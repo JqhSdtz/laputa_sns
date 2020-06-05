@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.laputa.laputa_sns.dao.SearchDao">
+	<select id="searchPost" resultMap="com.laputa.laputa_sns.dao.PostDao.PostResultMap">
+		select *
+		from lpt_post
+		where match(post_title, post_content) against(#{words} <if test="mode != null and mode == 'bool'">in boolean mode </if>)
+		limit 0, #{limit};
+	</select>
+	<select id="searchCategory" resultMap="com.laputa.laputa_sns.dao.CategoryDao.CategoryResultMap">
+		select category_id
+		from lpt_category
+		where match(category_name, category_intro) against(#{words} <if test="mode != null and mode == 'bool'">in boolean mode </if>)
+		limit 0, #{limit};
+	</select>
+	<select id="searchUser" resultMap="com.laputa.laputa_sns.dao.UserDao.UserResultMap">
+		select user_id, user_nickname, user_intro, user_raw_avatar, user_type, user_state
+		from lpt_user
+		where match(user_nickname, user_intro) against(#{words} <if test="mode != null and mode == 'bool'">in boolean mode </if>)
+		limit 0, #{limit};
+	</select>
+</mapper>

@@ -1,0 +1,6 @@
+<script id="categorySlcTp" type="text/html">
+	<%for(let i = 0; i < list.length; i++) {%>
+	<a data-id="<%:=list[i].id%>" data-is-leaf="<%:=list[i].is_leaf%>" class="category-btn dropdown-item"
+	   onclick="onCategoryBtnClick(this)"><%:=list[i].name%></a>
+	<%}%>
+</script>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.laputa.laputa_sns.dao.CommentL1Dao">
+	<resultMap id="CommentL1ResultMap" type="com.laputa.laputa_sns.model.CommentL1">
+		<id column="comment_l1_id" property="id"/>
+		<result column="comment_l1_type" property="type"/>
+		<result column="comment_l1_post_id" property="post.id"/>
+		<result column="comment_l1_content" property="content"/>
+		<result column="comment_l1_raw_img" property="rawImg"/>
+		<result column="comment_l1_creator_id" property="creator.id"/>
+		<result column="comment_l1_l2_cnt" property="l2Cnt"/>
+		<result column="comment_l1_like_cnt" property="likeCnt"/>
+		<result column="comment_l1_poster_rep_cnt" property="posterRepCnt"/>
+		<result column="comment_l1_latest_reply_time" property="latestReplyTime"/>
+		<result column="comment_l1_create_time" property="createTime"/>
+	</resultMap>
+
+	<sql id="commentL1Columns">
+		<choose>
+			<when test="${prefix}queryParam == null or ${prefix}queryParam.queryType == null or ${prefix}queryParam.queryType == @com.laputa.laputa_sns.common.QueryParam@BASIC">
+				comment_l1_id, comment_l1_type, comment_l1_creator_id, comment_l1_post_id, comment_l1_l2_cnt,
+				comment_l1_like_cnt, comment_l1_poster_rep_cnt, comment_l1_latest_reply_time, comment_l1_create_time
+			</when>
+			<when test="${prefix}queryParam.queryType == @com.laputa.laputa_sns.common.QueryParam@EXIST">comment_l1_id</when>
+			<otherwise>*</otherwise>
+		</choose>
+	</sql>
+
+	<select id="selectList" parameterType="com.laputa.laputa_sns.model.CommentL1" resultMap="CommentL1ResultMap">
+		select
+		<include refid="commentL1Columns">
+			<property name="prefix" value=""/>
+		</include>
+		from lpt_comment_l1
+		<where>
+			<if test="queryParam != null and queryParam.useStartIdAtSql == 1">
+				<choose>
+					<when test="queryParam.orderDir == null or queryParam.orderDir == 'desc'">
+						comment_l1_id &lt; #{queryParam.startId}
+					</when>
+					<otherwise>comment_l1_id &gt; #{queryParam.startId}</otherwise>
+				</choose>
+			</if>
+			<if test="postId != null">and comment_l1_post_id = #{postId}</if>
+			<if test="creatorId != null">and comment_l1_creator_id = #{creatorId}</if>
+			<if test="queryParam != null and queryParam.queryNotIndexed != null">
+				and comment_l1_${queryParam.queryNotIndexed}_indexed_flag = 0
+			</if>
+			and comment_l1_del_flag = 0
+		</where>
+		<if test="queryParam != null and queryParam.orderBy != null">
+			order by comment_l1_${queryParam.orderBy}
+			<if test="queryParam != null and queryParam.orderDir != null">${queryParam.orderDir}</if>
+			, comment_l1_id desc
+		</if>
+		<if test="queryParam != null and queryParam.isPaged != null">limit
+			<if test="queryParam != null and queryParam.useStartIdAtSql == 0">#{queryParam.from},</if>
+			#{queryParam.queryNum}
+		</if>
+	</select>
+
+	<select id="selectOne" parameterType="com.laputa.laputa_sns.model.CommentL1" resultMap="CommentL1ResultMap">
+		select
+		<include refid="commentL1Columns">
+			<property name="prefix" value=""/>
+		</include>
+		from lpt_comment_l1
+		where comment_l1_id = #{id} and comment_l1_del_flag = 0
+	</select>
+
+	<select id="selectListByMultiId" resultMap="CommentL1ResultMap">
+		select
+		<include refid="commentL1Columns">
+			<property name="prefix" value="entity."/>
+		</include>
+		from lpt_comment_l1
+		where comment_l1_id in
+		<foreach collection="idList" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+		and comment_l1_del_flag = 0
+	</select>
+
+	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.CommentL1" useGeneratedKeys="true"
+	        keyProperty="id">
+		insert into lpt_comment_l1
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			comment_l1_post_id, comment_l1_content, comment_l1_raw_img, comment_l1_creator_id,
+			<if test="type != null">comment_l1_type,</if>
+			<if test="lIndexedFlag != null">comment_l1_l_indexed_flag,</if>
+			<if test="pIndexedFlag != null">comment_l1_p_indexed_flag,</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			#{postId}, #{content}, #{rawImg}, #{creatorId},
+			<if test="type != null">#{type},</if>
+			<if test="lIndexedFlag != null">#{lIndexedFlag},</if>
+			<if test="pIndexedFlag != null">${pIndexedFlag},</if>
+		</trim>
+	</insert>
+
+	<update id="setPopularIndexFlag">
+		update lpt_comment_l1
+		set comment_l1_p_indexed_flag = #{value}
+		where comment_l1_id = #{id}
+	</update>
+
+	<update id="deleteOne">
+		update lpt_comment_l1
+		set comment_l1_del_flag = 1
+		where comment_l1_id = #{id}
+	</update>
+
+	<update id="correctL2Cnt">
+		update lpt_comment_l1
+		set comment_l1_l2_cnt = (select count(*)
+		                         from lpt_comment_l2
+		                         where comment_l2_l1_id = comment_l1_id and comment_l2_del_flag = 0)
+		where comment_l1_del_flag = 0
+	</update>
+
+	<update id="correctLikeCnt">
+		update lpt_comment_l1
+		set comment_l1_like_cnt = (select count(*)
+		                     from lpt_like_record
+		                     where like_record_target_id = comment_l1_id and like_record_type = ${@com.laputa.laputa_sns.model.LikeRecord@TYPE_CML1})
+		where comment_l1_del_flag = 0
+	</update>
+
+	<update id="correctPosterRepCnt">
+		update lpt_comment_l1
+		set comment_l1_poster_rep_cnt = (select count(*)
+		                                 from lpt_comment_l2, lpt_post
+		                                 where comment_l2_l1_id = comment_l1_id and comment_l2_creator_id = post_creator_id and post_id = comment_l1_post_id and comment_l2_del_flag = 0)
+		where comment_l1_del_flag = 0
+	</update>
+
+</mapper>

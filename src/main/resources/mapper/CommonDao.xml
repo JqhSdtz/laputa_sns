@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.laputa.laputa_sns.dao.CommonDao">
+
+	<update id="clearIndexedFlag">
+		update ${tableName} set ${indexedFlagFieldName} = 0 where ${idFieldName} != -1
+	</update>
+
+	<update id="updateOne">
+		update ${tableName} set ${filedName} = #{value} where ${idFieldName} = #{value_id}
+	</update>
+
+	<update id="batchUpdate">
+		insert into ${tableName}(${idFieldName}, ${valueFiledName}) values
+		<foreach item="item" index="idx" collection="list" separator=",">
+			(#{item.id}, #{item.value})
+		</foreach>
+		on duplicate key update ${valueFiledName} =
+		<choose>
+			<when test="ops == 1">
+				values(${valueFiledName})
+			</when>
+			<otherwise>
+				${valueFiledName} + values(${valueFiledName})
+			</otherwise>
+		</choose>
+	</update>
+
+</mapper>

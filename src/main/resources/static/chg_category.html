@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8">
+		<script src="https://cdn.staticfile.org/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdn.staticfile.org/popper.js/1.14.7/umd/popper.min.js"></script>
+		<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+		<script src="https://cdn.staticfile.org/template_js/0.8.0/template.js"></script>
+		<link href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+		<title>更改父目录</title>
+	</head>
+
+	<body>
+		<div id="main" style="width: 80%; margin-left: 10%; margin-top: 10%">
+			<div id="categoryDropdown" class="btn-group dropright">
+				<button id="selectBtn" class="btn mt-3 btn-lg btn-outline-dark dropdown-toggle" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="false">
+					选择目录
+				</button>
+				<div id="categoryMenu" class="dropdown-menu">
+					<a class="dropdown-item">正在加载...</a>
+				</div>
+			</div>
+			<p id="categoryPath" class="text-info" style="position: absolute; left: 0; margin-top: 5em"></p>
+			<button id="submit-button" class="btn btn-lg btn-dark" style="margin-left: 10em">更改</button>
+		</div>
+	</body>
+
+	<script src="js/common.js"></script>
+	<script src="js/comp/category_slc.js"></script>
+	<script src="js/chg_category.js"></script>
+</html>

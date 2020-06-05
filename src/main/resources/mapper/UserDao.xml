@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.laputa.laputa_sns.dao.UserDao">
+
+	<resultMap id="UserResultMap" type="com.laputa.laputa_sns.model.User">
+		<id column="user_id" property="id"/>
+		<result column="user_type" property="type"/>
+		<result column="user_state" property="state"/>
+		<result column="user_nickname" property="nickName"/>
+		<result column="user_password" property="password"/>
+		<result column="user_pwd_salt" property="pwdSalt"/>
+		<result column="user_token" property="token"/>
+		<result column="user_wx_unionid" property="wxUnionId"/>
+		<result column="user_email" property="email"/>
+		<result column="user_sch_info" property="schInfo"/>
+		<result column="user_phone" property="phone"/>
+		<result column="user_intro" property="intro"/>
+		<result column="user_top_post_id" property="topPostId"/>
+		<result column="user_raw_avatar" property="rawAvatar"/>
+		<result column="user_followers_cnt" property="followersCnt"/>
+		<result column="user_following_cnt" property="followingCnt"/>
+		<result column="user_post_cnt" property="postCnt"/>
+		<result column="user_talk_ban_to" property="talkBanTo"/>
+		<result column="user_recent_visit_categories" property="recentVisitCategories"/>
+		<result column="user_last_get_news_time" property="lastGetNewsTime"/>
+		<result column="user_last_login_time" property="lastLoginTime"/>
+		<result column="user_create_time" property="createTime"/>
+	</resultMap>
+
+	<resultMap id="UserRecvSettingResultMap" type="com.laputa.laputa_sns.model.UserRecvSetting">
+		<id column="user_id" property="user.id"/>
+		<result column="user_recv_like" property="recvLike"/>
+		<result column="user_recv_email" property="recvEmail"/>
+		<result column="user_recv_wx" property="recvWx"/>
+	</resultMap>
+
+	<sql id="userColumns">
+		<choose>
+			<when test="${prefix}queryParam == null or ${prefix}queryParam.queryType == null or ${prefix}queryParam.queryType == @com.laputa.laputa_sns.common.QueryParam@BASIC">
+				user_id, user_nickname, user_raw_avatar, user_type, user_state, user_top_post_id, user_following_cnt,
+				user_followers_cnt, user_post_cnt
+				<if test="${prefix}withTokenInfo != null and ${prefix}withTokenInfo">
+					, user_token
+				</if>
+				<if test="${prefix}fromLogin != null and ${prefix}fromLogin">
+					, user_last_login_time, user_talk_ban_to, user_recent_visit_categories, user_last_get_news_time
+				</if>
+				<if test="${prefix}withPwdInfo != null and ${prefix}withPwdInfo">
+					, user_password, user_pwd_salt
+				</if>
+				<if test="${prefix}withWxInfo != null and ${prefix}withWxInfo">
+					, user_wx_unionid, user_wx_openid
+				</if>
+				<if test="${prefix}withProfileInfo != null and ${prefix}withProfileInfo">
+					, user_email, user_sch_info, user_phone
+				</if>
+				<if test="${prefix}withTimeInfo != null and ${prefix}withTimeInfo">
+					, user_last_login_time, user_create_time
+				</if>
+			</when>
+			<when test="${prefix}queryParam.queryType == @com.laputa.laputa_sns.common.QueryParam@SPEC1">user_id,
+				user_nickname
+			</when>
+			<when test="${prefix}queryParam.queryType == @com.laputa.laputa_sns.common.QueryParam@EXIST">user_id</when>
+			<otherwise>*</otherwise>
+		</choose>
+	</sql>
+
+	<select id="selectList" parameterType="com.laputa.laputa_sns.model.User" resultMap="UserResultMap">
+		select
+		<include refid="userColumns">
+			<property name="prefix" value=""/>
+		</include>
+		from lpt_user
+		<where>
+			<if test="queryParam != null and queryParam.useStartIdAtSql == 1">
+				<choose>
+					<when test="queryParam.orderDir == null or queryParam.orderDir == 'desc'">
+						user_id &lt; #{queryParam.startId}
+					</when>
+					<otherwise>user_id &gt; #{queryParam.startId}</otherwise>
+				</choose>
+			</if>
+			<if test="followersCnt != null">and user_followers_cnt between #{queryParam.from} and #{queryParam.to}</if>
+			<if test="followingCnt != null">and user_following_cnt between #{queryParam.from} and #{queryParam.to}</if>
+			<if test="postCnt != null">and user_post_cnt between #{queryParam.from} and #{queryParam.to}</if>
+			<if test="lastLoginTime != null">and user_last_login_time &gt;= #{queryParam.from} and user_last_login_time
+				&lt;=
+				#{queryParam.to}
+			</if>
+			<if test="queryParam.createTime != null">and user_create_time &gt;= #{queryParam.from} and user_create_time
+				&lt;=
+				#{queryParam.to}
+			</if>
+			<if test="type != null">and user_type = #{type}</if>
+			<if test="state != null">and user_state = #{state}</if>
+		</where>
+		<if test="queryParam != null and queryParam.orderBy != null">
+			order by user_${queryParam.orderBy}
+			<if test="queryParam != null and queryParam.orderDir != null">${queryParam.orderDir}</if>
+			, user_id desc
+		</if>
+		<if test="queryParam != null and queryParam.isPaged != null">limit
+			<if test="queryParam != null and queryParam.useStartIdAtSql == 0">#{queryParam.from},</if>
+			#{queryParam.queryNum}
+		</if>
+	</select>
+
+	<!--以后有其他登录方式，可以在这里改-->
+	<select id="selectOne" parameterType="com.laputa.laputa_sns.model.User" resultMap="UserResultMap">
+		select
+		<include refid="userColumns">
+			<property name="prefix" value=""/>
+		</include>
+		from lpt_user
+		where user_id = #{id}
+	</select>
+
+	<select id="selectListByMultiId" resultMap="UserResultMap">
+		select
+		<include refid="userColumns">
+			<property name="prefix" value="entity."/>
+		</include>
+		from lpt_user
+		where user_id in
+		<foreach collection="idList" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</select>
+
+	<select id="selectRecvSetting" resultMap="UserRecvSettingResultMap">
+		select user_id, user_recv_like, user_recv_email, user_recv_wx
+		from lpt_user
+		where user_id = #{id}
+	</select>
+
+	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.User" useGeneratedKeys="true" keyProperty="id">
+		insert into lpt_user
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			user_nickname, user_wx_unionid, user_email, user_phone, user_password, user_pwd_salt
+			<if test="type != null">user_type,</if>
+			<if test="state != null">user_state</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			#{nickName}, #{wxUnionId}, #{email}, #{phone}, #{password}, #{pwdSalt},
+			<if test="type != null">#{type},</if>
+			<if test="state != null">#{state}</if>
+		</trim>
+	</insert>
+
+	<update id="updateOne" parameterType="com.laputa.laputa_sns.model.User">
+		update lpt_user
+		<set>
+			<if test="nickName != null">user_nickname = #{nickName},</if>
+			<if test="lastAlterNameTime != null">user_last_alter_name_time = #{lastAlterNameTime},</if>
+			<if test="talkBanTo != null">user_talk_ban_to = #{talkBanTo},</if>
+			<if test="type != null">user_type = #{type},</if>
+			<if test="state != null">user_state = #{state},</if>
+			<if test="wxUnionId != null">user_wx_unionid = #{wxUnionId},</if>
+			<if test="email != null">user_email = #{email},</if>
+			<if test="schInfo != null">user_sch_info = #{schInfo},</if>
+			<if test="phone != null">user_phone = #{phone},</if>
+			<if test="intro != null">user_intro = #{intro},</if>
+			<if test="rawAvatar != null">user_raw_avatar = #{rawAvatar},</if>
+			<if test="topPostId != null">user_top_post_id = #{topPostId},</if>
+		</set>
+		where user_id = #{id}
+	</update>
+
+	<update id="updateRecvSetting" parameterType="com.laputa.laputa_sns.model.UserRecvSetting">
+		update lpt_user
+		<set>
+			<if test="recvLike != null">user_recv_like = #{recvLike},</if>
+			<if test="recvEmail != null">user_recv_email = #{recvEmail},</if>
+			<if test="recvWx != null">user_recv_wx = #{recvWx},</if>
+		</set>
+		where user_id = #{id}
+	</update>
+
+	<update id="updateTopPost">
+		update lpt_user
+		set user_top_post_id = #{postId}
+		where user_id = #{userId}
+	</update>
+
+	<update id="updateAfterLogin">
+		update lpt_user
+		set user_login_cnt = user_login_cnt + 1,
+		    user_token     = #{token},
+			user_last_login_time = #{curTime}
+		where user_id = #{id}
+	</update>
+
+	<update id="redefineState">
+		update lpt_user
+		set user_state = ((select count(*) from lpt_permission where permission_user_id = user_id) > 0)
+		where user_id = #{id}
+	</update>
+
+	<update id="correctPostCnt">
+		update lpt_user
+		set user_post_cnt = (select count(*) from lpt_post where post_creator_id = user_id and post_del_flag = 0)
+		where user_id != -1
+	</update>
+
+	<update id="correctFollowersCnt">
+		update lpt_user
+		set user_followers_cnt = (select count(*) from lpt_follow where follow_target_id = user_id)
+		where user_id != -1
+	</update>
+
+	<update id="correctFollowingCnt">
+		update lpt_user
+		set user_following_cnt = (select count(*) from lpt_follow where follow_follower_id = user_id)
+		where user_id != -1
+	</update>
+
+</mapper>

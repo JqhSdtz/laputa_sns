@@ -1,0 +1,75 @@
+package com.laputa.laputa_sns.service;
+
+import com.laputa.laputa_sns.common.Result;
+import com.laputa.laputa_sns.dao.SearchDao;
+import com.laputa.laputa_sns.model.Category;
+import com.laputa.laputa_sns.model.Operator;
+import com.laputa.laputa_sns.model.Post;
+import com.laputa.laputa_sns.model.User;
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * @author JQH
+ * @since 下午 12:49 20/05/14
+ */
+
+@Service
+public class SearchService {
+
+    private final SearchDao dao;
+    private final CategoryService categoryService;
+    private final UserService userService;
+
+    public SearchService(SearchDao dao, CategoryService categoryService, UserService userService) {
+        this.dao = dao;
+        this.categoryService = categoryService;
+        this.userService = userService;
+    }
+
+    @Value("${search-result-limit}")//搜索结果只返回20个
+    private int searchResultLimit;
+
+    private String processWords(String words) {//删除通配符
+        words = words.trim();
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < words.length(); ++i)
+            if (words.charAt(i) != '*')
+                stringBuilder.append(words.charAt(i));
+        return stringBuilder.toString();
+    }
+
+    @SneakyThrows
+    public Result<List<Post>> searchPost(String words, String mode, Operator operator) {
+        int len = words.length();
+        if (len < 1 || len > 40)
+            return new Result(Result.FAIL).setErrorCode(1010200201).setMessage("搜索内容长度应在1-40之间");
+        words = processWords(words);
+        List<Post> postList = dao.searchPost(words, mode, searchResultLimit);
+        userService.multiSetUser(postList, Post.class.getMethod("getCreatorId"), Post.class.getMethod("setCreator", User.class));
+        categoryService.multiSetCategory(postList, Post.class.getMethod("getCategoryId"), Post.class.getMethod("setCategory", Category.class), operator);
+        return new Result(Result.SUCCESS).setObject(postList);
+    }
+
+    public Result<List<Category>> searchCategory(String words, String mode, Operator operator) {
+        int len = words.length();
+        if (len < 1 || len > 40)
+            return new Result(Result.FAIL).setErrorCode(1010200201).setMessage("搜索内容长度应在1-40之间");
+        words = processWords(words);
+        List<Category> categoryList = dao.searchCategory(words, mode, searchResultLimit);
+        for (int i = 0; i < categoryList.size(); ++i)
+            categoryList.set(i, categoryService.readCategory(categoryList.get(i).getId(), false, operator).getObject());
+        return new Result(Result.SUCCESS).setObject(categoryList);
+    }
+
+    public Result<List<User>> searchUser(String words, String mode, Operator operator) {
+        int len = words.length();
+        if (len < 1 || len > 40)
+            return new Result(Result.FAIL).setErrorCode(1010200201).setMessage("搜索内容长度应在1-40之间");
+        words = processWords(words);
+        return new Result(Result.SUCCESS).setObject(dao.searchUser(words, mode, searchResultLimit));
+    }
+}

@@ -1,0 +1,64 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+		<script src="https://cdn.staticfile.org/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdn.staticfile.org/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+		<script src="https://cdn.staticfile.org/twitter-bootstrap/4.2.1/js/bootstrap.min.js"></script>
+		<link href="https://cdn.staticfile.org/twitter-bootstrap/4.2.1/css/bootstrap.min.css" rel="stylesheet"/>
+		<title>注册 烟台大学BBS</title>
+	</head>
+
+	<style>
+		body {
+			background: url('img/background3.jpg') no-repeat fixed;
+			background-size: cover;
+		}
+
+		body::-webkit-scrollbar{
+			display: none;
+		}
+		#mainForm {
+			position: relative;
+			background-color: rgba(255,255,255,0.5);
+			left: 10%;
+			top: 5%;
+			width: 40%;
+		}
+		#password, #confirmPwd {
+			margin-top: 2rem;
+		}
+		#loginButton {
+			font-size: 0.8rem;
+		}
+	</style>
+
+	<body>
+		<input id="pageContext" type="hidden" value="${pageContext.request.contextPath}"/>
+		<div class="container-fluid py-5">
+			<div id="mainForm" class="p-4">
+				<p class="lead mb-3 mt-4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;未定义未定义未定义未定义未定义未定义未定义未定义未定义未定义未定义未定义未定义</p>
+				<form id="registerForm">
+					<div class="form-group formItem" id="userNameFormItem" required="required">
+						<input id="userName" name="userName" type="text" class="form-control" placeholder="用户名">
+					</div>
+					<div class="form-group formItem" id="passwordFormItem" required="required">
+						<input id="password" name="password" type="password" class="form-control" placeholder="密码">
+					</div>
+					<div class="form-group formItem" id="confirmPwdFormItem" required="required">
+						<input id="confirmPwd" name="confirmPwd" type="password" class="form-control" placeholder="确认密码">
+					</div>
+					<input id="submitButton" type="button" class="col-5 offset-1 mt-3 mb-3 btn-lg btn-dark" value="注  册"/>
+					<a href="login.html">
+						<input id="loginButton" type="button" class="col-4 offset-1 btn-lg btn-primary" value="已有帐号？点击登录"/>
+					</a>
+				</form>
+			</div>
+		</div>
+	</body>
+	<script src="js/common.js"></script>
+	<script src="js/lib/form-item.js"></script>
+	<script src="js/register.js"></script>
+</html>

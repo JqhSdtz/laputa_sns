@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.laputa.laputa_sns.dao.PostNewsDao">
+	<resultMap id="PostNewsResultMap" type="com.laputa.laputa_sns.model.PostNews">
+		<id column="inbox_rec_id" property="id"/>
+		<result column="inbox_rec_type" property="type"/>
+		<result column="inbox_rec_receiver_id" property="receiverId"/>
+		<result column="inbox_rec_sender_id" property="senderId"/>
+		<result column="inbox_rec_content_id" property="postId"/>
+		<result column="inbox_rec_create_time" property="createTime"/>
+	</resultMap>
+
+	<resultMap id="tmpPostResultMap" type="com.laputa.laputa_sns.model.Post">
+		<id column="post_id" property="id"/>
+		<result column="post_creator_id" property="creator.id"/>
+		<result column="post_create_time" property="createTime"/>
+	</resultMap>
+
+	<!--otherwise里面之前是小于等于，然后改成了小于，不确定是否有错误-->
+	<select id="selectList" parameterType="com.laputa.laputa_sns.model.PostNews" resultMap="PostNewsResultMap">
+		select inbox_rec_id, inbox_rec_receiver_id, inbox_rec_sender_id, inbox_rec_content_id
+		from lpt_inbox_rec
+		where inbox_rec_receiver_id = #{entity.receiverId}
+		and inbox_rec_id
+		<choose>
+			<when test="entity.queryParam.useStartIdAtSql == 1">&lt; #{entity.queryParam.startId}</when>
+			<otherwise>&lt; (select inbox_rec_id from lpt_inbox_rec where inbox_rec_receiver_id = #{entity.receiverId} and inbox_rec_content_id = #{entity.postId} order by inbox_rec_id desc limit 1)</otherwise>
+		</choose>
+		and inbox_rec_sender_id in
+		<foreach collection="followingList" item="follow" open="(" separator="," close=")">
+			#{follow.targetId}
+		</foreach>
+		order by inbox_rec_id desc
+		limit #{entity.queryParam.queryNum}
+	</select>
+
+	<insert id="insertList" useGeneratedKeys="true" keyProperty="id">
+		insert ignore into lpt_inbox_rec(inbox_rec_receiver_id, inbox_rec_sender_id, inbox_rec_content_id) values
+		<foreach item="item" index="index" collection="list" separator=",">
+			(#{item.receiverId}, #{item.senderId}, #{item.postId})
+		</foreach>
+	</insert>
+
+	<select id="selectPostListOfAllUser" resultMap="tmpPostResultMap">
+		select post_id, post_creator_id, post_create_time
+		from lpt_post
+		where post_id &lt; #{startId} and post_del_flag = 0
+		order by post_id desc
+		limit #{queryNum}
+	</select>
+
+</mapper>

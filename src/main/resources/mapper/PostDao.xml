@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.laputa.laputa_sns.dao.PostDao">
+	<resultMap id="PostResultMap" type="com.laputa.laputa_sns.model.Post">
+		<id column="post_id" property="id"/>
+		<result column="post_full_text_id" property="fullTextId"/>
+		<result column="post_full_text" property="fullText"/>
+		<result column="post_sup_id" property="supId"/>
+		<result column="post_ori_id" property="oriId"/>
+		<result column="post_type" property="type"/>
+		<result column="post_state" property="state"/>
+		<result column="post_length" property="length"/>
+		<result column="post_title" property="title"/>
+		<result column="post_content" property="content"/>
+		<result column="post_raw_img" property="rawImg"/>
+		<result column="post_allow_forward" property="allowForward"/>
+		<result column="post_category_id" property="category.id"/>
+		<result column="post_comment_cnt" property="commentCnt"/>
+		<result column="post_like_cnt" property="likeCnt"/>
+		<result column="post_forward_cnt" property="forwardCnt"/>
+		<result column="post_view_cnt" property="viewCnt"/>
+		<result column="post_top_comment_id" property="topCommentId"/>
+		<result column="post_creator_id" property="creator.id"/>
+		<result column="post_latest_time" property="latestTime"/>
+		<result column="post_create_time" property="createTime"/>
+	</resultMap>
+
+	<sql id="basicColumns">
+		post_id, post_full_text_id, post_allow_forward, post_sup_id, post_ori_id, post_type, post_state, post_category_id,
+		post_like_cnt, post_comment_cnt, post_view_cnt, post_top_comment_id, post_creator_id, post_create_time
+	</sql>
+
+	<sql id="postColumns">
+		<choose>
+			<when test="${prefix}queryParam == null or ${prefix}queryParam.queryType == null or ${prefix}queryParam.queryType == @com.laputa.laputa_sns.common.QueryParam@BASIC">
+				<include refid="basicColumns"/>
+			</when>
+			<when test="${prefix}queryParam.queryType == @com.laputa.laputa_sns.common.QueryParam@EXIST">post_id</when>
+			<otherwise>*</otherwise>
+		</choose>
+	</sql>
+
+	<select id="selectList" resultMap="PostResultMap">
+		select
+		<include refid="postColumns">
+			<property name="prefix" value="post."/>
+		</include>
+		from lpt_post
+		<where>
+			<if test="post.queryParam != null and post.queryParam.useStartIdAtSql == 1">
+				<choose>
+					<when test="post.queryParam.orderDir == null or post.queryParam.orderDir == 'desc'">
+						post_id &lt; #{post.queryParam.startId}
+					</when>
+					<otherwise>post_id &gt; #{post.queryParam.startId}</otherwise>
+				</choose>
+			</if>
+			<if test="category_list != null">
+				and post_category_id in
+				<foreach collection="category_list" item="category" open="(" separator="," close=")">
+					#{category.id}
+				</foreach>
+			</if>
+			<if test="category_list == null and post.category != null and post.category.id != null">and post_category_id = #{post.category.id}</if>
+			<if test="post.supId != null">and post_sup_id = #{post.supId}</if>
+			<if test="post.oriId != null">and post_ori_id = #{post.oriId}</if>
+			<if test="post.allowForward != null">and post_allow_forward = #{post.allowForward}</if>
+			<if test="post.type != null">and post_type = #{post.type}</if>
+			<if test="post.state != null">and post_state = #{post.state}</if>
+			<if test="post.creator != null and post.creator.id != null">and post_creator_id = #{post.creator.id}</if>
+			<if test="post.queryParam != null and post.queryParam.queryNotIndexed != null">
+				and post_${post.queryParam.queryNotIndexed}_indexed_flag = 0
+			</if>
+			and post_del_flag = 0
+		</where>
+		<if test="post.queryParam != null and post.queryParam.orderBy != null">
+			order by post_${post.queryParam.orderBy}
+			<if test="post.queryParam != null and post.queryParam.orderDir != null">${post.queryParam.orderDir}</if>
+			<if test="post.queryParam.orderBy != 'id'">
+				, post_id desc
+			</if>
+		</if>
+		<if test="post.queryParam != null and post.queryParam.isPaged != null">limit
+			<if test="post.queryParam != null and post.queryParam.useStartIdAtSql == 0">#{post.queryParam.from},</if>
+			#{post.queryParam.queryNum}
+		</if>
+	</select>
+
+	<select id="selectOne" parameterType="com.laputa.laputa_sns.model.Post" resultMap="PostResultMap">
+		<choose>
+			<when test="queryFullText != null and queryFullText == 1">
+				select tmp_post.*, post_full_text from (select * from lpt_post where post_id = #{id} and post_del_flag = 0)
+				as tmp_post left join lpt_post_full
+				on post_full_text_id is not null and post_full_id = post_full_text_id
+			</when>
+			<otherwise>
+				select
+				<include refid="postColumns">
+					<property name="prefix" value=""/>
+				</include>
+				from lpt_post
+				where post_id = #{id} and post_del_flag = 0
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="selectFullText" resultType="java.lang.String">
+		select post_full_text
+		from lpt_post_full
+		where post_full_id = #{fullTextId}
+	</select>
+
+	<select id="selectListByMultiId" resultMap="PostResultMap">
+		select
+		<include refid="postColumns">
+			<property name="prefix" value="entity."/>
+		</include>
+		from lpt_post
+		where post_id in
+		<foreach collection="idList" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+		and post_del_flag = 0
+	</select>
+
+	<insert id="insertFullText" parameterType="com.laputa.laputa_sns.common.TmpEntry" useGeneratedKeys="true"
+	        keyProperty="id">
+		insert into lpt_post_full(post_full_text)
+		values (#{value})
+	</insert>
+
+	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.Post" useGeneratedKeys="true" keyProperty="id">
+		insert into lpt_post
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			post_length, post_title, post_content, post_raw_img, post_category_id, post_creator_id,
+			<if test="fullTextId != null">post_full_text_id,</if>
+			<if test="supId != null">post_sup_id,</if>
+			<if test="oriId != null">post_ori_id,</if>
+			<if test="allowForward != null">post_allow_forward,</if>
+			<if test="type != null">post_type,</if>
+			<if test="state != null">post_state</if>
+			<if test="lIndexedFlag != null">post_l_indexed_flag,</if>
+			<if test="pIndexedFlag != null">post_p_indexed_flag,</if>
+		</trim>
+		values
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			#{length}, #{title}, #{content}, #{rawImg}, #{category.id}, #{creator.id},
+			<if test="fullTextId != null">#{fullTextId},</if>
+			<if test="supId != null">#{supId},</if>
+			<if test="oriId != null">#{oriId},</if>
+			<if test="allowForward != null">#{post.allowForward},</if>
+			<if test="type != null">#{type},</if>
+			<if test="state != null">#{state}</if>
+			<if test="lIndexedFlag != null">#{lIndexedFlag},</if>
+			<if test="pIndexedFlag != null">${pIndexedFlag},</if>
+		</trim>
+	</insert>
+
+	<update id="updateTopComment">
+		update lpt_post
+		set post_top_comment_id = #{commentId}
+		where post_id = #{postId}
+	</update>
+
+	<update id="deleteOne">
+		update lpt_post
+		set post_del_flag = 1
+		where post_id = #{id}
+	</update>
+
+	<update id="setPopularIndexFlag">
+		update lpt_post
+		set post_p_indexed_flag = #{value}
+		where post_id = #{id}
+	</update>
+
+	<update id="correctCommentCnt">
+		update lpt_post
+		set post_comment_cnt = (select count(*)
+		                        from lpt_comment_l1
+		                        where comment_l1_post_id = post_id and comment_l1_del_flag = 0)
+		where post_del_flag = 0
+	</update>
+
+	<update id="correctForwardCnt">
+		update lpt_post as a
+		set a.post_forward_cnt = (select *
+		                          from (select count(*)
+		                                from lpt_post as b
+		                                where b.post_sup_id = a.post_id and b.post_del_flag = 0) as tmp)
+		where a.post_del_flag = 0
+	</update>
+
+	<update id="correctLikeCnt">
+		update lpt_post
+		set post_like_cnt = (select count(*)
+		                     from lpt_like_record
+		                     where like_record_target_id = post_id and like_record_type = ${@com.laputa.laputa_sns.model.LikeRecord@TYPE_POST})
+		where post_del_flag = 0
+	</update>
+
+</mapper>

@@ -1,0 +1,29 @@
+<script id="forwardOfPostTp" type="text/html">
+	<div id="forward_of_post_<%:=post.id%>" class="forward bg-light border border-light" style="display: none">
+		<div class="input-group input-group-lg">
+			<div class="input-group-prepend">
+				<span class="input-group-text" id="forward_span_<%:=post.id%>">转发</span>
+			</div>
+			<input id="forward_text_<%:=post.id%>" type="text" class="form-control"
+				   aria-describedby="forward_span_<%:=post.id%>">
+			<button data-id="<%:=post.id%>" onclick="sendForward(this)" class="btn-primary"
+					style="display: inline; width: 20%">发送
+			</button>
+		</div>
+		<div id="forward_list_<%:=post.id%>" style="width: 95%; margin-left: 2.5%">
+		</div>
+		<%if(post.forward_cnt !== 0){%>
+		<button id="more_forward_btn_<%:=post.id%>" data-id="<%:=post.id%>"
+				style="width: 95%; margin-left: 2.5%" class="btn btn-lg btn-outline-dark"
+				onclick="readMoreForward(this)">更多
+		</button>
+		<%}%>
+	</div>
+</script>
+
+<script id="forwardTp" type="text/html">
+	<%for(let i = 0; i < list.length; i++) {%>
+	<img src="<%:=getUserAvatarUrl(list[i].creator)%>" style="border-radius: 100%; width: 50px;height: 50px"/>
+	<a href="user_info.html?user_id=<%:=list[i].creator.id%>" class="text-dark"><%:=list[i].creator.nick_name%></a>
+	<%}%>
+</script>

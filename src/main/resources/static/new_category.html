@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8">
+		<script src="https://cdn.staticfile.org/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+		<script src="https://cdn.staticfile.org/template_js/0.8.0/template.js"></script>
+		<link href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+		<title>创建目录</title>
+	</head>
+	<body>
+		<form id="createForm" style="position: relative; width: 80%; margin-left: 10%; margin-top: 2em">
+			<div class="form-group formItem" id="titleFormItem">
+				<input id="title" name="title" type="text" class="form-control" placeholder="名称">
+			</div>
+			<select id="type-select" class="form-control" id="exampleFormControlSelect1">
+				<option value="0">普通目录</option>
+				<option value="1">私有目录</option>
+			</select>
+			<div class="form-group formItem" id="contentFormItem" required="required">
+				<textarea id="content" name="content" class="form-control" rows="10" placeholder="简介"></textarea>
+			</div>
+			<input id="submitButton" style="position: absolute; right: 0" type="button"
+				   class="col-5 mt-3 btn-lg btn-dark" value="创建"/>
+		</form>
+	</body>
+
+	<script src="js/common.js"></script>
+	<script src="js/new_category.js"></script>
+</html>

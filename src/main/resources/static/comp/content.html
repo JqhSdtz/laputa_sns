@@ -1,0 +1,13 @@
+<script id="contentDropTp" type="text/html">
+	<div id="drop_<%:=type%>_<%:=content.id%>" class="dropdown">
+		<button class="btn btn-link text-muted dropdown-toggle" type="button" id="content_drop_btn_<%:=content.id%>" data-toggle="dropdown">
+			操作
+		</button>
+		<div class="dropdown-menu">
+			<%if(content.creator.id === operator.user_id || (content.rights && content.rights.delete)){%>
+			<a class="dropdown-item" data-id="<%:=content.id%>" data-creator-id="<%:=content.creator.id%>" data-type="<%:=content.entity_type%>" onclick="delContent(this)">删除</a>
+			<%}%>
+			<a class="dropdown-item" href="#">举报</a>
+		</div>
+	</div>
+</script>

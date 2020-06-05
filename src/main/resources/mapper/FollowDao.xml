@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.laputa.laputa_sns.dao.FollowDao">
+	<resultMap id="FollowResultMap" type="com.laputa.laputa_sns.model.Follow">
+		<id column="follow_id" property="id"/>
+		<result column="follow_type" property="type"/>
+		<result column="follow_state" property="state"/>
+		<result column="follow_create_time" property="createTime"/>
+		<result column="follow_follower_id" property="follower.id"/>
+		<result column="follow_target_id" property="target.id"/>
+	</resultMap>
+
+	<!--获取关注列表需要在条件里设置followerId，获取到的是targetId，获取粉丝列表则反之	-->
+	<sql id="followColumn">
+		<choose>
+			<when test="queryParam == null or queryParam.queryType == null or queryParam.queryType == @com.laputa.laputa_sns.common.QueryParam@BASIC">
+				follow_id,
+				<if test="targetId != null">follow_follower_id,</if>
+				<if test="followerId != null">follow_target_id,</if>
+				follow_type, follow_create_time
+			</when>
+			<when test="queryParam.queryType == @com.laputa.laputa_sns.common.QueryParam@EXIST">follow_id</when>
+			<otherwise>*</otherwise>
+		</choose>
+	</sql>
+
+	<select id="selectList" parameterType="com.laputa.laputa_sns.model.Follow" resultMap="FollowResultMap">
+		select
+		<include refid="followColumn"/>
+		from lpt_follow
+		<where>
+			<if test="followerId != null">follow_follower_id = #{followerId}</if>
+			<if test="targetId != null">and follow_target_id = #{targetId}</if>
+			<if test="type != null">and follow_type = #{type}</if>
+			<if test="targetId != null">
+				and follow_id
+				<choose>
+					<when test="queryParam.useStartIdAtSql == 1">&lt; #{queryParam.startId}</when>
+					<otherwise>&lt;= (select follow_id from lpt_follow where follow_target_id = #{targetId} and follow_follower_id = #{followerId})</otherwise>
+				</choose>
+			</if>
+		</where>
+		<if test="targetId != null">
+			order by follow_id desc
+			limit #{queryParam.queryNum}
+		</if>
+	</select>
+
+	<sql id="followCondition">
+		<if test="id != null">follow_id = #{id}</if>
+		<if test="followerId != null and targetId != null">
+			and follow_target_id = #{targetId}
+			and follow_follower_id = #{followerId}
+		</if>
+	</sql>
+
+	<select id="selectOne" parameterType="com.laputa.laputa_sns.model.Follow" resultMap="FollowResultMap">
+		select
+		<include refid="followColumn"/>
+		from lpt_follow
+		<where>
+			<include refid="followCondition"/>
+		</where>
+	</select>
+
+	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.Follow" useGeneratedKeys="true"
+	        keyProperty="id">
+		insert into lpt_follow(follow_follower_id, follow_target_id<if test="type != null">,follow_type</if>)
+		values (#{followerId}, #{targetId}<if test="type != null">,#{type}</if>)
+		on duplicate key update follow_type = #{type}
+	</insert>
+<!--    insert into lpt_follow(follow_follower_id, follow_target_id<if test="type != null">,follow_type</if>)
+		select #{followerId}, #{targetId}<if test="type != null">,#{type}</if> from dual
+		where not exists (select follow_id from lpt_follow where  follow_follower_id = #{followerId} and follow_target_id = #{targetId})-->
+
+	<update id="updateOne" parameterType="com.laputa.laputa_sns.model.Follow">
+		update lpt_follow set
+		follow_type = #{type}
+		<where>
+			<include refid="followCondition"/>
+		</where>
+	</update>
+
+	<delete id="deleteOne" parameterType="com.laputa.laputa_sns.model.Follow">
+		delete
+		from lpt_follow
+		<where>
+			<include refid="followCondition"/>
+		</where>
+	</delete>
+
+</mapper>
