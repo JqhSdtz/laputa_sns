@@ -8,7 +8,7 @@ import com.laputa.laputa_sns.dao.CommentL2Dao;
 import com.laputa.laputa_sns.helper.CommentServiceHelper;
 import com.laputa.laputa_sns.helper.QueryHelper;
 import com.laputa.laputa_sns.helper.RedisHelper;
-import com.laputa.laputa_sns.model.*;
+import com.laputa.laputa_sns.model.entity.*;
 import com.laputa.laputa_sns.util.CryptUtil;
 import com.laputa.laputa_sns.util.QueryTokenUtil;
 import com.laputa.laputa_sns.util.RedisUtil;

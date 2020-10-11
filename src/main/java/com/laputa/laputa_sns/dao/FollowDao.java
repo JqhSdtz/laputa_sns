@@ -1,7 +1,7 @@
 package com.laputa.laputa_sns.dao;
 
 import com.laputa.laputa_sns.common.BaseDao;
-import com.laputa.laputa_sns.model.Follow;
+import com.laputa.laputa_sns.model.entity.Follow;
 import org.springframework.stereotype.Repository;
 
 /**

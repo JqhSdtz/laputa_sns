@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.laputa.laputa_sns.dao.AdminOpsRecordDao">
-	<resultMap id="AdminOpsRecordResultMap" type="com.laputa.laputa_sns.model.AdminOpsRecord">
+	<resultMap id="AdminOpsRecordResultMap" type="com.laputa.laputa_sns.model.entity.AdminOpsRecord">
 		<id column="admin_ops_rec_id" property="id"/>
 		<result column="admin_ops_rec_type" property="type"/>
 		<result column="admin_ops_rec_creator_id" property="creator.id"/>
@@ -11,7 +11,7 @@
 		<result column="admin_ops_rec_create_time" property="createTime"/>
 	</resultMap>
 
-	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.AdminOpsRecord" useGeneratedKeys="true"
+	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.entity.AdminOpsRecord" useGeneratedKeys="true"
 	        keyProperty="id">
 		insert into lpt_admin_ops_rec(admin_ops_rec_type, admin_ops_rec_creator_id, admin_ops_rec_target_id, admin_ops_rec_desc, admin_ops_rec_comment)
 		values (#{type}, #{creator.id}, #{targetId}, #{desc}, #{opComment})

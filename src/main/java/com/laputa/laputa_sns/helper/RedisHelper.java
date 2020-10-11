@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.laputa.laputa_sns.common.AbstractBaseEntity;
 import com.laputa.laputa_sns.common.TmpEntry;
-import com.laputa.laputa_sns.model.AbstractContent;
+import com.laputa.laputa_sns.model.entity.AbstractContent;
 import com.laputa.laputa_sns.util.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;

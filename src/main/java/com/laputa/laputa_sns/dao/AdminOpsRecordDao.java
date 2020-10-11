@@ -1,7 +1,7 @@
 package com.laputa.laputa_sns.dao;
 
 import com.laputa.laputa_sns.common.BaseDao;
-import com.laputa.laputa_sns.model.AdminOpsRecord;
+import com.laputa.laputa_sns.model.entity.AdminOpsRecord;
 
 /**
  * @author JQH

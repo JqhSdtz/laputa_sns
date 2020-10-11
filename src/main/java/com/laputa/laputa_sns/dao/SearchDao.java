@@ -1,8 +1,8 @@
 package com.laputa.laputa_sns.dao;
 
-import com.laputa.laputa_sns.model.Category;
-import com.laputa.laputa_sns.model.Post;
-import com.laputa.laputa_sns.model.User;
+import com.laputa.laputa_sns.model.entity.Category;
+import com.laputa.laputa_sns.model.entity.Post;
+import com.laputa.laputa_sns.model.entity.User;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.stereotype.Repository;
 

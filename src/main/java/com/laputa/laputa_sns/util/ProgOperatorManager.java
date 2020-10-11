@@ -1,7 +1,6 @@
 package com.laputa.laputa_sns.util;
 
-import com.laputa.laputa_sns.model.Operator;
-import com.laputa.laputa_sns.model.Operator;
+import com.laputa.laputa_sns.model.entity.Operator;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;

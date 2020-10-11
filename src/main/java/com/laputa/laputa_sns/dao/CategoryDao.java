@@ -1,7 +1,7 @@
 package com.laputa.laputa_sns.dao;
 
 import com.laputa.laputa_sns.common.BaseDao;
-import com.laputa.laputa_sns.model.Category;
+import com.laputa.laputa_sns.model.entity.Category;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 

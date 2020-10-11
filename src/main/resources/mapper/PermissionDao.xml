@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.laputa.laputa_sns.dao.PermissionDao">
-	<resultMap id="PermissionResultMap" type="com.laputa.laputa_sns.model.Permission">
+	<resultMap id="PermissionResultMap" type="com.laputa.laputa_sns.model.entity.Permission">
 		<id column="permission_id" property="id"/>
 		<result column="permission_user_id" property="user.id"/>
 		<result column="permission_level" property="level"/>
@@ -20,7 +20,7 @@
 		</choose>
 	</sql>
 
-	<select id="selectList" parameterType="com.laputa.laputa_sns.model.Permission" resultMap="PermissionResultMap">
+	<select id="selectList" parameterType="com.laputa.laputa_sns.model.entity.Permission" resultMap="PermissionResultMap">
 		select
 		<include refid="permissionColumn"/>
 		from lpt_permission
@@ -40,7 +40,7 @@
 		</if>
 	</sql>
 
-	<select id="selectOne" parameterType="com.laputa.laputa_sns.model.Permission" resultMap="PermissionResultMap">
+	<select id="selectOne" parameterType="com.laputa.laputa_sns.model.entity.Permission" resultMap="PermissionResultMap">
 		select
 		<include refid="permissionColumn"/>
 		from lpt_permission
@@ -49,13 +49,13 @@
 		</where>
 	</select>
 
-	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.Permission" useGeneratedKeys="true"
+	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.entity.Permission" useGeneratedKeys="true"
 	        keyProperty="id">
 		insert into lpt_permission(permission_user_id, permission_category_id, permission_level, permission_creator_id)
 		values (#{userId}, #{categoryId}, #{level}, #{creator.id})
 	</insert>
 
-	<update id="updateOne" parameterType="com.laputa.laputa_sns.model.Permission">
+	<update id="updateOne" parameterType="com.laputa.laputa_sns.model.entity.Permission">
 		update lpt_permission set
 		permission_level = #{level}
 		<where>
@@ -63,7 +63,7 @@
 		</where>
 	</update>
 
-	<delete id="deleteOne" parameterType="com.laputa.laputa_sns.model.Permission">
+	<delete id="deleteOne" parameterType="com.laputa.laputa_sns.model.entity.Permission">
 		delete
 		from lpt_permission
 		<where>

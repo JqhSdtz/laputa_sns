@@ -3,7 +3,7 @@ package com.laputa.laputa_sns.service;
 import com.laputa.laputa_sns.common.QueryParam;
 import com.laputa.laputa_sns.common.RedisPrefix;
 import com.laputa.laputa_sns.common.Result;
-import com.laputa.laputa_sns.model.*;
+import com.laputa.laputa_sns.model.entity.*;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;

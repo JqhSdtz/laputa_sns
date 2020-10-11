@@ -7,7 +7,7 @@ import com.laputa.laputa_sns.common.BaseService;
 import com.laputa.laputa_sns.common.QueryParam;
 import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.dao.PermissionDao;
-import com.laputa.laputa_sns.model.*;
+import com.laputa.laputa_sns.model.entity.*;
 import com.laputa.laputa_sns.util.ProgOperatorManager;
 import com.laputa.laputa_sns.validator.PermissionValidator;
 import lombok.SneakyThrows;

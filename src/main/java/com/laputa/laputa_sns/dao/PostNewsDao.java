@@ -1,9 +1,9 @@
 package com.laputa.laputa_sns.dao;
 
 import com.laputa.laputa_sns.common.BaseDao;
-import com.laputa.laputa_sns.model.Follow;
-import com.laputa.laputa_sns.model.Post;
-import com.laputa.laputa_sns.model.PostNews;
+import com.laputa.laputa_sns.model.entity.Follow;
+import com.laputa.laputa_sns.model.entity.Post;
+import com.laputa.laputa_sns.model.entity.PostNews;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 

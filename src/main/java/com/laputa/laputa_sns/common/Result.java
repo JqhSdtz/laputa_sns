@@ -2,11 +2,10 @@ package com.laputa.laputa_sns.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.laputa.laputa_sns.model.Operator;
+import com.laputa.laputa_sns.model.entity.Operator;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 

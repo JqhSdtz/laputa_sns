@@ -1,11 +1,9 @@
 package com.laputa.laputa_sns.validator;
 
-import com.laputa.laputa_sns.model.Operator;
-import com.laputa.laputa_sns.model.Post;
+import com.laputa.laputa_sns.model.entity.Operator;
+import com.laputa.laputa_sns.model.entity.Post;
 import com.laputa.laputa_sns.right.PostRight;
-import com.laputa.laputa_sns.service.CategoryService;
 import com.laputa.laputa_sns.service.PermissionService;
-import com.laputa.laputa_sns.util.ProgOperatorManager;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 

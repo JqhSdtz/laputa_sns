@@ -1,4 +1,4 @@
-package com.laputa.laputa_sns.model;
+package com.laputa.laputa_sns.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -11,6 +11,7 @@ import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
 
 /**
+ * 二级评论
  * @author JQH
  * @since 下午 12:14 20/02/29
  */

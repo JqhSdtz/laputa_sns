@@ -2,8 +2,8 @@ package com.laputa.laputa_sns.controller;
 
 import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.helper.CommentServiceHelper;
-import com.laputa.laputa_sns.model.CommentL1;
-import com.laputa.laputa_sns.model.Operator;
+import com.laputa.laputa_sns.model.entity.CommentL1;
+import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.service.CommentL1Service;
 import org.springframework.web.bind.annotation.*;
 

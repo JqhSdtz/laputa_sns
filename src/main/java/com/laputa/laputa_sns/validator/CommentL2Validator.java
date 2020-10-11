@@ -1,7 +1,7 @@
 package com.laputa.laputa_sns.validator;
 
-import com.laputa.laputa_sns.model.CommentL2;
-import com.laputa.laputa_sns.model.Operator;
+import com.laputa.laputa_sns.model.entity.CommentL2;
+import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.right.CommentRight;
 import com.laputa.laputa_sns.service.PermissionService;
 import org.jetbrains.annotations.NotNull;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.laputa.laputa_sns.dao.LikeRecordDao">
-	<resultMap id="likeRecordResultMap" type="com.laputa.laputa_sns.model.LikeRecord">
+	<resultMap id="likeRecordResultMap" type="com.laputa.laputa_sns.model.entity.LikeRecord">
 		<id column="like_record_id" property="id"/>
 		<result column="like_record_type" property="type"/>
 		<result column="like_record_target_id" property="targetId"/>
@@ -10,7 +10,7 @@
 	</resultMap>
 
 	<!--otherwise里面之前是小于等于，然后改成了小于，不确定是否有错误-->
-	<select id="selectList" parameterType="com.laputa.laputa_sns.model.LikeRecord" resultMap="likeRecordResultMap">
+	<select id="selectList" parameterType="com.laputa.laputa_sns.model.entity.LikeRecord" resultMap="likeRecordResultMap">
 		select *
 		from lpt_like_record
 		<where>
@@ -37,7 +37,7 @@
 		</foreach>
 	</insert>
 
-	<delete id="deleteOne" parameterType="com.laputa.laputa_sns.model.LikeRecord">
+	<delete id="deleteOne" parameterType="com.laputa.laputa_sns.model.entity.LikeRecord">
 		delete
 		from lpt_like_record
 		where like_record_target_id = #{targetId}

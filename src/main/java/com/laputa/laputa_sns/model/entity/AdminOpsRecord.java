@@ -1,4 +1,4 @@
-package com.laputa.laputa_sns.model;
+package com.laputa.laputa_sns.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**
+ * 管理员操作记录
  * @author JQH
  * @since 下午 3:50 20/04/24
  */

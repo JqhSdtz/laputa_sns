@@ -1,10 +1,9 @@
 package com.laputa.laputa_sns.controller;
 
 import com.laputa.laputa_sns.common.Result;
-import com.laputa.laputa_sns.model.Category;
-import com.laputa.laputa_sns.model.Operator;
-import com.laputa.laputa_sns.model.User;
-import com.laputa.laputa_sns.model.UserRecvSetting;
+import com.laputa.laputa_sns.model.entity.Operator;
+import com.laputa.laputa_sns.model.entity.User;
+import com.laputa.laputa_sns.model.entity.UserRecvSetting;
 import com.laputa.laputa_sns.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;

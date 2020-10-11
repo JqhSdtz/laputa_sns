@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.laputa.laputa_sns.dao.PostNewsDao">
-	<resultMap id="PostNewsResultMap" type="com.laputa.laputa_sns.model.PostNews">
+	<resultMap id="PostNewsResultMap" type="com.laputa.laputa_sns.model.entity.PostNews">
 		<id column="inbox_rec_id" property="id"/>
 		<result column="inbox_rec_type" property="type"/>
 		<result column="inbox_rec_receiver_id" property="receiverId"/>
@@ -10,14 +10,14 @@
 		<result column="inbox_rec_create_time" property="createTime"/>
 	</resultMap>
 
-	<resultMap id="tmpPostResultMap" type="com.laputa.laputa_sns.model.Post">
+	<resultMap id="tmpPostResultMap" type="com.laputa.laputa_sns.model.entity.Post">
 		<id column="post_id" property="id"/>
 		<result column="post_creator_id" property="creator.id"/>
 		<result column="post_create_time" property="createTime"/>
 	</resultMap>
 
 	<!--otherwise里面之前是小于等于，然后改成了小于，不确定是否有错误-->
-	<select id="selectList" parameterType="com.laputa.laputa_sns.model.PostNews" resultMap="PostNewsResultMap">
+	<select id="selectList" parameterType="com.laputa.laputa_sns.model.entity.PostNews" resultMap="PostNewsResultMap">
 		select inbox_rec_id, inbox_rec_receiver_id, inbox_rec_sender_id, inbox_rec_content_id
 		from lpt_inbox_rec
 		where inbox_rec_receiver_id = #{entity.receiverId}

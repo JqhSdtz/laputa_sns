@@ -1,11 +1,11 @@
 package com.laputa.laputa_sns.controller;
 
-import com.laputa.laputa_sns.model.Operator;
+import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.service.*;
-import com.laputa.laputa_sns.validator.AdminLevel;
 import org.springframework.web.bind.annotation.*;
 
 /**
+ * 数据校验控制器
  * @author JQH
  * @since 下午 12:56 20/04/26
  */

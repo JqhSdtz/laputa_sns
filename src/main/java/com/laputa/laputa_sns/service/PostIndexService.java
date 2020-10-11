@@ -1,9 +1,9 @@
 package com.laputa.laputa_sns.service;
 
 import com.laputa.laputa_sns.common.*;
-import com.laputa.laputa_sns.model.Category;
-import com.laputa.laputa_sns.model.Operator;
-import com.laputa.laputa_sns.model.Post;
+import com.laputa.laputa_sns.model.entity.Category;
+import com.laputa.laputa_sns.model.entity.Operator;
+import com.laputa.laputa_sns.model.entity.Post;
 import com.laputa.laputa_sns.util.ProgOperatorManager;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;

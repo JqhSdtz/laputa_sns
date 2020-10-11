@@ -7,7 +7,7 @@ import com.laputa.laputa_sns.common.*;
 import com.laputa.laputa_sns.dao.UserDao;
 import com.laputa.laputa_sns.helper.QueryHelper;
 import com.laputa.laputa_sns.helper.RedisHelper;
-import com.laputa.laputa_sns.model.*;
+import com.laputa.laputa_sns.model.entity.*;
 import com.laputa.laputa_sns.util.CryptUtil;
 import com.laputa.laputa_sns.util.RedisUtil;
 import com.laputa.laputa_sns.validator.UserValidator;
@@ -33,7 +33,6 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import static com.laputa.laputa_sns.common.Result.FAIL;
 import static com.laputa.laputa_sns.common.Result.SUCCESS;
@@ -300,7 +299,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         if (checkNameResult.getState() == FAIL)
             return checkNameResult;
         user.setPwdSalt(CryptUtil.randUrlSafeStr(32, true));
-        user.setPassword(CryptUtil.md5(user.getPassword() + user.getPwdSalt()));
+        user.setPassword(CryptUtil.md5(user.getPassword() + user.getPwdSalt(), true));
         int res = insertOne(user);
         if (res == -1)
             return new Result(FAIL).setErrorCode(1010020104).setMessage("数据库操作失败");
@@ -374,7 +373,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         User resUser = selectOne(paramUser);
         if (resUser == null || resUser.getPassword() == null || resUser.getPwdSalt() == null)
             return new Result(FAIL).setErrorCode(1010020208).setMessage("数据库操作失败");
-        String testPwd = CryptUtil.md5(paramUser.getPassword() + resUser.getPwdSalt());
+        String testPwd = CryptUtil.md5(paramUser.getPassword() + resUser.getPwdSalt(), true);
         if (!testPwd.equals(resUser.getPassword()))
             return new Result(FAIL).setErrorCode(1010130209).setMessage("密码错误");
         return new Result(SUCCESS).setObject(resUser);

@@ -1,8 +1,8 @@
 package com.laputa.laputa_sns.controller;
 
 import com.laputa.laputa_sns.common.Result;
-import com.laputa.laputa_sns.model.Follow;
-import com.laputa.laputa_sns.model.Operator;
+import com.laputa.laputa_sns.model.entity.Follow;
+import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.service.FollowService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;

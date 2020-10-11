@@ -3,7 +3,6 @@ package com.laputa.laputa_sns.util;
 import com.laputa.laputa_sns.common.AbstractBaseEntity;
 import com.laputa.laputa_sns.common.QueryParam;
 import com.laputa.laputa_sns.common.Result;
-import com.laputa.laputa_sns.model.AbstractContent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Date;

@@ -1,4 +1,4 @@
-package com.laputa.laputa_sns.model;
+package com.laputa.laputa_sns.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 操作者，即登录用户
  * @author JQH
  * @since 上午 9:48 20/02/19
  */
@@ -30,31 +31,61 @@ public class Operator extends AbstractBaseEntity {
 
     private String entityType = "OPERATOR";
 
+    /**
+     * 用户基本信息
+     */
     private User user;
 
+    /**
+     * 用户权限信息
+     */
     @JsonProperty("permission_map")
     private Map<Integer, Integer> permissionMap;//Key是categoryId
 
+    /**
+     * 用户关注列表
+     */
     @JsonProperty("follow_list")
     private List<Follow> followList;
 
+    /**
+     * 用户的token，和User类中的token相同，用于登录验证
+     */
     private String token;
 
+    /**
+     * 登录信息，目前是登录失败的时候设置并返回
+     */
     @JsonProperty("log_message")
     private String logMessage;
 
+    /**
+     * 登录过期时间，该字段当前未使用
+     */
     @JsonProperty("expire_seconds")
     private Integer expireSeconds = 1800;
 
+    /**
+     * 用户当前未读动态数量
+     */
     @JsonProperty("unread_news_cnt")
     private Integer unreadNewsCnt;
 
+    /**
+     * 用户当前未读消息数量
+     */
     @JsonProperty("unread_notice_cnt")
     private Long unreadNoticeCnt;
 
+    /**
+     * 用户上一次发送请求的时间
+     */
     @JsonProperty("last_access_time")
     private Long lastAccessTime;
 
+    /**
+     * 该对象是否处于一个登录请求中
+     */
     @JsonProperty("from_login")
     private Boolean fromLogin;
 

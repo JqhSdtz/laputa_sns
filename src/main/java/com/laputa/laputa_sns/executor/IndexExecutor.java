@@ -3,8 +3,8 @@ package com.laputa.laputa_sns.executor;
 import com.laputa.laputa_sns.common.AbstractBaseEntity;
 import com.laputa.laputa_sns.common.QueryParam;
 import com.laputa.laputa_sns.common.Result;
-import com.laputa.laputa_sns.model.AbstractContent;
-import com.laputa.laputa_sns.model.Operator;
+import com.laputa.laputa_sns.model.entity.AbstractContent;
+import com.laputa.laputa_sns.model.entity.Operator;
 import lombok.SneakyThrows;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 

@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.laputa.laputa_sns.common.*;
 import com.laputa.laputa_sns.dao.CategoryDao;
 import com.laputa.laputa_sns.helper.RedisHelper;
-import com.laputa.laputa_sns.model.AdminOpsRecord;
-import com.laputa.laputa_sns.model.Category;
-import com.laputa.laputa_sns.model.Operator;
-import com.laputa.laputa_sns.model.Post;
+import com.laputa.laputa_sns.model.entity.AdminOpsRecord;
+import com.laputa.laputa_sns.model.entity.Category;
+import com.laputa.laputa_sns.model.entity.Operator;
+import com.laputa.laputa_sns.model.entity.Post;
 import com.laputa.laputa_sns.util.ProgOperatorManager;
 import com.laputa.laputa_sns.util.RedisUtil;
 import com.laputa.laputa_sns.validator.CategoryValidator;
@@ -105,7 +105,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
                 category.setIsLeaf(false).setOriPostCnt(0L);
             setPathList(category);//设置路径
         }
-        cascadeSetOriPostCnt(groundCategory);//设置贴子数
+        cascadeSetOriPostCnt(groundCategory);//设置帖子数
         Globals.CategoryServiceInitialized = true;
         log.info("目录树加载完成");
     }
@@ -642,7 +642,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             else
                 ori.setOriPostCnt(0L);
         }
-        cascadeSetOriPostCnt(groundCategory);//设置贴子数
+        cascadeSetOriPostCnt(groundCategory);//设置帖子数
         return "目录的帖子数校正" + r + "条数据";
     }
 

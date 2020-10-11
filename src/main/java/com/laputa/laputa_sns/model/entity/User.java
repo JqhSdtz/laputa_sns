@@ -1,4 +1,4 @@
-package com.laputa.laputa_sns.model;
+package com.laputa.laputa_sns.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Date;
 
 /**
+ * 用户
  * @author JQH
  * @since 上午 11:49 20/02/05
  */
@@ -28,48 +29,99 @@ public class User extends AbstractBaseEntity {
 
     private String entityType = "USER";
 
+    /**
+     * 昵称，也是登录名，可以是汉字
+     */
     @JsonProperty("nick_name")
     private String nickName;
+    /**
+     * 登录密码
+     */
     @JsonProperty(value = "password", access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
+    /**
+     * 密码的salt
+     */
     @JsonIgnore
     private String pwdSalt;
+    /**
+     * 用户的登录token
+     */
     @JsonIgnore
     private String token;
 
     @JsonProperty("wx_unionid")
     private String wxUnionId;
     private String email;
+    /**
+     * 用户的学校信息
+     */
     @JsonProperty("sch_info")
     private String schInfo;
     private String phone;
+    /**
+     * 用户的个人介绍
+     */
     private String intro;
+    /**
+     * 用户的头像地址
+     */
     @JsonProperty("raw_avatar")
     private String rawAvatar;
 
+    /**
+     * 用户个人中心的置顶帖子
+     */
     @JsonProperty("top_post_id")
     private Integer topPostId;
 
+    /**
+     * 粉丝数量
+     */
     @JsonProperty("followers_cnt")
     private Long followersCnt;
+    /**
+     * 关注数量
+     */
     @JsonProperty("following_cnt")
     private Long followingCnt;
+    /**
+     * 帖子数量
+     */
     @JsonProperty("post_cnt")
     private Long postCnt;
 
+    /**
+     * 当前登录用户是否关注了该用户
+     */
     @JsonProperty("followed_by_viewer")
     private Boolean followedByViewer;
 
+    /**
+     * 最近一次获取动态的时间
+     */
     @JsonIgnore
     private Date lastGetNewsTime;
+    /**
+     * 最近一次登录的时间
+     */
     @JsonProperty("last_login_time")
     private Date lastLoginTime;
+    /**
+     * 最近一次修改昵称的时间
+     */
     @JsonProperty("last_alter_name_time")
     private Date lastAlterNameTime;
+    /**
+     * 被禁言的截止时间
+     */
     @JsonProperty("talk_ban_to")
     private Date talkBanTo;
 
+    /**
+     * 最近访问的目录，用';'连接的目录ID字符串
+     */
     @JsonIgnore
     private String recentVisitCategories;
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.laputa.laputa_sns.dao.CommentL1Dao">
-	<resultMap id="CommentL1ResultMap" type="com.laputa.laputa_sns.model.CommentL1">
+	<resultMap id="CommentL1ResultMap" type="com.laputa.laputa_sns.model.entity.CommentL1">
 		<id column="comment_l1_id" property="id"/>
 		<result column="comment_l1_type" property="type"/>
 		<result column="comment_l1_post_id" property="post.id"/>
@@ -26,7 +26,7 @@
 		</choose>
 	</sql>
 
-	<select id="selectList" parameterType="com.laputa.laputa_sns.model.CommentL1" resultMap="CommentL1ResultMap">
+	<select id="selectList" parameterType="com.laputa.laputa_sns.model.entity.CommentL1" resultMap="CommentL1ResultMap">
 		select
 		<include refid="commentL1Columns">
 			<property name="prefix" value=""/>
@@ -59,7 +59,7 @@
 		</if>
 	</select>
 
-	<select id="selectOne" parameterType="com.laputa.laputa_sns.model.CommentL1" resultMap="CommentL1ResultMap">
+	<select id="selectOne" parameterType="com.laputa.laputa_sns.model.entity.CommentL1" resultMap="CommentL1ResultMap">
 		select
 		<include refid="commentL1Columns">
 			<property name="prefix" value=""/>
@@ -81,7 +81,7 @@
 		and comment_l1_del_flag = 0
 	</select>
 
-	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.CommentL1" useGeneratedKeys="true"
+	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.entity.CommentL1" useGeneratedKeys="true"
 	        keyProperty="id">
 		insert into lpt_comment_l1
 		<trim prefix="(" suffix=")" suffixOverrides=",">

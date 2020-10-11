@@ -1,4 +1,4 @@
-package com.laputa.laputa_sns.model;
+package com.laputa.laputa_sns.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,9 +13,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * 目录
  * @author JQH
  * @since 下午 2:43 20/02/05
  */
@@ -26,31 +26,67 @@ import java.util.concurrent.atomic.AtomicLong;
 @Accessors(chain = true)
 public class Category extends AbstractBaseEntity implements Cloneable {
 
-    public static final int TYPE_COMMON = 0;//普通目录
-    public static final int TYPE_PRIVATE = 1;//不向上层聚集的目录
-    public static final int TYPE_DEF_SUB = 2;//默认子目录
+    /**
+     * 普通目录，向上层聚集
+     */
+    public static final int TYPE_COMMON = 0;
+    /**
+     * 私有目录，不向上层聚集
+     */
+    public static final int TYPE_PRIVATE = 1;
+    /**
+     * 默认子目录，向上层聚集
+     */
+    public static final int TYPE_DEF_SUB = 2;
 
     private String entityType = "CATEGORY";
 
+    /**
+     * 目录名称
+     */
     private String name;
+    /**
+     * 目录介绍
+     */
     private String intro;
+    /**
+     * 封面图片地址
+     */
     @JsonProperty("cover_img")
     private String coverImg;
+    /**
+     * 本目录在父目录的展示顺序，由前端解析
+     */
     @JsonProperty("disp_seq")
     private Integer dispSeq;
 
+    /**
+     * 目录的帖子数，仅用作数据传输，在传输前读取oriPostCnt和缓存中的数量，临时计算并赋值
+     */
     @JsonProperty("post_cnt")
     private Long postCnt;
 
+    /**
+     * 目录的原始帖子数，即不算缓存的数量
+     */
     @JsonIgnore
     private Long oriPostCnt;
 
+    /**
+     * 目录缓存的帖子数量，用作初始化时获取加载的数量，以及刷新缓存时确定要驻留的数量
+     */
     @JsonProperty("cache_num")
     private Integer cacheNum;
 
+    /**
+     * 该目录的默认子目录，由前端解析，作用是选择目录的时候，如果不选子目录，则默认选中该目录，目前前端尚未处理该字段
+     */
     @JsonProperty("def_sub_id")
     private Integer defSubId;
 
+    /**
+     * 该目录的置顶帖子ID
+     */
     @JsonProperty("top_post_id")
     private Integer topPostId;
 
@@ -59,16 +95,31 @@ public class Category extends AbstractBaseEntity implements Cloneable {
 
     @JsonIgnore
     private Category parent;
+    /**
+     * 子目录列表
+     */
     @JsonIgnore
     private List<Category> subCategoryList = new ArrayList();
+    /**
+     * 新帖列表
+     */
     @JsonIgnore
     private IndexList latestPostList;
+    /**
+     * 热帖列表
+     */
     @JsonIgnore
     private IndexList popularPostList;
 
+    /**
+     * 该目录的路径，即从根目录到该目录的所有目录列表
+     */
     @JsonProperty("path_list")
     private List<Category> pathList;
 
+    /**
+     * 是否是叶目录
+     */
     @JsonProperty("is_leaf")
     private Boolean isLeaf;
 

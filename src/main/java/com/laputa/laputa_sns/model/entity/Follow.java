@@ -1,4 +1,4 @@
-package com.laputa.laputa_sns.model;
+package com.laputa.laputa_sns.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,6 +9,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**
+ * 关注关系
  * @author JQH
  * @since 下午 5:51 20/02/20
  */
@@ -19,7 +20,13 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class Follow extends AbstractBaseEntity {
 
+    /**
+     * 关注者
+     */
     private User follower;
+    /**
+     * 被关注者
+     */
     private User target;
 
     private String entityType = "FOLLOW";

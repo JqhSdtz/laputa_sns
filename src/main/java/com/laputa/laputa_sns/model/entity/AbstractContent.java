@@ -1,6 +1,5 @@
-package com.laputa.laputa_sns.model;
+package com.laputa.laputa_sns.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.laputa.laputa_sns.common.AbstractBaseEntity;
 import lombok.Getter;
 import lombok.Setter;

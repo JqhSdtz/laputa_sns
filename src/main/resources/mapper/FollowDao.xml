@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.laputa.laputa_sns.dao.FollowDao">
-	<resultMap id="FollowResultMap" type="com.laputa.laputa_sns.model.Follow">
+	<resultMap id="FollowResultMap" type="com.laputa.laputa_sns.model.entity.Follow">
 		<id column="follow_id" property="id"/>
 		<result column="follow_type" property="type"/>
 		<result column="follow_state" property="state"/>
@@ -24,7 +24,7 @@
 		</choose>
 	</sql>
 
-	<select id="selectList" parameterType="com.laputa.laputa_sns.model.Follow" resultMap="FollowResultMap">
+	<select id="selectList" parameterType="com.laputa.laputa_sns.model.entity.Follow" resultMap="FollowResultMap">
 		select
 		<include refid="followColumn"/>
 		from lpt_follow
@@ -54,7 +54,7 @@
 		</if>
 	</sql>
 
-	<select id="selectOne" parameterType="com.laputa.laputa_sns.model.Follow" resultMap="FollowResultMap">
+	<select id="selectOne" parameterType="com.laputa.laputa_sns.model.entity.Follow" resultMap="FollowResultMap">
 		select
 		<include refid="followColumn"/>
 		from lpt_follow
@@ -63,7 +63,7 @@
 		</where>
 	</select>
 
-	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.Follow" useGeneratedKeys="true"
+	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.entity.Follow" useGeneratedKeys="true"
 	        keyProperty="id">
 		insert into lpt_follow(follow_follower_id, follow_target_id<if test="type != null">,follow_type</if>)
 		values (#{followerId}, #{targetId}<if test="type != null">,#{type}</if>)
@@ -73,7 +73,7 @@
 		select #{followerId}, #{targetId}<if test="type != null">,#{type}</if> from dual
 		where not exists (select follow_id from lpt_follow where  follow_follower_id = #{followerId} and follow_target_id = #{targetId})-->
 
-	<update id="updateOne" parameterType="com.laputa.laputa_sns.model.Follow">
+	<update id="updateOne" parameterType="com.laputa.laputa_sns.model.entity.Follow">
 		update lpt_follow set
 		follow_type = #{type}
 		<where>
@@ -81,7 +81,7 @@
 		</where>
 	</update>
 
-	<delete id="deleteOne" parameterType="com.laputa.laputa_sns.model.Follow">
+	<delete id="deleteOne" parameterType="com.laputa.laputa_sns.model.entity.Follow">
 		delete
 		from lpt_follow
 		<where>

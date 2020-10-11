@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -24,7 +25,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Slf4j
 public class CryptUtil {
 
-    private static final String DEFAULT_CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";//默认的AES加密算法
+    private static final String DEFAULT_CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";//默认的AES加密算法
 
     private static final String HMAC_MD5_NAME = "HmacMD5";
 
@@ -44,27 +45,26 @@ public class CryptUtil {
             revPosSet[charSet[i]] = i;
     }
 
-    @Nullable
-    public static String aesEncrypt(String key, String content) {
-        try {
-            Cipher cipher = Cipher.getInstance(DEFAULT_CIPHER_ALGORITHM);
-            byte[] byteContent = content.getBytes("utf-8");
-            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key.getBytes("UTF-8"), "AES"));// 初始化为加密模式的密码器
-            byte[] result = cipher.doFinal(byteContent);
-            return Base64.encodeBase64String(result);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return null;
-    }
+//    @Nullable
+//    public static String aesEncrypt(String key, String content, String iv) {
+//        try {
+//            Cipher cipher = Cipher.getInstance(DEFAULT_CIPHER_ALGORITHM);
+//            byte[] byteContent = content.getBytes("utf-8");
+//            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key.getBytes("UTF-8"), "AES"), new IvParameterSpec(iv.getBytes()));// 初始化为加密模式的密码器
+//            byte[] result = cipher.doFinal(byteContent);
+//            return Base64.encodeBase64String(result);
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
+//        return null;
+//    }
 
     @Nullable
-    public static String aesDecrypt(String key, String content) {
+    public static String aesDecrypt(String key, String content, String iv) {
         try {
             Cipher cipher = Cipher.getInstance(DEFAULT_CIPHER_ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key.getBytes("UTF-8"), "AES"));
-            byte[] base64 = Base64.decodeBase64(content);
-            byte[] result = cipher.doFinal(base64);
+            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(Base64.decodeBase64(key), "AES"), new IvParameterSpec(Base64.decodeBase64(iv)));
+            byte[] result = cipher.doFinal(Base64.decodeBase64(content));
             return new String(result, "utf-8");
         } catch (Exception e) {
             //e.printStackTrace();
@@ -72,19 +72,29 @@ public class CryptUtil {
         return null;
     }
 
-    public static String md5(@NotNull String str) {
+    private static String messageDigest(@NotNull String str, String alg) {
         byte[] secretBytes = null;
         try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
+            MessageDigest md = MessageDigest.getInstance(alg);
             md.update(str.getBytes());
             secretBytes = md.digest();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        String md5code = new BigInteger(1, secretBytes).toString(16);
-        for (int i = 0; i < 32 - md5code.length(); i++)
-            md5code = "0" + md5code;
+        return new BigInteger(1, secretBytes).toString(16);
+    }
+
+    public static String md5(@NotNull String str, boolean withPadding) {
+        String md5code = messageDigest(str, "MD5");
+        if (withPadding) {
+            for (int i = 0; i < 32 - md5code.length(); i++)
+                md5code = "0" + md5code;
+        }
         return md5code;
+    }
+
+    public static String sha1(@NotNull String str) {
+        return messageDigest(str, "SHA");
     }
 
     @Nullable

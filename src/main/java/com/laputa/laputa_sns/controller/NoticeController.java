@@ -2,10 +2,9 @@ package com.laputa.laputa_sns.controller;
 
 import com.laputa.laputa_sns.common.QueryParam;
 import com.laputa.laputa_sns.common.Result;
-import com.laputa.laputa_sns.model.Notice;
-import com.laputa.laputa_sns.model.Operator;
+import com.laputa.laputa_sns.model.entity.Notice;
+import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.service.NoticeService;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

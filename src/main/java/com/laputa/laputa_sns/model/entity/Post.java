@@ -1,4 +1,4 @@
-package com.laputa.laputa_sns.model;
+package com.laputa.laputa_sns.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
+ * 帖子
  * @author JQH
  * @since 下午 2:43 20/02/05
  */
@@ -26,77 +27,171 @@ import java.util.List;
 @JsonFilter("PostFilter")
 public class Post extends AbstractContent<Post> {
 
+    /**
+     * 公开的帖子，会出现在所发表的目录，个人主页以及粉丝的动态中
+     */
     public static final int TYPE_PUBLIC = 0;
+
+    /**
+     * 转发的帖子，会出现在个人主页以及粉丝的动态中
+     */
     public static final int TYPE_FORWARD = 1;
+
+    /**
+     * 非公开的帖子，会出现在个人主页以及粉丝的动态中
+     */
     public static final int TYPE_PRIVATE = 2;
 
+    /**
+     * 该帖子对象从属于一个目录，即处于查询某个目录的帖子的请求中
+     */
     public static final int OF_CATEGORY = 1;
+    /**
+     * 该帖子对象从属于一个用户，即处于查询某个用户所发表的帖子的请求中
+     */
     public static final int OF_CREATOR = 2;
+    /**
+     * 该帖子对象从属于一个被转发的帖子，即处于查询某个帖子的转发帖子的请求中
+     */
     public static final int OF_SUP_POST = 3;
 
     private String entityType = "POST";
 
     private Integer ofType;
 
+    /**
+     * 帖子的完整内容，短帖子没有该字段
+     */
     @JsonIgnore
     private String fullText;
+    /**
+     * 帖子的完整内容ID，完整内容和帖子不在一个表中存储
+     */
     @JsonProperty("full_text_id")
     private Integer fullTextId;
+    /**
+     * 是否查询完整内容
+     */
     private Integer queryFullText;
 
+    /**
+     * 帖子标题
+     */
     private String title;
+    /**
+     * 帖子内容(可能不是完整内容)
+     */
     private String content;
+    /**
+     * 帖子图片的原始字段值，即多个路径拼成的字符串
+     */
     @JsonProperty("raw_img")
     private String rawImg;
+    /**
+     * 帖子内容长度(完整内容)
+     */
     private Integer length;
 
+    /**
+     * 帖子是否允许转发
+     */
     @JsonProperty("allow_forward")
     private Integer allowForward;
 
+    /**
+     * 帖子的上级帖子，即被转发帖子(仅在该帖是转发帖的时候存在)
+     */
     @JsonProperty("sup_id")
     private Integer supId;
+    /**
+     * 帖子的原始帖子ID，即一次或多次转发的时候，最初的帖子(仅在该帖是转发帖的时候存在)
+     */
     @JsonProperty("ori_id")
     private Integer oriId;
-
+    /**
+     * 帖子的原始帖子
+     */
     @JsonProperty("ori_post")
     private Post oriPost;
 
+    /**
+     * 帖子所属目录
+     */
     @JsonIgnore
     private Category category;
 
+    /**
+     * 帖子点赞数
+     */
     @JsonProperty("like_cnt")
     private Long likeCnt;
+    /**
+     * 帖子评论数(一级评论)
+     */
     @JsonProperty("comment_cnt")
     private Long commentCnt;
+    /**
+     * 帖子转发数
+     */
     @JsonProperty("forward_cnt")
     private Long forwardCnt;
+    /**
+     * 帖子查看数，当前未使用
+     */
     @JsonProperty("view_cnt")
     private Long viewCnt;
 
+    /**
+     * 当前登录用户是否给该帖子点赞，仅在数据传输时使用
+     */
     @JsonProperty("liked_by_viewer")
     private Boolean likedByViewer;
 
+    /**
+     * 当前帖子是否被置顶，仅在数据传输时使用
+     */
     @JsonProperty("is_topped")
     private Boolean isTopped;
 
+    /**
+     * 最近活跃时间，当前未使用
+     */
     @JsonProperty("latest_time")
     private Date latestTime;
 
+    /**
+     * 当前帖子的置顶评论ID(一级评论)
+     */
     @JsonProperty("top_comment_id")
     private Integer topCommentId;
 
+    /**
+     * 帖子创建者
+     */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private User creator;
 
+    /**
+     * 当前用户对该帖子的权限
+     */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private PostRight rights;
 
+    /**
+     * 预览的一级评论列表，在查看某个帖子详情的时候会用到，用于数据传输
+     */
     @JsonProperty("preview_comment_list")
     private List<CommentL1> previewCommentList;
 
+    /**
+     * 该帖子是否在最新帖子索引中
+     */
     @JsonIgnore
     private Boolean lIndexedFlag;
 
+    /**
+     * 该帖子是否在最热帖子索引中
+     */
     @JsonIgnore
     private Boolean pIndexedFlag;
 

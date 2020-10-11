@@ -1,4 +1,4 @@
-package com.laputa.laputa_sns.model;
+package com.laputa.laputa_sns.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -10,6 +10,7 @@ import lombok.experimental.Accessors;
 import java.util.List;
 
 /**
+ * 权限，
  * @author JQH
  * @since 下午 4:31 20/02/05
  */
@@ -21,7 +22,13 @@ import java.util.List;
 @JsonFilter("PermissionFilter")
 public class Permission extends AbstractBaseEntity {
 
+    /**
+     * 该权限对象从属于某个目录下，即处于查询某个目录的有权限的用户列表的请求中
+     */
     public static final int OF_CATEGORY = 1;
+    /**
+     * 该权限对象从属于某个用户下，即处于查询某个用户的有权限的目录列表的请求中
+     */
     public static final int OF_USER = 2;
 
     private Integer ofType;
@@ -34,6 +41,9 @@ public class Permission extends AbstractBaseEntity {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private User creator;
 
+    /**
+     * 权限等级，在执行某些需要权限的操作时进行判断
+     */
     private Integer level;
 
     @JsonProperty("category_path")

@@ -1,12 +1,9 @@
 package com.laputa.laputa_sns.dao;
 
 import com.laputa.laputa_sns.common.BaseDao;
-import com.laputa.laputa_sns.common.TmpEntry;
-import com.laputa.laputa_sns.model.CommentL1;
+import com.laputa.laputa_sns.model.entity.CommentL1;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * @author JQH

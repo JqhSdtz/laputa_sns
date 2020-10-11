@@ -1,8 +1,8 @@
 package com.laputa.laputa_sns.controller;
 
 import com.laputa.laputa_sns.common.Result;
-import com.laputa.laputa_sns.model.Operator;
-import com.laputa.laputa_sns.model.User;
+import com.laputa.laputa_sns.model.entity.Operator;
+import com.laputa.laputa_sns.model.entity.User;
 import com.laputa.laputa_sns.service.OperatorService;
 import org.springframework.web.bind.annotation.*;
 

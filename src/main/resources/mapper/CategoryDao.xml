@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.laputa.laputa_sns.dao.CategoryDao">
 
-	<resultMap id="CategoryResultMap" type="com.laputa.laputa_sns.model.Category">
+	<resultMap id="CategoryResultMap" type="com.laputa.laputa_sns.model.entity.Category">
 		<id column="category_id" property="id"/>
 		<result column="category_name" property="name"/>
 		<result column="category_type" property="type"/>
@@ -19,13 +19,13 @@
 		<result column="category_create_time" property="createTime"/>
 	</resultMap>
 
-	<select id="selectList" parameterType="com.laputa.laputa_sns.model.Category" resultMap="CategoryResultMap">
+	<select id="selectList" parameterType="com.laputa.laputa_sns.model.entity.Category" resultMap="CategoryResultMap">
 		select *
 		from lpt_category
 		where category_del_flag = 0;
 	</select>
 
-	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.Category" useGeneratedKeys="true"
+	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.entity.Category" useGeneratedKeys="true"
 	        keyProperty="id">
 		insert into lpt_category
 		<trim prefix="(" suffix=")" suffixOverrides=",">
@@ -47,7 +47,7 @@
 		</trim>
 	</insert>
 
-	<update id="updateOne" parameterType="com.laputa.laputa_sns.model.Category">
+	<update id="updateOne" parameterType="com.laputa.laputa_sns.model.entity.Category">
 		update lpt_category
 		<set>
 			<if test="name != null">category_name = #{name},</if>

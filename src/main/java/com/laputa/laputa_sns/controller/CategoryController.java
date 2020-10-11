@@ -1,8 +1,8 @@
 package com.laputa.laputa_sns.controller;
 
 import com.laputa.laputa_sns.common.Result;
-import com.laputa.laputa_sns.model.Category;
-import com.laputa.laputa_sns.model.Operator;
+import com.laputa.laputa_sns.model.entity.Category;
+import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.service.CategoryService;
 import com.laputa.laputa_sns.view.CategoryView;
 import com.laputa.laputa_sns.vo.CategoryVo;

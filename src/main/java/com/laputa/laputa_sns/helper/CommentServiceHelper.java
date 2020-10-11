@@ -2,7 +2,7 @@ package com.laputa.laputa_sns.helper;
 
 import com.laputa.laputa_sns.common.*;
 import com.laputa.laputa_sns.executor.IndexExecutor;
-import com.laputa.laputa_sns.model.*;
+import com.laputa.laputa_sns.model.entity.*;
 import com.laputa.laputa_sns.service.*;
 import com.laputa.laputa_sns.util.RedisUtil;
 import lombok.SneakyThrows;

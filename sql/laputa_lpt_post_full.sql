@@ -26,7 +26,7 @@ CREATE TABLE `lpt_post_full` (
   `post_full_id` int NOT NULL AUTO_INCREMENT,
   `post_full_text` text NOT NULL,
   PRIMARY KEY (`post_full_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='较长的贴子的完整内容 ';
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='较长的帖子的完整内容 ';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

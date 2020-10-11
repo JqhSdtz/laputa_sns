@@ -1,4 +1,4 @@
-package com.laputa.laputa_sns.model;
+package com.laputa.laputa_sns.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**
+ * 点赞记录
  * @author JQH
  * @since 下午 3:08 20/02/24
  */
@@ -24,9 +25,15 @@ public class LikeRecord extends AbstractBaseEntity {
 
     private String entityType = "LIKE";
 
+    /**
+     * 点赞目标的ID
+     */
     @JsonProperty("target_id")
     private Integer targetId;
 
+    /**
+     * 点赞发起人
+     */
     private User creator;
 
     @JsonProperty("creator_id")

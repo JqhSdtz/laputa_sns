@@ -1,8 +1,8 @@
 package com.laputa.laputa_sns.dao;
 
 import com.laputa.laputa_sns.common.BaseDao;
-import com.laputa.laputa_sns.model.User;
-import com.laputa.laputa_sns.model.UserRecvSetting;
+import com.laputa.laputa_sns.model.entity.User;
+import com.laputa.laputa_sns.model.entity.UserRecvSetting;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 

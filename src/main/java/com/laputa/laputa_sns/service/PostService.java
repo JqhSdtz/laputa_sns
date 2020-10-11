@@ -10,7 +10,7 @@ import com.laputa.laputa_sns.helper.CommentServiceHelper;
 import com.laputa.laputa_sns.helper.QueryHelper;
 import com.laputa.laputa_sns.helper.RedisHelper;
 import com.laputa.laputa_sns.helper.SimpleQueryHelper;
-import com.laputa.laputa_sns.model.*;
+import com.laputa.laputa_sns.model.entity.*;
 import com.laputa.laputa_sns.util.CryptUtil;
 import com.laputa.laputa_sns.util.QueryTokenUtil;
 import com.laputa.laputa_sns.util.RedisUtil;
@@ -525,7 +525,7 @@ public class PostService extends BaseService<PostDao, Post> {
             return new Result(FAIL).setErrorCode(1010050103).setMessage("数据库操作失败");
         post.setLikeCnt(0L).setCommentCnt(0L).setViewCnt(0L).setForwardCnt(0L);
         if (post.getType().equals(Post.TYPE_PUBLIC)) {
-            categoryService.cascadeUpdatePostCnt(category.getId(), 1L);//修改目录的贴子数
+            categoryService.cascadeUpdatePostCnt(category.getId(), 1L);//修改目录的帖子数
             postIndexService.addPostIndex(post, LATEST, true, null);//新创建的post的latest索引标志默认为1
         }
         userService.updatePostCnt(post.getCreatorId(), 1L);
@@ -588,7 +588,7 @@ public class PostService extends BaseService<PostDao, Post> {
             return new Result(FAIL).setErrorCode(1010050110).setMessage("数据库操作失败");
         redisHelper.removeEntity(post.getId());
         if (post.getType().equals(Post.TYPE_PUBLIC)) {
-            categoryService.cascadeUpdatePostCnt(category.getId(), -1L);//修改目录的贴子数
+            categoryService.cascadeUpdatePostCnt(category.getId(), -1L);//修改目录的帖子数
             //删除帖子不需要修改indexed_flag，删除的帖子不影响数据库查询结果，评论数据同理
             postIndexService.deletePostIndex(post, LATEST);
             postIndexService.deletePostIndex(post, POPULAR);

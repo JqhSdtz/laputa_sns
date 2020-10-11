@@ -1,8 +1,8 @@
 package com.laputa.laputa_sns.controller;
 
 import com.laputa.laputa_sns.common.Result;
-import com.laputa.laputa_sns.model.Operator;
-import com.laputa.laputa_sns.model.Post;
+import com.laputa.laputa_sns.model.entity.Operator;
+import com.laputa.laputa_sns.model.entity.Post;
 import com.laputa.laputa_sns.service.PostIndexService;
 import com.laputa.laputa_sns.service.PostService;
 import org.jetbrains.annotations.NotNull;

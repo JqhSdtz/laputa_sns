@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.laputa.laputa_sns.dao.UserDao">
 
-	<resultMap id="UserResultMap" type="com.laputa.laputa_sns.model.User">
+	<resultMap id="UserResultMap" type="com.laputa.laputa_sns.model.entity.User">
 		<id column="user_id" property="id"/>
 		<result column="user_type" property="type"/>
 		<result column="user_state" property="state"/>
@@ -27,7 +27,7 @@
 		<result column="user_create_time" property="createTime"/>
 	</resultMap>
 
-	<resultMap id="UserRecvSettingResultMap" type="com.laputa.laputa_sns.model.UserRecvSetting">
+	<resultMap id="UserRecvSettingResultMap" type="com.laputa.laputa_sns.model.entity.UserRecvSetting">
 		<id column="user_id" property="user.id"/>
 		<result column="user_recv_like" property="recvLike"/>
 		<result column="user_recv_email" property="recvEmail"/>
@@ -66,7 +66,7 @@
 		</choose>
 	</sql>
 
-	<select id="selectList" parameterType="com.laputa.laputa_sns.model.User" resultMap="UserResultMap">
+	<select id="selectList" parameterType="com.laputa.laputa_sns.model.entity.User" resultMap="UserResultMap">
 		select
 		<include refid="userColumns">
 			<property name="prefix" value=""/>
@@ -107,7 +107,7 @@
 	</select>
 
 	<!--以后有其他登录方式，可以在这里改-->
-	<select id="selectOne" parameterType="com.laputa.laputa_sns.model.User" resultMap="UserResultMap">
+	<select id="selectOne" parameterType="com.laputa.laputa_sns.model.entity.User" resultMap="UserResultMap">
 		select
 		<include refid="userColumns">
 			<property name="prefix" value=""/>
@@ -134,7 +134,7 @@
 		where user_id = #{id}
 	</select>
 
-	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.User" useGeneratedKeys="true" keyProperty="id">
+	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.entity.User" useGeneratedKeys="true" keyProperty="id">
 		insert into lpt_user
 		<trim prefix="(" suffix=")" suffixOverrides=",">
 			user_nickname, user_wx_unionid, user_email, user_phone, user_password, user_pwd_salt
@@ -149,7 +149,7 @@
 		</trim>
 	</insert>
 
-	<update id="updateOne" parameterType="com.laputa.laputa_sns.model.User">
+	<update id="updateOne" parameterType="com.laputa.laputa_sns.model.entity.User">
 		update lpt_user
 		<set>
 			<if test="nickName != null">user_nickname = #{nickName},</if>
@@ -168,7 +168,7 @@
 		where user_id = #{id}
 	</update>
 
-	<update id="updateRecvSetting" parameterType="com.laputa.laputa_sns.model.UserRecvSetting">
+	<update id="updateRecvSetting" parameterType="com.laputa.laputa_sns.model.entity.UserRecvSetting">
 		update lpt_user
 		<set>
 			<if test="recvLike != null">user_recv_like = #{recvLike},</if>

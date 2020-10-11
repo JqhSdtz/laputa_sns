@@ -1,9 +1,9 @@
 package com.laputa.laputa_sns.validator;
 
 import com.laputa.laputa_sns.common.Result;
-import com.laputa.laputa_sns.model.Category;
-import com.laputa.laputa_sns.model.Operator;
-import com.laputa.laputa_sns.model.Permission;
+import com.laputa.laputa_sns.model.entity.Category;
+import com.laputa.laputa_sns.model.entity.Operator;
+import com.laputa.laputa_sns.model.entity.Permission;
 import com.laputa.laputa_sns.service.CategoryService;
 import com.laputa.laputa_sns.service.PermissionService;
 import com.laputa.laputa_sns.util.ProgOperatorManager;

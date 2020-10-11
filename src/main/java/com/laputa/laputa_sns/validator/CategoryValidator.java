@@ -1,7 +1,7 @@
 package com.laputa.laputa_sns.validator;
 
-import com.laputa.laputa_sns.model.Category;
-import com.laputa.laputa_sns.model.Operator;
+import com.laputa.laputa_sns.model.entity.Category;
+import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.right.CategoryRight;
 import com.laputa.laputa_sns.service.CategoryService;
 import com.laputa.laputa_sns.service.PermissionService;
@@ -74,7 +74,7 @@ public class CategoryValidator {
         return permissionLevel != null && permissionLevel >= UPDATE_CATEGORY_PRE_CACHED_NUM;
     }
 
-    /**检查更新目录置顶贴子权限*/
+    /**检查更新目录置顶帖子权限*/
     public boolean checkUpdateTopPostPermission(Category category, @NotNull Operator operator) {//更新目录操作要求本目录权限
         if(operator .getId().equals(-1))
             return false;
@@ -82,7 +82,7 @@ public class CategoryValidator {
         return permissionLevel != null && permissionLevel >= SET_CATEGORY_TOP_POST;
     }
 
-    /**检查更新目录置顶贴子权限*/
+    /**检查更新目录置顶帖子权限*/
     public boolean checkUpdateDefSubPermission(Category category, @NotNull Operator operator) {//更新目录操作要求本目录权限
         if(operator .getId().equals(-1))
             return false;

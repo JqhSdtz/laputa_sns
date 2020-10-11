@@ -1,8 +1,7 @@
 package com.laputa.laputa_sns.validator;
 
-import com.laputa.laputa_sns.model.LikeRecord;
-import com.laputa.laputa_sns.model.Operator;
-import com.laputa.laputa_sns.util.ProgOperatorManager;
+import com.laputa.laputa_sns.model.entity.LikeRecord;
+import com.laputa.laputa_sns.model.entity.Operator;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
