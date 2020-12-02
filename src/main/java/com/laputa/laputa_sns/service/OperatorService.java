@@ -27,6 +27,7 @@ import static com.laputa.laputa_sns.common.Result.FAIL;
 import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
+ * 操作者相关的服务
  * @author JQH
  * @since 上午 9:50 20/02/19
  */

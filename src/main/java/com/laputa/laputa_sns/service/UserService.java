@@ -38,6 +38,7 @@ import static com.laputa.laputa_sns.common.Result.FAIL;
 import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
+ * 用户服务，包括用户的增加、修改等
  * @author JQH
  * @since 下午 11:09 20/02/12
  */

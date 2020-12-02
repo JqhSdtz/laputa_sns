@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * 微信相关的服务
  * @author JQH
  * @since 下午 7:37 20/06/11
  */

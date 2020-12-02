@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 /**
+ * 索引列表，使用链表的形式，支持随机读写和位置变更
  * @author JQH
  * @since 下午 3:59 20/02/22
  */
@@ -178,7 +179,12 @@ public class IndexList {
         return rPole.left.data;
     }
 
-    /**若getRemained为true则返回缩减后剩余的节点，否则返回被缩减掉的节点*/
+    /**
+     * 若getRemained为true则返回缩减后剩余的节点，否则返回被缩减掉的节点
+     * @param size
+     * @param getRemained
+     * @return
+     */
     public synchronized List<Index> trim(int size, boolean getRemained) {
         Node node = lPole;
         List<Index> remainedList = getRemained ? new ArrayList() : null;

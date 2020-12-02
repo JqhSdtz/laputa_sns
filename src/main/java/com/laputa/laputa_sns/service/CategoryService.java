@@ -33,7 +33,8 @@ import static com.laputa.laputa_sns.common.Result.FAIL;
 import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
- * 除初始化过程外，任何需要直接改动原有Category对象的方法都应该设为同步！
+ * 目录服务
+ * 注：除初始化过程外，任何需要直接改动原有Category对象的方法都应该设为同步！
  * @author JQH
  * @since 下午 8:17 20/02/06
  */
@@ -110,6 +111,11 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         log.info("目录树加载完成");
     }
 
+    /**
+     * 级联地设置基础目录对象的帖子数据，在初始化和校正数据的时候调用
+     * @param root
+     * @return
+     */
     private long cascadeSetOriPostCnt(@NotNull Category root) {
         if (root.getIsLeaf() == null || root.getIsLeaf())
             return root.getOriPostCnt();
@@ -361,7 +367,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     }
 
     /**
-     * 读取目录
+     * 读取目录，从基础的目录对象克隆出来，保证基础的目录对象不被修改
      */
     public Result<Category> readCategory(Integer categoryId, boolean withCounter, Operator operator) {
         Result<Category> result = getCategory(categoryId, operator);
@@ -373,6 +379,15 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         return result;
     }
 
+    /**
+     * 给目标对象列表添加目录对象属性
+     * @param entityList
+     * @param getCategoryIdMethod
+     * @param setCategoryMethod
+     * @param operator
+     * @param <T>
+     * @return
+     */
     @SneakyThrows
     public <T> Result multiSetCategory(List<T> entityList, Method getCategoryIdMethod, Method setCategoryMethod, Operator operator) {
         for (int i = 0; i < entityList.size(); ++i) {
@@ -401,6 +416,13 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         return new Result(SUCCESS).setObject(categoryList);
     }
 
+    /**
+     * 写入管理员操作记录
+     * @param category
+     * @param type
+     * @param operator
+     * @return
+     */
     @SneakyThrows
     private Result writeToAdminOpsRecord(Category category, int type, Operator operator) {
         AdminOpsRecord record = new AdminOpsRecord();
@@ -431,6 +453,13 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         return writeToAdminOpsRecord(category, AdminOpsRecord.TYPE_CREATE_CATEGORY, operator);
     }
 
+    /**
+     * 读取基础的目录对象，需谨慎调用，基础目录对象长期存在
+     * @param categoryId
+     * @param withCounter
+     * @param operator
+     * @return
+     */
     private Result<Category> readOriginalCategory(Integer categoryId, boolean withCounter, Operator operator) {
         Result<Category> result = getCategory(categoryId, operator);
         if (result.getState() == SUCCESS) {
@@ -493,6 +522,12 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         return writeToAdminOpsRecord((Category) opParam.setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_INFO, operator);
     }
 
+    /**
+     * 更新目录的展示顺序
+     * @param paramObject
+     * @param operator
+     * @return
+     */
     public synchronized Result updateCategoryDispSeq(@NotNull Category paramObject, Operator operator) {
         if (!paramObject.isValidUpdateDispSeqParam() || !paramObject.isValidOpComment())
             return new Result(FAIL).setErrorCode(1010010229).setMessage("操作失败，参数不合法");
@@ -510,6 +545,12 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         return writeToAdminOpsRecord((Category) opParam.setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_DISP_SEQ, operator);
     }
 
+    /**
+     * 更新目录的缓存数量
+     * @param paramObject
+     * @param operator
+     * @return
+     */
     public synchronized Result updateCategoryCacheNum(@NotNull Category paramObject, Operator operator) {
         if (!paramObject.isValidUpdateCacheNumParam() || !paramObject.isValidOpComment())
             return new Result(FAIL).setErrorCode(1010010232).setMessage("操作失败，参数不合法");
@@ -628,6 +669,10 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         return writeToAdminOpsRecord((Category) category.setOpComment(param.getOpComment()), AdminOpsRecord.TYPE_DELETE_CATEGORY, operator);
     }
 
+    /**
+     * 校正目录的多个计数属性
+     * @return
+     */
     public synchronized String correctCounters() {
         int r = dao.correctPostCnt(new ArrayList(leafCategorySet));
         if (r == 0)

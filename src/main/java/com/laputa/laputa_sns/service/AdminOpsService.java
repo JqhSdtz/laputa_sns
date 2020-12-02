@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
+ * 管理员操作服务
  * @author JQH
  * @since 下午 3:32 20/04/24
  */
@@ -26,6 +27,12 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
         this.userService = userService;
     }
 
+    /**
+     * 创建一条管理员操作记录
+     * @param param
+     * @param operator
+     * @return
+     */
     public Result<Integer> createAdminOpsRecord(AdminOpsRecord param, Operator operator) {
         if (!param.isValidInsertParam())
             return new Result(Result.FAIL).setErrorCode(1010190201).setMessage("操作失败，参数错误");
@@ -38,6 +45,12 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
         return new Result(Result.SUCCESS).setObject(res);
     }
 
+    /**
+     * 读取一条管理员操作记录
+     * @param id
+     * @param operator
+     * @return
+     */
     public Result<AdminOpsRecord> readRecord(Integer id, Operator operator) {
         if (id == null)
             return new Result(Result.FAIL).setErrorCode(1010190204).setMessage("操作失败，参数错误");
@@ -52,6 +65,12 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
         return new Result(Result.SUCCESS).setObject(res);
     }
 
+    /**
+     * 根据条件读取多条管理员操作记录
+     * @param param
+     * @param operator
+     * @return
+     */
     @SneakyThrows
     public Result<List<AdminOpsRecord>> readRecordList(AdminOpsRecord param, Operator operator) {
         if (!param.isValidReadIndexParam())

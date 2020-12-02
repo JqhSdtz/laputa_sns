@@ -31,6 +31,7 @@ import static com.laputa.laputa_sns.common.Result.FAIL;
 import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
+ * 内容动态服务(Feed流)
  * 等有钱了，Feed流改成推模式，现在暂时用拉模式
  *
  * @author JQH
@@ -223,7 +224,14 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
         redisTemplate.opsForZSet().remove(getNewsOutBoxKey(userId), String.valueOf(postId));
     }
 
-    //根据关注列表返回已经取关但还在列表中的PostNews对应的Redis中ZSet的Value
+    /**
+     * 根据关注列表返回已经取关但还在列表中的PostNews对应的Redis中ZSet的Value
+     * @param postNewsList
+     * @param numLimit
+     * @param followingList
+     * @param operator
+     * @return
+     */
     private Result<List<String>> fillPostNewsWithPost(List<PostNews> postNewsList, Integer numLimit, List<Follow> followingList, Operator operator) {
         int limit = numLimit == null ? postNewsList.size() : Math.min(numLimit, postNewsList.size());
         List<Integer> postIdList = new ArrayList(limit);

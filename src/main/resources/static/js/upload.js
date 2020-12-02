@@ -1,5 +1,5 @@
 if (typeof imgUrl === 'undefined')
-    imgUrl = baseUrl + '/oss/com'
+    imgUrl = lpt.baseUrl + '/oss/com'
 if (typeof uploadLmt === 'undefined')
     uploadLmt = 1;
 let rawImg = null;

@@ -7,43 +7,35 @@ function createOrCancelLike(elem, type) {
     const liked = $(elem).attr('data-liked');
     const likeCnt = parseInt($('#like_cnt_' + type + '_' + id).text());
     if (liked === '0') {//创建
-        $.ajax({
-            type: 'POST',
-            url: baseUrl + '/like/' + type,
-            contentType: 'application/json',
-            dataType: 'json',
-            data: JSON.stringify({
+        lpt.likeServ.like({
+            data: {
+                type: type,
                 target_id: id
-            }),
-            success: function (result) {
-                if (result.state === 1) {
-                    $(elem).removeClass('icon-heart-empty');
-                    $(elem).addClass('icon-heart');
-                    $(elem).attr('data-liked', '1');
-                    $('#like_cnt_' + type + '_' + id).text(likeCnt + 1);
-                } else {
-                    alert(result.message);
-                }
+            },
+            success: function () {
+                $(elem).removeClass('icon-heart-empty');
+                $(elem).addClass('icon-heart');
+                $(elem).attr('data-liked', '1');
+                $('#like_cnt_' + type + '_' + id).text(likeCnt + 1);
+            },
+            fail: function (result) {
+                alert(result.message);
             }
         });
     } else {//取消
-        $.ajax({
-            type: 'DELETE',
-            url: baseUrl + '/like/' + type,
-            contentType: 'application/json',
-            dataType: 'json',
-            data: JSON.stringify({
+        lpt.likeServ.unlike({
+            data: {
+                type: type,
                 target_id: id
-            }),
-            success: function (result) {
-                if (result.state === 1) {
-                    $(elem).removeClass('icon-heart');
-                    $(elem).addClass('icon-heart-empty');
-                    $(elem).attr('data-liked', '0');
-                    $('#like_cnt_' + type + '_' + id).text(likeCnt - 1);
-                } else {
-                    alert(result.message);
-                }
+            },
+            success: function () {
+                $(elem).removeClass('icon-heart');
+                $(elem).addClass('icon-heart-empty');
+                $(elem).attr('data-liked', '0');
+                $('#like_cnt_' + type + '_' + id).text(likeCnt - 1);
+            },
+            fail: function (result) {
+                alert(result.message);
             }
         });
     }
@@ -53,58 +45,52 @@ function delContent(elem) {
     const id = parseInt($(elem).attr('data-id'));
     const type = $(elem).attr('data-type');
     const creatorId = parseInt($(elem).attr('data-creator-id'));
-    let url, targetElem, parentCntElem;
+    let targetElem, parentCntElem;
     if (type === 'POST') {
-        url = '/post';
         targetElem = $('#post_' + id);
     } else if (type === 'CML1') {
-        url = '/comment/l1';
         targetElem = $('#comment_l1_' + id);
         parentCntElem = $('#comment_l1_cnt_' + id);
     } else if (type === 'CML2') {
-        url = '/comment/l2';
         targetElem = $('#comment_l2_' + id);
         parentCntElem = $('#comment_l2_cnt_' + id);
     }
     let comment;
     if (creatorId !== getOperator().user_id)
         comment = prompt("请输入操作原因(5-256个字)", "");
-    $.ajax({
-        type: 'DELETE',
-        url: baseUrl + url,
-        contentType: 'application/json',
-        dataType: 'json',
-        data: JSON.stringify({
+    lpt.contentServ.delete({
+        data: {
+            type: type,
             id: id,
             op_comment: comment
-        }),
-        success: function (result) {
-            if (result.state === 1) {
-                alert('删除成功');
-                targetElem.hide();
-                if (typeof parentCntElem !== 'undefined') {
-                    const oriCnt = parseInt(parentCntElem.text());
-                    parentCntElem.text(oriCnt - 1);
-                }
-            } else
-                alert(result.message);
+        },
+        success: function () {
+            alert('删除成功');
+            targetElem.hide();
+            if (typeof parentCntElem !== 'undefined') {
+                const oriCnt = parseInt(parentCntElem.text());
+                parentCntElem.text(oriCnt - 1);
+            }
+        },
+        fail: function (result) {
+            alert(result.message);
         }
-    })
+    });
 }
 
 function showFullText(elem) {
     const fullTextId = parseInt($(elem).attr('data-full-text-id'));
     const id = parseInt($(elem).attr('data-id'));
-    $.ajax({
-        type: 'GET',
-        url: baseUrl + '/post/full_text/' + fullTextId,
-        dataType: 'json',
+    lpt.postServ.getFullText({
+        data: {
+            fullTextId: fullTextId
+        },
         success: function (result) {
-            if (result.state === 1) {
-                $(elem).hide();
-                $('#post_content_' + id).text(result.object);
-            } else
-                alert(result.message);
+            $(elem).hide();
+            $('#post_content_' + id).text(result.object);
+        },
+        fail: function (result) {
+            alert(result.message);
         }
     });
 }

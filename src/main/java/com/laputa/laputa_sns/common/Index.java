@@ -3,6 +3,7 @@ package com.laputa.laputa_sns.common;
 import org.jetbrains.annotations.NotNull;
 
 /**
+ * 索引对象
  * @author JQH
  * @since 下午 5:43 20/02/22
  */

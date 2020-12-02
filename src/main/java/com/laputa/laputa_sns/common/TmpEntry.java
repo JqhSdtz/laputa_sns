@@ -3,6 +3,7 @@ package com.laputa.laputa_sns.common;
 import lombok.Getter;
 
 /**
+ * id和value的一个键值对
  * @author JQH
  * @since 上午 11:59 20/03/16
  */

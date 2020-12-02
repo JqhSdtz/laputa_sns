@@ -9,6 +9,8 @@ import java.util.Date;
 import java.util.List;
 
 /**
+ * 查询Token工具类，用于在需要验证的操作中验证和设置token
+ * 主要是分页查询场景，用于避免系统资源被恶意占用
  * @author JQH
  * @since 下午 4:04 20/03/26
  */

@@ -14,6 +14,9 @@ import java.util.List;
 import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
+ * 索引执行对象，用于执行各种需要redis和数据库联合组成的索引中进行
+ * 查找、增加和删除的逻辑
+ *
  * @author JQH
  * @since 上午 10:35 20/04/10
  */
@@ -44,27 +47,86 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
     }
 
     public static class CallBacks<T extends AbstractBaseEntity> {
+        /**
+         * 获取索引列表中每一项的ID，一般从redis中获取
+         */
         public GetIdListCallBack<T> getIdListCallBack;
+        /**
+         * 根据索引列表中的ID获取索引列表中的完整对象
+         */
         public MultiReadEntityCallBack<T> multiReadEntityCallBack;
+        /**
+         * 从数据库中加载索引列表，加载完整对象
+         */
         public GetDBListCallBack<T> getDBListCallBack;
+        /**
+         * 将数据库中获取的索引列表添加到redis中
+         */
         public MultiSetRedisIndexCallBack<T> multiSetRedisIndexCallBack;
+        /**
+         * 根据ID读取一个完整对象，一般用于读取置顶对象
+         */
         public ReadOneEntityCallBack<T> readOneEntityCallBack;
     }
 
     public class Param<T extends AbstractBaseEntity> {
+        /**
+         * 索引列表，保存一个索引对象ID和索引排序值的二元组列表，具体用途不定
+         */
         public List<TypedTuple<String>> indexSetList;
+        /**
+         * paramEntity是作为参数的实体，queryEntity是用来返回处理数据的实体
+         */
         public T paramEntity, queryEntity;
+        /**
+         * 索引中置顶实体的ID
+         */
         public Integer topId;
+        /**
+         * 索引类型，热门索引或最新索引
+         */
         public Integer type;
+        /**
+         * 被索引对象的所有根据条件可获取的子对象的数量
+         */
         public Long childNumOfParent;
+        /**
+         * newStartId是下一次查询的开始位置的对象ID，newFrom是下一次查询的开始位置
+         */
         public Integer newStartId, newFrom;
+        /**
+         * 有些索引的对象是一个ID和其他数值的复合字符串，需要用startValue这个属性记录一下
+         * newStartValue就是下一次查询用到的startValue
+         */
         public String newStartValue;
+        /**
+         * 初始化查询的起始位置，即没有设定from值或from值无效时的索引开始位置
+         */
         public int initFrom = 0;
+        /**
+         * 初始化查询的起始对象ID，同上
+         */
         public int initStartId = 0;
+        /**
+         * 查询的索引列表的结果，包含完整实体对象
+         */
         public List<T> entityList;
+        /**
+         * 索引列表对象的ID列表，一般用于去redis中查询索引对象列表
+         */
         public List<Integer> idList;
+        /**
+         * 若从redis中查出来的索引列表长度不够，是否去数据库查询并补充到redis的索引列表中
+         * 若该值为true，则会从数据库查询并补充，否则不会
+         */
         public boolean disablePatchFromDB;
+        /**
+         * 查询的操作者
+         */
         public Operator operator;
+        /**
+         * 查询的附加条件，用途不定
+         */
         public Object addition;
     }
 
@@ -97,6 +159,7 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
             param.entityList = entityListResult.getObject();
             if (!param.disablePatchFromDB && param.entityList.size() < queryNum) {
                 Integer oriFrom = queryParam.getFrom();
+                // 暂时改变原有参数，以便数据库查询
                 queryParam.setFrom(queryParam.getFrom() + param.entityList.size())
                         .setQueryNum(queryNum - param.entityList.size());
                 Integer oriStartId = queryParam.getStartId();
@@ -116,6 +179,7 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
                             callBacks.multiSetRedisIndexCallBack.multiSetRedisIndex(dbList, this);
                     }
                 }
+                // 恢复原有参数
                 queryParam.setFrom(oriFrom).setStartId(oriStartId).setStartValue(oriStartValue);
             }
         } else {
@@ -146,8 +210,8 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
                     ((AbstractContent) topEntity).setIsTopped(true);
                 tmpList.set(0, topEntity);
             }
-            param.newFrom = queryParam.getFrom() + param.entityList.size();
             //topEntity另外读取的，是顺序之外的内容，不能影响正常顺序，所以设置考虑置顶之后的顺序前确定from的值
+            param.newFrom = queryParam.getFrom() + param.entityList.size();
             param.entityList = tmpList;
         }
         param.queryEntity.getQueryParam().setStartId(param.newStartId).setStartValue(param.newStartValue).setFrom(param.newFrom);

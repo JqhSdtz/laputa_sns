@@ -11,14 +11,18 @@ FormItem.setTest(userNameFormItem, function (value) {
         return false;
     } else {
         const deferred = $.Deferred();
-        checkIdDeferred = $.get(baseUrl + '/user/check_name/' + $('#userName').val(), function (data) {
-            if (data.state === 0) {
+        checkIdDeferred = lpt.userServ.checkName({
+            data: {
+                userName: $('#userName').val()
+            },
+            success: function () {
+                deferred.resolve();
+            },
+            fail: function (data) {
                 FormItem.setWarningText(userNameFormItem, data.message);
                 deferred.reject();
-            } else {
-                deferred.resolve();
             }
-        }, 'json');
+        });
         return deferred.promise();
     }
 });
@@ -41,24 +45,19 @@ submitButton.click(function () {//提交表单前验证
         return;
     submitButton.attr('disabled', 'disabled');
     $.when(checkIdDeferred).done(function () {
-        $.ajax({
-            type: 'POST',
-            url: baseUrl + '/operator/register',
-            contentType: 'application/json',
-            dataType: 'json',
-            data: JSON.stringify({
+        lpt.operatorServ.register({
+            data: {
                 nick_name: $('#userName').val(),
-                password: md5($('#password').val()),
-            }),
-            success: function (data) {
-                if (data.state === 1) {
-                    window.location.href = 'post_list.html';
-                } else {
-                    alert(data.message);
-                }
+                password: lpt.md5($('#password').val())
+            },
+            success: function () {
+                window.location.href = 'post_list.html';
+            },
+            fail: function (data) {
+                alert(data.message);
             },
             error: function (xhr) {
-                alert('错误信息 ' + xhr.code + ' 请重试');
+                alert('错误信息  ' + xhr.code + '   请重试');
             },
             complete: function () {
                 submitButton.removeAttr('disabled');

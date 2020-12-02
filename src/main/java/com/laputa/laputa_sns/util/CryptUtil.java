@@ -18,6 +18,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
+ * 加密工具类
  * @author JQH
  * @since 上午 11:17 20/03/21
  */

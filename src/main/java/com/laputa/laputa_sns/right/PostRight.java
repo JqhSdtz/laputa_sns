@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
+ * 帖子操作权限
  * @author JQH
  * @since 上午 10:07 20/04/05
  */

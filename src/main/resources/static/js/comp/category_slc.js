@@ -3,42 +3,40 @@ const categorySlcTp = template(document.getElementById('categorySlcTp').innerHTM
 let selectedCategoryId = null;
 const categoryMap = new Map();
 
-function getData(url, showAfterLoad) {
-    $.ajax({
-        type: 'GET',
-        url: baseUrl + url,
-        dataType: 'json',
-        success: function (data) {
-            if (data.state === 1) {
-                const list = data.object;
-                for (let i = 0; i < list.length; ++i)
-                    categoryMap.set(list[i].id, list[i]);
-                $('#categoryMenu').html(getCategoryMenu(data.object));
-                if (showAfterLoad)
-                    $('#selectBtn').dropdown('show');
-            } else
-                console.log(data.message);
+function getData(action, data, showAfterLoad) {
+    action({
+        data: data,
+        success: function (result) {
+            const list = result.object;
+            for (let i = 0; i < list.length; ++i)
+                categoryMap.set(list[i].id, list[i]);
+            $('#categoryMenu').html(getCategoryMenu(result.object));
+            if (showAfterLoad)
+                $('#selectBtn').dropdown('show');
+        },
+        fail: function (result) {
+            alert(result.message);
         }
     });
 }
 
 function onCategoryBtnClick(elem) {
     const categoryId = parseInt($(elem).attr('data-id'));
-    if ($(elem).attr('data-is-leaf') === 'true'){
+    if ($(elem).attr('data-is-leaf') === 'true') {
         selectedCategoryId = categoryId;
         $('#selectBtn').dropdown('hide');
         const pathList = categoryMap.get(categoryId).path_list;
         let pathStr = '所选目录 ' + getCategoryPathStr(pathList);
         $('#categoryPath').text(pathStr);
     } else
-        getData('/category/direct_sub/' + categoryId, true);
+        getData(lpt.categoryServ.getDirectSub, {categoryId: categoryId}, true);
 }
 
 $('#selectBtn').click(function () {
-    getData('/category/roots', true);
+    getData(lpt.categoryServ.getRoots, null, true);
 });
 
-getData('/category/roots', false);
+getData(lpt.categoryServ.getRoots, null, false);
 
 function getCategoryMenu(list) {
     return categorySlcTp({list: list});

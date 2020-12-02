@@ -26,6 +26,7 @@ import static com.laputa.laputa_sns.common.Result.FAIL;
 import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
+ * 点赞记录相关的服务
  * @author JQH
  * @since 下午 2:11 20/02/24
  */
@@ -64,6 +65,12 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
 
     private final String[] typeStr = {"PS", "C1", "C2"};
 
+    /**
+     * 获取redis中新点赞列表的key，新点赞列表是指没有被刷入数据库的，会被用作重复校验的点赞列表
+     * @param targetId
+     * @param type
+     * @return
+     */
     @NotNull
     private String getNewRedisSetKey(int targetId, int type) {
         return RedisPrefix.LIKE_RECORD_SET_NEW + "/" + typeStr[type] + ":" + targetId;
@@ -74,6 +81,13 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
         return RedisPrefix.LIKE_RECORD_SET_NEW + "/" + typeStr[type] + ":*";
     }
 
+    /**
+     * 获取redis中旧点赞列表的key，旧点赞列表是指已经被刷入数据库后又被取出来的，仅用于展示的
+     * 点赞列表，一般不会用于重复校验
+     * @param targetId
+     * @param type
+     * @return
+     */
     @NotNull
     private String getFormerRedisSetKey(int targetId, int type) {
         return RedisPrefix.LIKE_RECORD_SET_FORMER + "/" + typeStr[type] + ":" + targetId;
@@ -91,6 +105,12 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
         return redisTemplate.opsForZSet().size(getNewRedisSetKey(targetId, type));
     }
 
+    /**
+     * 从redis中获取多个被点赞对象的点赞数量
+     * @param targetIdList
+     * @param type
+     * @return
+     */
     @NotNull
     private List<Long> multiGetRedisLikeSetSize(@NotNull List<Integer> targetIdList, int type) {
         List<String> keys = new ArrayList(targetIdList.size());
@@ -104,10 +124,21 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
         return (List<Long>) (List) resList;
     }
 
+    /**
+     * 给某个内容对象设置点赞数量
+     * @param entity
+     * @param type
+     */
     public void setLikeCnt(@NotNull AbstractContent entity, int type) {
         entity.setLikeCnt(entity.getLikeCnt() + getNewRedisLikeSetSize(entity.getId(), type));
     }
 
+    /**
+     * 给多个内容对象设置点赞数量
+     * @param entityList
+     * @param type
+     * @param <T>
+     */
     public <T extends AbstractContent> void multiSetLikeCnt(@NotNull List<T> entityList, int type) {
         List<Integer> idList = new ArrayList(entityList.size());
         for (int i = 0; i < entityList.size(); ++i)
@@ -121,7 +152,13 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
     }
 
     private class RedisValue {
+        /**
+         * 点赞者ID(用户ID)
+         */
         Integer creatorId;
+        /**
+         * 数据库点赞记录ID，无业务含义
+         */
         Integer likeRecordId;
 
         RedisValue(Integer creatorId, Integer likeRecordId) {
@@ -171,6 +208,15 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
         return redisTemplate.opsForZSet().score(key, v) != null;
     }
 
+    /**
+     * 给多个内容对象设置是否被某个用户点过赞
+     * 这里仅判断是否在新的点赞列表中，即还未刷入数据库的记录
+     * 已刷入数据库的记录不会用来判断是否点赞
+     * @param targetList
+     * @param type
+     * @param userId
+     * @param <T>
+     */
     public <T extends AbstractContent> void multiSetIsLikedByViewer(@NotNull List<T> targetList, int type, Integer userId) {
         byte[] creatorKey = getRedisValue(userId, null).getBytes();
         List<Object> resList = redisTemplate.executePipelined((RedisCallback) connection -> {
@@ -225,10 +271,13 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
         callBacks.getIdListCallBack = executor -> {
             LikeRecord param = (LikeRecord) executor.param.paramEntity;
             int queryNum = param.getQueryParam().getQueryNum();
+            // 是否从新的点赞列表中获取，新的点赞列表指还未刷入数据库的，一个用户在某个对象的新的点赞列表中不会重复出现
             boolean fromNewZSet = param.getQueryParam().getAddition() == null || !"1".equals(param.getQueryParam().getAddition());
             executor.param.addition = fromNewZSet;
             String key = fromNewZSet ? getNewRedisSetKey(param.getTargetId(), param.getType()) : getFormerRedisSetKey(param.getTargetId(), param.getType());
             List<TypedTuple<String>> indexList = RedisUtil.readIndex(redisTemplate, key, param.getQueryParam(), true, true);
+            // 当前是从新的点赞列表获取，但新的不够了，就再从redis中旧的点赞列表中获取
+            // 但要注意这和从数据库中补充不是一回事
             if (fromNewZSet && (indexList == null || indexList.size() < queryNum)) {
                 executor.param.queryEntity.getQueryParam().setAddition("1");
                 int dim = indexList == null ? 0 : indexList.size();
@@ -309,6 +358,12 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
         return callBacks;
     }
 
+    /**
+     * 获取某个目标对象的点赞列表
+     * @param param
+     * @param operator
+     * @return
+     */
     public Result<List<LikeRecord>> readTargetLikeList(@NotNull LikeRecord param, Operator operator) {
         if (!param.isValidTargetListSelectParam())
             return new Result(FAIL).setErrorCode(1010070202).setMessage("读取点赞列表失败，参数错误");
@@ -355,7 +410,7 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
         } else if (likeRecord.getType().equals(LikeRecord.TYPE_CML2)) {
             CommentL2 comment = (CommentL2) targetResult.getObject();
             String likeSetKey = getNewRedisSetKey(comment.getId(), LikeRecord.TYPE_CML2);
-            commentL1Service.incrLikeCnt(comment.getL1Id(), comment.getId(), likeSetKey, comment.getLikeCnt(), 1);
+            commentL2Service.incrLikeCnt(comment.getL1Id(), comment.getId(), likeSetKey, comment.getLikeCnt(), 1);
             if (!comment.getCreatorId().equals(operator.getUserId()))
                 noticeService.pushNotice(comment.getId(), Notice.TYPE_LIKE_CML2, comment.getCreatorId());
         }

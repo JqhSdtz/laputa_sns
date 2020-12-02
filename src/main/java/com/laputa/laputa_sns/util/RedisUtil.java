@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
+ * Redis相关的工具类，包括一些常用的lua脚本封装的方法
  * @author JQH
  * @since 下午 3:42 20/03/19
  */

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 /**
+ * 通知服务
  * @author JQH
  * @since 下午 2:38 20/04/15
  */

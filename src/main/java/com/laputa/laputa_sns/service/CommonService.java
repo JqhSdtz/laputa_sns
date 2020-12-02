@@ -12,6 +12,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * 公共服务，主要是一些公共的数据库操作方法
  * @author JQH
  * @since 下午 12:34 20/03/16
  */
@@ -41,10 +42,28 @@ public class CommonService {
             dao.clearIndexedFlag(tableName, idFieldName, lFiledName);
     }
 
+    /**
+     * 根据ID更新一个表的某个字段
+     * @param tableName
+     * @param idFieldName
+     * @param filedName
+     * @param id
+     * @param value
+     * @return
+     */
     public int updateOne(String tableName, String idFieldName, String filedName, Integer id, Object value) {
         return dao.updateOne(tableName, idFieldName, filedName, id, value);
     }
 
+    /**
+     * 根据ID列表批量更新表的某个字段
+     * @param tableName
+     * @param idFieldName
+     * @param valueFiledName
+     * @param ops
+     * @param list
+     * @return
+     */
     public int batchUpdate(String tableName, String idFieldName, String valueFiledName, int ops, @NotNull List<TmpEntry> list) {
         if (list.size() == 0)
             return 0;

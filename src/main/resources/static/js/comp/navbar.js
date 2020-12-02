@@ -11,18 +11,14 @@ function initNav(operator) {
         $('#userDrop1').html('个人中心').attr('href', 'user_info.html?user_id=' + operator.user_id);
         $('#userDrop2').html('修改信息').attr('href', 'mod_user.html');
         $('#userDrop3').show().html('注销').click(function () {
-            $.ajax({
-                type: 'POST',
-                url: baseUrl + '/operator/logout',
-                dataType: 'json',
-                success: function (result) {
-                    if (result.state === 1) {
-                        setOperator(result.operator)
-                        $('#userName').html('游客').attr('href', 'login.html');
-                        $('#userDrop1').html('登录').attr('href', 'login.html');
-                        $('#userDrop2').html('注册').attr('href', 'register.html');
-                    } else
-                        alert(result.message);
+            lpt.operatorServ.logout({
+                success: function () {
+                    $('#userName').html('游客').attr('href', 'login.html');
+                    $('#userDrop1').html('登录').attr('href', 'login.html');
+                    $('#userDrop2').html('注册').attr('href', 'register.html');
+                },
+                fail: function (result) {
+                    alert(result.message);
                 }
             });
         });

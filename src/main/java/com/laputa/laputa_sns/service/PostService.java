@@ -36,6 +36,7 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
 import static com.laputa.laputa_sns.service.PostIndexService.*;
 
 /**
+ * 帖子服务
  * @author JQH
  * @since 下午 6:22 20/02/21
  */
@@ -473,6 +474,11 @@ public class PostService extends BaseService<PostDao, Post> {
         return postListResult;
     }
 
+    /**
+     * 给多个帖子设置原始帖子，即最开始被转发的那个帖子
+     * @param postList
+     * @param operator
+     */
     public void multiSetOriPost(@NotNull List<Post> postList, Operator operator) {
         if (postList.size() == 0)
             return;

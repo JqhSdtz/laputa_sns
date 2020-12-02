@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
+ * 搜索服务，搜索使用MySQL的全文索引功能
  * @author JQH
  * @since 下午 12:49 20/05/14
  */

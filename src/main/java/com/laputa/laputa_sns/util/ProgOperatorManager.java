@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 程序操作者管理类
+ * 按照设计，程序本身也可以注册操作者，并赋予权限
+ * 目前该方面的功能还未开发
  * @author JQH
  * @since 下午 12:01 20/02/15
  */

@@ -31,6 +31,7 @@ import static com.laputa.laputa_sns.common.Result.FAIL;
 import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
+ * 转发服务
  * @author JQH
  * @since 下午 3:15 20/03/08
  */

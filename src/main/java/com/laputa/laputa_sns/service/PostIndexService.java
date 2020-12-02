@@ -21,6 +21,7 @@ import java.util.*;
 import static com.laputa.laputa_sns.common.Result.FAIL;
 
 /**
+ * 帖子索引服务
  * @author JQH
  * @since 下午 5:31 20/02/21
  */
@@ -48,7 +49,10 @@ public class PostIndexService implements ApplicationRunner {
         this.commonService = commonService;
     }
 
-    @Value("${post-index-max-cache-num}")//帖子索引的最大缓存长度，超过此长度的将放入数据库
+    /**
+     * 帖子索引的最大缓存长度，超过此长度的将放入数据库
+     */
+    @Value("${post-index-max-cache-num}")
     private int postIndexMaxCacheNum;
 
     @Override

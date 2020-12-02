@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
+ * 查询参数
  * @author JQH
  * @since 下午 12:50 20/02/05
  */

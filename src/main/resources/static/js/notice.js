@@ -1,58 +1,28 @@
 const noticeTp = template(document.getElementById('noticeTp').innerHTML);
-let hasReachedBottom = false;
-let curFrom = 0;
-let totalLength = 0;
-let isSendingAjax = false;
 const noticeMap = new Map();
 
-$.ajax({
-    type: 'POST',
-    url: baseUrl + '/notice',
-    contentType: 'application/json',
-    dataType: 'json',
-    data: JSON.stringify({
-        from: curFrom,
-        query_num: 10
-    }),
+lpt.noticeServ.query({
     success: function (result) {
-        if (result.state === 1) {
-            setOperator(result.operator);
-            initNav(result.operator);
-            curFrom += result.object.length;
-            processNoticeList(result.object);
-        } else
-            alert(result.message);
+        initNav(result.operator);
+        processNoticeList(result.object);
+    },
+    fail: function (result) {
+        alert(result.message);
     }
 });
 
 function getNewNotice() {
-    if (!hasReachedBottom) {
-        if (isSendingAjax)
-            return;
-        isSendingAjax = true;
-        $.ajax({
-            type: 'POST',
-            url: baseUrl + '/notice',
-            contentType: 'application/json',
-            dataType: 'json',
-            data: JSON.stringify({
-                from: curFrom,
-                query_num: 10
-            }),
+    if (!lpt.noticeServ.querior.hasReachedBottom) {
+        lpt.noticeServ.query({
             success: function (result) {
-                if (result.state === 0) {
-                    alert(result.message);
-                    return;
-                }
-                curFrom += result.object.length;
                 if (result.object.length === 0) {
-                    hasReachedBottom = true;
                     $('#more-btn').text('没有更多');
+                } else {
+                    processNoticeList(result.object);
                 }
-                processNoticeList(result.object);
             },
-            complete: function () {
-                isSendingAjax = false;
+            fail: function (result) {
+                alert(result.message);
             }
         });
     }
@@ -63,7 +33,6 @@ function processNoticeList(list) {
         noticeMap.set(getNoticeKey(list[i]), list[i]);
         console.log('notice ' + list[i].content_id);
     }
-    totalLength += list.length;
     console.log('-------------------');
     $('#notice-list').append(noticeTp({list: list}));
 }
@@ -101,18 +70,13 @@ function getDescription(notice) {
 
 function showNoticeDetail(key) {
     const notice = noticeMap.get(key);
-    $.ajax({
-        type: 'POST',
-        url: baseUrl + '/notice/read',
-        contentType: 'application/json',
-        dataType: 'json',
-        data: JSON.stringify({
+    lpt.noticeServ.markAsRead({
+        data: {
             type: notice.type,
             content_id: notice.content_id
-        }),
-        success: function (result) {
-            if (result.state === 0)
-                alert(result.message);
+        },
+        fail: function (result) {
+            alert(result.message);
         }
     });
     switch (notice.type_str) {
@@ -126,7 +90,7 @@ function showNoticeDetail(key) {
             window.location.href = 'like_list.html?type=cml2&id=' + notice.content.id;
             break;
         case 'follower':
-            window.location.href = 'follower_list.html?user_id=' + getOperator().user_id;
+            window.location.href = 'follower_list.html?user_id=' + lpt.operatorServ.getCurrent().user_id;
     }
 }
 

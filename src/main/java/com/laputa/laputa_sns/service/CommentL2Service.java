@@ -33,6 +33,7 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
 import static com.laputa.laputa_sns.helper.CommentServiceHelper.POPULAR;
 
 /**
+ * 二级评论服务
  * @author JQH
  * @since 下午 1:46 20/02/29
  */

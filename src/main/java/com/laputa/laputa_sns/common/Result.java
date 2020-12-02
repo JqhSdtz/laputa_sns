@@ -10,6 +10,7 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 
 /**
+ * 处理结果封装对象
  * @author JQH
  * @since 下午 1:04 20/02/08
  */

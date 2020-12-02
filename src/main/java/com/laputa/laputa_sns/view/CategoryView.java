@@ -9,6 +9,7 @@ import com.laputa.laputa_sns.vo.CategoryVo;
 import org.springframework.stereotype.Service;
 
 /**
+ * 用于读取封装后的目录对象
  * @author JQH
  * @since 下午 5:31 20/03/31
  */

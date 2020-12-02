@@ -32,6 +32,7 @@ import static com.laputa.laputa_sns.common.Result.FAIL;
 import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
+ * 关注服务
  * @author JQH
  * @since 下午 7:10 20/02/20
  */
@@ -86,6 +87,11 @@ public class FollowService extends BaseService<FollowDao, Follow> {
         return RedisPrefix.USER_FOLLOWER_LIST + ":" + str;
     }
 
+    /**
+     * 获取redis中保存的某个用户的关注列表字符串
+     * @param followerId
+     * @return
+     */
     @Nullable
     private List<String> getRedisFollowingStrList(Integer followerId) {
         String str = redisTemplate.opsForValue().get(getFollowingListKey(followerId));
@@ -94,12 +100,19 @@ public class FollowService extends BaseService<FollowDao, Follow> {
         return new ArrayList(Arrays.asList(str.split("-")));
     }
 
+    /**
+     * 获取redis中保存的某个用户的关注列表
+     * @param followerId
+     * @return
+     */
     @Nullable
     private List<Follow> getRedisFollowingList(Integer followerId) {
+        // 获取关注列表字符串
         List<String> strList = getRedisFollowingStrList(followerId);
         if (strList == null)
             return null;
         List<Follow> followList = new ArrayList(strList.size());
+        // 解析关注列表字符串
         for (int i = strList.size() - 1; i >= 0; --i) {
             String[] v = strList.get(i).split("_");
             followList.add(((Follow) new Follow().setTargetId(Integer.valueOf(v[0])).setType(Integer.valueOf(v[1]))));
@@ -107,6 +120,14 @@ public class FollowService extends BaseService<FollowDao, Follow> {
         return followList;
     }
 
+    /**
+     * 设置redis中的关注列表，redis中的关注列表直接使用字符串存储
+     * 因为获取用户的动态数量时需要取出用户的全部关注
+     * 所以取出关注列表是个频繁操作，直接使用一个字符串存储会更快
+     * @param followerId
+     * @param followingList
+     * @param listClass
+     */
     private void setRedisFollowingList(Integer followerId, @NotNull List followingList, @NotNull Class listClass) {
         if (followingList.size() == 0)
             return;
@@ -125,6 +146,12 @@ public class FollowService extends BaseService<FollowDao, Follow> {
         redisTemplate.opsForValue().set(getFollowingListKey(followerId), stringBuilder.toString(), redisTimeOut, TimeUnit.MINUTES);
     }
 
+    /**
+     * 获取字符串列表中的目标ID所能匹配上的字符串所在的位置
+     * @param targetId
+     * @param list
+     * @return
+     */
     private int getTargetIdxOfList(Integer targetId, @NotNull List<String> list) {
         if (list == null)
             return -1;
@@ -134,6 +161,13 @@ public class FollowService extends BaseService<FollowDao, Follow> {
         return -1;
     }
 
+    /**
+     * 操作redis中的关注列表，包括移除、更新、添加
+     * @param follow
+     * @param list
+     * @param type
+     * @return
+     */
     private boolean opRedisFollowingList(@NotNull Follow follow, List<String> list, int type) {
         String value = follow.getTargetId() + "_" + follow.getType();
         if (list == null)
@@ -155,6 +189,12 @@ public class FollowService extends BaseService<FollowDao, Follow> {
         return true;
     }
 
+    /**
+     * 给关注实体对象设置用户信息
+     * @param followList
+     * @param type
+     * @return
+     */
     @SneakyThrows
     private Result fillFollowWithUser(@NotNull List<Follow> followList, int type) {
         if (type == FOLLOWING)
@@ -188,10 +228,19 @@ public class FollowService extends BaseService<FollowDao, Follow> {
         return new Result(SUCCESS).setObject(followList);
     }
 
+    /**
+     * 向redis中添加一条关注者记录(即某个用户关注了某个用户)
+     * redis中用户的关注者列表是存在ZSet中的，而不像关注列表存的是一个字符串
+     * @param follow
+     */
     private void addNewToRedisFollowerIndex(@NotNull Follow follow) {
         redisTemplate.opsForZSet().add(getFollowerZSetKey(follow.getTargetId()), getRedisValue(follow.getFollowerId(), null), new Date().getTime());
     }
 
+    /**
+     * 从redis的关注者列表中移除一个对象
+     * @param follow
+     */
     private void removeRedisFollowerIndex(@NotNull Follow follow) {
         String key = getFollowerZSetKey(follow.getTargetId());
         long res = redisTemplate.opsForZSet().remove(key, getRedisValue(follow.getFollowerId(), null));
@@ -202,8 +251,17 @@ public class FollowService extends BaseService<FollowDao, Follow> {
         }
     }
 
+    /**
+     * 封装的redis中一条关注记录的属性
+     */
     private class RedisValue {
+        /**
+         * 数据库中关注表的主键，无业务含义
+         */
         Integer followId;
+        /**
+         * 关注者ID
+         */
         Integer followerId;
 
         RedisValue(Integer followerId, Integer followId) {
@@ -259,7 +317,7 @@ public class FollowService extends BaseService<FollowDao, Follow> {
             }
             return new Result(SUCCESS).setObject(followList);
         };
-        callBacks.getDBListCallBack = executor -> {
+        callBacks.getDBListCallBack = (executor) -> {
             Follow follow = (Follow) executor.param.paramEntity;
             if (follow.getQueryParam().getStartId() == null || follow.getQueryParam().getStartId().equals(0)) {
                 RedisValue redisValue = parseRedisValue(follow.getQueryParam().getStartValue());

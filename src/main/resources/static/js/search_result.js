@@ -1,16 +1,16 @@
-
 const searchType = getParamOfUrl('type');
 const words = getParamOfUrl('words');
 const mode = getParamOfUrl('mode');
-$.ajax({
-    type: 'GET',
-    url: baseUrl + '/search/' + searchType + '/' + words + '/' + mode,
-    dataType: 'json',
-    success: function (result) {
-        if (result.state === 0) {
-            alert(result.message);
-            return;
-        }
+lpt.searchServ.search({
+    data : {
+        searchType: searchType,
+        words: words,
+        mode: mode,
+    },
+    fail: function (result) {
+        alert(result.message);
+    },
+    finish: function (result) {
         $(document.body).html(JSON.stringify(result));
     }
 });

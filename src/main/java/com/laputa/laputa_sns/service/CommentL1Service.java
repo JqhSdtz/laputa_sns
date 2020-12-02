@@ -34,6 +34,7 @@ import static com.laputa.laputa_sns.helper.CommentServiceHelper.POPULAR;
 import static com.laputa.laputa_sns.helper.CommentServiceHelper.LATEST;
 
 /**
+ * 一级评论服务
  * @author JQH
  * @since 下午 12:25 20/02/27
  */
@@ -84,6 +85,12 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
         this.serviceHelper = new CommentServiceHelper(1, queryHelper, redisHelper, redisTemplate, likeRecordService, commonService, userService, this, CommentL1.class);
     }
 
+    /**
+     * 更新一级评论的数量相关的信息
+     * @param commentId 评论ID
+     * @param l2Delta 二级评论的增量
+     * @param pcmDelta 二级评论中发帖人评论的增量
+     */
     public void updateCounters(Integer commentId, Long l2Delta, Long pcmDelta) {
         Map<String, Long> map = new HashMap(2);
         if (l2Delta != null)
@@ -93,10 +100,24 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
         redisHelper.updateCounters(commentId, map);
     }
 
+    /**
+     * 增加点赞数量
+     * @param parentId
+     * @param commentId
+     * @param likeSetKey redis中该评论点赞记录集合的key
+     * @param oriValue
+     * @param delta
+     */
     public void incrLikeCnt(int parentId, int commentId, String likeSetKey, long oriValue, int delta) {
         serviceHelper.incrLikeCnt(parentId, commentId, likeSetKey, oriValue, delta);
     }
 
+    /**
+     * 设置一级评论表中的热门索引标志字段，即是否已经处于热门索引，防止从数据库中选取热门索引时重复选取
+     * @param id
+     * @param value
+     * @return
+     */
     public int setPopularIndexFlag(int id, int value) {
         return dao.setPopularIndexFlag(id, value);
     }

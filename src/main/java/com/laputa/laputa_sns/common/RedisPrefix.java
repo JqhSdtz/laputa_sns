@@ -1,6 +1,7 @@
 package com.laputa.laputa_sns.common;
 
 /**
+ * Redis中Key的前缀的统一管理类
  * @author JQH
  * @since 下午 7:53 20/02/18
  */

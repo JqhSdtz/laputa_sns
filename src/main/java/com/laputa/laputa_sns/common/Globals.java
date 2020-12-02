@@ -1,6 +1,7 @@
 package com.laputa.laputa_sns.common;
 
 /**
+ * 全局变量和相关方法
  * @author JQH
  * @since 下午 1:17 20/03/28
  */
