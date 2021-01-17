@@ -35,7 +35,7 @@ export default {
 .top-bar {
 	background-color: rgb(247, 247, 247);
 	padding: 0.5rem 1rem;
-	height: 3.5rem;
+	height: 3rem;
 	position: relative;
 	border-bottom: 1px solid rgba(0, 0, 0, .125);
 }
@@ -47,25 +47,30 @@ export default {
 
 .top-bar .ava {
 	border-radius: 100%;
-	width: 3.5rem;
-	height: 3.5rem;
+	width: 3rem;
+	height: 3rem;
 }
 
 .top-bar .time-and-name {
 	position: absolute;
-	margin-left: 4.5rem;
+	transform: translate(0, -50%);
+	top: 50%;
+	left: 4.75rem;
+}
+
+.top-bar p {
+	text-align: left;
 }
 
 .top-bar .name {
-	margin-top: 0.4rem;
-	margin-bottom: 0.5rem;
 	font-weight: bold;
-	font-size: 1.25rem;
+	font-size: 1.1rem;
 }
 
 .top-bar .time {
-	margin-top: 0;
-	font-size: 1rem;
+	margin-top: -1rem;
+	text-indent: 0.25rem;
+	font-size: 0.85rem;
 }
 
 </style>

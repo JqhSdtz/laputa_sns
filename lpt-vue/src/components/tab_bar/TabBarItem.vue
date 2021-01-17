@@ -16,7 +16,7 @@ export default {
 	props: {
 		path: String,
 	},
-	inject: ['setCurrentView'],
+	inject: ['refreshMainView'],
 	data() {
 		return {}
 	},
@@ -29,7 +29,7 @@ export default {
 		itemClick() {
 			if (this.isActive) {
 				// 点击当前菜单项时给router-view设置一个时间戳作为key，可以强制刷新
-				this.setCurrentView(new Date().getTime());
+				this.refreshMainView();
 			} else {
 				this.$router.push(this.path);
 			}
@@ -42,7 +42,7 @@ export default {
 .tab-bar-item {
 	flex: 1;
 	text-align: center;
-	height: 5rem;
+	height: 100%;
 	font-size: 14px;
 }
 </style>

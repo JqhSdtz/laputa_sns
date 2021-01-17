@@ -82,6 +82,7 @@ export default {
 
 <style scoped>
 .post-list {
+	height: 100%;
 	overflow-y: scroll;
 }
 

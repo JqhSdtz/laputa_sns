@@ -57,11 +57,8 @@ export default {
 <style scoped>
 img {
 	margin: 0.1rem 0;
-	height: 70%;
+	height: 60%;
 	vertical-align: middle;
-}
-.tab-bar-item {
-	height: 100%;
 }
 .tab-bar {
 	height: 100%;
