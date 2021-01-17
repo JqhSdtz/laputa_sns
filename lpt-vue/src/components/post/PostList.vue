@@ -84,6 +84,7 @@ export default {
 .post-list {
 	height: 100%;
 	overflow-y: scroll;
+	background-color: #ECECEC;
 }
 
 .post-list::-webkit-scrollbar {

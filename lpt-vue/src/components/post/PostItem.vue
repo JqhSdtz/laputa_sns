@@ -28,6 +28,5 @@ export default {
 .post-item {
 	background-color: white;
 	margin-bottom: 1rem;
-	border: 1px solid rgba(0, 0, 0, .125);
 }
 </style>

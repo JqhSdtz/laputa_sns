@@ -1,11 +1,13 @@
 <template>
-	<div class="top-bar">
-		<div class="ava-div"><img class="ava" :src="avatarUrl"/></div>
-		<div class="time-and-name">
+	<a-row class="top-bar">
+		<a-col span="4" class="ava-div">
+			<img class="ava" :src="avatarUrl"/>
+		</a-col>
+		<a-col span="16" class="time-and-name">
 			<p class="name">{{ post.creator.nick_name }}</p>
 			<p v-if="typeof post.create_time !== 'undefined'" class="time">{{ beforeTime }}</p>
-		</div>
-	</div>
+		</a-col>
+	</a-row>
 </template>
 
 <script>
@@ -33,44 +35,33 @@ export default {
 
 <style>
 .top-bar {
-	background-color: rgb(247, 247, 247);
-	padding: 0.5rem 1rem;
 	height: 3rem;
-	position: relative;
-	border-bottom: 1px solid rgba(0, 0, 0, .125);
-}
-
-
-.top-bar .ava-div {
-	position: absolute;
 }
 
 .top-bar .ava {
 	border-radius: 100%;
-	width: 3rem;
-	height: 3rem;
+	margin: 0.5rem 1rem;
+	width: 2.5rem;
+	height: 2.5rem;
 }
 
 .top-bar .time-and-name {
-	position: absolute;
-	transform: translate(0, -50%);
-	top: 50%;
-	left: 4.75rem;
+	margin-top: 0.45rem;
 }
 
 .top-bar p {
 	text-align: left;
+	margin: 0;
 }
 
 .top-bar .name {
 	font-weight: bold;
-	font-size: 1.1rem;
+	font-size: 0.9rem;
 }
 
 .top-bar .time {
-	margin-top: -1rem;
-	text-indent: 0.25rem;
-	font-size: 0.85rem;
+	margin-left: 0.15rem;
+	font-size: 0.75rem;
 }
 
 </style>

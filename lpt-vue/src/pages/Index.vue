@@ -15,6 +15,6 @@ export default {
 
 <style scoped>
 	.post-list {
-		padding: 8px;
+		padding: 8px 0;
 	}
 </style>

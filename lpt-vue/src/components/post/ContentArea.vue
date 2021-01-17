@@ -32,14 +32,15 @@ export default {
 .content {
 	text-align: left;
 	word-break: break-word;
-	padding: 0.5rem;
+	padding: 0 1rem;
 	white-space: pre-wrap;
-	font-size: 1.25rem;
+	font-size: 0.85rem;
 }
 
 .title {
+	text-align: center;
 	font-weight: bold;
-	font-size: 1.35rem;
+	font-size: 1rem;
 	word-wrap: break-word;
 	word-break: normal;
 }
@@ -48,6 +49,7 @@ export default {
 	color: #6c757d;
 	text-align: right;
 	margin-right: 1rem;
+	font-size: 0.75rem;
 }
 
 .full-text-btn {
