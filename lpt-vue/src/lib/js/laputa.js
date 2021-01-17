@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 function initLaputa(option) {
     const lpt = {};
     lpt.isLocalHost = false;
@@ -45,14 +47,6 @@ function initLaputa(option) {
         lpt.isObject = function (obj) {
             return Object.prototype.toString.call(obj) === '[Object Object]';
         }
-        lpt.md5 = function (data) {
-            if (CryptoJS.MD5)
-                return CryptoJS.MD5(data).toString();
-            else {
-                console.error('未引入CryptoJS MD5模块');
-                return '';
-            }
-        }
     }
 
     function wrap(fun) {
@@ -65,6 +59,9 @@ function initLaputa(option) {
                     if (!arg.data) {
                         // 防止data属性未定义引发错误
                         arg.data = {};
+                    }
+                    if (!arg.param) {
+                        arg.param = {};
                     }
                 }
             }
@@ -107,44 +104,50 @@ function initLaputa(option) {
                 url: param.url,
                 data: jsonDataStr
             });
-            if (!allowRepeat && lpt.sentData.has(dataStr))
+            const sentData = param.querior ? param.querior.sentData : lpt.sentData;
+            if (!allowRepeat && sentData.has(dataStr))
                 return {
                     success: 0,
                     message: '当前请求不允许重复发送！'
                 };
-            lpt.sentData.add(dataStr);
-            const xhr = $.ajax({
-                type: method,
+            sentData.add(dataStr);
+            // 没有回调函数才使用promise
+            const usePromise = !(param.success || param.fail || param.complete);
+            const promise = axios({
+                method: method,
                 url: param.url,
-                contentType: 'application/json',
-                dataType: 'json',
-                data: method === 'GET' ? param.data : jsonDataStr,
-                success: function (result) {
-                    if (result.state === 1) {
-                        if (typeof param.success == 'function')
-                            param.success(result);
-                        if (result.operator)
-                            lpt.operatorServ.setCurrent(result.operator);
-                    } else {
-                        if (typeof param.fail == 'function')
-                            param.fail(result);
-                    }
-                    if (typeof param.finish == 'function')
-                        param.finish(result);
+                headers: {
+                    'Content-Type': 'application/json'
                 },
-                error: function (xhr) {
-                    if (typeof param.error == 'function')
-                        param.error(xhr);
-                },
-                complete: function () {
-                    if (typeof param.complete == 'function')
-                        param.complete();
+                responseType: 'json',
+                param: method === 'GET' ? param.data : undefined,
+                data: method === 'GET' ? undefined : jsonDataStr
+            }).then(response => {
+                const result = response.data;
+                if (result.state === 1) {
+                    if (typeof param.success === 'function')
+                        param.success(result);
+                    if (result.operator)
+                        lpt.operatorServ.setCurrent(result.operator);
+                } else {
+                    if (typeof param.fail === 'function')
+                        param.fail(result);
+                    if (usePromise)
+                        throw new Error(result.message);
                 }
+                if (typeof param.finish === 'function')
+                    param.finish(result);
+                if (typeof param.complete === 'function')
+                    param.complete();
+            }).catch(error => {
+                if (typeof param.error === 'function')
+                    param.error(error);
+                if (typeof param.complete === 'function')
+                    param.complete();
+                throw error;
             });
-            return {
-                success: 1,
-                xhr: xhr
-            }
+            promise.success = 1;
+            return promise;
         }
         lpt.get = function (param) {
             param.method = 'GET';
@@ -177,13 +180,22 @@ function initLaputa(option) {
                 isSendingAjax: false,
                 hasReachedBottom: false,
                 totalLength: 0,
-                curQueryToken: null
+                curQueryToken: null,
+                sentData: new Set()
             };
             Object.assign(executor, option);
+            executor.onBusyChange = function (fun) {
+                executor.onBusyChangeCallBack = fun;
+            }
+            executor.offBusyChange = function () {
+                executor.onBusyChangeCallBack = undefined;
+            }
             executor.query = function (param) {
                 if (executor.isSendingAjax)
                     return executor;
                 executor.isSendingAjax = true;
+                if (executor.onBusyChangeCallBack)
+                    executor.onBusyChangeCallBack(executor.isSendingAjax);
                 param.data = param.data || {};
                 param.data.query_param = Object.assign({}, lpt.defaultQueryParam, param.data.query_param);
                 const queryParam = param.data.query_param;
@@ -203,6 +215,8 @@ function initLaputa(option) {
                 });
                 lpt.appendMethod(param, 'complete', function () {
                     executor.isSendingAjax = false;
+                    if (executor.onBusyChangeCallBack)
+                        executor.onBusyChangeCallBack(executor.isSendingAjax);
                 });
                 if (param.method)
                     lpt.ajax(param);
@@ -218,6 +232,7 @@ function initLaputa(option) {
                 executor.hasReachedBottom = param.hasReachedBottom || false;
                 executor.totalLength = param.totalLength || 0;
                 executor.curQueryToken = param.curQueryToken || null;
+                executor.sentData.clear();
             }
             return executor;
         }
@@ -313,7 +328,6 @@ function initLaputa(option) {
             id: '0'
         };
         const serv = {
-            querior: lpt.createQuerior(),
             setCurrentCategory: wrap(function (category) {
                 currentCategory = category;
             }),
@@ -324,11 +338,11 @@ function initLaputa(option) {
                 const queryType = param.data.queryType || 'popular';
                 param.url = lpt.baseUrl + '/post/' + queryType;
                 param.data.category_id = param.data.category_id || currentCategory.id;
-                return serv.querior.query(param);
+                return param.querior.query(param);
             }),
             queryForCreator: wrap(function (param) {
                 param.url = lpt.baseUrl + '/post/creator';
-                return serv.querior.query(param);
+                return param.querior.query(param);
             }),
             getFullText: wrap(function (param) {
                 param.url = lpt.baseUrl + '/post/full_text/' + param.data.fullTextId;
@@ -352,27 +366,22 @@ function initLaputa(option) {
     }
 
     function initCommentService() {
-        const queriorMap = new Map();
         const serv = {
-            getQuerior: function (type, parentId) {
-                const key = `${type}/${parentId}`;
-                let querior = queriorMap.get(key);
-                if (!querior)
+            getQuerior: function (param) {
+                const key = `${param.param.type}/${param.data.parentId}`;
+                let querior = param.queriorMap.get(key);
+                if (!querior) {
                     querior = lpt.createQuerior();
+                    param.queriorMap.set(key, querior);
+                }
                 return querior;
             },
-            clearQueriors: function () {
-                queriorMap.clear();
-            },
             query: wrap(function (param) {
-                param.url = `${lpt.baseUrl}/comment/${param.data.type}/${param.data.rankType}/`;
-                const data = param.data;
-                const type = data.type;
-                data.type = undefined;
-                return serv.getQuerior(type, data.parent_id).query(param);
+                param.url = `${lpt.baseUrl}/comment/${param.param.type}/${param.param.rankType}/`;
+                return serv.getQuerior(param).query(param);
             }),
             create: wrap(function (param) {
-                param.url = lpt.baseUrl + '/comment/' + param.data.type;
+                param.url = lpt.baseUrl + '/comment/' + param.param.type;
                 return lpt.post(param);
             })
         };
@@ -437,7 +446,13 @@ function initLaputa(option) {
             getDirectSub: wrap(function (param) {
                 param.url = lpt.baseUrl + '/category/direct_sub/' + param.data.categoryId;
                 return lpt.get(param);
-            })
+            }),
+            getPathStr: function (list) {
+                let pathStr = '';
+                for (let i = list.length - 1; i >= 0; --i)
+                    pathStr += list[i].name + '\\';
+                return pathStr;
+            }
         };
         lpt.categoryServ = serv;
     }
@@ -575,4 +590,4 @@ function initLaputa(option) {
     return lpt;
 }
 
-const lpt = initLaputa();
+export default initLaputa();
