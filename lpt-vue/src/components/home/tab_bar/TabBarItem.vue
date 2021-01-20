@@ -15,14 +15,25 @@ export default {
 	name: 'TabBarItem',
 	props: {
 		path: String,
+		alias: String
 	},
-	inject: ['refreshMainView'],
+	inject: {
+		refreshMainView: {
+			type: Function
+		}
+	},
 	data() {
 		return {}
 	},
 	computed: {
 		isActive() {
-			return this.$route.path.indexOf(this.path) !== -1;
+			const path = this.$route.path;
+			if (path.indexOf(this.path) > -1) {
+				return true;
+			} else if (this.alias && path.indexOf(this.alias) > -1) {
+				return true;
+			}
+			return false;
 		}
 	},
 	methods: {

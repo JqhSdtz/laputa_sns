@@ -8,7 +8,7 @@
 
 <script>
 
-import PostItem from './PostItem'
+import PostItem from './item/PostItem'
 import lpt from '@/lib/js/laputa'
 import infiniteScroll from '@/lib/js/infinite-scroll'
 import theme from '@/lib/js/theme'
@@ -30,7 +30,11 @@ export default {
 			busy: false
 		}
 	},
-	inject: ['setGlobalBusy'],
+	inject: {
+		setGlobalBusy: {
+			type: Function
+		}
+	},
 	created() {
 		querior.reset();
 		const ref = this;
@@ -40,12 +44,17 @@ export default {
 				ref.busy = isBusy;
 			});
 		});
-		lpt.postServ.queryForCategory({
+		this.defaultQueryOption = {
 			querior,
-			data: {
+			param: {
 				queryType: this.sortType,
-				category_id: this.categoryId
 			},
+			data: {
+				category_id: this.categoryId
+			}
+		};
+		lpt.postServ.queryForCategory({
+			...this.defaultQueryOption,
 			success: result => {
 				ref.list = result.object;
 			}
@@ -59,11 +68,7 @@ export default {
 			const ref = this;
 			if (!querior.hasReachedBottom) {
 				lpt.postServ.queryForCategory({
-					querior,
-					data: {
-						queryType: this.sortType,
-						category_id: this.categoryId
-					},
+					...this.defaultQueryOption,
 					success: (result) => {
 						ref.list = ref.list.concat(result.object);
 					},

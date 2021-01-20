@@ -34,13 +34,11 @@ export default {
 	word-break: break-word;
 	padding: 0 1rem;
 	white-space: pre-wrap;
-	font-size: 0.85rem;
 }
 
 .title {
 	text-align: center;
 	font-weight: bold;
-	font-size: 1rem;
 	word-wrap: break-word;
 	word-break: normal;
 }

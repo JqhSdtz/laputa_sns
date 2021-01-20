@@ -7,9 +7,9 @@
 </template>
 
 <script>
-import TopBar from './TopBar.vue'
-import ContentArea from './ContentArea'
-import BottomBar from './BottomBar'
+import TopBar from './parts/TopBar.vue'
+import ContentArea from './parts/ContentArea'
+import BottomBar from './parts/BottomBar'
 
 export default {
 	name: 'PostItem',

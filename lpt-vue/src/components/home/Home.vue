@@ -1,17 +1,18 @@
 <template>
-	<div id="main-view">
+	<div id="main-view" :style="{height: mainViewHeight}">
 		<main-view :key="currentView"></main-view>
 	</div>
-	<main-tab-bar id="main-bar"></main-tab-bar>
+	<main-tab-bar id="main-bar" :style="{height: mainBarHeight}"></main-tab-bar>
 	<loading-area id="loading-area" :isBusy="isBusy"></loading-area>
 </template>
 
 <script>
 
 import lpt from '@/lib/js/laputa'
-import MainTabBar from '../tab_bar/MainTabBar'
+import MainTabBar from './tab_bar/MainTabBar'
 import MainView from './MainView'
 import LoadingArea from './hide_areas/LoadingArea'
+import remHelper from '@/lib/js/rem-helper'
 
 export default {
 	name: 'Home',
@@ -28,6 +29,9 @@ export default {
 		const mainView = {
 			currentView: 'index'
 		}
+		// 底部固定4rem，mainView现算一个px值
+		this.mainViewHeight = (document.body.clientHeight - remHelper.remToPx(4)) + 'px';
+		this.mainBarHeight = '4rem';
 		return {
 			...loadingArea,
 			...mainView,
@@ -56,12 +60,6 @@ export default {
 </script>
 
 <style scoped>
-	#main-view {
-		height: 90%;
-	}
-	#main-bar {
-		height: 10%;
-	}
 	#loading-area {
 		position: fixed;
 		right: 5%;

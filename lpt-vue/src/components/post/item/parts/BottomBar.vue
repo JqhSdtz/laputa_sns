@@ -9,8 +9,10 @@
 			<span class="cnt">{{post.comment_cnt}}</span>
 		</a-col>
 		<a-col class="icon-col" span="6">
-			<like-filled v-if="post.liked_by_viewer" class="icon" style="color: red"/>
-			<like-outlined v-else class="icon"/>
+			<span v-check-sign="true">
+				<like-filled v-if="post.liked_by_viewer" class="icon" style="color: red"/>
+				<like-outlined v-else class="icon"/>
+			</span>
 			<span class="cnt">{{post.like_cnt}}</span>
 		</a-col>
 	</a-row>
@@ -33,6 +35,9 @@ export default {
 	},
 	data() {
 		return {}
+	},
+	methods: {
+
 	}
 }
 </script>

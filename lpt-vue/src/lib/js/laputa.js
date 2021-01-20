@@ -251,15 +251,15 @@ function initLaputa(option) {
 
     function initOperatorService() {
         const serv = {
-            login: wrap(function (param) {
+            signIn: wrap(function (param) {
                 param.url = lpt.baseUrl + '/operator/login';
                 return lpt.post(param);
             }),
-            logout: wrap(function (param) {
+            signOut: wrap(function (param) {
                 param.url = lpt.baseUrl + '/operator/logout';
                 return lpt.post(param);
             }),
-            register: wrap(function (param) {
+            signUp: wrap(function (param) {
                 param.url = lpt.baseUrl + '/operator/register';
                 return lpt.post(param);
             }),
@@ -335,7 +335,7 @@ function initLaputa(option) {
                 return currentCategory;
             }),
             queryForCategory: wrap(function (param) {
-                const queryType = param.data.queryType || 'popular';
+                const queryType = param.param.queryType || 'popular';
                 param.url = lpt.baseUrl + '/post/' + queryType;
                 param.data.category_id = param.data.category_id || currentCategory.id;
                 return param.querior.query(param);
@@ -349,7 +349,7 @@ function initLaputa(option) {
                 return lpt.get(param);
             }),
             create: wrap(function (param) {
-                const type = param.data.type || 'public';
+                const type = param.param.type || 'public';
                 param.url = lpt.baseUrl + '/post/' + type;
                 return lpt.post(param);
             }),

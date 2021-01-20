@@ -1,22 +1,41 @@
 <template>
-	<a-config-provider :getPopupContainer="getPopupContainer">
-		<Home/>
+	<a-config-provider :locale="locale" :getPopupContainer="getPopupContainer">
+		<router-view/>
 	</a-config-provider>
 </template>
 
 <script>
-import zhCN from 'ant-design-vue/es/locale/zh_CN'
-import Home from './components/home/Home'
+import zhCN from 'ant-design-vue/es/locale/zh_CN';
+import { registerCheckSignFailCallback } from '@/lib/js/laputa-vue';
+import { Modal } from 'ant-design-vue';
 
 export default {
 	name: 'App',
-	components: {
-		Home
-	},
 	data() {
 		return {
 			locale: zhCN,
 		};
+	},
+	created() {
+		registerCheckSignFailCallback(() => {
+			// 注册全局未登录提示
+			const ref = this;
+			Modal.confirm({
+				title: '是否登录？',
+				// icon: createVNode(ExclamationCircleOutlined),
+				content: '登录打开新世界！',
+				onOk() {
+					ref.$router.push({name: 'signIn'});
+				}
+			});
+		});
+	},
+	provide() {
+		return {
+			backToHome: () => {
+				this.$router.push({name: 'home'});
+			}
+		}
 	},
 	methods: {
 		getPopupContainer(el, dialogContext) {

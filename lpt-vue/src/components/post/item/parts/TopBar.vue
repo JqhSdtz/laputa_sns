@@ -46,7 +46,7 @@ export default {
 }
 
 .top-bar .time-and-name {
-	margin-top: 0.45rem;
+	margin-top: 0.52rem;
 }
 
 .top-bar p {
@@ -56,7 +56,6 @@ export default {
 
 .top-bar .name {
 	font-weight: bold;
-	font-size: 0.9rem;
 }
 
 .top-bar .time {

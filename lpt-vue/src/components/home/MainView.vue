@@ -78,6 +78,10 @@ export default {
 			if (!curDir) {
 				return;
 			}
+			if (curDir === 'down') {
+				// 阻止浏览器默认下拉刷新操作
+				event.preventDefault();
+			}
 			let moveDist;
 			if (curDir === 'down' || curDir === 'up') {
 				moveDist = Math.abs(diffY);

@@ -1,35 +1,51 @@
 import {createRouter, createWebHashHistory} from 'vue-router';
-import Index from '@/pages/Index';
-import News from '@/pages/News';
-import Community from '@/pages/Community';
-import Mine from '@/pages/Mine';
+import Home from '@/components/home/Home'
+import Index from '@/pages/inside/Index';
+import News from '@/pages/inside/News';
+import Community from '@/pages/inside/Community';
+import Mine from '@/pages/inside/Mine';
+import SignIn from '@/pages/outside/SignIn';
+import SignUp from '@/pages/outside/SignUp';
 
 export default createRouter({
     history: createWebHashHistory(),
     routes: [
         {
             path: '/',
-            redirect: '/index'
+            redirect: '/home/index'
         },
         {
-            path: '/index',
-            name: 'index',
-            component: Index
+            path: '/home',
+            name: 'home',
+            component: Home,
+            children: [
+                {
+                    path: 'index',
+                    component: Index
+                },
+                {
+                    path: 'news',
+                    component: News
+                },
+                {
+                    path: 'community',
+                    component: Community
+                },
+                {
+                    path: 'mine',
+                    component: Mine
+                }
+            ]
         },
         {
-            path: '/news',
-            name: 'news',
-            component: News
+            path: '/sign_in',
+            name: 'signIn',
+            component: SignIn
         },
         {
-            path: '/community',
-            name: 'community',
-            component: Community
-        },
-        {
-            path: '/mine',
-            name: 'mine',
-            component: Mine
+            path: '/sign_up',
+            name: 'signUp',
+            component: SignUp
         }
     ]
 })

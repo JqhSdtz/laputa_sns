@@ -1,10 +1,10 @@
 <template>
-	This is mine!
+	<div>There are communities!</div>
 </template>
 
 <script>
 export default {
-	name: 'Mine'
+	name: 'Community'
 }
 </script>
 

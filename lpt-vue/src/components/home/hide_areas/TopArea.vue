@@ -12,7 +12,11 @@ export default {
 		pullFinish: Boolean,
 		finishCallback: Function
 	},
-	inject: ['refreshMainView'],
+	inject: {
+		refreshMainView: {
+			type: Function
+		}
+	},
 	methods: {
 		refresh() {
 			this.refreshMainView();
@@ -20,8 +24,8 @@ export default {
 	},
 	watch: {
 		pullFinish(newValue, oldValue) {
+			this.finishCallback();
 			if (newValue && !oldValue) {
-				this.finishCallback();
 				this.refresh();
 			}
 		}

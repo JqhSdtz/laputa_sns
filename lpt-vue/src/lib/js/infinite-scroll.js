@@ -181,7 +181,7 @@ const doCheck = function (force) {
 };
 
 export default {
-    mounted(el, binding, vnode) {
+    mounted(el, binding, vNode) {
         el[ctx] = {
             el,
             vm: binding.instance,
@@ -205,7 +205,7 @@ export default {
             tryBind();
         });
     },
-    unmount(el, binding, vnode) {
+    unmount(el, binding, vNode) {
         if (el && el[ctx] && el[ctx].scrollEventTarget)
             el[ctx].scrollEventTarget.removeEventListener('scroll', el[ctx].scrollListener);
         if (beforeUnbind) beforeUnbind();
