@@ -17,6 +17,7 @@ function initLaputa(option) {
     initCommonUtil();
     initUrlMethods();
     initAjaxMethods();
+    initConsumerFactory();
     initQueriorFactory();
 
     initAdminOpsService();
@@ -35,27 +36,51 @@ function initLaputa(option) {
     initSearchService();
 
     function initCommonUtil() {
-        lpt.appendMethod = function (target, methodName, fun) {
-            const ref = this;
-            const oriFun = target[methodName];
-            target[methodName] = function () {
-                if (typeof oriFun == 'function')
-                    oriFun.apply(ref, arguments);
-                fun.apply(ref, arguments);
+        const util = {
+            appendMethod(target, methodName, fun) {
+                const ref = this;
+                const oriFun = target[methodName];
+                target[methodName] = function () {
+                    if (typeof oriFun == 'function')
+                        oriFun.apply(ref, arguments);
+                    fun.apply(ref, arguments);
+                }
+            },
+            isObject(obj) {
+                return Object.prototype.toString.call(obj) === '[Object Object]';
             }
         }
-        lpt.isObject = function (obj) {
-            return Object.prototype.toString.call(obj) === '[Object Object]';
-        }
-        lpt.getFromMap = function (map, key, constructor) {
-            if (!(map instanceof Map))
-                return null;
-            let res = map.get(key);
-            if (!res) {
-                res = new constructor();
-                map.set(key, res);
+        lpt.util = util;
+    }
+
+    function initConsumerFactory() {
+        lpt.createConsumer = function () {
+            const consumer = {};
+            const busyChangeListeners = [];
+            let isBusy = false;
+            consumer.isBusy = function () {
+                return isBusy;
             }
-            return res;
+            consumer.changeBusy = function (_isBusy) {
+                isBusy = _isBusy;
+                busyChangeListeners.forEach(listener => {
+                    if (typeof listener === 'function') {
+                        listener(_isBusy);
+                    }
+                });
+            }
+            consumer.onBusyChange = function (listener) {
+                busyChangeListeners.push(listener);
+            }
+            consumer.offBusyChange = function (listener) {
+                if (listener) {
+                    busyChangeListeners.forEach((item, idx) => {
+                        if (item === listener)
+                            busyChangeListeners.splice(idx, 1);
+                    });
+                }
+            }
+            return consumer;
         }
     }
 
@@ -64,7 +89,7 @@ function initLaputa(option) {
         return function () {
             for (let i = 0; i < arguments.length; ++i) {
                 const arg = arguments[i];
-                if (lpt.isObject(arg) && arg.url) {
+                if (lpt.util.isObject(arg) && arg.url) {
                     // 该参数是对象，并且包含url属性，则为请求对象
                     if (!arg.data) {
                         // 防止data属性未定义引发错误
@@ -101,8 +126,11 @@ function initLaputa(option) {
     function initAjaxMethods() {
         // 保存已发送的数据和URL及Method，用于判重
         lpt.sentData = new Set();
-        lpt.sentDataMap = new Map();
         lpt.ajax = function (param) {
+            if (!param.consumer) {
+                console.warn('no consumer defined for ajax request! use new consumer.');
+                param.consumer = lpt.createConsumer();
+            }
             // 没有回调函数才使用promise
             const usePromise = !(param.success || param.fail || param.complete);
             if (!param.url) {
@@ -123,21 +151,21 @@ function initLaputa(option) {
                 url: param.url,
                 data: jsonDataStr
             });
-            let sentData;
-            if (param.querior) {
-                sentData = param.querior.sentData;
-            } else if (param.consumer) {
-                sentData = lpt.getFromMap(lpt.sentDataMap, param.consumer, Set);
-            } else {
-                sentData = lpt.sentData;
-            }
-            if (!allowRepeat && sentData.has(dataStr))
+            if (!allowRepeat && lpt.sentData.has(dataStr))
                 return {
                     success: 0,
                     from: 'local',
                     message: '当前请求不允许重复发送！'
                 };
-            sentData.add(dataStr);
+            lpt.sentData.add(dataStr);
+            if (param.consumer.isBusy()) {
+                return {
+                    success: 0,
+                    from: 'local',
+                    message: '正在执行其他请求!'
+                };
+            }
+            param.consumer.changeBusy(true);
             const promise = axios({
                 method: method,
                 url: param.url,
@@ -157,18 +185,23 @@ function initLaputa(option) {
                 } else {
                     if (typeof param.fail === 'function')
                         param.fail(result);
-                    if (usePromise)
+                    if (usePromise) {
+                        // promise形式会抛出内容为错误信息的异常
                         throw new Error(result.message);
+                    }
                 }
                 if (typeof param.finish === 'function')
                     param.finish(result);
                 if (typeof param.complete === 'function')
                     param.complete();
+                param.consumer.changeBusy(false);
+                return Promise.resolve(result);
             }).catch(error => {
                 if (typeof param.error === 'function')
                     param.error(error);
                 if (typeof param.complete === 'function')
                     param.complete();
+                param.consumer.changeBusy(false);
                 throw error;
             });
             promise.success = 1;
@@ -202,62 +235,60 @@ function initLaputa(option) {
             const executor = {
                 curStartId: 0,
                 curFrom: 0,
-                isSendingAjax: false,
                 hasReachedBottom: false,
                 totalLength: 0,
-                curQueryToken: null,
-                sentData: new Set()
+                curQueryToken: null
             };
+            // 每个查询器都内含一个消费者
+            const consumer = lpt.createConsumer();
             Object.assign(executor, option);
+            let onBusyChangeCallBack;
             executor.onBusyChange = function (fun) {
-                executor.onBusyChangeCallBack = fun;
+                onBusyChangeCallBack = fun;
+                consumer.onBusyChange(fun);
             }
             executor.offBusyChange = function () {
-                executor.onBusyChangeCallBack = undefined;
+                consumer.offBusyChange(onBusyChangeCallBack);
+            }
+            executor.isBusy = function () {
+                return consumer.isBusy();
             }
             executor.query = function (param) {
-                if (executor.isSendingAjax)
+                if (consumer.isBusy())
                     return executor;
-                executor.isSendingAjax = true;
-                if (executor.onBusyChangeCallBack)
-                    executor.onBusyChangeCallBack(executor.isSendingAjax);
                 param.data = param.data || {};
                 param.data.query_param = Object.assign({}, lpt.defaultQueryParam, param.data.query_param);
                 const queryParam = param.data.query_param;
                 queryParam.start_id = executor.curStartId;
                 queryParam.from = executor.curFrom;
                 queryParam.query_token = executor.curQueryToken;
-                lpt.appendMethod(param, 'success', function (result) {
-                    if (result.object.length === 0) {
-                        executor.hasReachedBottom = true;
-                    } else {
-                        executor.curStartId = result.object[result.object.length - 1].id;
-                        executor.curFrom += result.object.length;
-                        executor.totalLength += result.object.length;
+                // 携带当前查询器的内含消费者信息
+                param.consumer = consumer;
+                // 查询器允许POST重复数据
+                param.allowRepeat = true;
+                const res = param.method ? lpt.ajax(param) : lpt.post(param);
+                res.then((result) => {
+                    if (result.success === 0) {
+                        if (result.object.length === 0) {
+                            executor.hasReachedBottom = true;
+                        } else {
+                            executor.curStartId = result.object[result.object.length - 1].id;
+                            executor.curFrom += result.object.length;
+                            executor.totalLength += result.object.length;
+                        }
+                        if (result.attached_token)
+                            executor.curQueryToken = result.attached_token;
                     }
-                    if (result.attached_token)
-                        executor.curQueryToken = result.attached_token;
                 });
-                lpt.appendMethod(param, 'complete', function () {
-                    executor.isSendingAjax = false;
-                    if (executor.onBusyChangeCallBack)
-                        executor.onBusyChangeCallBack(executor.isSendingAjax);
-                });
-                if (param.method)
-                    lpt.ajax(param);
-                else
-                    lpt.post(param);
-                return executor;
+                return res;
             }
             executor.reset = function (param) {
                 param = param || {};
                 executor.curStartId = param.curStartId || 0;
                 executor.curFrom = param.curFrom || 0;
-                executor.isSendingAjax = param.isSendingAjax || false;
                 executor.hasReachedBottom = param.hasReachedBottom || false;
                 executor.totalLength = param.totalLength || 0;
                 executor.curQueryToken = param.curQueryToken || null;
-                executor.sentData.clear();
             }
             return executor;
         }
@@ -278,15 +309,22 @@ function initLaputa(option) {
         const serv = {
             signIn: wrap(function (param) {
                 param.url = lpt.baseUrl + '/operator/login';
-                return lpt.post(param);
+                // 登录允许POST重复数据
+                param.allowRepeat = true;
+                return lpt.post(param).then(result => {
+                    lpt.operatorServ.setCurrent(result.object);
+                });
             }),
             signOut: wrap(function (param) {
+                // 请求数据自动处理过程中已经修改了currentOperator
                 param.url = lpt.baseUrl + '/operator/logout';
                 return lpt.post(param);
             }),
             signUp: wrap(function (param) {
                 param.url = lpt.baseUrl + '/operator/register';
-                return lpt.post(param);
+                return lpt.post(param).then(result => {
+                    lpt.operatorServ.setCurrent(result.object);
+                });
             }),
             setCurrent: wrap(function (_operator) {
                 lpt.operator = _operator;
@@ -296,7 +334,7 @@ function initLaputa(option) {
                 if (typeof lpt.operator !== 'undefined')
                     return lpt.operator;
                 const st = localStorage.getItem('lpt_operator');
-                return st === null ? null : JSON.parse(st);
+                return (st === null || st === 'undefined') ? null : JSON.parse(st);
             }),
             isCurrentAdmin: wrap(function (operator) {
                 if (typeof operator === 'undefined')
@@ -315,7 +353,7 @@ function initLaputa(option) {
                 return lpt.get(param);
             }),
             checkName: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/check_name/' + param.data.userName;
+                param.url = lpt.baseUrl + '/user/check_name/' + param.param.userName;
                 return lpt.get(param);
             }),
             setInfo: wrap(function (param) {

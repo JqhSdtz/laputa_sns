@@ -38,7 +38,6 @@ export default {
 	},
 	created() {
 		querior.reset();
-		this.lptConsumer = Symbol();
 		const ref = this;
 		querior.onBusyChange(isBusy => {
 			this.$nextTick(() => {
@@ -48,7 +47,6 @@ export default {
 		});
 		this.defaultQueryOption = {
 			querior,
-			consumer: this.lptConsumer,
 			param: {
 				queryType: this.sortType,
 			},
