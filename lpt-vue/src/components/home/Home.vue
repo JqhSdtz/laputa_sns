@@ -60,9 +60,9 @@ export default {
 </script>
 
 <style scoped>
-	#loading-area {
-		position: fixed;
-		right: 5%;
-		bottom: 11%;
-	}
+#loading-area {
+	position: fixed;
+	right: 5%;
+	bottom: 11%;
+}
 </style>

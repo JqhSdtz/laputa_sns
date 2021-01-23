@@ -1,6 +1,7 @@
 <template>
 	<div class="post-list" v-infinite-scroll="loadMore"
 	     infinite-scroll-disabled="busy" infinite-scroll-distance="10">
+		<a-back-top style="bottom: 4.5rem;" :target="getElement"/>
 		<post-item class="post-item" v-for="post in list" :post="post"
 		           :key="post.id" :class="{post, 'last-post': post.last}"></post-item>
 	</div>
@@ -37,6 +38,7 @@ export default {
 	},
 	created() {
 		querior.reset();
+		this.lptConsumer = Symbol();
 		const ref = this;
 		querior.onBusyChange(isBusy => {
 			this.$nextTick(() => {
@@ -46,6 +48,7 @@ export default {
 		});
 		this.defaultQueryOption = {
 			querior,
+			consumer: this.lptConsumer,
 			param: {
 				queryType: this.sortType,
 			},
@@ -55,7 +58,7 @@ export default {
 		};
 		lpt.postServ.queryForCategory({
 			...this.defaultQueryOption,
-			success: result => {
+			success(result) {
 				ref.list = result.object;
 			}
 		});
@@ -69,10 +72,10 @@ export default {
 			if (!querior.hasReachedBottom) {
 				lpt.postServ.queryForCategory({
 					...this.defaultQueryOption,
-					success: (result) => {
+					success(result) {
 						ref.list = ref.list.concat(result.object);
 					},
-					fail: (result) => {
+					fail(result) {
 						alert(result.message);
 					}
 				});
@@ -80,6 +83,9 @@ export default {
 		},
 		getColor(index) {
 			return theme.getColor(index);
+		},
+		getElement() {
+			return this.$el;
 		}
 	}
 }

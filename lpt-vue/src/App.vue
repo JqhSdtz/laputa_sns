@@ -1,13 +1,17 @@
 <template>
 	<a-config-provider :locale="locale" :getPopupContainer="getPopupContainer">
-		<router-view/>
+		<router-view v-slot="{ Component }">
+			<keep-alive>
+				<component :is="Component"/>
+			</keep-alive>
+		</router-view>
 	</a-config-provider>
 </template>
 
 <script>
 import zhCN from 'ant-design-vue/es/locale/zh_CN';
-import { registerCheckSignFailCallback } from '@/lib/js/laputa-vue';
-import { Modal } from 'ant-design-vue';
+import {registerCheckSignFailCallback} from '@/lib/js/laputa-vue';
+import {Modal} from 'ant-design-vue';
 
 export default {
 	name: 'App',
@@ -30,13 +34,6 @@ export default {
 			});
 		});
 	},
-	provide() {
-		return {
-			backToHome: () => {
-				this.$router.push({name: 'home'});
-			}
-		}
-	},
 	methods: {
 		getPopupContainer(el, dialogContext) {
 			if (dialogContext) {
@@ -49,7 +46,7 @@ export default {
 }
 </script>
 
-<style>
+<style lang="less">
 #app {
 	height: 100%;
 }

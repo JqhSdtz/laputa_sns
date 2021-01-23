@@ -47,6 +47,16 @@ function initLaputa(option) {
         lpt.isObject = function (obj) {
             return Object.prototype.toString.call(obj) === '[Object Object]';
         }
+        lpt.getFromMap = function (map, key, constructor) {
+            if (!(map instanceof Map))
+                return null;
+            let res = map.get(key);
+            if (!res) {
+                res = new constructor();
+                map.set(key, res);
+            }
+            return res;
+        }
     }
 
     function wrap(fun) {
@@ -65,7 +75,12 @@ function initLaputa(option) {
                     }
                 }
             }
-            return fun.apply(ref, arguments);
+            const result = fun.apply(ref, arguments);
+            if (result && result.from === 'local' && result.success === 0) {
+                // 本地的失败信息在控制台输出
+                console.log(result.message);
+            }
+            return result;
         };
     }
 
@@ -86,10 +101,14 @@ function initLaputa(option) {
     function initAjaxMethods() {
         // 保存已发送的数据和URL及Method，用于判重
         lpt.sentData = new Set();
+        lpt.sentDataMap = new Map();
         lpt.ajax = function (param) {
+            // 没有回调函数才使用promise
+            const usePromise = !(param.success || param.fail || param.complete);
             if (!param.url) {
                 return {
                     success: 0,
+                    from: 'local',
                     message: 'URL不能为空！'
                 };
             }
@@ -104,15 +123,21 @@ function initLaputa(option) {
                 url: param.url,
                 data: jsonDataStr
             });
-            const sentData = param.querior ? param.querior.sentData : lpt.sentData;
+            let sentData;
+            if (param.querior) {
+                sentData = param.querior.sentData;
+            } else if (param.consumer) {
+                sentData = lpt.getFromMap(lpt.sentDataMap, param.consumer, Set);
+            } else {
+                sentData = lpt.sentData;
+            }
             if (!allowRepeat && sentData.has(dataStr))
                 return {
                     success: 0,
+                    from: 'local',
                     message: '当前请求不允许重复发送！'
                 };
             sentData.add(dataStr);
-            // 没有回调函数才使用promise
-            const usePromise = !(param.success || param.fail || param.complete);
             const promise = axios({
                 method: method,
                 url: param.url,

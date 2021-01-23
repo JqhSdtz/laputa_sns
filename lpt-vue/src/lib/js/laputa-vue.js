@@ -22,3 +22,11 @@ export function checkSignDirection(el, binding) {
 export function registerCheckSignFailCallback(callback) {
     checkSignFailCallback = callback;
 }
+
+export const testDirection = {
+    beforeMount(el, binding, vNode) {
+        console.log(el);
+        console.log(binding);
+        console.log(vNode);
+    }
+}

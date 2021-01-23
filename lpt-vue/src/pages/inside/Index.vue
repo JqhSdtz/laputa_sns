@@ -1,5 +1,5 @@
 <template>
-	<post-list class='post-list'></post-list>
+	<post-list keep-scroll-top class='post-list'></post-list>
 </template>
 
 <script>

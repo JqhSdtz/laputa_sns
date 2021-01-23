@@ -1,8 +1,13 @@
 <template>
 	<top-area :pull-distance="pullDistance.down" :pull-finish="pullFinish.down"
 	          :finish-callback="resetTouch"></top-area>
-	<router-view @touchstart="touchStart($event)"
-	             @touchmove="touchMove($event)" @touchend="touchEnd($event)"></router-view>
+
+	<router-view v-slot="{ Component }" @touchstart="touchStart($event)"
+	             @touchmove="touchMove($event)" @touchend="touchEnd($event)">
+		<keep-alive>
+			<component :is="Component" />
+		</keep-alive>
+	</router-view>
 </template>
 
 <script>
