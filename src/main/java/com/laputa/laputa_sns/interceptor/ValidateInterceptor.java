@@ -65,7 +65,7 @@ public class ValidateInterceptor implements HandlerInterceptor {
                 message = "Token不正确";
                 break loadOperator;
             }
-            Result<Operator> operatorResult = operatorService.loadOperator(userId, operator, request, response);
+            Result<Operator> operatorResult = operatorService.loadOperator(userId, operator, response);
             if (operatorResult.getState() == Result.FAIL) {
                 message = operatorResult.getMessage();
                 break loadOperator;
