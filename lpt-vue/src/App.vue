@@ -5,15 +5,20 @@
 				<component :is="Component"/>
 			</keep-alive>
 		</router-view>
-		<loading-area id="loading-area" :isBusy="isBusy"></loading-area>
+		<loading-area id="loading-area"></loading-area>
 	</a-config-provider>
 </template>
 
 <script>
 import zhCN from 'ant-design-vue/es/locale/zh_CN';
+import { message } from 'ant-design-vue';
 import {registerCheckSignFailCallback} from '@/lib/js/laputa-vue';
 import {Modal} from 'ant-design-vue';
-import LoadingArea from '@/components/global/LoadingArea'
+import LoadingArea from '@/components/global/LoadingArea';
+
+message.config({
+	duration: 1.5
+})
 
 export default {
 	name: 'App',
@@ -21,11 +26,7 @@ export default {
 		LoadingArea
 	},
 	data() {
-		const loadingArea = {
-			isBusy: false
-		};
 		return {
-			...loadingArea,
 			locale: zhCN,
 		};
 	},
@@ -42,13 +43,6 @@ export default {
 				}
 			});
 		});
-	},
-	provide() {
-		return {
-			setGlobalBusy: (isBusy) => {
-				this.isBusy = isBusy;
-			}
-		}
 	},
 	methods: {
 		getPopupContainer(el, dialogContext) {

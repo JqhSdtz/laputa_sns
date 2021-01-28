@@ -119,7 +119,7 @@ function initLaputa(option) {
                 contentType: 'application/json',
                 dataType: 'json',
                 data: method === 'GET' ? param.data : jsonDataStr,
-                success: function (result) {
+                success: function (result, textStatus, request) {
                     if (result.state === 1) {
                         if (typeof param.success == 'function')
                             param.success(result);

@@ -42,9 +42,7 @@ export default {
 		}
 	},
 	methods: {
-		login() {
 
-		}
 	}
 }
 </script>

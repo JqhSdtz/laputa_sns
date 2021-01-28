@@ -2,23 +2,18 @@
 	<a-form id="form" ref="form" layout="horizontal" :model="form"
 	        :label-col="{span: 8}" :wrapper-col="{span: 16}" :rules="rules"
 	        hide-required-mark="">
-		<a-form-item name="username">
+		<a-form-item ref="username" name="username">
 			<template v-slot:label>
 				<label class="label">用户名：</label>
 			</template>
-			<a-input v-model:value="form.username" placeholder="请输入" @focus="onFocus"/>
+			<a-input v-model:value="form.username" placeholder="请输入"/>
 		</a-form-item>
-		<a-form-item name="password">
+		<a-form-item ref="password" name="password">
 			<template v-slot:label>
 				<label class="label">密码：</label>
 			</template>
-			<a-input-password v-model:value="form.password" placeholder="请输入" @focus="onFocus"/>
+			<a-input-password v-model:value="form.password" placeholder="请输入"/>
 		</a-form-item>
-		<a-row id="message" v-if="signFailed">
-			<a-col span="16" offset="8">
-				<p class="message-text">{{ failMessage }}</p>
-			</a-col>
-		</a-row>
 		<a-form-item :wrapperCol="{span: 24}">
 			<a-button style="width: 100%;" type="primary" @click="signIn">
 				登录
@@ -36,21 +31,16 @@
 </template>
 
 <script>
-import lpt from '@/lib/js/laputa'
-import md5 from 'crypto-js/md5'
-import {notification} from "ant-design-vue";
+import lpt from '@/lib/js/laputa';
+import md5 from 'crypto-js/md5';
+import {notification, message} from 'ant-design-vue';
+import {makeError} from '@/lib/js/form-util';
+import global from '@/lib/js/global-state';
 
 export default {
 	name: 'SignIn',
-	inject: {
-		setGlobalBusy: {
-			type: Function
-		}
-	},
 	data() {
 		return {
-			signFailed: false,
-			failMessage: '',
 			form: {
 				username: '',
 				password: '',
@@ -69,10 +59,9 @@ export default {
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
-		const ref = this;
 		this.lptConsumer.onBusyChange(isBusy => {
 			this.$nextTick(() => {
-				ref.setGlobalBusy(isBusy);
+				global.isBusy.value = isBusy;
 			});
 		});
 	},
@@ -83,20 +72,17 @@ export default {
 		toSignUp() {
 			this.$router.push({path: '/sign_up'});
 		},
-		onFocus() {
-			this.signFailed = false;
-		},
 		signIn() {
 			const ref = this;
-			this.$refs.form.validate().then(() => {
-				lpt.operatorServ.signIn({
+			const form = this.$refs.form;
+			form.validate().then(() => {
+				return lpt.operatorServ.signIn({
 					consumer: ref.lptConsumer,
 					data: {
 						nick_name: ref.form.username,
 						password: md5(ref.form.password).toString()
 					},
 					success() {
-						ref.signFailed = false;
 						ref.backToHome();
 						notification.open({
 							message: '登录成功',
@@ -104,21 +90,25 @@ export default {
 						});
 					},
 					fail(result) {
-						ref.signFailed = true;
-						ref.failMessage = result.message;
+						if (result.error_code === 1010130207) {
+							// 用户名不存在
+							makeError(ref.$refs.username, result.message);
+						} else if (result.error_code === 1010130209) {
+							// 密码错误
+							makeError(ref.$refs.password, result.message);
+						} else {
+							// 其他错误
+							message.warn(result.message);
+						}
 					}
 				})
-			}).catch(() => {
-				this.signFailed = false;
 			});
 		}
 	}
 }
 </script>
 
-<style scoped lang="less">
-@import (reference) '~ant-design-vue/dist/antd.less';
-
+<style scoped>
 .label {
 	line-height: 2.5rem;
 }
@@ -129,13 +119,5 @@ export default {
 	transform: translate(-50%, -50%);
 	left: 50%;
 	top: 40%;
-}
-
-#message {
-	margin-top: -1rem;
-}
-
-.message-text {
-	color: @error-color
 }
 </style>

@@ -1,7 +1,7 @@
 import {createApp} from 'vue';
 import App from './App.vue';
 import router from './router';
-import {Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input} from 'ant-design-vue';
+import {Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload} from 'ant-design-vue';
 import 'ant-design-vue/dist/antd.less';
 import remHelper from '@/lib/js/rem-helper';
 import {checkSignDirection, testDirection} from '@/lib/js/laputa-vue';
@@ -14,7 +14,7 @@ remHelper.initRem({
 });
 
 const app = createApp(App);
-const useList = [router, Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input];
+const useList = [router, Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload];
 useList.forEach(item => {
     app.use(item);
 });

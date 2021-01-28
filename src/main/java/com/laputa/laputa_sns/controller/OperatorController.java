@@ -6,6 +6,7 @@ import com.laputa.laputa_sns.model.entity.User;
 import com.laputa.laputa_sns.service.OperatorService;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -24,13 +25,13 @@ public class OperatorController {
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public Result<Operator> login(@RequestBody User user, HttpServletResponse response) {
-        return operatorService.login(user, response);
+    public Result<Operator> login(@RequestBody User user, HttpServletRequest request, HttpServletResponse response) {
+        return operatorService.login(user, request, response);
     }
 
     @RequestMapping(value = "/register", method = RequestMethod.POST)
-    public Result<Operator> register(@RequestBody User user, HttpServletResponse response) {
-        return operatorService.register(user, response);
+    public Result<Operator> register(@RequestBody User user, HttpServletRequest request, HttpServletResponse response) {
+        return operatorService.register(user, request, response);
     }
 
     @RequestMapping(value = "/logout", method = RequestMethod.POST)

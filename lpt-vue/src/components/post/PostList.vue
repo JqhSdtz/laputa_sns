@@ -13,6 +13,7 @@ import PostItem from './item/PostItem'
 import lpt from '@/lib/js/laputa'
 import infiniteScroll from '@/lib/js/infinite-scroll'
 import theme from '@/lib/js/theme'
+import global from '@/lib/js/global-state';
 
 const querior = lpt.createQuerior();
 
@@ -31,17 +32,14 @@ export default {
 			busy: false
 		}
 	},
-	inject: {
-		setGlobalBusy: {
-			type: Function
-		}
-	},
 	created() {
 		querior.reset();
 		const ref = this;
 		querior.onBusyChange(isBusy => {
 			this.$nextTick(() => {
-				ref.setGlobalBusy(isBusy);
+				global.isBusy.value = isBusy;
+				// 这里单独建一个busy属性是为了防止
+				// 全局的isBusy变动触发无限下滑组件检测状态导致错误请求
 				ref.busy = isBusy;
 			});
 		});

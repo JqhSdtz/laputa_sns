@@ -2,30 +2,25 @@
 	<a-form id="form" ref="form" layout="horizontal" :model="form"
 	        :label-col="{span: 8}" :wrapper-col="{span: 16}" :rules="rules"
 	        hide-required-mark="">
-		<a-form-item name="username">
+		<a-form-item ref="username" name="username">
 			<template v-slot:label>
 				<label class="label">用户名：</label>
 			</template>
-			<a-input v-model:value="form.username" placeholder="请输入" @focus="onFocus"/>
+			<a-input v-model:value="form.username" placeholder="请输入"/>
 		</a-form-item>
-		<a-form-item name="password">
+		<a-form-item ref="password" name="password">
 			<template v-slot:label>
 				<label class="label">密码：</label>
 			</template>
-			<a-input-password v-model:value="form.password" placeholder="请输入" @focus="onFocus"/>
+			<a-input-password v-model:value="form.password" placeholder="请输入"/>
 		</a-form-item>
 		<!-- 经过尝试，confirmPassword必须名称保持一致 -->
-		<a-form-item name="confirmPassword">
+		<a-form-item ref="confirmPassword" name="confirmPassword">
 			<template v-slot:label>
 				<label class="label">确认密码：</label>
 			</template>
-			<a-input-password v-model:value="form.confirmPassword" placeholder="请输入" @focus="onFocus"/>
+			<a-input-password v-model:value="form.confirmPassword" placeholder="请输入"/>
 		</a-form-item>
-		<a-row id="message" v-if="signFailed">
-			<a-col span="16" offset="8">
-				<p class="message-text">{{ failMessage }}</p>
-			</a-col>
-		</a-row>
 		<a-form-item :wrapperCol="{span: 24}">
 			<a-button style="width: 100%;" type="primary" @click="signUp">
 				注册
@@ -45,30 +40,22 @@
 <script>
 import lpt from "@/lib/js/laputa";
 import md5 from "crypto-js/md5";
-import { notification } from 'ant-design-vue';
+import {notification, message} from 'ant-design-vue';
+import global from '@/lib/js/global-state';
 
 export default {
 	name: 'SignUp',
-	inject: {
-		setGlobalBusy: {
-			type: Function
-		}
-	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
-		const ref = this;
 		this.lptConsumer.onBusyChange(isBusy => {
 			this.$nextTick(() => {
-				ref.setGlobalBusy(isBusy);
-				ref.busy = isBusy;
+				global.isBusy.value = isBusy;
 			});
 		});
 	},
 	data() {
 		const ref = this;
 		return {
-			signFailed: false,
-			failMessage: '',
 			form: {
 				username: '',
 				password: '',
@@ -134,13 +121,10 @@ export default {
 		toSignIn() {
 			this.$router.push({path: '/sign_in'});
 		},
-		onFocus() {
-			this.signFailed = false;
-		},
 		signUp() {
 			this.$refs.form.validate().then(() => {
 				const ref = this;
-				lpt.operatorServ.signUp({
+				return lpt.operatorServ.signUp({
 					consumer: ref.lptConsumer,
 					data: {
 						nick_name: ref.form.username,
@@ -156,21 +140,16 @@ export default {
 						});
 					},
 					fail(result) {
-						ref.signFailed = true;
-						ref.failMessage = result.message;
+						message.warn(result.message);
 					}
 				});
-			}).catch(() => {
-				this.signFailed = false;
-			});
+			})
 		}
 	}
 }
 </script>
 
 <style scoped lang="less">
-@import (reference) '~ant-design-vue/dist/antd.less';
-
 .label {
 	line-height: 2.5rem;
 }
@@ -181,13 +160,5 @@ export default {
 	transform: translate(-50%, -50%);
 	left: 50%;
 	top: 40%;
-}
-
-#message {
-	margin-top: -1rem;
-}
-
-.message-text {
-	color: @error-color
 }
 </style>

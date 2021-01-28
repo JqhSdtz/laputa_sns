@@ -10,6 +10,7 @@ import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.model.entity.User;
 import com.laputa.laputa_sns.util.CryptUtil;
 import com.laputa.laputa_sns.util.ProgOperatorManager;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +20,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.net.URI;
 import java.util.Date;
 import java.util.Map;
 
@@ -28,6 +31,7 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
  * 操作者相关的服务
+ *
  * @author JQH
  * @since 上午 9:50 20/02/19
  */
@@ -72,16 +76,34 @@ public class OperatorService {
         redisHelper.setEntity(operator, false);
     }
 
-    private void setToken(@NotNull Operator operator, @NotNull HttpServletResponse response) {
+    @SneakyThrows
+    private String getOriginDomain(HttpServletRequest request) {
+        String url = request.getHeader("Origin");
+        URI uri = new URI(url);
+        String domain = uri.getHost();
+        return domain.startsWith("www.") ? domain.substring(4) : domain;
+    }
+
+    private void setToken(@NotNull Operator operator, HttpServletRequest request, @NotNull HttpServletResponse response) {
         String token = CryptUtil.randUrlSafeStr(32, true);
         operator.setToken(token);
         if (operator.getUser() != null)
             operator.getUser().setToken(token);
-        Cookie cookie = new Cookie("token", operator.getUserId() + "@" + token);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        //cookie.setSecure(true);
-        response.addCookie(cookie);
+        Cookie[] cookies = new Cookie[2];
+        for (int i = 0; i < 2; ++i) {
+            cookies[i] = new Cookie("token", operator.getUserId() + "@" + token);;
+            Cookie cookie = cookies[i];
+            cookie.setPath("/");
+            cookie.setHttpOnly(true);
+            // 一个月
+            cookie.setMaxAge(2592000);
+            if (i == 0) {
+                // 解决跨域问题
+                cookie.setDomain(getOriginDomain(request));
+            }
+            //cookie.setSecure(true);
+            response.addCookie(cookie);
+        }
     }
 
     @Nullable
@@ -97,26 +119,26 @@ public class OperatorService {
             return operator;
     }
 
-    public Result<Operator> login(@NotNull User paramUser, HttpServletResponse response) {
+    public Result<Operator> login(@NotNull User paramUser, HttpServletRequest request, HttpServletResponse response) {
         Result<User> loginResult = userService.login(paramUser);
         if (loginResult.getState() == FAIL)
             return (Result<Operator>) (Result) loginResult;
         User resUser = loginResult.getObject();
         Operator operator = new Operator();
         operator.setUser(resUser).setFromLogin(true);
-        afterLogin(operator, response, false, false);
+        afterLogin(operator, request, response, false, false);
         return new Result(SUCCESS).setObject(operator);
     }
 
-    public Result<Operator> register(User paramUser, HttpServletResponse response) {
+    public Result<Operator> register(User paramUser, HttpServletRequest request, HttpServletResponse response) {
         Operator operator = new Operator();
         operator.setUser(paramUser);
-        setToken(operator, response);
+        setToken(operator, request, response);
         Result<Integer> registerResult = userService.createUser(paramUser);
         if (registerResult.getState() == FAIL)
             return (Result<Operator>) (Result) registerResult;
         operator.setUserId(registerResult.getObject()).setFromLogin(true);
-        afterLogin(operator, response, false, true);
+        afterLogin(operator, request, response, false, true);
         return new Result(SUCCESS).setObject(operator);
     }
 
@@ -129,7 +151,7 @@ public class OperatorService {
         return Result.EMPTY_SUCCESS;
     }
 
-    private Result afterLogin(@NotNull Operator operator, HttpServletResponse response, boolean fromLoad, boolean fromRegister) {
+    private Result afterLogin(@NotNull Operator operator, HttpServletRequest request, HttpServletResponse response, boolean fromLoad, boolean fromRegister) {
         User user = operator.getUser();
         if (user.getState() != null && user.getState() > 0) {//该用户涉及管理权限
             Result<Map<Integer, Integer>> permissionMapResult = permissionService.readPermissionMapOfUser(user.getId(), progOperator);
@@ -137,7 +159,7 @@ public class OperatorService {
                 return permissionMapResult;
             operator.setPermissionMap(permissionMapResult.getObject());
         }
-        setToken(operator, response);
+        setToken(operator, request, response);
         //operator.setLastAccessTime(new Date().getTime()).setFromLogin(null);
         Result afterLogin = userService.afterLogin(user, operator.getToken(), fromRegister);//更新数据库，增加登录次数
         if (afterLogin.getState() == FAIL)
@@ -147,14 +169,14 @@ public class OperatorService {
         return Result.EMPTY_SUCCESS;
     }
 
-    public Result<Operator> loadOperator(Integer userId, Operator operator, HttpServletResponse response) {
+    public Result<Operator> loadOperator(Integer userId, Operator operator, HttpServletRequest request, HttpServletResponse response) {
         if (operator == null)
             operator = getOnlineOperator(userId);
         if (operator == null)
             return new Result(FAIL).setErrorCode(1010130201).setMessage("用户离线");
         boolean fromLogin = operator.getFromLogin() != null && operator.getFromLogin();
         if (fromLogin) {
-            afterLogin(operator, response, true, false);
+            afterLogin(operator, request, response, true, false);
         } else {
             Result<User> userResult = userService.readUserWithCounter(userId, operator);//获取用户基本信息
             if (userResult.getState() == FAIL)

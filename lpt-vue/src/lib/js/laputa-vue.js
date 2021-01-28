@@ -1,4 +1,6 @@
-import lpt from '@/lib/js/laputa'
+import lpt from '@/lib/js/laputa';
+import global from '@/lib/js/global-state';
+import {reactive} from 'vue';
 
 let checkSignFailCallback;
 
@@ -9,8 +11,7 @@ export function checkSignDirection(el, binding) {
             // 不检查是否登录
             return;
         }
-        const curOperator = lpt.operatorServ.getCurrent();
-        if (curOperator === null || curOperator.user.id === -1) {
+        if (!lpt.operatorServ.hasSigned()) {
             if (checkSignFailCallback) {
                 checkSignFailCallback();
             }
@@ -30,3 +31,8 @@ export const testDirection = {
         console.log(vNode);
     }
 }
+
+lpt.event.on('onCurOperatorChange', operator => {
+    // 不能直接替换operator对象，否则会失去响应性
+    global.curOperator.user = reactive(operator.user);
+});

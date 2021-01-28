@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+axios.defaults.withCredentials = true;
+
 function initLaputa(option) {
     const lpt = {};
     lpt.isLocalHost = false;
@@ -15,6 +17,7 @@ function initLaputa(option) {
     lpt.loadOption(option);
 
     initCommonUtil();
+    initEventBus();
     initUrlMethods();
     initAjaxMethods();
     initConsumerFactory();
@@ -51,6 +54,36 @@ function initLaputa(option) {
             }
         }
         lpt.util = util;
+    }
+
+    function initEventBus() {
+        const eventMap = new Map();
+        const event = {};
+        event.on = function(name, fun) {
+            let funArr = eventMap.get(name);
+            if (!funArr) {
+                funArr = new Array();
+                eventMap.set(name, funArr);
+            }
+            funArr.push(fun);
+        }
+        event.emit = function(name, obj) {
+            const funArr = eventMap.get(name);
+            if (!funArr)
+                return;
+            funArr.forEach(fun => {
+                if (typeof fun === 'function')
+                    fun(obj);
+            });
+        }
+        event.off = function(name, fun) {
+            const funArr = eventMap.get(name);
+            funArr.forEach((_fun, idx) => {
+                if (_fun === fun)
+                    funArr.splice(idx, 1);
+            });
+        }
+        lpt.event = event;
     }
 
     function initConsumerFactory() {
@@ -186,8 +219,8 @@ function initLaputa(option) {
                     if (typeof param.fail === 'function')
                         param.fail(result);
                     if (usePromise) {
-                        // promise形式会抛出内容为错误信息的异常
-                        throw new Error(result.message);
+                        // 如果有throwObject选项，则抛出整个result对象，否则抛出错误信息
+                        throw new Error(param.throwObject ? result : result.message);
                     }
                 }
                 if (typeof param.finish === 'function')
@@ -306,6 +339,12 @@ function initLaputa(option) {
     }
 
     function initOperatorService() {
+        const unSignedOperator = {
+            user: {
+                id: -1
+            }
+        };
+        let curOperator;
         const serv = {
             signIn: wrap(function (param) {
                 param.url = lpt.baseUrl + '/operator/login';
@@ -326,15 +365,19 @@ function initLaputa(option) {
                     lpt.operatorServ.setCurrent(result.object);
                 });
             }),
+            hasSigned: wrap(function () {
+                return serv.getCurrent().user.id !== -1;
+            }),
             setCurrent: wrap(function (_operator) {
-                lpt.operator = _operator;
+                curOperator = _operator;
                 localStorage.setItem('lpt_operator', JSON.stringify(_operator));
+                lpt.event.emit('onCurOperatorChange', _operator);
             }),
             getCurrent: wrap(function () {
-                if (typeof lpt.operator !== 'undefined')
-                    return lpt.operator;
+                if (typeof curOperator !== 'undefined')
+                    return curOperator;
                 const st = localStorage.getItem('lpt_operator');
-                return (st === null || st === 'undefined') ? null : JSON.parse(st);
+                return (st === null || st === 'undefined') ? unSignedOperator : JSON.parse(st);
             }),
             isCurrentAdmin: wrap(function (operator) {
                 if (typeof operator === 'undefined')
@@ -349,7 +392,7 @@ function initLaputa(option) {
     function initUserService() {
         const serv = {
             get: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/' + param.data.user_id;
+                param.url = lpt.baseUrl + '/user/' + param.param.user_id;
                 return lpt.get(param);
             }),
             checkName: wrap(function (param) {

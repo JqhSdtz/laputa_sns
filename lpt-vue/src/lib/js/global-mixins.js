@@ -19,6 +19,7 @@ function removeDistinct(setKey, key) {
     }
 }
 
+// 用于切换页面时保持原页面的滚动条位置
 const keepScrollTop = {
     mounted() {
         // 因为deactivated钩子中scrollTop值已清零，所以要在每次变化时都记录下当前的scrollTop
