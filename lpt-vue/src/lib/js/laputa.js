@@ -59,7 +59,7 @@ function initLaputa(option) {
     function initEventBus() {
         const eventMap = new Map();
         const event = {};
-        event.on = function(name, fun) {
+        event.on = function (name, fun) {
             let funArr = eventMap.get(name);
             if (!funArr) {
                 funArr = new Array();
@@ -67,7 +67,7 @@ function initLaputa(option) {
             }
             funArr.push(fun);
         }
-        event.emit = function(name, obj) {
+        event.emit = function (name, obj) {
             const funArr = eventMap.get(name);
             if (!funArr)
                 return;
@@ -76,7 +76,7 @@ function initLaputa(option) {
                     fun(obj);
             });
         }
-        event.off = function(name, fun) {
+        event.off = function (name, fun) {
             const funArr = eventMap.get(name);
             funArr.forEach((_fun, idx) => {
                 if (_fun === fun)
@@ -159,6 +159,30 @@ function initLaputa(option) {
     function initAjaxMethods() {
         // 保存已发送的数据和URL及Method，用于判重
         lpt.sentData = new Set();
+        const lptUserTokenIdentifier = 'l7p$t-u8s*e6r-t5o@k4e(3$n1~';
+        let curUserToken = localStorage.getItem(lptUserTokenIdentifier);
+        lpt.getCurUserToken = function () {
+            return curUserToken;
+        }
+        let ajaxBusyCount = 0;
+
+        function changeBusy(param, isBusy) {
+            const oriBusyCount = ajaxBusyCount;
+            // promise是线程安全的，通过事件循环实现，无需考虑++操作的原子性
+            ajaxBusyCount += isBusy ? 1 : -1;
+            if (Math.sign(oriBusyCount) !== Math.sign(ajaxBusyCount)
+                && !param.ignoreGlobalBusyChange) {
+                // 之前同时执行的请求数和当前请求数符号不同
+                // 即从0到正或从正道0，或异常时从负到正、从正到负
+                // 发起全局繁忙状态改变
+                lpt.event.emit('globalBusyChange', isBusy);
+            }
+            if (!param.ignoreBusyChange) {
+                // 发起consumer内部繁忙状态改变
+                param.consumer.changeBusy(isBusy);
+            }
+        }
+
         lpt.ajax = function (param) {
             if (!param.consumer) {
                 console.warn('no consumer defined for ajax request! use new consumer.');
@@ -198,17 +222,26 @@ function initLaputa(option) {
                     message: '正在执行其他请求!'
                 };
             }
-            param.consumer.changeBusy(true);
+            changeBusy(param, true);
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            if (curUserToken) {
+                headers['X-LPT-USER-TOKEN'] = curUserToken;
+            }
             const promise = axios({
                 method: method,
                 url: param.url,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: headers,
                 responseType: 'json',
                 param: method === 'GET' ? param.data : undefined,
                 data: method === 'GET' ? undefined : jsonDataStr
             }).then(response => {
+                const tmpUserToken = response.headers['x-lpt-user-token'];
+                if (tmpUserToken) {
+                    curUserToken = tmpUserToken;
+                    localStorage.setItem(lptUserTokenIdentifier, curUserToken);
+                }
                 const result = response.data;
                 if (result.state === 1) {
                     if (typeof param.success === 'function')
@@ -227,14 +260,14 @@ function initLaputa(option) {
                     param.finish(result);
                 if (typeof param.complete === 'function')
                     param.complete();
-                param.consumer.changeBusy(false);
+                changeBusy(param, false);
                 return Promise.resolve(result);
             }).catch(error => {
                 if (typeof param.error === 'function')
                     param.error(error);
                 if (typeof param.complete === 'function')
                     param.complete();
-                param.consumer.changeBusy(false);
+                changeBusy(param, false);
                 throw error;
             });
             promise.success = 1;
@@ -395,14 +428,20 @@ function initLaputa(option) {
                 param.url = lpt.baseUrl + '/user/' + param.param.user_id;
                 return lpt.get(param);
             }),
+            getInfo: wrap(function (param) {
+                param.url = lpt.baseUrl + '/user/info/' + param.param.user_id;
+                return lpt.get(param);
+            }),
             checkName: wrap(function (param) {
                 param.url = lpt.baseUrl + '/user/check_name/' + param.param.userName;
                 return lpt.get(param);
             }),
             setInfo: wrap(function (param) {
                 param.url = lpt.baseUrl + '/user/info';
-                const operator = lpt.operatorServ.getCurrent();
-                param.data.id = operator.user_id;
+                return lpt.patch(param);
+            }),
+            updateUserName: wrap(function (param) {
+                param.url = lpt.baseUrl + '/user/name';
                 return lpt.patch(param);
             }),
             setTopPost: wrap(function (param) {

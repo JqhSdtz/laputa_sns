@@ -215,7 +215,7 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
      * 读取指定一级评论的二级评论
      */
     public Result<List<CommentL2>> readIndexCommentL2List(@NotNull CommentL2 comment, Operator operator) {
-        if (!comment.isValidReadIndexParam(previewCml2Num))
+        if (!comment.isValidReadIndexParam(previewCml2Num, true))
             return new Result(FAIL).setErrorCode(1010090203).setMessage("操作错误，参数不合法");
         Result validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(comment, POPULAR, hmacKey);
         if (validateTokenResult.getState() == FAIL)

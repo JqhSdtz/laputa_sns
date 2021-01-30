@@ -13,6 +13,7 @@ import com.laputa.laputa_sns.util.ProgOperatorManager;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -60,6 +61,9 @@ public class OperatorService {
         this.redisHelper = new RedisHelper(RedisPrefix.ONLINE_OPERATOR, objectMapper, operatorTimeOut, null, null, null, null, Operator.class, redisTemplate);
     }
 
+    @Value("${pass-token-through-header}")
+    private boolean passTokenThroughHeader;
+
     public Operator getOnlineOperator(Integer userId) {
         return redisHelper.getEntity(userId, false, false);
     }
@@ -77,13 +81,17 @@ public class OperatorService {
         operator.setToken(token);
         if (operator.getUser() != null)
             operator.getUser().setToken(token);
-        Cookie cookie = new Cookie("token", operator.getUserId() + "@" + token);
+        String cookieToken = operator.getUserId() + "@" + token;
+        Cookie cookie = new Cookie("token", cookieToken);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         // 一个月
         cookie.setMaxAge(2592000);
         //cookie.setSecure(true);
         response.addCookie(cookie);
+        if (passTokenThroughHeader) {
+            response.addHeader("X-LPT-USER-TOKEN", cookieToken);
+        }
     }
 
     @Nullable

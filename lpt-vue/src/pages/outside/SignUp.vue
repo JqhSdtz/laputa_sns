@@ -41,17 +41,11 @@
 import lpt from "@/lib/js/laputa";
 import md5 from "crypto-js/md5";
 import {notification, message} from 'ant-design-vue';
-import global from '@/lib/js/global-state';
 
 export default {
 	name: 'SignUp',
 	created() {
 		this.lptConsumer = lpt.createConsumer();
-		this.lptConsumer.onBusyChange(isBusy => {
-			this.$nextTick(() => {
-				global.isBusy.value = isBusy;
-			});
-		});
 	},
 	data() {
 		const ref = this;

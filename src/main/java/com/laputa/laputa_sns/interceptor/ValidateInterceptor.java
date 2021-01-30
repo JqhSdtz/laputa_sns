@@ -9,6 +9,7 @@ import com.laputa.laputa_sns.service.OperatorService;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -32,6 +33,9 @@ public class ValidateInterceptor implements HandlerInterceptor {
         this.operatorService = operatorService;
     }
 
+    @Value("${pass-token-through-header}")
+    private boolean passTokenThroughHeader;
+
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request, HttpServletResponse response, Object handler) {
         if (!Globals.ready()) {
@@ -42,6 +46,9 @@ public class ValidateInterceptor implements HandlerInterceptor {
         if ("/operator/login".equals(servletPath) || "/operator/register".equals(servletPath))
             return true;//不拦截注册登录请求
         String cookieStr = getTokenFromCookie(request.getCookies());
+        if (cookieStr == null && passTokenThroughHeader) {
+            cookieStr = request.getHeader("X-LPT-USER-TOKEN");
+        }
         String message = null;
         if (cookieStr != null && cookieStr != "") loadOperator:{
             String[] str = cookieStr.split("@");

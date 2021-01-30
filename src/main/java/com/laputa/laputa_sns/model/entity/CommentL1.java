@@ -169,9 +169,13 @@ public class CommentL1 extends AbstractContent<CommentL1> {
     }
 
     @JsonIgnore
-    public boolean isValidReadIndexParam() {
-        if (creator != null)//避免污染选择条件
-            return false;
+    public boolean isValidReadIndexParam(boolean format) {
+        if (format) {
+            this.setCreator(null);
+        } else {
+            if (creator != null)//避免污染选择条件
+                return false;
+        }
         if (post == null || post.getId() == null)
             return false;
         if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)

@@ -12,8 +12,6 @@ export default {
 			showCapturePanel: false
 		}
 	},
-	mounted() {
-	},
 	methods: {
 		handleClick(event) {
 			this.showCapturePanel = !this.showCapturePanel;
@@ -61,7 +59,8 @@ export default {
 			zIndex: 1,
 			left: 0,
 			bottom: 0,
-			width: '100%'
+			width: '100%',
+			boxShadow: '0 -3px 10px rgba(100, 100, 100, 0.2)'
 		}
 		const capturePanel = (
 			// <div style="height: 500px;background-color:black">aaaaaaaaaa</div>

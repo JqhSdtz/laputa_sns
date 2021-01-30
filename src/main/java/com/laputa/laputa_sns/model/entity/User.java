@@ -151,11 +151,15 @@ public class User extends AbstractBaseEntity {
     }
 
     @JsonIgnore
-    public boolean isValidUpdateInfoParam() {
+    public boolean isValidUpdateInfoParam(boolean format) {
         if (id == null)
             return false;
-        if (nickName != null || followersCnt != null || followingCnt != null || postCnt != null)
-            return false;//这些需特殊判断
+        if (format) {
+            this.setNickName(null).setFollowersCnt(null).setFollowingCnt(null).setPostCnt(null);
+        } else {
+            if (nickName != null || followersCnt != null || followingCnt != null || postCnt != null)
+                return false;//这些需特殊判断
+        }
         if (wxUnionId == null && email == null && schInfo == null && phone == null && intro == null && rawAvatar == null)
             return false;
         return true;

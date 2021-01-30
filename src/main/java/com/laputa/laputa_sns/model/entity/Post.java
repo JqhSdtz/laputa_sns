@@ -328,9 +328,14 @@ public class Post extends AbstractContent<Post> {
     }
 
     @JsonIgnore
-    public boolean isValidReadIndexOfCategoryParam() {
-        if (supId != null || oriId != null || allowForward != null || type != null || state != null || creator != null)
-            return false;
+    public boolean isValidReadIndexOfCategoryParam(boolean format) {
+        if (format) {
+            this.setSupId(null).setOriId(null).setAllowForward(null).setType(null).setState(null);
+            this.creator = null;
+        } else {
+            if (supId != null || oriId != null || allowForward != null || type != null || state != null || creator != null)
+                return false;
+        }
         if (category == null || category.getId() == null)
             return false;
         if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)
@@ -339,9 +344,14 @@ public class Post extends AbstractContent<Post> {
     }
 
     @JsonIgnore
-    public boolean isValidReadIndexOfCreatorParam() {
-        if (supId != null || oriId != null || allowForward != null || type != null || state != null || category != null)
-            return false;
+    public boolean isValidReadIndexOfCreatorParam(boolean format) {
+        if (format) {
+            this.setSupId(null).setOriId(null).setAllowForward(null).setType(null).setState(null);
+            this.category = null;
+        } else {
+            if (supId != null || oriId != null || allowForward != null || type != null || state != null || category != null)
+                return false;
+        }
         if (creator == null || creator.getId() == null)
             return false;
         if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)

@@ -1,9 +1,10 @@
 import {createRouter, createWebHashHistory} from 'vue-router';
 import Home from '@/components/home/Home'
-import Index from '@/pages/inside/Index';
-import News from '@/pages/inside/News';
-import Community from '@/pages/inside/Community';
-import Mine from '@/pages/inside/Mine';
+import Index from '@/pages/inside/index/Index';
+import News from '@/pages/inside/news/News';
+import Community from '@/pages/inside/community/Community';
+import Mine from '@/pages/inside/mine/Mine';
+import ModUserInfo from '@/pages/inside/mine/details/ModUserInfo';
 import SignIn from '@/pages/outside/SignIn';
 import SignUp from '@/pages/outside/SignUp';
 
@@ -34,6 +35,10 @@ const router =  createRouter({
                 {
                     path: 'mine',
                     component: Mine
+                },
+                {
+                    path: 'mod_user_info',
+                    component: ModUserInfo
                 }
             ]
         },

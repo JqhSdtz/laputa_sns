@@ -434,7 +434,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * 添加目录，返回结果中包含新添加目录的id
      */
     public synchronized Result createCategory(@NotNull Category category, Operator operator) {
-        if (!category.isValidInsertParam() || !category.isValidOpComment())
+        if (!category.isValidInsertParam(true) || !category.isValidOpComment())
             return new Result(FAIL).setErrorCode(1010010207).setMessage("操作失败，参数不合法");
         if (!categoryValidator.checkCreatePermission(category, operator))
             return new Result(FAIL).setErrorCode(1010010208).setMessage("操作失败，权限错误");

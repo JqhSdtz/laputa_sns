@@ -1,5 +1,5 @@
 <template>
-	<div id="main-view" :style="{height: mainViewHeight}">
+	<div id="main-view" :style="{height: mainViewHeight, position: 'relative'}">
 		<main-view :key="currentView"></main-view>
 	</div>
 	<main-tab-bar id="main-bar" :style="{height: mainBarHeight}"></main-tab-bar>

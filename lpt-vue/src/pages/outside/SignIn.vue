@@ -59,11 +59,6 @@ export default {
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
-		this.lptConsumer.onBusyChange(isBusy => {
-			this.$nextTick(() => {
-				global.isBusy.value = isBusy;
-			});
-		});
 	},
 	methods: {
 		backToHome() {

@@ -40,6 +40,7 @@ public class WebConfigurer implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins("*")
                 .allowCredentials(true)
+                .exposedHeaders("X-LPT-USER-TOKEN")
                 .allowedMethods("GET", "POST", "PATCH", "DELETE");
     }
 

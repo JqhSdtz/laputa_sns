@@ -206,7 +206,7 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
      * 读取指定帖子的评论
      */
     public Result<List<CommentL1>> readIndexCommentL1List(@NotNull CommentL1 comment, int type, boolean withPreviewL2List, Operator operator) {
-        if (!comment.isValidReadIndexParam())
+        if (!comment.isValidReadIndexParam(true))
             return new Result(FAIL).setErrorCode(1010080203).setMessage("操作错误，参数不合法");
         Result validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(comment, type, hmacKey);
         if (validateTokenResult.getState() == FAIL)

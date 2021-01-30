@@ -5,7 +5,10 @@ import {Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload} fr
 import 'ant-design-vue/dist/antd.less';
 import remHelper from '@/lib/js/rem-helper';
 import {checkSignDirection, testDirection} from '@/lib/js/laputa-vue';
-import globalMixins from '@/lib/js/global-mixins'
+import globalMixins from '@/lib/js/global-mixins';
+import {initLaputa} from '@/lib/js/laputa-vue';
+
+initLaputa();
 
 // 设置rem单位的相对大小
 remHelper.initRem({

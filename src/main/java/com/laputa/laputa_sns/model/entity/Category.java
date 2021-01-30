@@ -190,11 +190,15 @@ public class Category extends AbstractBaseEntity implements Cloneable {
 
     @JsonIgnore
     /**用于在Category对象作为新添加对象的时候判断是否合法*/
-    public boolean isValidInsertParam() {
+    public boolean isValidInsertParam(boolean format) {
         if (name == null || parent == null || parent.id == null)
             return false;
-        if (postCnt != null || topPostId != null || defSubId != null || dispSeq != null)//过滤掉新添加数据不应该出现的字段
-            return false;
+        if (format) {
+            this.setPostCnt(null).setTopPostId(null).setDefSubId(null).setDispSeq(null);
+        } else {
+            if (postCnt != null || topPostId != null || defSubId != null || dispSeq != null)//过滤掉新添加数据不应该出现的字段
+                return false;
+        }
         return true;
     }
 

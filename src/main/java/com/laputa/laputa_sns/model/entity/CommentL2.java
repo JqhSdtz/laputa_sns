@@ -129,9 +129,13 @@ public class CommentL2 extends AbstractContent<CommentL2> {
     }
 
     @JsonIgnore
-    public boolean isValidReadIndexParam(int previewCml2Num) {
-        if (postId != null || creator != null)//避免污染选择条件
-            return false;
+    public boolean isValidReadIndexParam(int previewCml2Num, boolean format) {
+        if (format) {
+            this.setPostId(null).setCreator(null);
+        } else {
+            if (postId != null || creator != null)//避免污染选择条件
+                return false;
+        }
         if (l1 == null || l1.getId() == null)
             return false;
         if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10

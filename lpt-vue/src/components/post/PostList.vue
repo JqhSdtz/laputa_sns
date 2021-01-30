@@ -37,7 +37,6 @@ export default {
 		const ref = this;
 		querior.onBusyChange(isBusy => {
 			this.$nextTick(() => {
-				global.isBusy.value = isBusy;
 				// 这里单独建一个busy属性是为了防止
 				// 全局的isBusy变动触发无限下滑组件检测状态导致错误请求
 				ref.busy = isBusy;

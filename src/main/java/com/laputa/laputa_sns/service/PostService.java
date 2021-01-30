@@ -303,7 +303,7 @@ public class PostService extends BaseService<PostDao, Post> {
      */
     @SneakyThrows
     public Result<List<Post>> readIndexPostList(@NotNull Post paramPost, int type, Operator operator) {
-        if (!paramPost.isValidReadIndexOfCategoryParam())
+        if (!paramPost.isValidReadIndexOfCategoryParam(true))
             return new Result(FAIL).setErrorCode(1010050213).setMessage("操作错误，参数不合法");
         Result validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(paramPost, type, hmacKey);
         if (validateTokenResult.getState() == FAIL)
@@ -334,7 +334,7 @@ public class PostService extends BaseService<PostDao, Post> {
 
     public Result<List<Post>> readPostListOfCreator(@NotNull Post param, Operator operator) {
         param.setOfType(Post.OF_CREATOR);
-        if (!param.isValidReadIndexOfCreatorParam())
+        if (!param.isValidReadIndexOfCreatorParam(true))
             return new Result(FAIL).setErrorCode(1010050221).setMessage("操作错误，参数不合法");
         Result validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(param, CREATOR, hmacKey);
         if (validateTokenResult.getState() == FAIL)

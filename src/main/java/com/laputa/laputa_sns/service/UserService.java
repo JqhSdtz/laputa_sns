@@ -330,7 +330,15 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
      * 读取用户基本信息
      */
     public Result<User> readUser(Integer id, boolean isFull, boolean withCnt, boolean withIsFollowedByViewer, Operator operator) {
-        Result<User> result = queryHelper.readEntity(new User(id), isFull);
+        User queryEntity = new User(id);
+        Result<User> result;
+        if (isFull) {
+            // 读取用户完整信息直接读数据库
+            queryEntity.setQueryParam(new QueryParam().setQueryType(QueryParam.FULL));
+            result = queryHelper.readDBEntity(queryEntity);
+        } else {
+            result = queryHelper.readEntity(queryEntity, false);
+        }
         if (result.getState() == FAIL)
             return result;
         User user = result.getObject();
@@ -399,7 +407,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
      * 更新用户信息
      */
     public Result updateUserInfo(@NotNull User paramUser, Operator operator) {
-        if (!paramUser.isValidUpdateInfoParam())
+        if (!paramUser.isValidUpdateInfoParam(true))
             return new Result(FAIL).setErrorCode(1010020210).setMessage("操作错误，参数不合法");
         if (!userValidator.checkUpdatePermission(paramUser, operator))//检查操作者权限
             return new Result(FAIL).setErrorCode(1010020211).setMessage("操作失败，权限错误");
