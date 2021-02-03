@@ -1,5 +1,5 @@
-import lpt from '@/lib/js/laputa';
-import global from '@/lib/js/global-state';
+import lpt from '@/lib/js/laputa/laputa';
+import global from '@/lib/js/global/global-state';
 import {reactive} from 'vue';
 
 export function initLaputa() {
@@ -16,8 +16,13 @@ export function initLaputa() {
 
 let checkSignFailCallback;
 
+// 注册权限校验失败的回调
+export function registerCheckSignFailCallback(callback) {
+    checkSignFailCallback = callback;
+}
+
 // 全局的权限校验指令
-export function checkSignDirection(el, binding) {
+const checkSignDirection = function (el, binding) {
     el.addEventListener('click', (event) => {
         const val = binding.value;
         if (!val) {
@@ -33,16 +38,25 @@ export function checkSignDirection(el, binding) {
     });
 }
 
-// 注册权限校验失败的回调
-export function registerCheckSignFailCallback(callback) {
-    checkSignFailCallback = callback;
-}
-
-export const testDirection = {
-    beforeMount(el, binding, vNode) {
-        console.log(el);
-        console.log(binding);
-        console.log(vNode);
+const onClickOutsideDirection = {
+    mounted(el, binding) {
+        if (typeof binding.value !== 'function')
+            return;
+        document.addEventListener('click', function (event) {
+            if (!el.contains(event.target)) {
+                binding.value();
+            }
+        }, true);
     }
 }
 
+export const customDirectionList = [
+    {
+        name: 'checkSign',
+        handler: checkSignDirection
+    },
+    {
+        name: 'clickOutside',
+        handler: onClickOutsideDirection
+    }
+];

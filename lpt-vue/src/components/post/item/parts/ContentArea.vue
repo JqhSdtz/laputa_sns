@@ -1,15 +1,17 @@
 <template>
 	<div class="content-area">
 		<p class="title">{{ post.title }}</p>
-		<pre class="content">{{ post.content }}</pre>
-		<p v-if="post.full_text_id" class="full-text-btn" onclick="showFullText()" >查看全文
+		<pre class="content" v-if="isShowFullText">{{ fullText }}</pre>
+		<pre class="content" v-else>{{ post.content }}</pre>
+		<p v-if="post.full_text_id && !isShowFullText" class="full-text-btn" @click="showFullText" >
+			查看全文
 		</p>
 		<p class="category-path">{{ categoryPath }}</p>
 	</div>
 </template>
 
 <script>
-import lpt from "@/lib/js/laputa";
+import lpt from "@/lib/js/laputa/laputa";
 
 export default {
 	name: 'ContentArea',
@@ -17,12 +19,32 @@ export default {
 		post: Object
 	},
 	data() {
-		this.categoryPath = lpt.categoryServ.getPathStr(this.post.category_path);
-		return {}
+		return {
+			fullText: '',
+			isShowFullText: false
+		}
+	},
+	created() {
+		this.lptConsumer = lpt.createConsumer();
+	},
+	computed: {
+		categoryPath() {
+			return lpt.categoryServ.getPathStr(this.post.category_path);
+		}
 	},
 	methods: {
 		showFullText() {
-
+			const ref = this;
+			lpt.postServ.getFullText({
+				consumer: this.lptConsumer,
+				param: {
+					fullTextId: this.post.full_text_id
+				},
+				success(result) {
+					ref.isShowFullText = true;
+					ref.fullText = result.object;
+				}
+			});
 		}
 	}
 }
@@ -53,5 +75,6 @@ export default {
 .full-text-btn {
 	cursor: pointer;
 	color: #007bff;
+	margin-left: 1rem;
 }
 </style>

@@ -1,12 +1,12 @@
 import {createApp} from 'vue';
 import App from './App.vue';
 import router from './router';
-import {Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload} from 'ant-design-vue';
+import {Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload, Popover, Tabs} from 'ant-design-vue';
 import 'ant-design-vue/dist/antd.less';
-import remHelper from '@/lib/js/rem-helper';
-import {checkSignDirection, testDirection} from '@/lib/js/laputa-vue';
-import globalMixins from '@/lib/js/global-mixins';
-import {initLaputa} from '@/lib/js/laputa-vue';
+import remHelper from '@/lib/js/uitls/rem-helper';
+import {customDirectionList} from '@/lib/js/laputa/laputa-vue';
+import globalMixins from '@/lib/js/global/global-mixins';
+import {initLaputa} from '@/lib/js/laputa/laputa-vue';
 
 initLaputa();
 
@@ -17,22 +17,12 @@ remHelper.initRem({
 });
 
 const app = createApp(App);
-const useList = [router, Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload];
+const useList = [router, Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload, Popover, Tabs];
 useList.forEach(item => {
     app.use(item);
 });
 
-// 全局添加权限校验指令
-const customDirectionList = [
-    {
-        name: 'checkSign',
-        handler: checkSignDirection
-    },
-    {
-        name: 'test',
-        handler: testDirection
-    }
-];
+// 添加全局自定义指令
 customDirectionList.forEach(item => {
     app.directive(item.name, item.handler);
 });

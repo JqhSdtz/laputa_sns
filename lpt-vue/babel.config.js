@@ -5,7 +5,12 @@ module.exports = {
     plugins: [
         ['import', {
             libraryName: 'ant-design-vue',
-            libraryDirectory: "es"
-        }]
+            libraryDirectory: 'es'
+        }, 'ant-design-vue'],
+        ['import', {
+            libraryName: 'vant',
+            libraryDirectory: 'es',
+            style: true
+        }, 'vant']
     ]
 }

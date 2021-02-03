@@ -27,18 +27,23 @@
 				</router-link>
 			</a-button>
 			<a-button class="item-btn">
-				相册
+				<router-link to="/home/mod_user_info">
+					修改密码
+				</router-link>
 			</a-button>
 			<a-button class="item-btn">
-				取消
+				<router-link to="#" @click="signOut">
+					注销
+				</router-link>
 			</a-button>
 		</div>
 	</div>
 </template>
 
 <script>
-import lpt from '@/lib/js/laputa';
-import global from '@/lib/js/global-state';
+import lpt from '@/lib/js/laputa/laputa';
+import global from '@/lib/js/global/global-state';
+import {message} from "ant-design-vue";
 
 export default {
 	name: 'Mine',
@@ -46,6 +51,9 @@ export default {
 		return {
 			me: global.curOperator
 		}
+	},
+	created() {
+		this.lptConsumer = lpt.createConsumer();
 	},
 	computed: {
 		hasSigned() {
@@ -59,7 +67,17 @@ export default {
 		signIn() {
 			this.$router.push({name: 'signIn'});
 		},
-
+		signOut() {
+			lpt.operatorServ.signOut({
+				consumer: this.lptConsumer,
+				success() {
+					message.success('注销成功');
+				},
+				fail(result) {
+					message.error(result.message);
+				}
+			});
+		}
 	}
 }
 </script>

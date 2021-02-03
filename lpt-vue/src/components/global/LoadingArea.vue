@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import global from '@/lib/js/global-state';
+import global from '@/lib/js/global/global-state';
 
 export default {
 	name: 'LoadingArea',

@@ -7,53 +7,82 @@ import Mine from '@/pages/inside/mine/Mine';
 import ModUserInfo from '@/pages/inside/mine/details/ModUserInfo';
 import SignIn from '@/pages/outside/SignIn';
 import SignUp from '@/pages/outside/SignUp';
+import PostDetail from '@/pages/outside/post_detail/PostDetail';
 
-const router =  createRouter({
-    history: createWebHashHistory(),
-    routes: [
-        {
-            path: '/',
-            redirect: '/home/index'
-        },
-        {
-            path: '/home',
-            name: 'home',
-            component: Home,
-            children: [
-                {
-                    path: 'index',
-                    component: Index
-                },
-                {
-                    path: 'news',
-                    component: News
-                },
-                {
-                    path: 'community',
-                    component: Community
-                },
-                {
-                    path: 'mine',
-                    component: Mine
-                },
-                {
-                    path: 'mod_user_info',
-                    component: ModUserInfo
-                }
-            ]
-        },
-        {
-            path: '/sign_in',
-            name: 'signIn',
-            component: SignIn
-        },
-        {
-            path: '/sign_up',
-            name: 'signUp',
-            component: SignUp
+const routers = [
+    {
+        path: '/',
+        redirect: '/home/index'
+    },
+    {
+        path: '/home',
+        name: 'home',
+        component: Home,
+        children: [
+            {
+                path: 'index',
+                component: Index
+            },
+            {
+                path: 'news',
+                component: News
+            },
+            {
+                path: 'community',
+                component: Community
+            },
+            {
+                path: 'mine',
+                component: Mine
+            },
+            {
+                path: 'mod_user_info',
+                component: ModUserInfo
+            }
+        ]
+    },
+    {
+        path: '/sign_in',
+        name: 'signIn',
+        component: SignIn
+    },
+    {
+        path: '/sign_up',
+        name: 'signUp',
+        component: SignUp
+    },
+    {
+        path: '/post_detail/:post_id',
+        name: 'postDetail',
+        component: PostDetail,
+        props: true,
+        meta: {
+            noCache: true
         }
-    ]
+    }
+];
+const router = createRouter({
+    history: createWebHashHistory(),
+    routes: routers
 });
+
+const _noCacheList = [];
+function processRouters(_routers) {
+    _routers.forEach(router => {
+        if (router.meta) {
+            if (router.meta.noCache && router.component) {
+                _noCacheList.push(router.component.name);
+            }
+        }
+        if (router.children) {
+            processRouters(router.children);
+        }
+    });
+}
+processRouters(routers);
+
+
+export const noCacheList = _noCacheList;
 
 let curHomeInsidePath = '/home/index';
 const resolvedSet = new Set();
@@ -81,6 +110,6 @@ router.beforeEach((to, from, next) => {
         return;
     }
     next();
-})
+});
 
 export default router;

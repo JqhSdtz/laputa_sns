@@ -7,10 +7,10 @@
 
 <script>
 
-import lpt from '@/lib/js/laputa'
+import lpt from '@/lib/js/laputa/laputa'
 import MainTabBar from './tab_bar/MainTabBar'
 import MainView from './MainView'
-import remHelper from '@/lib/js/rem-helper'
+import remHelper from '@/lib/js/uitls/rem-helper'
 
 export default {
 	name: 'Home',

@@ -1,7 +1,7 @@
 <template>
 	<a-config-provider :locale="locale" :getPopupContainer="getPopupContainer">
 		<router-view v-slot="{ Component }">
-			<keep-alive>
+			<keep-alive :exclude="noCacheList">
 				<component :is="Component"/>
 			</keep-alive>
 		</router-view>
@@ -12,9 +12,10 @@
 <script>
 import zhCN from 'ant-design-vue/es/locale/zh_CN';
 import { message } from 'ant-design-vue';
-import {registerCheckSignFailCallback} from '@/lib/js/laputa-vue';
+import {registerCheckSignFailCallback} from '@/lib/js/laputa/laputa-vue';
 import {Modal} from 'ant-design-vue';
 import LoadingArea from '@/components/global/LoadingArea';
+import {noCacheList} from '@/router/index';
 
 message.config({
 	duration: 1.5
@@ -28,6 +29,7 @@ export default {
 	data() {
 		return {
 			locale: zhCN,
+			noCacheList
 		};
 	},
 	created() {

@@ -52,7 +52,9 @@ export default {
 		const panelButtonStyle = {
 			width: '100%',
 			height: '3rem',
-			borderBottom: 'none'
+			borderBottom: 'none',
+			borderLeft: 'none',
+			borderRight: 'none'
 		};
 		const panelStyle = {
 			position: 'fixed',
@@ -63,7 +65,6 @@ export default {
 			boxShadow: '0 -3px 10px rgba(100, 100, 100, 0.2)'
 		}
 		const capturePanel = (
-			// <div style="height: 500px;background-color:black">aaaaaaaaaa</div>
 			<div style={panelStyle} v-show={this.showCapturePanel}>
 				<AButton style={panelButtonStyle} onClick={this.chooseCamera}>
 					拍照

@@ -31,14 +31,18 @@
 </template>
 
 <script>
-import lpt from '@/lib/js/laputa';
+import lpt from '@/lib/js/laputa/laputa';
 import md5 from 'crypto-js/md5';
 import {notification, message} from 'ant-design-vue';
-import {makeError} from '@/lib/js/form-util';
-import global from '@/lib/js/global-state';
+import {makeError} from '@/lib/js/uitls/form-util';
 
 export default {
 	name: 'SignIn',
+	inject: {
+		refreshMainView: {
+			type: Function
+		}
+	},
 	data() {
 		return {
 			form: {
@@ -78,6 +82,7 @@ export default {
 						password: md5(ref.form.password).toString()
 					},
 					success() {
+						this.refreshMainView();
 						ref.backToHome();
 						notification.open({
 							message: '登录成功',

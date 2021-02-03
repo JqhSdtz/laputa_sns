@@ -59,8 +59,8 @@
 <script>
 import AUploadM from '@/components/upload/Upload';
 import {message} from "ant-design-vue";
-import lpt from "@/lib/js/laputa";
-import global from "@/lib/js/global-state";
+import lpt from "@/lib/js/laputa/laputa";
+import global from "@/lib/js/global/global-state";
 
 export default {
 	name: 'ModUserInfo',
@@ -113,7 +113,8 @@ export default {
 								return Promise.resolve();
 							} else {
 								return lpt.userServ.checkName({
-									consumer: ref.lptConsumer,
+									consumer: lpt.createConsumer(),
+									ignoreGlobalBusyChange: true,
 									param: {
 										userName: value
 									}
@@ -187,7 +188,19 @@ export default {
 		},
 		saveUserInfo() {
 			const ref = this;
-			function setInfo() {
+			this.$refs.form.validate().then(() => {
+				if (ref.form.nick_name !== ref.oriUserName) {
+					// 修改用户名
+					lpt.userServ.updateUserName({
+						consumer: lpt.createConsumer(),
+						data: {
+							nick_name: ref.form.nick_name
+						},
+						fail(result) {
+							message.error('用户名修改失败，失败原因:' + result.message);
+						}
+					});
+				}
 				return lpt.userServ.setInfo({
 					consumer: ref.lptConsumer,
 					data: ref.form,
@@ -198,26 +211,6 @@ export default {
 						message.error(result.message);
 					}
 				});
-			}
-			this.$refs.form.validate().then(() => {
-				if (this.form.nick_name !== this.oriUserName) {
-					// 用户名改了
-					return lpt.userServ.updateUserName({
-						consumer: this.lptConsumer,
-						data: {
-							nick_name: this.form.nick_name
-						},
-						success() {
-							setInfo();
-						},
-						fail(result) {
-							message.error('用户名修改失败，失败原因:' + result.message);
-						}
-					});
-				} else {
-					// 用户名没改
-					return setInfo();
-				}
 			});
 		}
 	}

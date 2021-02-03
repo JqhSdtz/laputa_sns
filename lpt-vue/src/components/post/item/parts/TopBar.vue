@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import lpt from '@/lib/js/laputa'
+import lpt from '@/lib/js/laputa/laputa'
 import TimeAgo from 'javascript-time-ago'
 import zh from 'javascript-time-ago/locale/zh'
 
@@ -23,12 +23,21 @@ export default {
 	props: {
 		post: Object
 	},
-	created() {
-	},
-	data() {
-		this.avatarUrl = lpt.getUserAvatarUrl(this.post.creator);
-		this.beforeTime = timeAgo.format(this.post.create_time);
-		return {}
+	computed: {
+		avatarUrl() {
+			if (this.post.creator) {
+				return lpt.getUserAvatarUrl(this.post.creator);
+			} else {
+				return '';
+			}
+		},
+		beforeTime() {
+			if (this.post.create_time) {
+				return timeAgo.format(this.post.create_time);
+			} else {
+				return '';
+			}
+		}
 	}
 }
 </script>
