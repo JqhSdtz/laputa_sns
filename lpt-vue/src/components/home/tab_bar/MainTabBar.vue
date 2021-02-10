@@ -72,12 +72,15 @@ export default {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	box-shadow: 0 -3px 10px rgba(100, 100, 100, 0.2);
+	box-shadow: 0 -2px 14px rgba(100, 100, 100, 0.2);
 	background-color: #F7F7F7;
 }
 .icon {
 	margin-top: 0.25rem;
-	font-size: 2rem;
+	font-size: 1.75rem;
+}
+.text {
+	font-size: 0.9rem;
 }
 .icon-active {
 	color: forestgreen;

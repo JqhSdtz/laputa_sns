@@ -1,6 +1,6 @@
 <template>
 	<a-row class="bottom-bar" justify="space-between">
-		<a-col class="icon-col" span="6">
+		<a-col class="icon-col" span="6" @click="showPostDetail">
 			<share-alt-outlined class="icon"/>
 			<span class="cnt">{{ post.forward_cnt }}</span>
 		</a-col>
@@ -24,12 +24,12 @@ import {
 	CommentOutlined, ShareAltOutlined
 } from '@ant-design/icons-vue';
 import lpt from '@/lib/js/laputa/laputa';
-import global from "@/lib/js/global/global-state";
+import global from "@/lib/js/global";
 
 export default {
 	name: 'BottomBar',
 	props: {
-		post_id: Number
+		postId: Number
 	},
 	components: {
 		LikeOutlined,
@@ -39,7 +39,7 @@ export default {
 	},
 	data() {
 		return {
-			post: global.postManager.get(this.post_id)
+			post: global.states.postManager.get(this.postId)
 		}
 	},
 	created() {
@@ -50,7 +50,7 @@ export default {
 			this.$router.push({
 				name: 'postDetail',
 				params: {
-					post_id: this.post.id
+					postId: this.post.id
 				}
 			});
 		},

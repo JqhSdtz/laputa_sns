@@ -40,15 +40,11 @@
 <script>
 import lpt from "@/lib/js/laputa/laputa";
 import md5 from "crypto-js/md5";
-import {notification, message} from 'ant-design-vue';
+import {notification} from 'ant-design-vue';
+import {Toast} from 'vant';
 
 export default {
 	name: 'SignUp',
-	inject: {
-		refreshMainView: {
-			type: Function
-		}
-	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 	},
@@ -130,7 +126,6 @@ export default {
 						password: md5(ref.form.password).toString()
 					},
 					success() {
-						this.refreshMainView();
 						ref.backToHome();
 						notification.success({
 							message: '注册成功',
@@ -139,7 +134,7 @@ export default {
 						});
 					},
 					fail(result) {
-						message.warn(result.message);
+						Toast.fail(result.message);
 					}
 				});
 			})

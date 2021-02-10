@@ -5,12 +5,12 @@
 </template>
 
 <script>
-import global from '@/lib/js/global/global-state';
+import global from '@/lib/js/global';
 
 export default {
 	name: 'LoadingArea',
 	computed: {
-		isBusy: () => global.isBusy.value
+		isBusy: () => global.states.isBusy.value
 	}
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-	<div style="height: 100%">
+	<div id="main-area" :style="{height: getScrollHeight(), position: 'relative'}">
 		<a-popover trigger="click" placement="bottomLeft" v-model:visible="showPopover">
 			<template v-slot:content>
 				<div style="width: 4rem">
@@ -13,7 +13,7 @@
 					</a-button>
 				</div>
 			</template>
-			<transition name="fade" v-if="postListLoaded">
+			<transition name="van-fade" v-if="postListLoaded">
 				<a-button id="sortTypeBtn" v-show="showSortTypeSelector" >
 					<OrderedListOutlined/>
 					<span style="margin-left: 0.5rem">
@@ -23,13 +23,15 @@
 				</a-button>
 			</transition>
 		</a-popover>
-		<post-list ref="postList" keep-scroll-top class='post-list' :sort-type="sortType" :onLoaded="onPostListLoaded"/>
+		<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px'}" :target="getElement"/>
+		<post-list ref="postList" keep-scroll-top :sort-type="sortType" @loaded="onPostListLoaded"/>
 	</div>
 </template>
 
 <script>
-import PostList from '@/components/post/PostList'
+import PostList from '@/components/post/PostList';
 import {OrderedListOutlined} from '@ant-design/icons-vue';
+import global from '@/lib/js/global';
 
 export default {
 	name: 'Index',
@@ -39,14 +41,15 @@ export default {
 	},
 	data() {
 		return {
-			sortType: 'popular',
+			mainBarHeight: global.vars.style.tabBarHeight,
+			sortType: global.states.pages.index.sortType,
 			postListLoaded: false,
 			showSortTypeSelector: false,
 			showPopover: false
 		}
 	},
 	mounted() {
-		const listElem = this.$refs.postList.$el;
+		const listElem = this.$el;
 		let preScrollTop = 0;
 		listElem.addEventListener('scroll', () => {
 			const curScrollTop = listElem.scrollTop;
@@ -63,6 +66,7 @@ export default {
 	methods: {
 		changeSortType(type) {
 			this.sortType = type;
+			this.showPopover = false;
 		},
 		getPopBtnType(sortType) {
 			return this.sortType === sortType ? 'primary' : 'default';
@@ -70,14 +74,28 @@ export default {
 		onPostListLoaded() {
 			this.showSortTypeSelector = true;
 			this.postListLoaded = true;
+		},
+		getScrollHeight() {
+			const mainViewHeight = document.body.clientHeight;
+			// 底部高度加0.5的padding
+			const barHeight = this.mainBarHeight;
+			return mainViewHeight - barHeight + 'px';
+		},
+		getElement() {
+			return this.$el;
 		}
 	}
 }
 </script>
 
 <style scoped>
-.post-list {
-	padding: 8px 0;
+
+#main-area {
+	overflow-y: scroll;
+}
+
+#main-area::-webkit-scrollbar {
+	display: none;
 }
 
 .pop-btn {
@@ -97,13 +115,5 @@ export default {
 	top: 1.5rem;
 	background-color: white;
 	z-index: 2;
-}
-
-.fade-enter-active, .fade-leave-active {
-	transition: opacity 0.7s ease;
-}
-
-.fade-enter-from, .fade-leave-to {
-	opacity: 0;
 }
 </style>

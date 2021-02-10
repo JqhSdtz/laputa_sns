@@ -58,9 +58,9 @@
 
 <script>
 import AUploadM from '@/components/upload/Upload';
-import {message} from "ant-design-vue";
+import {Toast} from 'vant';
 import lpt from "@/lib/js/laputa/laputa";
-import global from "@/lib/js/global/global-state";
+import global from "@/lib/js/global";
 
 export default {
 	name: 'ModUserInfo',
@@ -81,7 +81,7 @@ export default {
 				ref.form = result.object;
 			},
 			fail(result) {
-				message.error(result.message);
+				Toast.fail(result.message);
 			}
 		});
 	},
@@ -89,7 +89,7 @@ export default {
 		const ref = this;
 		this.uploadUrl = lpt.baseUrl + '/oss/ava';
 		return {
-			me: global.curOperator,
+			me: global.states.curOperator,
 			uploadHeader: {
 				'x-lpt-user-token': ''
 			},
@@ -158,30 +158,30 @@ export default {
 		},
 		handleChange(info) {
 			if (info.file.status === 'uploading') {
-				global.isBusy.value = true;
+				global.states.isBusy.value = true;
 			} else if (info.file.status === 'done') {
-				global.isBusy.value = false;
+				global.states.isBusy.value = false;
 				const resultUrl = info.file.response.object;
 				if (typeof resultUrl === 'string'
 						&& resultUrl.indexOf('ava') >= 0) {
 					this.me.user.raw_avatar = info.file.response.object;
 				} else {
-					message.error('上传失败');
+					Toast.fail('上传失败');
 					console.log(info);
 				}
 			} else if (info.file.status === 'error') {
-				global.isBusy.value = false;
-				message.error('上传失败');
+				global.states.isBusy.value = false;
+				Toast.fail('上传失败');
 				console.log(info);
 			}
 		},
 		beforeUpload(file) {
 			if (file.type.indexOf('image') < 0) {
-				message.error('只能上传图片文件');
+				Toast.fail('只能上传图片文件');
 				return false;
 			}
 			if (file.size > 10485760) {
-				message.error('上传图片不能大于10M');
+				Toast.fail('上传图片不能大于10M');
 				return false;
 			}
 			this.uploadHeader["x-lpt-user-token"] = lpt.getCurUserToken();
@@ -197,7 +197,7 @@ export default {
 							nick_name: ref.form.nick_name
 						},
 						fail(result) {
-							message.error('用户名修改失败，失败原因:' + result.message);
+							Toast.fail('用户名修改失败，失败原因:' + result.message);
 						}
 					});
 				}
@@ -205,10 +205,10 @@ export default {
 					consumer: ref.lptConsumer,
 					data: ref.form,
 					success() {
-						message.success('修改成功');
+						Toast.success('修改成功');
 					},
 					fail(result) {
-						message.error(result.message);
+						Toast.fail(result.message);
 					}
 				});
 			});

@@ -1,20 +1,19 @@
 <template>
-	<top-area :pull-distance="pullDistance.down" :pull-finish="pullFinish.down"
-	          :finish-callback="resetTouch"></top-area>
-
-	<router-view v-slot="{ Component }" @touchstart="touchStart($event)"
-	             @touchmove="touchMove($event)" @touchend="touchEnd($event)">
-		<keep-alive>
-			<component :is="Component" />
-		</keep-alive>
-	</router-view>
+	<div style="height: 100%">
+		<top-area :pull-distance="pullDistance.down" :pull-finish="pullFinish.down"
+		          :finish-callback="resetTouch"></top-area>
+		<div @touchstart="touchStart($event)"
+		     @touchmove="touchMove($event)" @touchend="touchEnd($event)">
+			<slot></slot>
+		</div>
+	</div>
 </template>
 
 <script>
-import TopArea from './hide_areas/TopArea'
+import TopArea from './hide_areas/TopArea';
 
 export default {
-	name: 'MainView',
+	name: 'PullArea',
 	components: {
 		TopArea
 	},
@@ -116,4 +115,5 @@ export default {
 </script>
 
 <style scoped>
+
 </style>

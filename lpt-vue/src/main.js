@@ -1,14 +1,14 @@
+// TODO 按照官方实例未能实现样式的按需引入
+import 'ant-design-vue/dist/antd.less';
+
 import {createApp} from 'vue';
 import App from './App.vue';
 import router from './router';
-import {Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload, Popover, Tabs} from 'ant-design-vue';
-import 'ant-design-vue/dist/antd.less';
+import {Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload, Popover} from 'ant-design-vue';
+import {Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag} from 'vant';
 import remHelper from '@/lib/js/uitls/rem-helper';
 import {customDirectionList} from '@/lib/js/laputa/laputa-vue';
 import globalMixins from '@/lib/js/global/global-mixins';
-import {initLaputa} from '@/lib/js/laputa/laputa-vue';
-
-initLaputa();
 
 // 设置rem单位的相对大小
 remHelper.initRem({
@@ -17,8 +17,13 @@ remHelper.initRem({
 });
 
 const app = createApp(App);
-const useList = [router, Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload, Popover, Tabs];
-useList.forEach(item => {
+const antdUseList = [router, Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload, Popover];
+antdUseList.forEach(item => {
+    app.use(item);
+});
+
+const vantUseList = [Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag];
+vantUseList.forEach(item => {
     app.use(item);
 });
 
@@ -29,7 +34,7 @@ customDirectionList.forEach(item => {
 
 // 添加全局混入选项
 globalMixins.forEach(mixin => {
-   app.mixin(mixin);
+    app.mixin(mixin);
 });
 
 app.mount('#app');

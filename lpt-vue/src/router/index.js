@@ -7,7 +7,7 @@ import Mine from '@/pages/inside/mine/Mine';
 import ModUserInfo from '@/pages/inside/mine/details/ModUserInfo';
 import SignIn from '@/pages/outside/SignIn';
 import SignUp from '@/pages/outside/SignUp';
-import PostDetail from '@/pages/outside/post_detail/PostDetail';
+import PostDetail from '@/components/post/post_detail/PostDetail';
 
 const routers = [
     {
@@ -52,7 +52,7 @@ const routers = [
         component: SignUp
     },
     {
-        path: '/post_detail/:post_id',
+        path: '/post_detail/:postId',
         name: 'postDetail',
         component: PostDetail,
         props: true,

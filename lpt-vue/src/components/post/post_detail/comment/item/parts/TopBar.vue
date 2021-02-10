@@ -4,15 +4,15 @@
 			<img class="ava" :src="avatarUrl"/>
 		</a-col>
 		<a-col span="16" class="time-and-name">
-			<p class="name">{{ post.creator.nick_name }}</p>
-			<p v-if="typeof post.create_time !== 'undefined'" class="time">{{ beforeTime }}</p>
+			<p class="name">{{ comment.creator.nick_name }}</p>
+			<p v-if="typeof comment.create_time !== 'undefined'" class="time">{{ beforeTime }}</p>
 		</a-col>
 	</a-row>
 </template>
 
 <script>
-import lpt from '@/lib/js/laputa/laputa';
-import TimeAgo from 'javascript-time-ago';
+import lpt from "@/lib/js/laputa/laputa";
+import TimeAgo from "javascript-time-ago";
 import zh from 'javascript-time-ago/locale/zh';
 
 TimeAgo.addLocale(zh);
@@ -21,19 +21,19 @@ const timeAgo = new TimeAgo('zh-CN');
 export default {
 	name: 'TopBar',
 	props: {
-		post: Object
+		comment: Object
 	},
 	computed: {
 		avatarUrl() {
-			if (this.post.creator) {
-				return lpt.getUserAvatarUrl(this.post.creator);
+			if (this.comment.creator) {
+				return lpt.getUserAvatarUrl(this.comment.creator);
 			} else {
 				return '';
 			}
 		},
 		beforeTime() {
-			if (this.post.create_time) {
-				return timeAgo.format(this.post.create_time);
+			if (this.comment.create_time) {
+				return timeAgo.format(this.comment.create_time);
 			} else {
 				return '';
 			}
@@ -42,20 +42,20 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .top-bar {
-	height: 3rem;
-}
-
-.top-bar .ava {
-	border-radius: 100%;
-	margin: 0.5rem 1rem;
-	width: 2.5rem;
 	height: 2.5rem;
 }
 
 .top-bar .time-and-name {
-	margin-top: 0.52rem;
+	margin-top: 0.3rem;
+}
+
+.top-bar .ava {
+	border-radius: 100%;
+	margin: 0.2rem 1rem;
+	width: 2.2rem;
+	height: 2.2rem;
 }
 
 .top-bar p {
@@ -65,11 +65,11 @@ export default {
 
 .top-bar .name {
 	font-weight: bold;
+	font-size: 0.85rem;
 }
 
 .top-bar .time {
 	margin-left: 0.15rem;
-	font-size: 0.75rem;
+	font-size: 0.65rem;
 }
-
 </style>

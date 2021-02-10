@@ -33,16 +33,13 @@
 <script>
 import lpt from '@/lib/js/laputa/laputa';
 import md5 from 'crypto-js/md5';
-import {notification, message} from 'ant-design-vue';
+import {notification} from 'ant-design-vue';
+import {Toast} from 'vant';
 import {makeError} from '@/lib/js/uitls/form-util';
+import global from '@/lib/js/global';
 
 export default {
 	name: 'SignIn',
-	inject: {
-		refreshMainView: {
-			type: Function
-		}
-	},
 	data() {
 		return {
 			form: {
@@ -82,7 +79,7 @@ export default {
 						password: md5(ref.form.password).toString()
 					},
 					success() {
-						this.refreshMainView();
+						global.events.emit('login');
 						ref.backToHome();
 						notification.open({
 							message: '登录成功',
@@ -98,7 +95,7 @@ export default {
 							makeError(ref.$refs.password, result.message);
 						} else {
 							// 其他错误
-							message.warn(result.message);
+							Toast.fail(result.message);
 						}
 					}
 				})

@@ -2,7 +2,37 @@ import axios from 'axios';
 
 axios.defaults.withCredentials = true;
 
-function initLaputa(option) {
+function throttle(fn, delay) {
+    //https://github.com/ElemeFE/vue-infinite-scroll/blob/master/src/directive.js
+    let now, lastExec, timer, context, args; //eslint-disable-line
+    const execute = function () {
+        fn.apply(context, args);
+        lastExec = now;
+    };
+    return function () {
+        context = this;
+        args = arguments;
+        now = Date.now();
+        if (timer) {
+            clearTimeout(timer);
+            timer = null;
+        }
+        if (lastExec) {
+            const diff = delay - (now - lastExec);
+            if (diff < 0) {
+                execute();
+            } else {
+                timer = setTimeout(() => {
+                    execute();
+                }, diff);
+            }
+        } else {
+            execute();
+        }
+    };
+}
+
+function _initLaputa(option) {
     const lpt = {};
     lpt.isLocalHost = false;
     lpt.localhostUrl = 'http://localhost:8080/lpt';
@@ -250,9 +280,9 @@ function initLaputa(option) {
             if (curUserToken) {
                 headers['X-LPT-USER-TOKEN'] = curUserToken;
             }
-            function onComplete(param) {
+            function onComplete(param, result) {
                 if (typeof param.complete === 'function')
-                    param.complete();
+                    param.complete(result);
                 changeBusy(param, false);
                 consumer.setLastData(dataStr);
             }
@@ -279,19 +309,19 @@ function initLaputa(option) {
                     if (typeof param.fail === 'function')
                         param.fail(result);
                     if (param.usePromise) {
-                        onComplete(param);
+                        onComplete(param, result);
                         // 如果有throwObject选项，则抛出整个result对象，否则抛出错误信息
                         throw new Error(param.throwObject ? result : result.message);
                     }
                 }
                 if (typeof param.finish === 'function')
                     param.finish(result);
-                onComplete(param);
+                onComplete(param, result);
                 return Promise.resolve(result);
             }).catch(error => {
                 if (typeof param.error === 'function')
                     param.error(error);
-                onComplete(param);
+                onComplete(param, error);
                 throw error;
             });
             promise.success = 1;
@@ -343,7 +373,7 @@ function initLaputa(option) {
             executor.isBusy = function () {
                 return consumer.isBusy();
             }
-            executor.query = function (param) {
+            executor.query = throttle(function (param) {
                 if (consumer.isBusy())
                     return executor;
                 param.data = param.data || {};
@@ -357,7 +387,11 @@ function initLaputa(option) {
                 // 查询器允许POST重复数据
                 param.allowRepeat = true;
                 param.appendSuccess(result => {
-                    if (result.object.length === 0) {
+                    const queryStep = param.data.query_param.query_num;
+                    const resultLen = result.object.length;
+                    if (resultLen === 0) {
+                        executor.hasReachedBottom = true;
+                    } else if (queryStep && resultLen < queryStep) {
                         executor.hasReachedBottom = true;
                     } else {
                         executor.curStartId = result.object[result.object.length - 1].id;
@@ -369,7 +403,7 @@ function initLaputa(option) {
                 });
                 const res = param.method ? lpt.ajax(param) : lpt.post(param);
                 return res;
-            }
+            }, 600);
             executor.reset = function (param) {
                 param = param || {};
                 executor.curStartId = param.curStartId || 0;
@@ -378,6 +412,7 @@ function initLaputa(option) {
                 executor.totalLength = param.totalLength || 0;
                 executor.curQueryToken = param.curQueryToken || null;
             }
+            lpt.event.emit('createQuerior', executor);
             return executor;
         }
     }
@@ -501,16 +536,18 @@ function initLaputa(option) {
         let currentCategory = {
             id: '0'
         };
-        const defaultPost = {
-            creator: {},
-            liked_by_viewer: false,
-            forward_cnt: 0,
-            comment_cnt: 0,
-            like_cnt: 0,
-            category_path: ''
-        };
         const serv = {
-            defaultPost,
+            getDefaultPost: function(id) {
+                return {
+                    id: id,
+                    creator: {},
+                    liked_by_viewer: false,
+                    forward_cnt: 0,
+                    comment_cnt: 0,
+                    like_cnt: 0,
+                    category_path: []
+                };
+            },
             setCurrentCategory: wrap(function (category) {
                 currentCategory = category;
             }),
@@ -537,7 +574,7 @@ function initLaputa(option) {
                 return lpt.post(param);
             }),
             get: wrap(function (param) {
-                param.url = lpt.baseUrl + '/post/' + param.param.post_id;
+                param.url = lpt.baseUrl + '/post/' + param.param.postId;
                 return lpt.get(param);
             }),
             setTopComment: wrap(function (param) {
@@ -553,19 +590,30 @@ function initLaputa(option) {
     }
 
     function initCommentService() {
+        const defaultComment = {
+            creator: {},
+            liked_by_viewer: false,
+            like_cnt: 0
+        }
         const serv = {
-            getQuerior: function (param) {
-                const key = `${param.param.type}/${param.data.parentId}`;
-                let querior = param.queriorMap.get(key);
-                if (!querior) {
-                    querior = lpt.createQuerior();
-                    param.queriorMap.set(key, querior);
-                }
-                return querior;
+            getDefaultCommentL1: function (id){
+                return {
+                    id: id,
+                    ...defaultComment,
+                    comment_cnt: 0
+                };
             },
+            getDefaultCommentL2: function(id) {
+                return {
+                    id: id,
+                    ...defaultComment
+                };
+            },
+            level1: 'l1',
+            level2: 'l2',
             query: wrap(function (param) {
-                param.url = `${lpt.baseUrl}/comment/${param.param.type}/${param.param.rankType}/`;
-                return serv.getQuerior(param).query(param);
+                param.url = `${lpt.baseUrl}/comment/${param.param.type}/${param.param.queryType}`;
+                return param.querior.query(param);
             }),
             create: wrap(function (param) {
                 param.url = lpt.baseUrl + '/comment/' + param.param.type;
@@ -651,10 +699,9 @@ function initLaputa(option) {
 
     function initFollowService() {
         const serv = {
-            querior: lpt.createQuerior(),
             queryFollower: wrap(function (param) {
                 param.url = lpt.baseUrl + '/follow/follower';
-                return serv.querior.query(param);
+                return param.querior.query(param);
             }),
             getFollowing: wrap(function (param) {
                 param.url = lpt.baseUrl + '/follow/following/' + param.data.userId;
@@ -673,21 +720,10 @@ function initLaputa(option) {
     }
 
     function initForwardService() {
-        const queriorMap = new Map();
         const serv = {
-            getQuerior: function (supId) {
-                const key = supId;
-                let querior = queriorMap.get(key);
-                if (!querior)
-                    querior = lpt.createQuerior();
-                return querior;
-            },
-            clearQueriors: function () {
-                queriorMap.clear();
-            },
             query: wrap(function (param) {
                 param.url = lpt.baseUrl + '/forward/list';
-                return serv.getQuerior(param.data.sup_id).query(param);
+                return param.querior.query(param);
             }),
             create: wrap(function (param) {
                 param.url = lpt.baseUrl + '/forward';
@@ -699,10 +735,9 @@ function initLaputa(option) {
 
     function initLikeService() {
         const serv = {
-            querior: lpt.createQuerior(),
             query: wrap(function (param) {
                 param.url = lpt.baseUrl + '/like/list/' + param.param.type;
-                return serv.querior.query(param);
+                return param.querior.query(param);
             }),
             like: wrap(function (param) {
                 param.url = lpt.baseUrl + '/like/' + param.param.type;
@@ -718,10 +753,9 @@ function initLaputa(option) {
 
     function initNoticeService() {
         const serv = {
-            querior: lpt.createQuerior(),
             query: wrap(function (param) {
                 param.url = lpt.baseUrl + '/notice';
-                return serv.querior.query(param);
+                return param.querior.query(param);
             }),
             markAsRead: wrap(function (param) {
                 param.url = lpt.baseUrl + '/notice/read';
@@ -759,10 +793,9 @@ function initLaputa(option) {
 
     function initNewsService() {
         const serv = {
-            querior: lpt.createQuerior(),
             query: wrap(function (param) {
                 param.url = lpt.baseUrl + '/news';
-                return serv.querior.query(param);
+                return param.querior.query(param);
             })
         };
         lpt.newsServ = serv;
@@ -778,8 +811,7 @@ function initLaputa(option) {
         };
         lpt.searchServ = serv;
     }
-
     return lpt;
 }
 
-export default initLaputa();
+export default _initLaputa();

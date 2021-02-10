@@ -1,6 +1,10 @@
 <template>
 	<div id="main-view" :style="{height: mainViewHeight, position: 'relative'}">
-		<main-view :key="currentView"></main-view>
+		<router-view v-slot="{ Component }">
+			<keep-alive>
+				<component :is="Component"/>
+			</keep-alive>
+		</router-view>
 	</div>
 	<main-tab-bar id="main-bar" :style="{height: mainBarHeight}"></main-tab-bar>
 </template>
@@ -9,40 +13,26 @@
 
 import lpt from '@/lib/js/laputa/laputa'
 import MainTabBar from './tab_bar/MainTabBar'
-import MainView from './MainView'
-import remHelper from '@/lib/js/uitls/rem-helper'
+import global from "@/lib/js/global";
 
 export default {
 	name: 'Home',
 	components: {
-		MainView,
 		MainTabBar
 	},
 	data() {
 		const currentUser = lpt.operatorServ.getCurrent();
-		const mainView = {
-			currentView: 'index'
-		}
 		// 底部固定4rem，mainView现算一个px值
-		this.mainViewHeight = (document.body.clientHeight - remHelper.remToPx(4)) + 'px';
-		this.mainBarHeight = '4rem';
+		const mainViewHeight = (document.body.clientHeight - global.vars.style.tabBarHeight) + 'px';
+		const mainBarHeight = global.vars.style.tabBarHeight + 'px';
 		return {
-			...mainView,
-			hasLoggedIn: typeof global.user !== 'undefined',
+			mainViewHeight: mainViewHeight,
+			mainBarHeight: mainBarHeight,
+			hasLoggedIn: typeof global.states.user !== 'undefined',
 			user: currentUser ? currentUser : {
 				nick_name: '点击登录'
 			}
 		}
-	},
-	provide() {
-		return {
-			refreshMainView: () => {
-				this.currentView = new Date().getTime();
-			}
-		}
-	},
-	methods: {
-
 	}
 }
 </script>

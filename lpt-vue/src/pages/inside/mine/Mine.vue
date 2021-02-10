@@ -9,47 +9,35 @@
 				<a-button v-else type="link" class="name" @click="signIn">点击登录</a-button>
 			</a-col>
 		</a-row>
-		<a-row justify="center">
+		<a-row v-if="hasSigned" justify="center">
 			<a-col class="cnt-bar-item" span="7">
-				关注:{{me.user.following_cnt}}
+				关注:{{ me.user.following_cnt }}
 			</a-col>
 			<a-col class="cnt-bar-item" span="8">
-				粉丝:{{me.user.followers_cnt}}
+				粉丝:{{ me.user.followers_cnt }}
 			</a-col>
 			<a-col class="cnt-bar-item" span="7">
-				发帖:{{me.user.post_cnt}}
+				发帖:{{ me.user.post_cnt }}
 			</a-col>
 		</a-row>
-		<div style="margin-top: 1.5rem">
-			<a-button class="item-btn">
-				<router-link to="/home/mod_user_info">
-					个人信息
-				</router-link>
-			</a-button>
-			<a-button class="item-btn">
-				<router-link to="/home/mod_user_info">
-					修改密码
-				</router-link>
-			</a-button>
-			<a-button class="item-btn">
-				<router-link to="#" @click="signOut">
-					注销
-				</router-link>
-			</a-button>
+		<div v-if="hasSigned" style="margin-top: 1.5rem">
+			<van-cell title="个人信息" is-link to="/home/mod_user_info"/>
+			<van-cell title="修改密码" is-link to="/home/mod_user_info"/>
+			<van-cell title="注销" is-link @click="signOut"/>
 		</div>
 	</div>
 </template>
 
 <script>
 import lpt from '@/lib/js/laputa/laputa';
-import global from '@/lib/js/global/global-state';
-import {message} from "ant-design-vue";
+import global from '@/lib/js/global';
+import {Dialog, Toast} from 'vant';
 
 export default {
 	name: 'Mine',
 	data() {
 		return {
-			me: global.curOperator
+			me: global.states.curOperator
 		}
 	},
 	created() {
@@ -57,7 +45,7 @@ export default {
 	},
 	computed: {
 		hasSigned() {
-			return global.hasSigned.value;
+			return global.states.hasSigned.value;
 		},
 		myAvatarUrl() {
 			return lpt.getUserAvatarUrl(this.me.user);
@@ -68,15 +56,20 @@ export default {
 			this.$router.push({name: 'signIn'});
 		},
 		signOut() {
-			lpt.operatorServ.signOut({
-				consumer: this.lptConsumer,
-				success() {
-					message.success('注销成功');
-				},
-				fail(result) {
-					message.error(result.message);
-				}
-			});
+			Dialog.confirm({
+				message: '确认注销？',
+				closeOnClickOverlay: true
+			}).then(() => {
+				lpt.operatorServ.signOut({
+					consumer: this.lptConsumer,
+					success() {
+						Toast.success('注销成功');
+					},
+					fail(result) {
+						Toast.fail(result.message);
+					}
+				});
+			}).catch(() => {});
 		}
 	}
 }
@@ -97,14 +90,6 @@ export default {
 .name {
 	margin-top: 1rem;
 	font-size: 1.5rem;
-}
-
-.item-btn {
-	width: 100%;
-	height: 3rem;
-	text-align: left;
-	text-indent: 1rem;
-	border-bottom: none;
 }
 
 .cnt-bar-item {

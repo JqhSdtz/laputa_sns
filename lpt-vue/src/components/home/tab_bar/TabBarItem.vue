@@ -10,17 +10,13 @@
 </template>
 
 <script>
+import global from '@/lib/js/global';
 
 export default {
 	name: 'TabBarItem',
 	props: {
 		path: String,
 		alias: String
-	},
-	inject: {
-		refreshMainView: {
-			type: Function
-		}
 	},
 	data() {
 		return {}
@@ -39,8 +35,7 @@ export default {
 	methods: {
 		itemClick() {
 			if (this.isActive) {
-				// 点击当前菜单项时给router-view设置一个时间戳作为key，可以强制刷新
-				this.refreshMainView();
+				global.events.emit('forceRefresh');
 			} else {
 				this.$router.push(this.path);
 			}
