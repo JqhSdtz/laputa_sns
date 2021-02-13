@@ -12,6 +12,7 @@
 
 <script>
 import LikeItem from './item/LikeItem';
+import {Toast} from "vant";
 import {toRef} from 'vue';
 import global from '@/lib/js/global';
 import lpt from '@/lib/js/laputa/laputa';
@@ -101,7 +102,7 @@ export default {
 						}
 					},
 					fail(result) {
-						alert(result.message);
+						Toast.fail(result.message);
 					},
 					complete() {
 						ref.isRefreshing = false;

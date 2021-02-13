@@ -4,26 +4,16 @@
 		<van-pull-refresh v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh" success-text="刷新成功">
 			<van-list class="comment-list" @load="loadMore" :offset="listOffset"
 			          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
-				<div style="width: 100%; background-color: white; display: inline-block; margin-bottom: -0.35rem">
-					<button class="ant-btn fake-btn" style="float: left; margin-left: 1rem">
-						<span>{{sortType === 'popular' ? '热门评论' : '最新评论'}}</span>
-					</button>
-					<a-button type="link" style="float: right; margin-right: 1rem" @click="changeSortType">
-						<OrderedListOutlined/>
-						<span>{{sortType === 'popular' ? '按热度' : '按时间'}}</span>
-					</a-button>
-				</div>
 				<a-back-top :style="{bottom: listOffset + 'px'}" :target="getElement"/>
 				<comment-item class="comment-item" v-for="comment in list" :comment-id="comment.id"
-				              :key="comment.id" :show-sub-area="true" :show-actions="true"/>
+				              :key="comment.id" :show-actions="true"/>
 			</van-list>
 		</van-pull-refresh>
 	</div>
 </template>
 
 <script>
-import CommentItem from './item/CommentItem';
-import {OrderedListOutlined} from '@ant-design/icons-vue';
+import CommentItem from '../comment/item/CommentItem';
 import lpt from '@/lib/js/laputa/laputa';
 import global from '@/lib/js/global';
 import {Toast} from "vant";
@@ -34,23 +24,21 @@ const querior = lpt.createQuerior();
 const commentListEvents = createEventBus();
 
 export default {
-	name: 'CommentList',
+	name: 'SubCommentList',
 	props: {
-		postId: String,
+		parentId: Number,
 		onBusyChange: Function,
 		onLoaded: Function,
 		onRefresh: Function
 	},
 	components: {
-		CommentItem,
-		OrderedListOutlined
+		CommentItem
 	},
 	provide: {
 		commentListEvents: commentListEvents
 	},
 	data() {
 		return {
-			sortType: 'popular',
 			finished: toRef(querior, 'hasReachedBottom'),
 			isEmpty: false,
 			hasEverLoad: false,
@@ -71,44 +59,21 @@ export default {
 		this.defaultQueryOption = {
 			querior,
 			param: {
-				type: lpt.commentServ.level1,
-				queryType: this.sortType,
+				type: lpt.commentServ.level2,
+				queryType: 'popular'
 			},
 			data: {
-				post_id: this.postId
+				parent_id: this.parentId
 			}
 		};
 		this.loadMore(false);
-		commentListEvents.on(['top', 'unTop'], (param, name) => {
-			const isCancel = name === 'unTop';
-			const comment = param.comment;
-			lpt.postServ.setTopComment({
-				consumer: this.lptConsumer,
-				param: {
-					isCancel: isCancel
-				},
-				data: {
-					id: this.postId,
-					top_comment_id: comment.id,
-					op_comment: param.op_comment
-				},
-				success() {
-					Toast.success(isCancel ? '取消成功' : '置顶成功');
-					comment.is_topped = !isCancel;
-					param.callback && param.callback();
-				},
-				fail(result) {
-					Toast.fail(result.message);
-				}
-			});
-		});
 		commentListEvents.on('delete', (param) => {
 			const comment = param.comment;
 			const ref = this;
 			lpt.contentServ.delete({
 				consumer: this.lptConsumer,
 				param: {
-					type: lpt.contentType.commentL1
+					type: lpt.contentType.commentL2
 				},
 				data: {
 					id: comment.id,
@@ -128,16 +93,6 @@ export default {
 		querior.reset();
 	},
 	methods: {
-		changeSortType() {
-			if (this.sortType === 'popular') {
-				this.sortType = 'latest';
-			} else {
-				this.sortType = 'popular';
-			}
-			this.reset();
-			this.defaultQueryOption.param.queryType = this.sortType;
-			this.loadMore(true);
-		},
 		onPullRefresh() {
 			this.reset();
 			this.loadMore(true);
@@ -151,7 +106,7 @@ export default {
 			this.list.unshift(comment);
 		},
 		loadMore(isRefresh) {
-			console.log('load comment list!');
+			console.log('load subComment list!');
 			const ref = this;
 			if (!querior.hasReachedBottom) {
 				lpt.commentServ.query({
@@ -194,10 +149,5 @@ export default {
 
 .comment-item {
 	padding: 0.5rem;
-}
-
-.fake-btn {
-	border: none;
-	pointer-events: none;
 }
 </style>

@@ -136,6 +136,9 @@ public class OperatorService {
         delCookie.setPath("/");
         delCookie.setHttpOnly(true);
         response.addCookie(delCookie);
+        if (passTokenThroughHeader) {
+            response.addHeader("X-LPT-USER-TOKEN", "");
+        }
         return Result.EMPTY_SUCCESS;
     }
 

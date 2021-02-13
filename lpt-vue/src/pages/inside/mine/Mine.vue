@@ -63,6 +63,7 @@ export default {
 				lpt.operatorServ.signOut({
 					consumer: this.lptConsumer,
 					success() {
+						global.events.emit('signOut');
 						Toast.success('注销成功');
 					},
 					fail(result) {

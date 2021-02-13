@@ -60,4 +60,8 @@ public class QueryParam {
     private Integer to;
 
     private String addition;
+
+    @JsonProperty("custom_addition")
+    // 由页面传入的自定义附加条件
+    private String customAddition;
 }

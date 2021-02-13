@@ -79,7 +79,7 @@ export default {
 						password: md5(ref.form.password).toString()
 					},
 					success() {
-						global.events.emit('login');
+						global.events.emit('signIn');
 						ref.backToHome();
 						notification.open({
 							message: '登录成功',

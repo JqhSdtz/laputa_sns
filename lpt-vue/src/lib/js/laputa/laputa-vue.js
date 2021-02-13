@@ -19,20 +19,21 @@ export function registerCheckSignFailCallback(callback) {
 }
 
 // 全局的权限校验指令
-const checkSignDirection = function (el, binding) {
-    el.addEventListener('click', (event) => {
-        const val = binding.value;
-        if (!val) {
-            // 不检查是否登录
-            return;
+const checkSignDirection = {
+    mounted(el, binding) {
+        const value = binding.value;
+        if (value.click) {
+            el.addEventListener('click', () => {
+                if (!lpt.operatorServ.hasSigned()) {
+                    if (checkSignFailCallback) {
+                        checkSignFailCallback();
+                    }
+                } else {
+                    value.click();
+                }
+            });
         }
-        if (!lpt.operatorServ.hasSigned()) {
-            if (checkSignFailCallback) {
-                checkSignFailCallback();
-            }
-            event.preventDefault();
-        }
-    });
+    }
 }
 
 const onClickOutsideDirection = {

@@ -20,7 +20,7 @@ function wrap(param) {
     return type === Object ? reactive(def) : ref(def);
 }
 
-function initItemManager(type) {
+function initItemManager(param) {
     const itemMap = new Map();
     const itemManager = {};
     itemManager.getItemMap = function () {
@@ -31,6 +31,7 @@ function initItemManager(type) {
             // 因为直接通过map的set方法设置对象会直接覆盖，不会引起响应式变化
             // 所以这里需要逐一赋值
             const original = itemMap.get(item.id);
+            param.processItem && param.processItem(item);
             Object.assign(original, item);
             return original;
         } else {
@@ -51,6 +52,7 @@ function initItemManager(type) {
         let res = itemMap.get(id);
         if (!res) {
             let temp;
+            const type = param.type;
             if (type === lpt.contentType.post) {
                 temp = lpt.postServ.getDefaultPost(id);
             } else if (type === lpt.contentType.commentL1) {
@@ -65,6 +67,18 @@ function initItemManager(type) {
     return itemManager;
 }
 
+const postManager = initItemManager({
+    type: lpt.contentType.post,
+    processItem(item) {
+        if (!item.rights)
+            item.rights = {};
+    }
+});
+
+const commentL1Manager = initItemManager({
+    type: lpt.contentType.commentL1
+});
+
 const states = {
     isBusy: wrap({
         default: false
@@ -73,14 +87,22 @@ const states = {
         default: lpt.operatorServ.getCurrent()
     }),
     hasSigned: computed(() => states.curOperator.user.id !== -1),
-    postManager: initItemManager(lpt.contentType.post),
-    commentL1Manager: initItemManager(lpt.contentType.commentL1),
+    postManager: postManager,
+    commentL1Manager: commentL1Manager,
     pages: {
         index: {
             sortType: wrap({
                 default: 'popular'
             })
         }
+    },
+    prompt: {
+        show: wrap({
+            default: false
+        }),
+        onConfirm: wrap({
+            type: Function
+        })
     }
 }
 

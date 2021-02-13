@@ -36,8 +36,8 @@ function _initLaputa(option) {
     const lpt = {};
     lpt.isLocalHost = false;
     lpt.localhostUrl = 'http://localhost:8080/lpt';
-    lpt.remoteUrl = 'https://lpt.ytumore.cn';
-    lpt.imgBaseUrl = 'https://img.ytumore.cn/';
+    lpt.remoteUrl = 'https://lpt.jqh.zone';
+    lpt.imgBaseUrl = 'https://img.jqh.zone/';
 
     lpt.loadOption = function (_option) {
         Object.assign(lpt, _option);
@@ -295,7 +295,7 @@ function _initLaputa(option) {
                 data: method === 'GET' ? undefined : jsonDataStr
             }).then(response => {
                 const tmpUserToken = response.headers['x-lpt-user-token'];
-                if (tmpUserToken) {
+                if (typeof tmpUserToken !== 'undefined') {
                     curUserToken = tmpUserToken;
                     localStorage.setItem(lptUserTokenIdentifier, curUserToken);
                 }
@@ -541,6 +541,7 @@ function _initLaputa(option) {
                 return {
                     id: id,
                     creator: {},
+                    rights: {},
                     liked_by_viewer: false,
                     forward_cnt: 0,
                     comment_cnt: 0,
@@ -578,11 +579,7 @@ function _initLaputa(option) {
                 return lpt.get(param);
             }),
             setTopComment: wrap(function (param) {
-                param.url = lpt.baseUrl + '/post/top_comment/create';
-                return lpt.patch(param);
-            }),
-            cancelTopComment: wrap(function (param) {
-                param.url = lpt.baseUrl + '/post/top_comment/cancel';
+                param.url = lpt.baseUrl + '/post/top_comment/' + (param.param.isCancel ? 'cancel' : 'create');
                 return lpt.patch(param);
             })
         };
@@ -592,6 +589,7 @@ function _initLaputa(option) {
     function initCommentService() {
         const defaultComment = {
             creator: {},
+            rights: {},
             liked_by_viewer: false,
             like_cnt: 0
         }
@@ -611,12 +609,16 @@ function _initLaputa(option) {
             },
             level1: 'l1',
             level2: 'l2',
+            get: wrap(function (param) {
+                param.url = `${lpt.baseUrl}/comment/${param.param.type}/${param.param.commentId}`;
+                return lpt.get(param);
+            }),
             query: wrap(function (param) {
                 param.url = `${lpt.baseUrl}/comment/${param.param.type}/${param.param.queryType}`;
                 return param.querior.query(param);
             }),
             create: wrap(function (param) {
-                param.url = lpt.baseUrl + '/comment/' + param.param.type;
+                param.url = `${lpt.baseUrl}/comment/${param.param.type}`;
                 return lpt.post(param);
             })
         };
@@ -648,7 +650,7 @@ function _initLaputa(option) {
     function initCategoryService() {
         const serv = {
             setTopPost: wrap(function (param) {
-                param.url = lpt.baseUrl + '/category/top_post/' + (param.data.isCancel ? 'cancel' : 'create');
+                param.url = lpt.baseUrl + '/category/top_post/' + (param.param.isCancel ? 'cancel' : 'create');
                 return lpt.patch(param);
             }),
             setCacheNum: wrap(function (param) {

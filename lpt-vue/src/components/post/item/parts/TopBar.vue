@@ -1,19 +1,25 @@
 <template>
-	<a-row class="top-bar">
-		<a-col span="4" class="ava-div">
+	<div class="top-bar">
+		<div class="ava-div" style="display: inline-block; float: left">
 			<img class="ava" :src="avatarUrl"/>
-		</a-col>
-		<a-col span="16" class="time-and-name">
+		</div>
+		<div class="time-and-name" style="display: inline-block; float: left">
 			<p class="name">{{ post.creator.nick_name }}</p>
 			<p v-if="typeof post.create_time !== 'undefined'" class="time">{{ beforeTime }}</p>
-		</a-col>
-	</a-row>
+		</div>
+		<div v-if="post.is_topped" class="topped-tag" style="display: inline-block; float: left">
+			<van-tag  type="primary">
+				置顶
+			</van-tag>
+		</div>
+	</div>
 </template>
 
 <script>
 import lpt from '@/lib/js/laputa/laputa';
 import TimeAgo from 'javascript-time-ago';
 import zh from 'javascript-time-ago/locale/zh';
+import global from "@/lib/js/global";
 
 TimeAgo.addLocale(zh);
 const timeAgo = new TimeAgo('zh-CN');
@@ -21,7 +27,13 @@ const timeAgo = new TimeAgo('zh-CN');
 export default {
 	name: 'TopBar',
 	props: {
-		post: Object
+		postId: Number
+	},
+	data() {
+		const post = global.states.postManager.get(this.postId);
+		return {
+			post: post
+		}
 	},
 	computed: {
 		avatarUrl() {
@@ -54,7 +66,7 @@ export default {
 	height: 2.5rem;
 }
 
-.top-bar .time-and-name {
+.top-bar .time-and-name, .topped-tag {
 	margin-top: 0.52rem;
 }
 
@@ -70,6 +82,10 @@ export default {
 .top-bar .time {
 	margin-left: 0.15rem;
 	font-size: 0.75rem;
+}
+
+.topped-tag {
+	margin-left: 1rem;
 }
 
 </style>

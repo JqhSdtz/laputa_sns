@@ -1,5 +1,5 @@
 <template>
-	<div id="main-area" :style="{height: getScrollHeight(), position: 'relative'}">
+	<div id="main-area" :style="{height: scrollHeight, position: 'relative'}">
 		<a-popover trigger="click" placement="bottomLeft" v-model:visible="showPopover">
 			<template v-slot:content>
 				<div style="width: 4rem">
@@ -48,6 +48,14 @@ export default {
 			showPopover: false
 		}
 	},
+	computed: {
+		scrollHeight() {
+			const mainViewHeight = document.body.clientHeight;
+			// 底部高度加0.5的padding
+			const barHeight = this.mainBarHeight;
+			return mainViewHeight - barHeight + 'px';
+		}
+	},
 	mounted() {
 		const listElem = this.$el;
 		let preScrollTop = 0;
@@ -74,12 +82,6 @@ export default {
 		onPostListLoaded() {
 			this.showSortTypeSelector = true;
 			this.postListLoaded = true;
-		},
-		getScrollHeight() {
-			const mainViewHeight = document.body.clientHeight;
-			// 底部高度加0.5的padding
-			const barHeight = this.mainBarHeight;
-			return mainViewHeight - barHeight + 'px';
 		},
 		getElement() {
 			return this.$el;
@@ -112,7 +114,7 @@ export default {
 #sortTypeBtn {
 	position: fixed;
 	right: 1rem;
-	top: 1.5rem;
+	top: 0.75rem;
 	background-color: white;
 	z-index: 2;
 }

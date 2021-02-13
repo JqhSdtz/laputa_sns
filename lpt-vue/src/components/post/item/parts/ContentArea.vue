@@ -3,15 +3,21 @@
 		<p class="title">{{ post.title }}</p>
 		<pre class="content" v-if="isShowFullText">{{ fullText }}</pre>
 		<pre class="content" v-else>{{ post.content }}</pre>
-		<p v-if="post.full_text_id && !isShowFullText" class="full-text-btn" @click="showFullText" >
+		<p v-if="post.full_text_id && !isShowFullText" class="full-text-btn" @click="showFullText">
 			查看全文
 		</p>
+		<div v-if="imgList.length > 0">
+			<a v-for="(img, idx) in imgList" :key="img" @click="showImgPreview(idx)" style="display: inline; margin-left: 1em">
+				<van-image :src="img" width="50" height="50" />
+			</a>
+		</div>
 		<p class="category-path">{{ categoryPath }}</p>
 	</div>
 </template>
 
 <script>
 import lpt from "@/lib/js/laputa/laputa";
+import { ImagePreview } from 'vant';
 
 export default {
 	name: 'ContentArea',
@@ -19,7 +25,19 @@ export default {
 		post: Object
 	},
 	data() {
+		const rawImg = this.post.raw_img || '';
+		const imgListStr = rawImg.split('#');
+		const imgList = [];
+		const fullUrlList = [];
+		imgListStr.forEach(img => {
+			if (img) {
+				imgList.push(lpt.getPostThumbUrl(img));
+				fullUrlList.push(lpt.getFullImgUrl(img));
+			}
+		});
 		return {
+			fullUrlList: fullUrlList,
+			imgList: imgList,
 			fullText: '',
 			isShowFullText: false
 		}
@@ -33,6 +51,12 @@ export default {
 		}
 	},
 	methods: {
+		showImgPreview(index) {
+			ImagePreview({
+				images: this.fullUrlList,
+				startPosition: index
+			});
+		},
 		showFullText() {
 			const ref = this;
 			lpt.postServ.getFullText({

@@ -229,7 +229,8 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
             return (Result<List<CommentL2>>) (Result) postResult;
         comment.setL1(commentL1Result.getObject().setPost(postResult.getObject()));
         long l2Ofl1Cnt = commentL1Result.getObject().getL2Cnt();
-        if (comment.getQueryParam().getFrom().equals(0))
+        if (comment.getQueryParam().getFrom().equals(0)
+                && "skipPreview".equalsIgnoreCase(comment.getQueryParam().getCustomAddition()))
             comment.getQueryParam().setFrom((int) (l2Ofl1Cnt < previewCml2Num ? l2Ofl1Cnt : previewCml2Num));
         CommentL2 queryEntity = (CommentL2) new CommentL2().setQueryParam(new QueryParam());
         Result<List<CommentL2>> result = serviceHelper.readIndexComment(comment, queryEntity, POPULAR, operator);

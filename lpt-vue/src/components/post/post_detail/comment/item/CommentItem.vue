@@ -2,8 +2,8 @@
 	<div class="comment-item">
 		<top-bar class="top-bar" :comment="comment"/>
 		<content-area class="content-area" :comment="comment"/>
-		<bottom-bar class="bottom-bar" :comment-id="comment.id"/>
-		<sub-comment-area class="sub-comment-area" :comment="comment"/>
+		<bottom-bar class="bottom-bar" :comment-id="comment.id" :show-actions="showActions"/>
+		<sub-comment-area v-if="showSubArea" class="sub-comment-area" :comment="comment"/>
 		<van-divider style="margin: 5px 0"/>
 	</div>
 </template>
@@ -18,7 +18,12 @@ import SubCommentArea from './parts/SubCommentArea';
 export default {
 	name: 'CommentItem',
 	props: {
-		commentId: Number
+		commentId: Number,
+		showActions: Boolean,
+		showSubArea: {
+			type: Boolean,
+			default: false
+		}
 	},
 	components: {
 		TopBar,
@@ -38,7 +43,12 @@ export default {
 .comment-item {
 	background-color: white;
 }
+
 .content-area {
+	margin-top: 0.5rem;
+}
+
+.sub-comment-area {
 	margin-top: 0.5rem;
 }
 </style>

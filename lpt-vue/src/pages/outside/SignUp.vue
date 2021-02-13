@@ -42,6 +42,7 @@ import lpt from "@/lib/js/laputa/laputa";
 import md5 from "crypto-js/md5";
 import {notification} from 'ant-design-vue';
 import {Toast} from 'vant';
+import global from "@/lib/js/global";
 
 export default {
 	name: 'SignUp',
@@ -126,6 +127,7 @@ export default {
 						password: md5(ref.form.password).toString()
 					},
 					success() {
+						global.events.emit('signUp');
 						ref.backToHome();
 						notification.success({
 							message: '注册成功',

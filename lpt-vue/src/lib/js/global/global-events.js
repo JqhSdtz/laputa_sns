@@ -1,4 +1,3 @@
-const eventMap = new Map();
 function getNameArr(_name) {
     let names = [];
     if (typeof _name === 'string') {
@@ -10,6 +9,7 @@ function getNameArr(_name) {
 }
 
 export function createEventBus() {
+    const eventMap = new Map();
     return {
         on(name, fun) {
             const names = getNameArr(name);
@@ -22,7 +22,7 @@ export function createEventBus() {
                 funArr.push(fun);
             });
         },
-        emit(name, obj) {
+        emit(name, param) {
             const names = getNameArr(name);
             names.forEach(_name => {
                 const funArr = eventMap.get(_name);
@@ -30,7 +30,7 @@ export function createEventBus() {
                     return;
                 funArr.forEach(fun => {
                     if (typeof fun === 'function')
-                        fun(obj, name);
+                        fun(param, name);
                 });
             });
         },

@@ -1,10 +1,10 @@
 <template>
 	<div style="width: 100%; background-color: #ECECEC">
 		<div v-for="comment in comment.preview_l2_list" :key="comment.id">
-			<a-button type="link">
+			<a-button type="link" style="padding-right: 0">
 				{{comment.creator.nick_name}}
 			</a-button>
-			<van-tag v-if="comment.creator.id === curUserId" type="primary" style="margin-left: -0.75rem">
+			<van-tag v-if="comment.creator.id === posterId" type="primary" style="margin-left: 0.25rem">
 				贴主
 			</van-tag>
 			<div style="display: inline-block; margin-left: 0.25rem">:</div>
@@ -14,7 +14,7 @@
 		</div>
 		<a-button type="link" v-if="previewL2Length < comment.l2_cnt" @click="openCommentDetail">
 			共{{comment.l2_cnt}}条回复
-			<span v-if="comment.poster_rep_cnt">
+			<span v-if="comment.poster_rep_cnt" style="margin-left: 1rem">
 				含贴主{{comment.poster_rep_cnt}}条
 			</span>
 		</a-button>
@@ -30,13 +30,14 @@ export default {
 		comment: Object
 	},
 	inject: {
-		localEvents: {
+		postDetailEvents: {
 			type: Object
 		}
 	},
 	computed: {
-		curUserId() {
-			return global.states.curOperator.user.id;
+		posterId() {
+			const post = global.states.postManager.get(this.comment.post_id);
+			return post.creator.id;
 		},
 		previewL2Length() {
 			const list = this.comment.preview_l2_list;
@@ -45,7 +46,7 @@ export default {
 	},
 	methods: {
 		openCommentDetail() {
-			this.localEvents.emit('openCommentDetail', {
+			this.postDetailEvents.emit('openCommentDetail', {
 				id: this.comment.id
 			});
 		}

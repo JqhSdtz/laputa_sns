@@ -2,8 +2,8 @@ function initLaputa(option) {
     const lpt = {};
     lpt.isLocalHost = false;
     lpt.localhostUrl = 'http://localhost:8080/lpt';
-    lpt.remoteUrl = 'https://lpt.ytumore.cn';
-    lpt.imgBaseUrl = 'https://img.ytumore.cn/';
+    lpt.remoteUrl = 'https://lpt.jqh.zone';
+    lpt.imgBaseUrl = 'https://img.jqh.zone/';
 
     lpt.loadOption = function (_option) {
         Object.assign(lpt, _option);

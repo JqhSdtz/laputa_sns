@@ -3,9 +3,20 @@
 		<a-col span="4" class="ava-div">
 			<img class="ava" :src="avatarUrl"/>
 		</a-col>
-		<a-col span="16" class="time-and-name">
-			<p class="name">{{ comment.creator.nick_name }}</p>
+		<a-col class="time-and-name">
+			<div>
+				<p class="name" style="display: inline-block">{{ comment.creator.nick_name }}</p>
+				<van-tag v-if="comment.creator.id === posterId" type="primary"
+				         style="display: inline-block; margin-left: 0.5rem">
+					贴主
+				</van-tag>
+			</div>
 			<p v-if="typeof comment.create_time !== 'undefined'" class="time">{{ beforeTime }}</p>
+		</a-col>
+		<a-col v-if="comment.is_topped" class="topped-tag">
+			<van-tag type="primary">
+				置顶
+			</van-tag>
 		</a-col>
 	</a-row>
 </template>
@@ -14,6 +25,7 @@
 import lpt from "@/lib/js/laputa/laputa";
 import TimeAgo from "javascript-time-ago";
 import zh from 'javascript-time-ago/locale/zh';
+import global from "@/lib/js/global";
 
 TimeAgo.addLocale(zh);
 const timeAgo = new TimeAgo('zh-CN');
@@ -24,6 +36,10 @@ export default {
 		comment: Object
 	},
 	computed: {
+		posterId() {
+			const post = global.states.postManager.get(this.comment.post_id);
+			return post.creator.id;
+		},
 		avatarUrl() {
 			if (this.comment.creator) {
 				return lpt.getUserAvatarUrl(this.comment.creator);
@@ -47,7 +63,7 @@ export default {
 	height: 2.5rem;
 }
 
-.top-bar .time-and-name {
+.top-bar .time-and-name, topped-tag {
 	margin-top: 0.3rem;
 }
 
@@ -71,5 +87,9 @@ export default {
 .top-bar .time {
 	margin-left: 0.15rem;
 	font-size: 0.65rem;
+}
+
+.topped-tag {
+	margin-left: 1rem;
 }
 </style>

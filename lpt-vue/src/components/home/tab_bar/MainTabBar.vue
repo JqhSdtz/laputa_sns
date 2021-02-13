@@ -20,6 +20,7 @@
 				<div class="text text-active">动态</div>
 			</template>
 		</tab-bar-item>
+		<van-icon id="plus-icon" name="add-o" size="3.75rem" color="forestgreen"/>
 		<tab-bar-item path="/home/community">
 			<template v-slot:normal>
 				<ri-dashboard-line class="icon icon-normal"/>
@@ -45,8 +46,10 @@
 
 <script>
 import TabBarItem from './TabBarItem';
-import { RiHome3Line, RiAppsLine, RiDashboardLine, RiUser3Line,
-			RiHome3Fill, RiAppsFill, RiDashboardFill, RiUser3Fill } from '@/assets/icons/remix-icon';
+import {
+	RiHome3Line, RiAppsLine, RiDashboardLine, RiUser3Line,
+	RiHome3Fill, RiAppsFill, RiDashboardFill, RiUser3Fill
+} from '@/assets/icons/remix-icon';
 
 export default {
 	name: 'MainTabBar',
@@ -75,17 +78,25 @@ export default {
 	box-shadow: 0 -2px 14px rgba(100, 100, 100, 0.2);
 	background-color: #F7F7F7;
 }
+
 .icon {
 	margin-top: 0.25rem;
 	font-size: 1.75rem;
 }
+
 .text {
 	font-size: 0.9rem;
 }
+
 .icon-active {
 	color: forestgreen;
 }
+
 .text-active {
 	color: forestgreen;
+}
+
+#plus-icon {
+	margin: -0.35rem 0.5rem 0;
 }
 </style>

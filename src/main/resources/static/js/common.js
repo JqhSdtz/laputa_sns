@@ -1,5 +1,5 @@
 const lptMode = 2;
-const baseUrl = lptMode === 1 ? 'http://localhost:8080/lpt' : 'https://lpt.ytumore.cn';
+const baseUrl = lptMode === 1 ? 'http://localhost:8080/lpt' : 'https://lpt.jqh.zone';
 const baseStaticUrl = lptMode === 1 ? baseUrl : baseUrl + '/static';
 
 function aesEncrypt(key, data) {
@@ -101,15 +101,15 @@ function doToggle(elem_id, hide) {
 function getUserAvatarUrl(user) {
     if (typeof user.raw_avatar === 'undefined')
         return baseStaticUrl + '/img/def_ava.jpg';
-    return 'https://img.ytumore.cn/' + user.raw_avatar + '!ava.small/clip/50x50a0a0/gravity/center'
+    return 'https://img.jqh.zone/' + user.raw_avatar + '!ava.small/clip/50x50a0a0/gravity/center'
 }
 
 function getPostThumbUrl(rawUrl) {
-    return 'https://img.ytumore.cn/' + rawUrl + '!/both/50x50';
+    return 'https://img.jqh.zone/' + rawUrl + '!/both/50x50';
 }
 
 function showFullImg(rawUrl) {
-    $('#modal-img').attr('src', 'https://img.ytumore.cn/' + rawUrl);
+    $('#modal-img').attr('src', 'https://img.jqh.zone/' + rawUrl);
     $('#img-modal').modal('show');
 }
 
