@@ -2,6 +2,7 @@
 
 import {reactive, ref, computed} from 'vue';
 import lpt from '@/lib/js/laputa/laputa';
+import events from './global-events';
 
 function wrap(param) {
     let type, def;
@@ -32,6 +33,22 @@ function initItemManager(param) {
             // 所以这里需要逐一赋值
             const original = itemMap.get(item.id);
             param.processItem && param.processItem(item);
+            // const keySet = new Set();
+            // // 获取原有对象和现有对象的所有key
+            // for (let key in original)
+            //     keySet.add(key);
+            // for (let key in item)
+            //     keySet.add(key);
+            // keySet.forEach(key => {
+            //    if (Object.prototype.hasOwnProperty.call(item, key)) {
+            //        // eslint禁止直接使用hasOwnProperty
+            //        // 新对象有的，要给原对象加上去
+            //        original[key] = item[key];
+            //    } else {
+            //        // 新对象没有的，要从原对象中去掉
+            //        delete original[key];
+            //    }
+            // });
             Object.assign(original, item);
             return original;
         } else {
@@ -51,15 +68,7 @@ function initItemManager(param) {
         const id = parseInt(itemId);
         let res = itemMap.get(id);
         if (!res) {
-            let temp;
-            const type = param.type;
-            if (type === lpt.contentType.post) {
-                temp = lpt.postServ.getDefaultPost(id);
-            } else if (type === lpt.contentType.commentL1) {
-                temp = lpt.commentServ.getDefaultCommentL1(id);
-            } else if (type === lpt.contentType.commentL2) {
-                temp = lpt.commentServ.getDefaultCommentL2(id);
-            }
+            const temp = param.getDefault(id);
             res = itemManager.add(temp);
         }
         return res;
@@ -67,16 +76,36 @@ function initItemManager(param) {
     return itemManager;
 }
 
+const userManager = initItemManager({
+    getDefault(id) {
+        return lpt.userServ.getDefaultUser(id);
+    }
+});
+
 const postManager = initItemManager({
-    type: lpt.contentType.post,
     processItem(item) {
         if (!item.rights)
             item.rights = {};
+        if (item.creator) {
+            userManager.add(item.creator);
+        }
+    },
+    getDefault(id) {
+        return lpt.postServ.getDefaultPost(id);
     }
 });
 
 const commentL1Manager = initItemManager({
-    type: lpt.contentType.commentL1
+    processItem(item) {
+        if (!item.rights)
+            item.rights = {};
+        if (item.creator) {
+            userManager.add(item.creator);
+        }
+    },
+    getDefault(id) {
+        return lpt.commentServ.getDefaultCommentL1(id);
+    }
 });
 
 const states = {
@@ -89,6 +118,7 @@ const states = {
     hasSigned: computed(() => states.curOperator.user.id !== -1),
     postManager: postManager,
     commentL1Manager: commentL1Manager,
+    userManager: userManager,
     pages: {
         index: {
             sortType: wrap({
@@ -107,3 +137,20 @@ const states = {
 }
 
 export default states;
+
+function initGlobalBusyHandler() {
+    let globalBusyCount = 0;
+    events.on('pushGlobalBusy', (param) => {
+        // 之前同时执行的请求数和当前请求数符号不同
+        // 即从0到正或从正到0，或异常时从负到正、从正到负
+        // 发起全局繁忙状态改变
+        const oriBusyCount = globalBusyCount;
+        // promise是线程安全的，通过事件循环实现，无需考虑++操作的原子性
+        globalBusyCount += param.isBusy ? 1 : -1;
+        if (Math.sign(oriBusyCount) !== Math.sign(globalBusyCount)
+            && !param.ignoreGlobalBusyChange) {
+            states.isBusy.value = param.isBusy;
+        }
+    });
+}
+initGlobalBusyHandler();

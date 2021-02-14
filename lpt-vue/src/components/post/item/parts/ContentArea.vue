@@ -11,7 +11,7 @@
 				<van-image :src="img" width="50" height="50" />
 			</a>
 		</div>
-		<p class="category-path">{{ categoryPath }}</p>
+		<p v-if="post.type_str === 'public'" class="category-path">{{ categoryPath }}</p>
 	</div>
 </template>
 
@@ -47,6 +47,9 @@ export default {
 	},
 	computed: {
 		categoryPath() {
+			if (!this.post.category_path) {
+				return '';
+			}
 			return lpt.categoryServ.getPathStr(this.post.category_path);
 		}
 	},

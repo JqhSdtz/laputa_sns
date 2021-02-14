@@ -39,6 +39,7 @@ export default {
 	name: 'BottomBar',
 	props: {
 		postId: Number,
+		postOf: String,
 		showActions: Boolean
 	},
 	inject: {
@@ -97,11 +98,22 @@ export default {
 				return;
 			const ref = this;
 			if (action.id === 'top' || action.id === 'unTop') {
-				global.states.prompt.show.value = true;
-				global.states.prompt.onConfirm.value = (value) => {
+				if (ref.postOf === 'category') {
+					// 目录设置置顶贴需要输入理由
+					global.states.prompt.show.value = true;
+					global.states.prompt.onConfirm.value = (value) => {
+						this.postListEvents.emit(action.id, {
+							post: this.post,
+							comment: value,
+							callback() {
+								ref.actions = ref.initActions(ref.post);
+							}
+						});
+					}
+				} else {
+					// 个人设置置顶帖不需要
 					this.postListEvents.emit(action.id, {
 						post: this.post,
-						comment: value,
 						callback() {
 							ref.actions = ref.initActions(ref.post);
 						}

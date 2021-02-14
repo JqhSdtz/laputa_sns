@@ -5,7 +5,7 @@
 		                  success-text="刷新成功">
 			<van-list class="post-list" @load="loadMore" :offset="listOffset"
 			          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
-				<post-item class="post-item" v-for="post in list" :post-id="post.id"
+				<post-item class="post-item" v-for="post in list" :post-id="post.id" :post-of="postOf"
 				           :key="post.id" :class="{post, 'last-post': post.last}"/>
 			</van-list>
 		</van-pull-refresh>
@@ -26,6 +26,13 @@ const postListEvents = createEventBus();
 export default {
 	name: 'PostList',
 	props: {
+		postOf: {
+			type: String,
+			default: 'category'
+		},
+		creatorId: {
+			type: Number
+		},
 		categoryId: {
 			type: Number,
 			default: 0
@@ -65,15 +72,24 @@ export default {
 				ref.isBusy = isBusy;
 			});
 		});
-		this.defaultQueryOption = {
-			querior,
-			param: {
-				queryType: this.sortType,
-			},
-			data: {
-				category_id: this.categoryId
-			}
-		};
+		if (ref.postOf === 'category') {
+			this.defaultQueryOption = {
+				querior,
+				param: {
+					queryType: this.sortType,
+				},
+				data: {
+					category_id: this.categoryId
+				}
+			};
+		} else if (ref.postOf === 'creator') {
+			this.defaultQueryOption = {
+				querior,
+				data: {
+					creator_id: this.creatorId
+				}
+			};
+		}
 		this.loadMore(false);
 		global.events.on(['signIn', 'signOut', 'forceRefresh'], (obj, name) => {
 			if (name === 'forceRefresh')
@@ -83,16 +99,27 @@ export default {
 		postListEvents.on(['top', 'unTop'], (param, name) => {
 			const isCancel = name === 'unTop';
 			const post = param.post;
-			lpt.categoryServ.setTopPost({
+			let fun;
+			let data;
+			if (ref.postOf === 'category') {
+				fun = lpt.categoryServ.setTopPost;
+				data = {
+					id: this.categoryId,
+					top_post_id: post.id,
+					op_comment: param.comment
+				};
+			} else {
+				fun = lpt.userServ.setTopPost;
+				data = {
+					top_post_id: post.id
+				};
+			}
+			fun({
 				consumer: this.lptConsumer,
 				param: {
 					isCancel: isCancel
 				},
-				data: {
-					id: this.categoryId,
-					top_post_id: post.id,
-					op_comment: param.comment
-				},
+				data: data,
 				success() {
 					Toast.success(isCancel ? '取消成功' : '置顶成功');
 					post.is_topped = !isCancel;
@@ -147,7 +174,13 @@ export default {
 		loadMore(isRefresh) {
 			const ref = this;
 			if (!querior.hasReachedBottom) {
-				lpt.postServ.queryForCategory({
+				let fun;
+				if (this.postOf === 'category') {
+					fun = lpt.postServ.queryForCategory;
+				} else {
+					fun = lpt.postServ.queryForCreator;
+				}
+				fun({
 					...this.defaultQueryOption,
 					success(result) {
 						global.states.postManager.addList(result.object);

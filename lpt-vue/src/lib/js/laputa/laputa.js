@@ -215,19 +215,12 @@ function _initLaputa(option) {
         lpt.getCurUserToken = function () {
             return curUserToken;
         }
-        let ajaxBusyCount = 0;
 
         function changeBusy(param, isBusy) {
-            const oriBusyCount = ajaxBusyCount;
-            // promise是线程安全的，通过事件循环实现，无需考虑++操作的原子性
-            ajaxBusyCount += isBusy ? 1 : -1;
-            if (Math.sign(oriBusyCount) !== Math.sign(ajaxBusyCount)
-                && !param.ignoreGlobalBusyChange) {
-                // 之前同时执行的请求数和当前请求数符号不同
-                // 即从0到正或从正道0，或异常时从负到正、从正到负
-                // 发起全局繁忙状态改变
-                lpt.event.emit('globalBusyChange', isBusy);
-            }
+            lpt.event.emit('pushGlobalBusy', {
+                isBusy: isBusy,
+                ignoreGlobalBusyChange: param.ignoreGlobalBusyChange
+            });
             if (!param.ignoreBusyChange) {
                 // 发起consumer内部繁忙状态改变
                 param.consumer.changeBusy(isBusy);
@@ -484,6 +477,15 @@ function _initLaputa(option) {
 
     function initUserService() {
         const serv = {
+            getDefaultUser: function(id) {
+                return {
+                    id: id,
+                    nick_name: '',
+                    followers_cnt: 0,
+                    following_cnt: 0,
+                    post_cnt: 0
+                }
+            },
             get: wrap(function (param) {
                 param.url = lpt.baseUrl + '/user/' + param.param.user_id;
                 return lpt.get(param);

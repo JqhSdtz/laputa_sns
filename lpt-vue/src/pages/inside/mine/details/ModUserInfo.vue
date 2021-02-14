@@ -158,9 +158,13 @@ export default {
 		},
 		handleChange(info) {
 			if (info.file.status === 'uploading') {
-				global.states.isBusy.value = true;
+				global.events.emit('pushGlobalBusy', {
+					isBusy: true
+				});
 			} else if (info.file.status === 'done') {
-				global.states.isBusy.value = false;
+				global.events.emit('pushGlobalBusy', {
+					isBusy: false
+				});
 				const resultUrl = info.file.response.object;
 				if (typeof resultUrl === 'string'
 						&& resultUrl.indexOf('ava') >= 0) {
@@ -170,7 +174,9 @@ export default {
 					console.log(info);
 				}
 			} else if (info.file.status === 'error') {
-				global.states.isBusy.value = false;
+				global.events.emit('pushGlobalBusy', {
+					isBusy: false
+				});
 				Toast.fail('上传失败');
 				console.log(info);
 			}

@@ -8,6 +8,8 @@ import ModUserInfo from '@/pages/inside/mine/details/ModUserInfo';
 import SignIn from '@/pages/outside/SignIn';
 import SignUp from '@/pages/outside/SignUp';
 import PostDetail from '@/components/post/post_detail/PostDetail';
+import Publish from '@/pages/outside/Publish';
+import HomePage from '@/pages/outside/HomePage';
 
 const routers = [
     {
@@ -55,6 +57,20 @@ const routers = [
         path: '/post_detail/:postId',
         name: 'postDetail',
         component: PostDetail,
+        props: true,
+        meta: {
+            noCache: true
+        }
+    },
+    {
+        path: '/publish',
+        name: 'publish',
+        component: Publish
+    },
+    {
+        path: '/homepage/:userId',
+        name: 'homePage',
+        component: HomePage,
         props: true,
         meta: {
             noCache: true

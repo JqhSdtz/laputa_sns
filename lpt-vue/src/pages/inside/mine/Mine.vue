@@ -21,6 +21,7 @@
 			</a-col>
 		</a-row>
 		<div v-if="hasSigned" style="margin-top: 1.5rem">
+			<van-cell title="个人主页" is-link :to="'/homepage/' + me.user.id"/>
 			<van-cell title="个人信息" is-link to="/home/mod_user_info"/>
 			<van-cell title="修改密码" is-link to="/home/mod_user_info"/>
 			<van-cell title="注销" is-link @click="signOut"/>

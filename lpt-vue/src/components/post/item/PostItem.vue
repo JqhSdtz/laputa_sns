@@ -2,7 +2,7 @@
 	<div class="post-item">
 		<top-bar class="top-bar" :post-id="post.id"></top-bar>
 		<content-area class="content-area" :post="post"></content-area>
-		<bottom-bar class="bottom-bar" :post-id="post.id" :show-actions="true"></bottom-bar>
+		<bottom-bar class="bottom-bar" :post-id="post.id" :post-of="postOf" :show-actions="true"></bottom-bar>
 	</div>
 </template>
 
@@ -15,7 +15,8 @@ import global from '@/lib/js/global';
 export default {
 	name: 'PostItem',
 	props: {
-		postId: Number
+		postId: Number,
+		postOf: String
 	},
 	data() {
 		return {

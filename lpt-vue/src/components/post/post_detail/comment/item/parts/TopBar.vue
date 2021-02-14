@@ -1,11 +1,11 @@
 <template>
 	<a-row class="top-bar">
 		<a-col span="4" class="ava-div">
-			<img class="ava" :src="avatarUrl"/>
+			<img class="ava" :src="avatarUrl" @click="showUserHomePage"/>
 		</a-col>
 		<a-col class="time-and-name">
 			<div>
-				<p class="name" style="display: inline-block">{{ comment.creator.nick_name }}</p>
+				<p class="name" @click="showUserHomePage" style="display: inline-block">{{ comment.creator.nick_name }}</p>
 				<van-tag v-if="comment.creator.id === posterId" type="primary"
 				         style="display: inline-block; margin-left: 0.5rem">
 					贴主
@@ -53,6 +53,16 @@ export default {
 			} else {
 				return '';
 			}
+		}
+	},
+	methods: {
+		showUserHomePage() {
+			this.$router.push({
+				name: 'homePage',
+				params: {
+					userId: this.post.creator.id
+				}
+			});
 		}
 	}
 }

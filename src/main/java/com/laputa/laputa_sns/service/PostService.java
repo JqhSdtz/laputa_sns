@@ -521,7 +521,7 @@ public class PostService extends BaseService<PostDao, Post> {
                 return new Result(FAIL).setErrorCode(1010050211).setMessage("只能在叶目录发帖");
             post.setCategory(category);
         }
-        post.setLength(post.getContent().length()).setCreator(operator.getUser()).setType(Post.TYPE_PUBLIC);
+        post.setLength(post.getContent().length()).setCreator(operator.getUser());
         if (!postValidator.checkCreatePermission(post, operator))
             return new Result(FAIL).setErrorCode(1010050205).setMessage("操作失败，权限错误");
         if (post.getType().equals(Post.TYPE_PUBLIC))//与下面的addPostIndex对应

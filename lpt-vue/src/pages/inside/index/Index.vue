@@ -91,7 +91,6 @@ export default {
 </script>
 
 <style scoped>
-
 #main-area {
 	overflow-y: scroll;
 }

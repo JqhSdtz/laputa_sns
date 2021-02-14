@@ -1,10 +1,10 @@
 <template>
 	<div class="top-bar">
 		<div class="ava-div" style="display: inline-block; float: left">
-			<img class="ava" :src="avatarUrl"/>
+			<img class="ava" :src="avatarUrl" @click="showUserHomePage"/>
 		</div>
 		<div class="time-and-name" style="display: inline-block; float: left">
-			<p class="name">{{ post.creator.nick_name }}</p>
+			<p class="name" @click="showUserHomePage">{{ post.creator.nick_name }}</p>
 			<p v-if="typeof post.create_time !== 'undefined'" class="time">{{ beforeTime }}</p>
 		</div>
 		<div v-if="post.is_topped" class="topped-tag" style="display: inline-block; float: left">
@@ -49,6 +49,16 @@ export default {
 			} else {
 				return '';
 			}
+		}
+	},
+	methods: {
+		showUserHomePage() {
+			this.$router.push({
+				name: 'homePage',
+				params: {
+					userId: this.post.creator.id
+				}
+			});
 		}
 	}
 }

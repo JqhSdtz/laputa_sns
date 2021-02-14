@@ -47,4 +47,6 @@ export function createEventBus() {
     };
 }
 
-export default createEventBus();
+const globalEvent = createEventBus();
+
+export default globalEvent;

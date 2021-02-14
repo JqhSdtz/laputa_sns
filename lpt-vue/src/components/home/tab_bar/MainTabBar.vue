@@ -20,7 +20,9 @@
 				<div class="text text-active">动态</div>
 			</template>
 		</tab-bar-item>
-		<van-icon id="plus-icon" name="add-o" size="3.75rem" color="forestgreen"/>
+		<router-link to="/publish">
+			<van-icon id="plus-icon" name="add-o" size="3.75rem" color="forestgreen"/>
+		</router-link>
 		<tab-bar-item path="/home/community">
 			<template v-slot:normal>
 				<ri-dashboard-line class="icon icon-normal"/>
