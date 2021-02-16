@@ -30,9 +30,6 @@ import {Toast} from "vant";
 import {toRef} from "vue";
 import {createEventBus} from "@/lib/js/global/global-events";
 
-const querior = lpt.createQuerior();
-const commentListEvents = createEventBus();
-
 export default {
 	name: 'CommentList',
 	props: {
@@ -45,13 +42,17 @@ export default {
 		CommentItem,
 		OrderedListOutlined
 	},
-	provide: {
-		commentListEvents: commentListEvents
+	provide() {
+		return {
+			commentListEvents: this.commentListEvents
+		}
 	},
 	data() {
+		this.querior = lpt.createQuerior();
+		this.commentListEvents = createEventBus();
 		return {
 			sortType: 'popular',
-			finished: toRef(querior, 'hasReachedBottom'),
+			finished: toRef(this.querior, 'hasReachedBottom'),
 			isEmpty: false,
 			hasEverLoad: false,
 			list: [],
@@ -63,13 +64,13 @@ export default {
 	created() {
 		const ref = this;
 		this.lptConsumer = lpt.createConsumer();
-		querior.onBusyChange(isBusy => {
+		this.querior.onBusyChange(isBusy => {
 			this.$nextTick(() => {
 				ref.isBusy = isBusy;
 			});
 		});
 		this.defaultQueryOption = {
-			querior,
+			querior: this.querior,
 			param: {
 				type: lpt.commentServ.level1,
 				queryType: this.sortType,
@@ -79,7 +80,7 @@ export default {
 			}
 		};
 		this.loadMore(false);
-		commentListEvents.on(['top', 'unTop'], (param, name) => {
+		this.commentListEvents.on(['top', 'unTop'], (param, name) => {
 			const isCancel = name === 'unTop';
 			const comment = param.comment;
 			lpt.postServ.setTopComment({
@@ -102,7 +103,7 @@ export default {
 				}
 			});
 		});
-		commentListEvents.on('delete', (param) => {
+		this.commentListEvents.on('delete', (param) => {
 			const comment = param.comment;
 			const ref = this;
 			lpt.contentServ.delete({
@@ -125,7 +126,7 @@ export default {
 		});
 	},
 	unmounted() {
-		querior.reset();
+		this.querior.reset();
 	},
 	methods: {
 		changeSortType() {
@@ -144,7 +145,7 @@ export default {
 			this.$emit('refresh');
 		},
 		reset() {
-			querior.reset();
+			this.querior.reset();
 			this.hasEverLoad = false;
 		},
 		pushComment(comment) {
@@ -153,7 +154,7 @@ export default {
 		loadMore(isRefresh) {
 			console.log('load comment list!');
 			const ref = this;
-			if (!querior.hasReachedBottom) {
+			if (!this.querior.hasReachedBottom) {
 				lpt.commentServ.query({
 					...this.defaultQueryOption,
 					success(result) {
@@ -166,7 +167,7 @@ export default {
 							ref.list = ref.list.concat(result.object);
 						}
 						if (isRefresh) {
-							commentListEvents.emit('refreshList');
+							ref.commentListEvents.emit('refreshList');
 						}
 					},
 					fail(result) {

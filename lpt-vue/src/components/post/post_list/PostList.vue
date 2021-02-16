@@ -6,7 +6,7 @@
 			<van-list class="post-list" @load="loadMore" :offset="listOffset"
 			          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
 				<post-item class="post-item" v-for="post in list" :post-id="post.id" :post-of="postOf"
-				           :key="post.id" :class="{post, 'last-post': post.last}"/>
+				           :key="post.id" :is-top-post="post.id === topPostId" :class="{post, 'last-post': post.last}"/>
 			</van-list>
 		</van-pull-refresh>
 	</div>
@@ -17,11 +17,8 @@ import lpt from '@/lib/js/laputa/laputa';
 import global from '@/lib/js/global';
 import {toRef} from "vue";
 import {Toast} from 'vant';
-import PostItem from './item/PostItem';
+import PostItem from '../item/PostItem';
 import {createEventBus} from "@/lib/js/global/global-events";
-
-const querior = lpt.createQuerior();
-const postListEvents = createEventBus();
 
 export default {
 	name: 'PostList',
@@ -41,18 +38,23 @@ export default {
 			type: String,
 			default: 'popular'
 		},
+		topPostId: Number,
 		userId: String,
 		onLoaded: Function
 	},
-	provide: {
-		postListEvents: postListEvents
+	provide(){
+		return {
+			postListEvents: this.postListEvents
+		}
 	},
 	components: {
 		PostItem
 	},
 	data() {
+		this.querior = lpt.createQuerior();
+		this.postListEvents = createEventBus();
 		return {
-			finished: toRef(querior, 'hasReachedBottom'),
+			finished: toRef(this.querior, 'hasReachedBottom'),
 			hasEverLoad: false,
 			isEmpty: false,
 			list: [],
@@ -65,7 +67,7 @@ export default {
 		const ref = this;
 		this.lptConsumer = lpt.createConsumer();
 		this.hasReallyLoaded = false;
-		querior.onBusyChange(isBusy => {
+		this.querior.onBusyChange(isBusy => {
 			this.$nextTick(() => {
 				// 这里单独建一个isBusy属性是为了防止
 				// 全局的isBusy变动触发无限下滑组件检测状态导致错误请求
@@ -74,7 +76,7 @@ export default {
 		});
 		if (ref.postOf === 'category') {
 			this.defaultQueryOption = {
-				querior,
+				querior: this.querior,
 				param: {
 					queryType: this.sortType,
 				},
@@ -84,10 +86,14 @@ export default {
 			};
 		} else if (ref.postOf === 'creator') {
 			this.defaultQueryOption = {
-				querior,
+				querior: this.querior,
 				data: {
 					creator_id: this.creatorId
 				}
+			};
+		} else if (ref.postOf === 'news') {
+			this.defaultQueryOption = {
+				querior: this.querior
 			};
 		}
 		this.loadMore(false);
@@ -96,7 +102,7 @@ export default {
 				ref.isRefreshing = true;
 			ref.onRefresh();
 		});
-		postListEvents.on(['top', 'unTop'], (param, name) => {
+		this.postListEvents.on(['top', 'unTop'], (param, name) => {
 			const isCancel = name === 'unTop';
 			const post = param.post;
 			let fun;
@@ -130,7 +136,7 @@ export default {
 				}
 			});
 		});
-		postListEvents.on('delete', (param) => {
+		this.postListEvents.on('delete', (param) => {
 			const post = param.post;
 			const ref = this;
 			lpt.contentServ.delete({
@@ -153,7 +159,7 @@ export default {
 		});
 	},
 	unmounted() {
-		querior.reset();
+		this.querior.reset();
 	},
 	watch: {
 		sortType(newValue) {
@@ -168,21 +174,28 @@ export default {
 			this.loadMore(true);
 		},
 		reset() {
-			querior.reset();
+			this.querior.reset();
 			this.hasEverLoad = false;
 		},
 		loadMore(isRefresh) {
 			const ref = this;
-			if (!querior.hasReachedBottom) {
+			if (!this.querior.hasReachedBottom) {
 				let fun;
 				if (this.postOf === 'category') {
 					fun = lpt.postServ.queryForCategory;
-				} else {
+				} else if (this.postOf === 'creator') {
 					fun = lpt.postServ.queryForCreator;
+				} else if (this.postOf === 'news') {
+					fun = lpt.newsServ.query;
 				}
 				fun({
 					...this.defaultQueryOption,
 					success(result) {
+						if (ref.postOf === 'news') {
+							result.object = result.object.map(obj => {
+								return obj.content;
+							});
+						}
 						global.states.postManager.addList(result.object);
 						if (!ref.hasEverLoad) {
 							ref.list = result.object;
@@ -192,7 +205,7 @@ export default {
 							ref.list = ref.list.concat(result.object);
 						}
 						if (isRefresh) {
-							postListEvents.emit('refreshList');
+							ref.postListEvents.emit('refreshList');
 						}
 					},
 					fail(result) {

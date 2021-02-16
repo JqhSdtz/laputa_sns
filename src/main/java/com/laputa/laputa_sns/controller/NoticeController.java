@@ -25,8 +25,8 @@ public class NoticeController {
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST})
-    public Result<List<Notice>> readNoticeList(@RequestBody QueryParam queryParam, @RequestAttribute Operator operator) {
-        return noticeService.pullNotice(queryParam, operator).setOperator(operator);
+    public Result<List<Notice>> readNoticeList(@RequestBody Notice notice, @RequestAttribute Operator operator) {
+        return noticeService.pullNotice(notice, operator).setOperator(operator);
     }
 
     @RequestMapping(value = "/read", method = {RequestMethod.POST})

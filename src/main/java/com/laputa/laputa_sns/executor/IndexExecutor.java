@@ -214,6 +214,16 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
             param.newFrom = queryParam.getFrom() + param.entityList.size();
             param.entityList = tmpList;
         }
+        for (int i = 0; i < param.entityList.size(); ++i) {
+            // 没有置顶的都把isTopped字段设为false，方便前端
+            T entity = param.entityList.get(i);
+            if (entity instanceof AbstractContent) {
+                AbstractContent content = (AbstractContent) entity;
+                if (content.getIsTopped() == null) {
+                    content.setIsTopped(false);
+                }
+            }
+        }
         param.queryEntity.getQueryParam().setStartId(param.newStartId).setStartValue(param.newStartValue).setFrom(param.newFrom);
         return new Result(Result.SUCCESS).setObject(param.entityList);
     }

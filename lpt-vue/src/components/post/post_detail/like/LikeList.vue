@@ -1,13 +1,16 @@
 <template>
-	<van-empty v-if="hasEverLoad && isEmpty" description="没有点赞" />
-	<van-pull-refresh v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh" success-text="刷新成功">
-		<van-list class="like-list" @load="loadMore" :offset="listOffset"
-		          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
-			<a-back-top :style="{bottom: listOffset + 'px'}" :target="getElement"/>
-			<like-item class="like-item" v-for="like in list" :like="like"
-			              :key="like.id"/>
-		</van-list>
-	</van-pull-refresh>
+	<div style="height: 100%">
+		<van-empty v-if="hasEverLoad && isEmpty" description="没有点赞"/>
+		<van-pull-refresh style="height: 100%" v-show="hasEverLoad && !isEmpty" v-model="isRefreshing"
+		                  @refresh="onPullRefresh" success-text="刷新成功">
+			<van-list class="like-list" @load="loadMore" :offset="listOffset"
+			          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
+				<a-back-top :style="{bottom: listOffset + 'px'}" :target="getElement"/>
+				<like-item class="like-item" v-for="like in list" :like="like"
+				           :key="like.id"/>
+			</van-list>
+		</van-pull-refresh>
+	</div>
 </template>
 
 <script>
@@ -17,12 +20,14 @@ import {toRef} from 'vue';
 import global from '@/lib/js/global';
 import lpt from '@/lib/js/laputa/laputa';
 
-const querior = lpt.createQuerior();
-
 export default {
 	name: 'LikeList',
 	props: {
-		postId: String,
+		type: {
+			type: String,
+			default: lpt.contentType.post
+		},
+		targetId: Number,
 		onBusyChange: Function,
 		onLoaded: Function,
 		onRefresh: Function
@@ -31,36 +36,39 @@ export default {
 		LikeItem
 	},
 	data() {
+		this.querior = lpt.createQuerior();
+		const listOffset = this.type === lpt.contentType.post
+			? global.vars.style.postDetailBarHeight + 10 : 10;
 		return {
-			finished: toRef(querior, 'hasReachedBottom'),
+			finished: toRef(this.querior, 'hasReachedBottom'),
 			hasEverLoad: false,
 			list: [],
 			isEmpty: false,
-			listOffset: global.vars.style.postDetailBarHeight + 10,
+			listOffset: listOffset,
 			isRefreshing: false,
 			isBusy: false
 		}
 	},
 	created() {
 		const ref = this;
-		querior.onBusyChange(isBusy => {
+		this.querior.onBusyChange(isBusy => {
 			this.$nextTick(() => {
 				ref.isBusy = isBusy;
 			});
 		});
 		this.defaultQueryOption = {
-			querior,
+			querior: this.querior,
 			param: {
-				type: lpt.contentType.post
+				type: this.type
 			},
 			data: {
-				target_id: this.postId
+				target_id: this.targetId
 			}
 		};
 		this.loadMore();
 	},
 	unmounted() {
-		querior.reset();
+		this.querior.reset();
 	},
 	methods: {
 		onPullRefresh() {
@@ -69,7 +77,7 @@ export default {
 			this.$emit('refresh');
 		},
 		reset() {
-			querior.reset();
+			this.querior.reset();
 			this.hasEverLoad = false;
 		},
 		pushLike(like) {
@@ -87,9 +95,8 @@ export default {
 			}
 		},
 		loadMore() {
-			console.log('load like list!');
 			const ref = this;
-			if (!querior.hasReachedBottom) {
+			if (!this.querior.hasReachedBottom) {
 				lpt.likeServ.query({
 					...this.defaultQueryOption,
 					success(result) {

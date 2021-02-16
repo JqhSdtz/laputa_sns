@@ -1,8 +1,8 @@
 <template>
 	<div class="content-area">
 		<p class="title">{{ post.title }}</p>
-		<pre class="content" v-if="isShowFullText">{{ fullText }}</pre>
-		<pre class="content" v-else>{{ post.content }}</pre>
+		<pre class="content" v-if="isShowFullText" @click="showPostDetail">{{ fullText }}</pre>
+		<pre class="content" v-else @click="showPostDetail">{{ post.content }}</pre>
 		<p v-if="post.full_text_id && !isShowFullText" class="full-text-btn" @click="showFullText">
 			查看全文
 		</p>
@@ -54,6 +54,14 @@ export default {
 		}
 	},
 	methods: {
+		showPostDetail() {
+			this.$router.push({
+				name: 'postDetail',
+				params: {
+					postId: this.post.id
+				}
+			});
+		},
 		showImgPreview(index) {
 			ImagePreview({
 				images: this.fullUrlList,

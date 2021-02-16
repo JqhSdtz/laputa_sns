@@ -1,0 +1,91 @@
+<template>
+	<a-popover trigger="click" placement="bottomLeft" v-model:visible="showPopover">
+		<template v-slot:content>
+			<div style="width: 4rem">
+				<a-button class="pop-btn" :type="getPopBtnType('popular')"
+				          @click="changeSortType('popular')">
+					热门
+				</a-button>
+				<a-button class="pop-btn" :type="getPopBtnType('latest')"
+				          @click="changeSortType('latest')">
+					最新
+				</a-button>
+			</div>
+		</template>
+		<transition name="van-fade">
+			<a-button id="sortTypeBtn" v-show="showSortTypeSelector" >
+				<ordered-list-outlined/>
+				<span style="margin-left: 0.5rem">
+						<span v-if="sortType === 'popular'">热门</span>
+						<span v-if="sortType === 'latest'">最新</span>
+					</span>
+			</a-button>
+		</transition>
+	</a-popover>
+</template>
+
+<script>
+import {OrderedListOutlined} from "@ant-design/icons-vue";
+
+export default {
+	name: 'SortTypeSelector',
+	components: {
+		OrderedListOutlined
+	},
+	props: {
+		sortType: String
+	},
+	emits: ['update:sortType'],
+	data() {
+		return {
+			showSortTypeSelector: true,
+			showPopover: false
+		}
+	},
+	mounted() {
+		const listElem = this.$parent.$el;
+		let preScrollTop = 0;
+		listElem.addEventListener('scroll', () => {
+			const curScrollTop = listElem.scrollTop;
+			const diff = curScrollTop - preScrollTop;
+			preScrollTop = curScrollTop;
+			if (diff > 0 && curScrollTop > 300) {
+				this.showSortTypeSelector = false;
+				this.showPopover = false;
+			} else if (diff < 0) {
+				this.showSortTypeSelector = true;
+			}
+		});
+	},
+	methods: {
+		changeSortType(type) {
+			this.$emit('update:sortType', type);
+			this.showPopover = false;
+		},
+		getPopBtnType(sortType) {
+			return this.sortType === sortType ? 'primary' : 'default';
+		}
+	}
+}
+</script>
+
+<style scoped>
+.pop-btn {
+	border-top: none;
+	border-left: none;
+	border-right: none;
+	width: 100%;
+}
+
+.pop-btn:last-of-type {
+	border-bottom: none;
+}
+
+#sortTypeBtn {
+	position: fixed;
+	right: 1rem;
+	top: 4.5rem;
+	background-color: white;
+	z-index: 2;
+}
+</style>

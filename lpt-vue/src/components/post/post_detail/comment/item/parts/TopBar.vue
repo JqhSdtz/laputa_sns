@@ -58,7 +58,7 @@ export default {
 	methods: {
 		showUserHomePage() {
 			this.$router.push({
-				name: 'homePage',
+				name: 'userHomePage',
 				params: {
 					userId: this.post.creator.id
 				}
@@ -73,8 +73,8 @@ export default {
 	height: 2.5rem;
 }
 
-.top-bar .time-and-name, topped-tag {
-	margin-top: 0.3rem;
+.top-bar .time-and-name, .top-bar .topped-tag {
+	margin-top: 0;
 }
 
 .top-bar .ava {

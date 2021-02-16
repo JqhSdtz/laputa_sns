@@ -152,11 +152,14 @@ public class OperatorService {
         }
         setToken(operator, response);
         //operator.setLastAccessTime(new Date().getTime()).setFromLogin(null);
-        Result afterLogin = userService.afterLogin(user, operator.getToken(), fromRegister);//更新数据库，增加登录次数
+        //更新数据库，增加登录次数
+        Result afterLogin = userService.afterLogin(user, operator.getToken(), fromRegister);
         if (afterLogin.getState() == FAIL)
             return afterLogin;
-        if (!fromLoad)
+        if (!fromLoad) {
+            pullNewsAndNoticeCnt(operator);
             redisHelper.setEntity(operator, false);
+        }
         return Result.EMPTY_SUCCESS;
     }
 
@@ -169,21 +172,32 @@ public class OperatorService {
         if (fromLogin) {
             afterLogin(operator, response, true, false);
         } else {
-            Result<User> userResult = userService.readUserWithCounter(userId, operator);//获取用户基本信息
+            //获取用户基本信息
+            Result<User> userResult = userService.readUserWithCounter(userId, operator);
             if (userResult.getState() == FAIL)
                 return (Result) userResult.setMessage("ID错误");
             operator.setUser(userResult.getObject());
         }
+        pullNewsAndNoticeCnt(operator);
+        //加载成功，刷新Redis中的Operator
+        redisHelper.setEntity(operator, false);
+        return new Result(SUCCESS).setObject(operator);
+    }
+
+    /**
+     * 获取操作者的动态和通知数量
+     * @param operator
+     */
+    private void pullNewsAndNoticeCnt(Operator operator) {
         long curTime = new Date().getTime();
-        if (operator.getLastAccessTime() == null || curTime - operator.getLastAccessTime() > 1000) {//距上一次访问大于5秒，重新读取未读动态数
+        if (operator.getLastAccessTime() == null || curTime - operator.getLastAccessTime() > 1000) {
+            //距上一次访问大于1秒，重新读取未读动态数
             Result<Integer> cntResult = postNewsService.readNewsCount(operator);
             if (cntResult.getState() == SUCCESS)
                 operator.setUnreadNewsCnt(cntResult.getObject());
             operator.setUnreadNoticeCnt(noticeService.pullNoticeCnt(operator.getUserId()));
         }
         operator.setLastAccessTime(curTime);
-        redisHelper.setEntity(operator, false);//加载成功，刷新Redis中的Operator
-        return new Result(SUCCESS).setObject(operator);
     }
 
 }

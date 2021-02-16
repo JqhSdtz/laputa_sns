@@ -7,7 +7,7 @@
 			<p class="name" @click="showUserHomePage">{{ post.creator.nick_name }}</p>
 			<p v-if="typeof post.create_time !== 'undefined'" class="time">{{ beforeTime }}</p>
 		</div>
-		<div v-if="post.is_topped" class="topped-tag" style="display: inline-block; float: left">
+		<div v-if="isTopPost" class="topped-tag" style="display: inline-block; float: left">
 			<van-tag  type="primary">
 				置顶
 			</van-tag>
@@ -27,7 +27,8 @@ const timeAgo = new TimeAgo('zh-CN');
 export default {
 	name: 'TopBar',
 	props: {
-		postId: Number
+		postId: Number,
+		isTopPost: Boolean
 	},
 	data() {
 		const post = global.states.postManager.get(this.postId);
@@ -54,7 +55,7 @@ export default {
 	methods: {
 		showUserHomePage() {
 			this.$router.push({
-				name: 'homePage',
+				name: 'userHomePage',
 				params: {
 					userId: this.post.creator.id
 				}
@@ -76,8 +77,8 @@ export default {
 	height: 2.5rem;
 }
 
-.top-bar .time-and-name, .topped-tag {
-	margin-top: 0.52rem;
+.top-bar .time-and-name, .top-bar .topped-tag {
+	margin-top: 0.42rem;
 }
 
 .top-bar p {

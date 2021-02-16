@@ -10,10 +10,10 @@
 			</a-col>
 		</a-row>
 		<a-row v-if="hasSigned" justify="center">
-			<a-col class="cnt-bar-item" span="7">
+			<a-col class="cnt-bar-item" span="7" @click="showFollowingList">
 				关注:{{ me.user.following_cnt }}
 			</a-col>
-			<a-col class="cnt-bar-item" span="8">
+			<a-col class="cnt-bar-item" span="8" @click="showFollowersList">
 				粉丝:{{ me.user.followers_cnt }}
 			</a-col>
 			<a-col class="cnt-bar-item" span="7">
@@ -21,9 +21,15 @@
 			</a-col>
 		</a-row>
 		<div v-if="hasSigned" style="margin-top: 1.5rem">
-			<van-cell title="个人主页" is-link :to="'/homepage/' + me.user.id"/>
-			<van-cell title="个人信息" is-link to="/home/mod_user_info"/>
-			<van-cell title="修改密码" is-link to="/home/mod_user_info"/>
+			<van-cell title="个人主页" is-link :to="'/user_home_page/' + me.user.id"/>
+			<van-cell is-link to="/notice_list">
+				<template #title>
+					<span class="custom-title">通知</span>
+					<a-badge style="margin-left: 1rem; margin-top: -0.5rem;" :count="me.unread_notice_cnt" />
+				</template>
+			</van-cell>
+			<van-cell title="个人信息" is-link to="/mod_user_info"/>
+			<van-cell title="修改密码" is-link to="/mod_user_info"/>
 			<van-cell title="注销" is-link @click="signOut"/>
 		</div>
 	</div>
@@ -43,6 +49,20 @@ export default {
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
+		if (global.states.hasSigned.value) {
+			lpt.userServ.get({
+				consumer: this.lptConsumer,
+				param: {
+					userId: this.me.user.id
+				},
+				success(result) {
+					global.states.curOperator.user = result.object;
+				},
+				fail(result) {
+					Toast.fail(result.message);
+				}
+			});
+		}
 	},
 	computed: {
 		hasSigned() {
@@ -53,6 +73,22 @@ export default {
 		}
 	},
 	methods: {
+		showFollowersList() {
+			this.$router.push({
+				name: 'followersList',
+				params: {
+					userId: this.me.user.id.toString()
+				}
+			});
+		},
+		showFollowingList() {
+			this.$router.push({
+				name: 'followingList',
+				params: {
+					userId: this.me.user.id.toString()
+				}
+			});
+		},
 		signIn() {
 			this.$router.push({name: 'signIn'});
 		},

@@ -4,12 +4,17 @@ import Index from '@/pages/inside/index/Index';
 import News from '@/pages/inside/news/News';
 import Community from '@/pages/inside/community/Community';
 import Mine from '@/pages/inside/mine/Mine';
-import ModUserInfo from '@/pages/inside/mine/details/ModUserInfo';
-import SignIn from '@/pages/outside/SignIn';
-import SignUp from '@/pages/outside/SignUp';
+import ModUserInfo from '@/pages/outside/user/ModUserInfo';
+import SignIn from '@/pages/outside/sign/SignIn';
+import SignUp from '@/pages/outside/sign/SignUp';
 import PostDetail from '@/components/post/post_detail/PostDetail';
-import Publish from '@/pages/outside/Publish';
-import HomePage from '@/pages/outside/HomePage';
+import Publish from '@/pages/outside/publish/Publish';
+import UserHomePage from '@/pages/outside/user/UserHomePage';
+import FollowersList from '@/pages/outside/user/user_list/FollowersList';
+import FollowingList from '@/pages/outside/user/user_list/FollowingList';
+import NoticeList from '@/pages/outside/notice/NoticeList';
+import CommentLikeList from '@/components/post/post_detail/comment_detail/CommentLikeList';
+import SearchIndex from '@/pages/outside/search/SearchIndex';
 
 const routers = [
     {
@@ -36,12 +41,13 @@ const routers = [
             {
                 path: 'mine',
                 component: Mine
-            },
-            {
-                path: 'mod_user_info',
-                component: ModUserInfo
             }
         ]
+    },
+    {
+        path: '/mod_user_info',
+        name: 'modUserInfo',
+        component: ModUserInfo
     },
     {
         path: '/sign_in',
@@ -68,10 +74,50 @@ const routers = [
         component: Publish
     },
     {
-        path: '/homepage/:userId',
-        name: 'homePage',
-        component: HomePage,
+        path: '/user_home_page/:userId',
+        name: 'userHomePage',
+        component: UserHomePage,
         props: true,
+        meta: {
+            noCache: true
+        }
+    },
+    {
+        path: '/followers_list/:userId',
+        name: 'followersList',
+        component: FollowersList,
+        props: true,
+        meta: {
+            noCache: true
+        }
+    },
+    {
+        path: '/following_list/:userId',
+        name: 'followingList',
+        component: FollowingList,
+        props: true,
+        meta: {
+            noCache: true
+        }
+    },
+    {
+        path: '/notice_list',
+        name: 'noticeList',
+        component: NoticeList
+    },
+    {
+        path: '/comment_like_list/:type/:commentId',
+        name: 'commentLikeList',
+        component: CommentLikeList,
+        props: true,
+        meta: {
+            noCache: true
+        }
+    },
+    {
+        path: '/search_index',
+        name: 'searchIndex',
+        component: SearchIndex,
         meta: {
             noCache: true
         }
@@ -83,6 +129,7 @@ const router = createRouter({
 });
 
 const _noCacheList = [];
+
 function processRouters(_routers) {
     _routers.forEach(router => {
         if (router.meta) {
@@ -95,6 +142,7 @@ function processRouters(_routers) {
         }
     });
 }
+
 processRouters(routers);
 
 

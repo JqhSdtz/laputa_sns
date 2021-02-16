@@ -10,19 +10,6 @@
 				<div class="text text-active">首页</div>
 			</template>
 		</tab-bar-item>
-		<tab-bar-item path="/home/news">
-			<template v-slot:normal>
-				<ri-apps-line class="icon icon-normal"/>
-				<div class="text text-normal">动态</div>
-			</template>
-			<template v-slot:active>
-				<ri-apps-fill class="icon icon-active"/>
-				<div class="text text-active">动态</div>
-			</template>
-		</tab-bar-item>
-		<router-link to="/publish">
-			<van-icon id="plus-icon" name="add-o" size="3.75rem" color="forestgreen"/>
-		</router-link>
 		<tab-bar-item path="/home/community">
 			<template v-slot:normal>
 				<ri-dashboard-line class="icon icon-normal"/>
@@ -33,10 +20,27 @@
 				<div class="text text-active">社区</div>
 			</template>
 		</tab-bar-item>
+		<router-link to="/publish">
+			<van-icon id="plus-icon" name="add-o" size="3.75rem" color="forestgreen"/>
+		</router-link>
+		<tab-bar-item path="/home/news">
+			<template v-slot:normal>
+				<a-badge :count="unreadNewsCnt" :overflow-count="99" style="line-height: inherit">
+					<ri-apps-line class="icon icon-normal"/>
+					<div class="text text-normal">动态</div>
+				</a-badge>
+			</template>
+			<template v-slot:active>
+				<ri-apps-fill class="icon icon-active"/>
+				<div class="text text-active">动态</div>
+			</template>
+		</tab-bar-item>
 		<tab-bar-item path="/home/mine">
 			<template v-slot:normal>
-				<ri-user3-line class="icon icon-normal"/>
-				<div class="text text-normal">我的</div>
+				<a-badge :count="unreadNoticeCnt" :overflow-count="99" style="line-height: inherit">
+					<ri-user3-line class="icon icon-normal"/>
+					<div class="text text-normal">我的</div>
+				</a-badge>
 			</template>
 			<template v-slot:active>
 				<ri-user3-fill class="icon icon-active"/>
@@ -52,6 +56,8 @@ import {
 	RiHome3Line, RiAppsLine, RiDashboardLine, RiUser3Line,
 	RiHome3Fill, RiAppsFill, RiDashboardFill, RiUser3Fill
 } from '@/assets/icons/remix-icon';
+import global from '@/lib/js/global';
+import {toRef} from "vue";
 
 export default {
 	name: 'MainTabBar',
@@ -65,6 +71,12 @@ export default {
 		RiAppsFill,
 		RiDashboardFill,
 		RiUser3Fill
+	},
+	data() {
+		return {
+			unreadNoticeCnt: toRef(global.states.curOperator, 'unread_notice_cnt'),
+			unreadNewsCnt: toRef(global.states.curOperator, 'unread_news_cnt')
+		}
 	}
 }
 </script>

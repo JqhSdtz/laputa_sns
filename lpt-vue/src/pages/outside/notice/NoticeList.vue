@@ -1,43 +1,45 @@
 <template>
-	<van-empty v-if="hasEverLoad && isEmpty" description="没有转发" />
-	<van-pull-refresh style="height: 100%" v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh" success-text="刷新成功">
-		<van-list class="forward-list" @load="loadMore" :offset="listOffset"
+	<van-empty v-if="hasEverLoad && isEmpty" description="没有消息" />
+	<van-pull-refresh v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh"
+	                  success-text="刷新成功" style="height: 100%">
+		<van-list class="notice-list" @load="loadMore"
 		          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
-			<a-back-top :style="{bottom: listOffset + 'px'}" :target="getElement"/>
-			<forward-item class="forward-item" v-for="forward in list" :forward="forward"
-			              :key="forward.id"/>
+			<a-back-top :style="{bottom: '10px'}" :target="getElement"/>
+			<notice-item class="notice-item" v-for="notice in list" :key="notice.id" :notice-id="notice.id"/>
 		</van-list>
 	</van-pull-refresh>
 </template>
 
 <script>
-import ForwardItem from './item/ForwardItem';
-import {Toast} from "vant";
-import {toRef} from 'vue';
-import global from '@/lib/js/global';
+import NoticeItem from './item/NoticeItem';
 import lpt from '@/lib/js/laputa/laputa';
+import {toRef} from 'vue';
+import {Toast} from 'vant';
+import global from '@/lib/js/global';
 
 export default {
-	name: 'ForwardList',
-	props: {
-		postId: String,
-		onBusyChange: Function,
-		onLoaded: Function,
-		onRefresh: Function
-	},
+	name: 'NoticeList',
 	components: {
-		ForwardItem
+		NoticeItem
 	},
 	data() {
 		this.querior = lpt.createQuerior();
 		return {
+			curNoticeCount: global.states.curOperator.unread_notice_cnt,
 			finished: toRef(this.querior, 'hasReachedBottom'),
 			hasEverLoad: false,
 			list: [],
 			isEmpty: false,
-			listOffset: global.vars.style.postDetailBarHeight + 10,
 			isRefreshing: false,
 			isBusy: false
+		}
+	},
+	watch: {
+		curNoticeCount(newValue, oldValue) {
+			if (newValue !== oldValue) {
+				this.reset();
+				this.loadMore();
+			}
 		}
 	},
 	created() {
@@ -47,12 +49,6 @@ export default {
 				ref.isBusy = isBusy;
 			});
 		});
-		this.defaultQueryOption = {
-			querior: this.querior,
-			data: {
-				sup_id: this.postId
-			}
-		};
 		this.loadMore();
 	},
 	unmounted() {
@@ -62,22 +58,18 @@ export default {
 		onPullRefresh() {
 			this.reset();
 			this.loadMore();
-			this.$emit('refresh');
 		},
 		reset() {
 			this.querior.reset();
 			this.hasEverLoad = false;
 		},
-		pushForward(forward) {
-			this.list.unshift(forward);
-		},
 		loadMore() {
-			console.log('load forward list!');
 			const ref = this;
 			if (!this.querior.hasReachedBottom) {
-				lpt.forwardServ.query({
-					...this.defaultQueryOption,
+				lpt.noticeServ.query({
+					querior: this.querior,
 					success(result) {
+						global.states.noticeManager.addList(result.object);
 						if (!ref.hasEverLoad) {
 							ref.list = result.object;
 							ref.isEmpty = ref.list.length === 0;
@@ -103,13 +95,9 @@ export default {
 </script>
 
 <style scoped>
-.forward-list {
+.notice-list {
 	height: 100%;
 	overflow-y: visible;
-	background-color: #ECECEC;
-}
-
-.forward-item {
-	padding: 0.5rem;
+	padding-top: 2rem;
 }
 </style>

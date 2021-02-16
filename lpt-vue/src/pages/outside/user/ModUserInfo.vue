@@ -75,7 +75,7 @@ export default {
 		lpt.userServ.getInfo({
 			consumer: this.lptConsumer,
 			param: {
-				user_id: curOperator.user.id
+				userId: curOperator.user.id
 			},
 			success(result) {
 				ref.form = result.object;

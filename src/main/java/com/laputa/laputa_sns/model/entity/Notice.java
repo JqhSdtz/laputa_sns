@@ -1,6 +1,8 @@
 package com.laputa.laputa_sns.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.laputa.laputa_sns.common.AbstractBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -17,7 +19,7 @@ import java.util.Date;
 @Getter
 @Setter
 @Accessors(chain = true)
-public class Notice {
+public class Notice extends AbstractBaseEntity {
     public static final int TYPE_LIKE_POST = 0;
     public static final int TYPE_LIKE_CML1 = 1;
     public static final int TYPE_LIKE_CML2 = 2;
@@ -67,5 +69,12 @@ public class Notice {
     @JsonProperty("type_str")
     public String getTypeStr() {
         return typeStr[type];
+    }
+
+    @JsonIgnore
+    public boolean isValidPullNoticeParam() {
+        if (queryParam.getFrom() == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)
+            return false;
+        return true;
     }
 }

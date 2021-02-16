@@ -93,10 +93,11 @@ public class NoticeService {
         return cnt;
     }
 
-    public Result<List<Notice>> pullNotice(@NotNull QueryParam queryParam, @NotNull Operator operator) {
-        if (queryParam.getFrom() == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)
+    public Result<List<Notice>> pullNotice(@NotNull Notice paramNotice, @NotNull Operator operator) {
+        if (!paramNotice.isValidPullNoticeParam())
             return new Result(Result.FAIL).setErrorCode(1010160201).setMessage("操作错误，参数不合法");
         int receiverId = operator.getUserId();
+        QueryParam queryParam = paramNotice.getQueryParam();
         List<String> resList = redisTemplate.execute(pullNoticeScript, Arrays.asList(getRedisTimeKey(receiverId), getRedisInitTimeKey(receiverId), getRedisCntKey(receiverId)),
                 String.valueOf(queryParam.getFrom()), String.valueOf(queryParam.getFrom() + queryParam.getQueryNum() - 1));
         int len = resList.size() / 4;

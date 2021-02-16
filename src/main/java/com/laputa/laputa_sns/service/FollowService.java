@@ -205,7 +205,7 @@ public class FollowService extends BaseService<FollowDao, Follow> {
     }
 
     public Result<List<Follow>> readFollowingList(Integer userId, boolean withUserInfo, @NotNull Operator operator) {
-        if (operator.getFollowList() != null) {
+        if (operator.getFollowList() != null && operator.getUserId().equals(userId)) {
             if (withUserInfo)
                 fillFollowWithUser(operator.getFollowList(), FOLLOWING);
             return new Result(SUCCESS).setObject(operator.getFollowList());

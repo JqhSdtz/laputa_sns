@@ -5,10 +5,10 @@ import {createApp} from 'vue';
 import App from './App.vue';
 import router from './router';
 import {Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload,
-    Popover} from 'ant-design-vue';
+    Popover, Badge} from 'ant-design-vue';
 import {Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
     Popover as VPopOver, Dialog, Image as VanImage, Uploader, Form as VanForm, Field, Cascader,
-    Button as VanButton, Popup, Switch} from 'vant';
+    Button as VanButton, Popup, Switch, Search} from 'vant';
 import remHelper from '@/lib/js/uitls/rem-helper';
 import {customDirectionList} from '@/lib/js/laputa/laputa-vue';
 import globalMixins from '@/lib/js/global/global-mixins';
@@ -21,13 +21,13 @@ remHelper.initRem({
 
 const app = createApp(App);
 const antdUseList = [router, Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload,
-    Popover];
+    Popover, Badge];
 antdUseList.forEach(item => {
     app.use(item);
 });
 
 const vantUseList = [Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
-    VPopOver, Dialog, VanImage, Uploader, VanForm, Field, Cascader, VanButton, Popup, Switch];
+    VPopOver, Dialog, VanImage, Uploader, VanForm, Field, Cascader, VanButton, Popup, Switch, Search];
 vantUseList.forEach(item => {
     app.use(item);
 });

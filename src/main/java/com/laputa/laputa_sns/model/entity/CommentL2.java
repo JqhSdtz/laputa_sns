@@ -121,6 +121,8 @@ public class CommentL2 extends AbstractContent<CommentL2> {
 
     public CommentL2 setIsTopped(Boolean isTopped){return this;}
 
+    public Boolean getIsTopped() {return false;}
+
     @JsonIgnore
     public CommentL2 setEntityContent(@NotNull CommentL2 comment) {
         this.rawImg = comment.rawImg;

@@ -41,6 +41,7 @@ import {Toast} from "vant";
 export default {
 	name: 'BottomBar',
 	props: {
+		type: String,
 		commentId: Number,
 		showActions: Boolean
 	},
@@ -59,7 +60,12 @@ export default {
 		EllipsisOutlined
 	},
 	data() {
-		const comment = global.states.commentL1Manager.get(this.commentId);
+		let comment;
+		if (this.type === lpt.commentServ.level1) {
+			comment = global.states.commentL1Manager.get(this.commentId);
+		} else {
+			comment = global.states.commentL2Manager.get(this.commentId);
+		}
 		return {
 			comment: comment,
 			showPopover: false,
@@ -130,10 +136,12 @@ export default {
 			}
 		},
 		openCommentPanel() {
-			this.postDetailEvents.emit('openCommentPanel', {
-				type: lpt.commentServ.level2,
-				id: this.comment.id
-			});
+			if (this.postDetailEvents) {
+				this.postDetailEvents.emit('openCommentPanel', {
+					type: lpt.commentServ.level2,
+					id: this.comment.id
+				});
+			}
 		},
 		changeLike() {
 			const ref = this;

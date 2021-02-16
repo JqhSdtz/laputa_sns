@@ -425,7 +425,9 @@ function _initLaputa(option) {
         const unSignedOperator = {
             user: {
                 id: -1
-            }
+            },
+            unread_notice_cnt: 0,
+            unread_news_cnt: 0
         };
         let curOperator;
         const serv = {
@@ -454,11 +456,16 @@ function _initLaputa(option) {
             hasSigned: wrap(function () {
                 return serv.getCurrent().user.id !== -1;
             }),
-            setCurrent: wrap(function (_operator) {
+            setCurrent: function (_operator) {
+                if (_operator.user_id === -1) {
+                    _operator.unread_notice_cnt = 0;
+                    _operator.unread_news_cnt = 0;
+                    console.log(_operator);
+                }
                 curOperator = _operator;
                 localStorage.setItem('lpt_operator', JSON.stringify(_operator));
                 lpt.event.emit('onCurOperatorChange', _operator);
-            }),
+            },
             getCurrent: wrap(function () {
                 if (typeof curOperator !== 'undefined')
                     return curOperator;
@@ -479,19 +486,21 @@ function _initLaputa(option) {
         const serv = {
             getDefaultUser: function(id) {
                 return {
+                    isDefault: true,
                     id: id,
                     nick_name: '',
                     followers_cnt: 0,
                     following_cnt: 0,
-                    post_cnt: 0
+                    post_cnt: 0,
+                    top_post_id: -1
                 }
             },
             get: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/' + param.param.user_id;
+                param.url = lpt.baseUrl + '/user/' + param.param.userId;
                 return lpt.get(param);
             }),
             getInfo: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/info/' + param.param.user_id;
+                param.url = lpt.baseUrl + '/user/info/' + param.param.userId;
                 return lpt.get(param);
             }),
             checkName: wrap(function (param) {
@@ -541,6 +550,7 @@ function _initLaputa(option) {
         const serv = {
             getDefaultPost: function(id) {
                 return {
+                    isDefault: true,
                     id: id,
                     creator: {},
                     rights: {},
@@ -590,6 +600,7 @@ function _initLaputa(option) {
 
     function initCommentService() {
         const defaultComment = {
+            isDefault: true,
             creator: {},
             rights: {},
             liked_by_viewer: false,
@@ -651,6 +662,13 @@ function _initLaputa(option) {
 
     function initCategoryService() {
         const serv = {
+            getDefaultCategory: function(id) {
+                return {
+                    isDefault: true,
+                    id: id,
+                    top_post_id: -1
+                }
+            },
             setTopPost: wrap(function (param) {
                 param.url = lpt.baseUrl + '/category/top_post/' + (param.param.isCancel ? 'cancel' : 'create');
                 return lpt.patch(param);
@@ -672,7 +690,7 @@ function _initLaputa(option) {
                 return lpt.patch(param);
             }),
             get: wrap(function (param) {
-                param.url = lpt.baseUrl + '/category/' + param.data.id;
+                param.url = lpt.baseUrl + '/category/' + param.param.id;
                 return lpt.get(param);
             }),
             create: wrap(function (param) {
@@ -708,7 +726,7 @@ function _initLaputa(option) {
                 return param.querior.query(param);
             }),
             getFollowing: wrap(function (param) {
-                param.url = lpt.baseUrl + '/follow/following/' + param.data.userId;
+                param.url = lpt.baseUrl + '/follow/following/' + param.param.userId;
                 return lpt.get(param);
             }),
             follow: wrap(function (param) {
@@ -757,6 +775,11 @@ function _initLaputa(option) {
 
     function initNoticeService() {
         const serv = {
+            getDefaultNotice(id) {
+                return {
+                    id: id
+                }
+            },
             query: wrap(function (param) {
                 param.url = lpt.baseUrl + '/notice';
                 return param.querior.query(param);

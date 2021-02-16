@@ -28,27 +28,11 @@ function initItemManager(param) {
         return itemMap;
     }
     itemManager.add = function (item) {
+        param.processItem && param.processItem(item);
         if (itemMap.has(item.id)) {
             // 因为直接通过map的set方法设置对象会直接覆盖，不会引起响应式变化
             // 所以这里需要逐一赋值
             const original = itemMap.get(item.id);
-            param.processItem && param.processItem(item);
-            // const keySet = new Set();
-            // // 获取原有对象和现有对象的所有key
-            // for (let key in original)
-            //     keySet.add(key);
-            // for (let key in item)
-            //     keySet.add(key);
-            // keySet.forEach(key => {
-            //    if (Object.prototype.hasOwnProperty.call(item, key)) {
-            //        // eslint禁止直接使用hasOwnProperty
-            //        // 新对象有的，要给原对象加上去
-            //        original[key] = item[key];
-            //    } else {
-            //        // 新对象没有的，要从原对象中去掉
-            //        delete original[key];
-            //    }
-            // });
             Object.assign(original, item);
             return original;
         } else {
@@ -65,7 +49,7 @@ function initItemManager(param) {
         return itemList;
     }
     itemManager.get = function (itemId) {
-        const id = parseInt(itemId);
+        const id = param.notIntegerId ? itemId : parseInt(itemId);
         let res = itemMap.get(id);
         if (!res) {
             const temp = param.getDefault(id);
@@ -79,6 +63,12 @@ function initItemManager(param) {
 const userManager = initItemManager({
     getDefault(id) {
         return lpt.userServ.getDefaultUser(id);
+    }
+});
+
+const categoryManager = initItemManager({
+    getDefault(id) {
+        return lpt.categoryServ.getDefaultCategory(id);
     }
 });
 
@@ -108,6 +98,29 @@ const commentL1Manager = initItemManager({
     }
 });
 
+const commentL2Manager = initItemManager({
+    processItem(item) {
+        if (!item.rights)
+            item.rights = {};
+        if (item.creator) {
+            userManager.add(item.creator);
+        }
+    },
+    getDefault(id) {
+        return lpt.commentServ.getDefaultCommentL2(id);
+    }
+});
+
+const noticeManager = initItemManager({
+    notIntegerId: true,
+    processItem(item) {
+        item.id = item.type + ':' + item.content_id;
+    },
+    getDefault(id) {
+        return lpt.noticeServ.getDefaultNotice(id);
+    }
+});
+
 const states = {
     isBusy: wrap({
         default: false
@@ -116,9 +129,12 @@ const states = {
         default: lpt.operatorServ.getCurrent()
     }),
     hasSigned: computed(() => states.curOperator.user.id !== -1),
-    postManager: postManager,
-    commentL1Manager: commentL1Manager,
-    userManager: userManager,
+    postManager,
+    commentL1Manager,
+    commentL2Manager,
+    categoryManager,
+    userManager,
+    noticeManager,
     pages: {
         index: {
             sortType: wrap({
@@ -153,4 +169,5 @@ function initGlobalBusyHandler() {
         }
     });
 }
+
 initGlobalBusyHandler();

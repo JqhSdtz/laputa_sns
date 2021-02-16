@@ -17,7 +17,7 @@
 					              sort-type="popular" @refresh="onRefresh"/>
 				</van-tab>
 				<van-tab name="like" :title="'赞 ' + post.like_cnt">
-					<like-list v-if="curTabKey === 'like'" ref="likeList" :post-id="postId" @refresh="onRefresh"/>
+					<like-list v-if="curTabKey === 'like'" ref="likeList" :target-id="parseInt(postId)" @refresh="onRefresh"/>
 				</van-tab>
 			</van-tabs>
 		</div>
@@ -42,15 +42,15 @@ import LikeList from "@/components/post/post_detail/like/LikeList";
 import CommentDetail from "@/components/post/post_detail/comment_detail/CommentDetail";
 import InputPanel from "@/components/post/post_detail/InputPanel";
 
-const postDetailEvents = createEventBus();
-
 export default {
 	name: 'PostDetail',
 	props: {
 		postId: String
 	},
-	provide: {
-		postDetailEvents: postDetailEvents
+	provide() {
+		return {
+			postDetailEvents: this.postDetailEvents
+		}
 	},
 	components: {
 		InputPanel,
@@ -63,6 +63,7 @@ export default {
 		LikeList
 	},
 	data() {
+		this.postDetailEvents = createEventBus();
 		return {
 			mainBarHeight: global.vars.style.postDetailBarHeight,
 			post: global.states.postManager.get(this.postId),
@@ -72,17 +73,18 @@ export default {
 		}
 	},
 	created() {
+		this.parseCommand();
 		const ref = this;
 		this.lptConsumer = lpt.createConsumer();
 		this.init();
 		global.events.on('signIn', () => {
 			ref.init();
 		});
-		postDetailEvents.on('openCommentDetail', (param) => {
+		this.postDetailEvents.on('openCommentDetail', (param) => {
 			ref.curCommentDetailId = param.id;
 			ref.showCommentDetail = true;
 		});
-		postDetailEvents.on('closeCommentDetail', () => {
+		this.postDetailEvents.on('closeCommentDetail', () => {
 			ref.showCommentDetail = false;
 		});
 	},
@@ -99,6 +101,19 @@ export default {
 		}
 	},
 	methods: {
+		parseCommand() {
+			const query = this.$route.query;
+			const command = query.command;
+			if (!command)
+				return;
+			if (command === 'showLikeList') {
+				this.curTabKey = 'like';
+			} else if (command === 'showForwardList') {
+				this.curTabKey = 'forward';
+			} else if (command === 'showCommentDetail') {
+				this.curCommentDetailId = query.commentId;
+			}
+		},
 		onRefresh() {
 			this.init();
 		},

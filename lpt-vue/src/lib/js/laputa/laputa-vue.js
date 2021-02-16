@@ -1,10 +1,9 @@
 import lpt from '@/lib/js/laputa/laputa';
 import global from '@/lib/js/global';
-import {reactive, toRef} from 'vue';
 
 lpt.event.on('onCurOperatorChange', operator => {
     // 不能直接替换operator对象，否则会失去响应性
-    global.states.curOperator.user = reactive(operator.user);
+    Object.assign(global.states.curOperator, operator);
 });
 lpt.event.on('pushGlobalBusy', isBusy => {
     // 注册全局繁忙状态响应式属性

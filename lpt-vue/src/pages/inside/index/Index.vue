@@ -1,51 +1,35 @@
 <template>
-	<div id="main-area" :style="{height: scrollHeight, position: 'relative'}">
-		<a-popover trigger="click" placement="bottomLeft" v-model:visible="showPopover">
-			<template v-slot:content>
-				<div style="width: 4rem">
-					<a-button class="pop-btn" :type="getPopBtnType('popular')"
-					          @click="changeSortType('popular')">
-						热门
-					</a-button>
-					<a-button class="pop-btn" :type="getPopBtnType('latest')"
-					          @click="changeSortType('latest')">
-						最新
-					</a-button>
-				</div>
-			</template>
-			<transition name="van-fade" v-if="postListLoaded">
-				<a-button id="sortTypeBtn" v-show="showSortTypeSelector" >
-					<OrderedListOutlined/>
-					<span style="margin-left: 0.5rem">
-						<span v-if="sortType === 'popular'">热门</span>
-						<span v-if="sortType === 'latest'">最新</span>
-					</span>
-				</a-button>
-			</transition>
-		</a-popover>
+	<div id="main-area" :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top>
+		<van-search v-model="searchValue" @search="onSearch" placeholder="请输入搜索关键词"/>
+		<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType"/>
 		<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px'}" :target="getElement"/>
-		<post-list ref="postList" keep-scroll-top :sort-type="sortType" @loaded="onPostListLoaded"/>
+		<post-list ref="postList" :category-id="indexCategoryId" :top-post-id="category.top_post_id" :sort-type="sortType" @loaded="onPostListLoaded"/>
 	</div>
 </template>
 
 <script>
-import PostList from '@/components/post/PostList';
-import {OrderedListOutlined} from '@ant-design/icons-vue';
+import PostList from '@/components/post/post_list/PostList';
 import global from '@/lib/js/global';
+import lpt from '@/lib/js/laputa/laputa';
+import {Toast} from 'vant';
+import SortTypeSelector from "@/components/post/post_list/SortTypeSelector";
 
 export default {
 	name: 'Index',
 	components: {
-		PostList,
-		OrderedListOutlined
+		SortTypeSelector,
+		PostList
 	},
 	data() {
+		const indexCategoryId = 0;
+		const category = global.states.categoryManager.get(indexCategoryId);
 		return {
+			category,
+			indexCategoryId,
+			searchValue: '',
 			mainBarHeight: global.vars.style.tabBarHeight,
 			sortType: global.states.pages.index.sortType,
-			postListLoaded: false,
-			showSortTypeSelector: false,
-			showPopover: false
+			postListLoaded: false
 		}
 	},
 	computed: {
@@ -56,31 +40,31 @@ export default {
 			return mainViewHeight - barHeight + 'px';
 		}
 	},
-	mounted() {
-		const listElem = this.$el;
-		let preScrollTop = 0;
-		listElem.addEventListener('scroll', () => {
-			const curScrollTop = listElem.scrollTop;
-			const diff = curScrollTop - preScrollTop;
-			preScrollTop = curScrollTop;
-			if (diff > 0 && curScrollTop > 300) {
-				this.showSortTypeSelector = false;
-				this.showPopover = false;
-			} else if (diff < 0) {
-				this.showSortTypeSelector = true;
+	created() {
+		this.lptConsumer = lpt.createConsumer();
+		lpt.categoryServ.get({
+			consumer: this.lptConsumer,
+			param: {
+				id: this.category.id
+			},
+			success(result) {
+				global.states.categoryManager.add(result.object.root);
+			},
+			fail(result) {
+				Toast.fail(result.message);
 			}
 		});
 	},
 	methods: {
-		changeSortType(type) {
-			this.sortType = type;
-			this.showPopover = false;
-		},
-		getPopBtnType(sortType) {
-			return this.sortType === sortType ? 'primary' : 'default';
+		onSearch() {
+			this.$router.push({
+				path: '/search_index',
+				query: {
+					value: this.searchValue
+				}
+			});
 		},
 		onPostListLoaded() {
-			this.showSortTypeSelector = true;
 			this.postListLoaded = true;
 		},
 		getElement() {
@@ -97,24 +81,5 @@ export default {
 
 #main-area::-webkit-scrollbar {
 	display: none;
-}
-
-.pop-btn {
-	border-top: none;
-	border-left: none;
-	border-right: none;
-	width: 100%;
-}
-
-.pop-btn:last-of-type {
-	border-bottom: none;
-}
-
-#sortTypeBtn {
-	position: fixed;
-	right: 1rem;
-	top: 0.75rem;
-	background-color: white;
-	z-index: 2;
 }
 </style>

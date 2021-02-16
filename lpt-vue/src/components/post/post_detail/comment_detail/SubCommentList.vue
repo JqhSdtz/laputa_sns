@@ -6,7 +6,7 @@
 			          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
 				<a-back-top :style="{bottom: listOffset + 'px'}" :target="getElement"/>
 				<comment-item class="comment-item" v-for="comment in list" :comment-id="comment.id"
-				              :key="comment.id" :show-actions="true"/>
+				              :type="commentType" :key="comment.id" :show-actions="true"/>
 			</van-list>
 		</van-pull-refresh>
 	</div>
@@ -20,9 +20,6 @@ import {Toast} from "vant";
 import {toRef} from "vue";
 import {createEventBus} from "@/lib/js/global/global-events";
 
-const querior = lpt.createQuerior();
-const commentListEvents = createEventBus();
-
 export default {
 	name: 'SubCommentList',
 	props: {
@@ -34,12 +31,17 @@ export default {
 	components: {
 		CommentItem
 	},
-	provide: {
-		commentListEvents: commentListEvents
+	provide() {
+		return {
+			commentListEvents: this.commentListEvents
+		}
 	},
 	data() {
+		this.querior = lpt.createQuerior();
+		this.commentListEvents = createEventBus();
 		return {
-			finished: toRef(querior, 'hasReachedBottom'),
+			commentType: lpt.commentServ.level2,
+			finished: toRef(this.querior, 'hasReachedBottom'),
 			isEmpty: false,
 			hasEverLoad: false,
 			list: [],
@@ -51,13 +53,13 @@ export default {
 	created() {
 		const ref = this;
 		this.lptConsumer = lpt.createConsumer();
-		querior.onBusyChange(isBusy => {
+		this.querior.onBusyChange(isBusy => {
 			this.$nextTick(() => {
 				ref.isBusy = isBusy;
 			});
 		});
 		this.defaultQueryOption = {
-			querior,
+			querior: this.querior,
 			param: {
 				type: lpt.commentServ.level2,
 				queryType: 'popular'
@@ -67,7 +69,7 @@ export default {
 			}
 		};
 		this.loadMore(false);
-		commentListEvents.on('delete', (param) => {
+		this.commentListEvents.on('delete', (param) => {
 			const comment = param.comment;
 			const ref = this;
 			lpt.contentServ.delete({
@@ -90,7 +92,7 @@ export default {
 		});
 	},
 	unmounted() {
-		querior.reset();
+		this.querior.reset();
 	},
 	methods: {
 		onPullRefresh() {
@@ -99,7 +101,7 @@ export default {
 			this.$emit('refresh');
 		},
 		reset() {
-			querior.reset();
+			this.querior.reset();
 			this.hasEverLoad = false;
 		},
 		pushComment(comment) {
@@ -108,11 +110,11 @@ export default {
 		loadMore(isRefresh) {
 			console.log('load subComment list!');
 			const ref = this;
-			if (!querior.hasReachedBottom) {
+			if (!this.querior.hasReachedBottom) {
 				lpt.commentServ.query({
 					...this.defaultQueryOption,
 					success(result) {
-						global.states.commentL1Manager.addList(result.object);
+						global.states.commentL2Manager.addList(result.object);
 						if (!ref.hasEverLoad) {
 							ref.list = result.object;
 							ref.isEmpty = ref.list.length === 0;
@@ -121,7 +123,7 @@ export default {
 							ref.list = ref.list.concat(result.object);
 						}
 						if (isRefresh) {
-							commentListEvents.emit('refreshList');
+							ref.commentListEvents.emit('refreshList');
 						}
 					},
 					fail(result) {

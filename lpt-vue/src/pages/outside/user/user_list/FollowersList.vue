@@ -1,32 +1,28 @@
 <template>
-	<van-empty v-if="hasEverLoad && isEmpty" description="没有转发" />
-	<van-pull-refresh style="height: 100%" v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh" success-text="刷新成功">
-		<van-list class="forward-list" @load="loadMore" :offset="listOffset"
+	<van-empty v-if="hasEverLoad && isEmpty" description="没有粉丝" />
+	<van-pull-refresh v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh"
+	                  success-text="刷新成功" style="height: 100%">
+		<van-list class="user-list" @load="loadMore"
 		          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
-			<a-back-top :style="{bottom: listOffset + 'px'}" :target="getElement"/>
-			<forward-item class="forward-item" v-for="forward in list" :forward="forward"
-			              :key="forward.id"/>
+			<a-back-top :style="{bottom: '10px'}" :target="getElement"/>
+			<user-item class="user-item" v-for="obj in list" :key="obj.id" :user="obj.follower"/>
 		</van-list>
 	</van-pull-refresh>
 </template>
 
 <script>
-import ForwardItem from './item/ForwardItem';
-import {Toast} from "vant";
-import {toRef} from 'vue';
-import global from '@/lib/js/global';
 import lpt from '@/lib/js/laputa/laputa';
+import UserItem from './item/UserItem';
+import {toRef} from 'vue';
+import {Toast} from 'vant';
 
 export default {
-	name: 'ForwardList',
+	name: 'FollowersList',
 	props: {
-		postId: String,
-		onBusyChange: Function,
-		onLoaded: Function,
-		onRefresh: Function
+		userId: String
 	},
 	components: {
-		ForwardItem
+		UserItem
 	},
 	data() {
 		this.querior = lpt.createQuerior();
@@ -35,7 +31,6 @@ export default {
 			hasEverLoad: false,
 			list: [],
 			isEmpty: false,
-			listOffset: global.vars.style.postDetailBarHeight + 10,
 			isRefreshing: false,
 			isBusy: false
 		}
@@ -50,7 +45,7 @@ export default {
 		this.defaultQueryOption = {
 			querior: this.querior,
 			data: {
-				sup_id: this.postId
+				target_id: parseInt(this.userId)
 			}
 		};
 		this.loadMore();
@@ -62,20 +57,15 @@ export default {
 		onPullRefresh() {
 			this.reset();
 			this.loadMore();
-			this.$emit('refresh');
 		},
 		reset() {
 			this.querior.reset();
 			this.hasEverLoad = false;
 		},
-		pushForward(forward) {
-			this.list.unshift(forward);
-		},
 		loadMore() {
-			console.log('load forward list!');
 			const ref = this;
 			if (!this.querior.hasReachedBottom) {
-				lpt.forwardServ.query({
+				lpt.followServ.queryFollower({
 					...this.defaultQueryOption,
 					success(result) {
 						if (!ref.hasEverLoad) {
@@ -103,13 +93,8 @@ export default {
 </script>
 
 <style scoped>
-.forward-list {
+.user-list {
 	height: 100%;
 	overflow-y: visible;
-	background-color: #ECECEC;
-}
-
-.forward-item {
-	padding: 0.5rem;
 }
 </style>

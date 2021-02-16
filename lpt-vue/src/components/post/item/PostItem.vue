@@ -1,6 +1,6 @@
 <template>
 	<div class="post-item">
-		<top-bar class="top-bar" :post-id="post.id"></top-bar>
+		<top-bar class="top-bar" :post-id="post.id" :is-top-post="isTopPost"></top-bar>
 		<content-area class="content-area" :post="post"></content-area>
 		<bottom-bar class="bottom-bar" :post-id="post.id" :post-of="postOf" :show-actions="true"></bottom-bar>
 	</div>
@@ -16,7 +16,8 @@ export default {
 	name: 'PostItem',
 	props: {
 		postId: Number,
-		postOf: String
+		postOf: String,
+		isTopPost: Boolean
 	},
 	data() {
 		return {
