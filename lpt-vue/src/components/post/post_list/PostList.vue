@@ -3,8 +3,8 @@
 		<van-empty v-if="hasEverLoad && isEmpty" description="没有帖子"/>
 		<van-pull-refresh ref="pullArea" v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onRefresh"
 		                  success-text="刷新成功">
-			<van-list class="post-list" @load="loadMore" :offset="listOffset"
-			          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
+			<van-list ref="list" class="post-list" @load="loadMore" :offset="listOffset"
+			          :fill-parent="$el" v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
 				<post-item class="post-item" v-for="post in list" :post-id="post.id" :post-of="postOf"
 				           :key="post.id" :is-top-post="post.id === topPostId" :class="{post, 'last-post': post.last}"/>
 			</van-list>
@@ -61,6 +61,13 @@ export default {
 			listOffset: global.vars.style.tabBarHeight + 10,
 			isRefreshing: false,
 			isBusy: false
+		}
+	},
+	watch: {
+		sortType(newValue) {
+			this.reset();
+			this.defaultQueryOption.param.queryType = newValue;
+			this.loadMore(true);
 		}
 	},
 	created() {
@@ -161,13 +168,6 @@ export default {
 	unmounted() {
 		this.querior.reset();
 	},
-	watch: {
-		sortType(newValue) {
-			this.reset();
-			this.defaultQueryOption.param.queryType = newValue;
-			this.loadMore(true);
-		}
-	},
 	methods: {
 		onRefresh() {
 			this.reset();
@@ -192,9 +192,8 @@ export default {
 					...this.defaultQueryOption,
 					success(result) {
 						if (ref.postOf === 'news') {
-							result.object = result.object.map(obj => {
-								return obj.content;
-							});
+							result.object = result.object.filter(obj => obj.content)
+								.map(obj => obj.content);
 						}
 						global.states.postManager.addList(result.object);
 						if (!ref.hasEverLoad) {

@@ -1,13 +1,15 @@
 <template>
-	<van-empty v-if="hasEverLoad && isEmpty" description="没有粉丝" />
-	<van-pull-refresh v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh"
-	                  success-text="刷新成功" style="height: 100%">
-		<van-list class="user-list" @load="loadMore"
-		          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
-			<a-back-top :style="{bottom: '10px'}" :target="getElement"/>
-			<user-item class="user-item" v-for="obj in list" :key="obj.id" :user="obj.follower"/>
-		</van-list>
-	</van-pull-refresh>
+	<div id="main-area" :style="{height: scrollHeight, position: 'relative'}">
+		<van-empty v-if="hasEverLoad && isEmpty" description="没有粉丝"/>
+		<van-pull-refresh v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh"
+		                  success-text="刷新成功">
+			<van-list class="user-list" @load="loadMore" :offset="10"
+			          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
+				<a-back-top :style="{bottom: '10px'}" :target="getElement"/>
+				<user-item class="user-item" v-for="obj in list" :key="obj.id" :user="obj.follower"/>
+			</van-list>
+		</van-pull-refresh>
+	</div>
 </template>
 
 <script>
@@ -33,6 +35,12 @@ export default {
 			isEmpty: false,
 			isRefreshing: false,
 			isBusy: false
+		}
+	},
+	computed: {
+		scrollHeight() {
+			const mainViewHeight = document.body.clientHeight;
+			return mainViewHeight + 'px';
 		}
 	},
 	created() {
@@ -96,5 +104,14 @@ export default {
 .user-list {
 	height: 100%;
 	overflow-y: visible;
+}
+
+#main-area {
+	height: 100%;
+	overflow-y: scroll;
+}
+
+#main-area::-webkit-scrollbar {
+	display: none;
 }
 </style>

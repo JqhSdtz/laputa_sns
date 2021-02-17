@@ -2,7 +2,7 @@
 	<van-empty v-if="hasEverLoad && isEmpty" description="没有消息" />
 	<van-pull-refresh v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh"
 	                  success-text="刷新成功" style="height: 100%">
-		<van-list class="notice-list" @load="loadMore"
+		<van-list class="notice-list" @load="loadMore" :fill-parent="$el"
 		          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
 			<a-back-top :style="{bottom: '10px'}" :target="getElement"/>
 			<notice-item class="notice-item" v-for="notice in list" :key="notice.id" :notice-id="notice.id"/>

@@ -198,7 +198,7 @@ function _initLaputa(option) {
     function initUrlMethods() {
         lpt.getUserAvatarUrl = function (user) {
             if (typeof user.raw_avatar === 'undefined')
-                return lpt.baseStaticUrl + '/img/def_ava.jpg';
+                return lpt.baseStaticUrl + '/img/def_ava.svg';
             return lpt.imgBaseUrl + user.raw_avatar + '!ava.small/clip/50x50a0a0/gravity/center';
         }
         lpt.getPostThumbUrl = function (rawUrl) {
@@ -831,8 +831,7 @@ function _initLaputa(option) {
     function initSearchService() {
         const serv = {
             search: wrap(function (param) {
-                const data = param.data;
-                param.url = `${lpt.baseUrl}/search/${data.searchType}/${data.words}/${data.mode}`;
+                param.url = `${lpt.baseUrl}/search/${param.param.searchType}/${param.param.words}/${param.param.mode}`;
                 return lpt.get(param);
             })
         };

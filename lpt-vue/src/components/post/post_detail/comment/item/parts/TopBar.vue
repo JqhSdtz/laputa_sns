@@ -1,7 +1,7 @@
 <template>
 	<a-row class="top-bar">
 		<a-col span="4" class="ava-div">
-			<img class="ava" :src="avatarUrl" @click="showUserHomePage"/>
+			<img class="ava" :class="{'def-ava': !comment.creator.raw_avatar}" :src="avatarUrl" @click="showUserHomePage"/>
 		</a-col>
 		<a-col class="time-and-name">
 			<div>
@@ -60,7 +60,7 @@ export default {
 			this.$router.push({
 				name: 'userHomePage',
 				params: {
-					userId: this.post.creator.id
+					userId: this.comment.creator.id
 				}
 			});
 		}
@@ -82,6 +82,12 @@ export default {
 	margin: 0.2rem 1rem;
 	width: 2.2rem;
 	height: 2.2rem;
+}
+
+.top-bar .def-ava {
+	margin: 0.075rem 0.75rem;
+	width: 2.45rem;
+	height: 2.45rem;
 }
 
 .top-bar p {

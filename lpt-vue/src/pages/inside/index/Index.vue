@@ -1,6 +1,10 @@
 <template>
 	<div id="main-area" :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top>
-		<van-search v-model="searchValue" @search="onSearch" placeholder="请输入搜索关键词"/>
+		<van-search v-model="searchValue" @search="onSearch" placeholder="请输入搜索关键词">
+			<template v-slot:right-icon>
+				<van-checkbox v-model="enableBoolMode">多关键字</van-checkbox>
+			</template>
+		</van-search>
 		<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType"/>
 		<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px'}" :target="getElement"/>
 		<post-list ref="postList" :category-id="indexCategoryId" :top-post-id="category.top_post_id" :sort-type="sortType" @loaded="onPostListLoaded"/>
@@ -26,6 +30,7 @@ export default {
 		return {
 			category,
 			indexCategoryId,
+			enableBoolMode: false,
 			searchValue: '',
 			mainBarHeight: global.vars.style.tabBarHeight,
 			sortType: global.states.pages.index.sortType,
@@ -60,7 +65,8 @@ export default {
 			this.$router.push({
 				path: '/search_index',
 				query: {
-					value: this.searchValue
+					value: this.searchValue,
+					mode: this.enableBoolMode ? 'bool' : 'natrl'
 				}
 			});
 		},

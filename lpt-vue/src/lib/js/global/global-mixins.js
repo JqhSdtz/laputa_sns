@@ -1,4 +1,6 @@
 // 用于给元素添加事件时去重
+import {watch} from 'vue';
+
 const distinctMap = new Map();
 
 function isDistinct(setKey, key) {
@@ -24,7 +26,24 @@ function removeDistinct(setKey, key) {
 // 用于切换页面时保持原页面的滚动条位置
 const keepScrollTop = {
     props: {
+        fillParent: Object,
         keepScrollTop: Boolean
+    },
+    watch: {
+        loading(isLoading) {
+            // 列表加载完后如果高度达不到父元素的高度，则将列表高度设为父元素的高度
+            if (isLoading)
+                return;
+            const parent = this.fillParent;
+            if (this.fillParent && isDistinct('fill-parent', this.$el)) {
+                const ref = this;
+                this.$nextTick(() => {
+                    if (ref.$el.clientHeight < parent.clientHeight) {
+                        ref.$el.style.height = parent.clientHeight + 'px';
+                    }
+                });
+            }
+        }
     },
     mounted() {
         // 因为deactivated钩子中scrollTop值已清零，所以要在每次变化时都记录下当前的scrollTop

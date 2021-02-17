@@ -6,18 +6,20 @@
 				<content-area class="content-area" :post="post"></content-area>
 			</div>
 		</div>
-		<div v-show="!showCommentDetail" id="middle-bar" style="width: 100%;">
+		<div v-show="!showCommentDetail" ref="middleBar" id="middle-bar" style="width: 100%;height: 100%">
 			<van-tabs v-model:active="curTabKey" swipeable sticky lazy-render>
 				<van-tab name="forward" :title="'转发 ' + post.forward_cnt">
 					<forward-list v-if="curTabKey === 'forward'" ref="forwardList" :post-id="postId"
-					              @refresh="onRefresh"/>
+					              @refresh="onRefresh" class="list-area" :fill-parent="$refs.middleBar"/>
 				</van-tab>
-				<van-tab name="comment" :title="'评论 ' + post.comment_cnt" style="height: 100%">
+				<van-tab name="comment" :title="'评论 ' + post.comment_cnt">
 					<comment-list v-if="curTabKey === 'comment'" ref="commentList" :post-id="postId"
-					              sort-type="popular" @refresh="onRefresh"/>
+					              sort-type="popular" @refresh="onRefresh" class="list-area"
+					              :fill-parent="$refs.middleBar"/>
 				</van-tab>
 				<van-tab name="like" :title="'赞 ' + post.like_cnt">
-					<like-list v-if="curTabKey === 'like'" ref="likeList" :target-id="parseInt(postId)" @refresh="onRefresh"/>
+					<like-list v-if="curTabKey === 'like'" ref="likeList" :target-id="parseInt(postId)"
+					           @refresh="onRefresh" class="list-area" :fill-parent="$refs.middleBar"/>
 				</van-tab>
 			</van-tabs>
 		</div>
@@ -152,5 +154,9 @@ export default {
 
 .content-area {
 	margin-top: 0.5rem;
+}
+
+.list-area {
+	overflow-y: visible;
 }
 </style>

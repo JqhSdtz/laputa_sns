@@ -65,9 +65,11 @@ export default {
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 		const ref = this;
-		this.postListEvents.on('refreshList', () => {
-			ref.actions = ref.initActions(ref.post);
-		});
+		if (this.postListEvents) {
+			this.postListEvents.on('refreshList', () => {
+				ref.actions = ref.initActions(ref.post);
+			});
+		}
 	},
 	methods: {
 		initActions(post) {

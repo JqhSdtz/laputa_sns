@@ -1,7 +1,7 @@
 <template>
 	<div class="top-bar">
 		<div class="ava-div" style="display: inline-block; float: left">
-			<img class="ava" :src="avatarUrl" @click="showUserHomePage"/>
+			<img class="ava" :class="{'def-ava': !post.creator.raw_avatar}" :src="avatarUrl" @click="showUserHomePage"/>
 		</div>
 		<div class="time-and-name" style="display: inline-block; float: left">
 			<p class="name" @click="showUserHomePage">{{ post.creator.nick_name }}</p>
@@ -75,6 +75,12 @@ export default {
 	margin: 0.5rem 1rem;
 	width: 2.5rem;
 	height: 2.5rem;
+}
+
+.top-bar .def-ava {
+	margin: 0.375rem 0.75rem;
+	width: 2.75rem;
+	height: 2.75rem;
 }
 
 .top-bar .time-and-name, .top-bar .topped-tag {

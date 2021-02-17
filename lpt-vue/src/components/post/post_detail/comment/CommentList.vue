@@ -1,8 +1,8 @@
 <template>
-	<div>
+	<div style="height: 100%;">
 		<van-empty v-if="hasEverLoad && isEmpty" description="没有评论" />
-		<van-pull-refresh v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh" success-text="刷新成功">
-			<van-list class="comment-list" @load="loadMore" :offset="listOffset"
+		<van-pull-refresh style="height: 100%" v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh" success-text="刷新成功">
+			<van-list class="comment-list" @load="loadMore" :offset="listOffset" :fill-parent="fillParent || $el"
 			          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
 				<div style="width: 100%; background-color: white; display: inline-block; margin-bottom: -0.35rem">
 					<button class="ant-btn fake-btn" style="float: left; margin-left: 1rem">
@@ -33,6 +33,7 @@ import {createEventBus} from "@/lib/js/global/global-events";
 export default {
 	name: 'CommentList',
 	props: {
+		fillParent: Object,
 		postId: String,
 		onBusyChange: Function,
 		onLoaded: Function,
@@ -152,7 +153,6 @@ export default {
 			this.list.unshift(comment);
 		},
 		loadMore(isRefresh) {
-			console.log('load comment list!');
 			const ref = this;
 			if (!this.querior.hasReachedBottom) {
 				lpt.commentServ.query({

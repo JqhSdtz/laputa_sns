@@ -1,7 +1,7 @@
 <template>
 	<a-row class="user-item" @click="showUserHomePage">
 		<a-col span="4" class="ava-div">
-			<img class="ava" :src="avatarUrl"/>
+			<img class="ava" :class="{'def-ava': !user.raw_avatar}" :src="avatarUrl"/>
 		</a-col>
 		<a-col class="name">
 			<p>{{user.nick_name}}</p>
@@ -47,16 +47,22 @@ export default {
 
 .user-item .ava {
 	border-radius: 100%;
-	margin: 0.2rem 1rem;
-	width: 2.2rem;
-	height: 2.2rem;
+	margin: 0.5rem 1rem;
+	width: 2.5rem;
+	height: 2.5rem;
+}
+
+.user-item .def-ava {
+	margin: 0.375rem 0.75rem;
+	width: 2.75rem;
+	height: 2.75rem;
 }
 
 .user-item .name {
 	text-align: left;
 	margin-left: 1.5rem;
 	font-size: 1.15rem;
-	height: 2.4rem;
-	line-height: 2.4rem;
+	height: 3.1rem;
+	line-height: 3.1rem;
 }
 </style>

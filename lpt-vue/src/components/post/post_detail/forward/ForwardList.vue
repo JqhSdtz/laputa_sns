@@ -1,13 +1,15 @@
 <template>
-	<van-empty v-if="hasEverLoad && isEmpty" description="没有转发" />
-	<van-pull-refresh style="height: 100%" v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh" success-text="刷新成功">
-		<van-list class="forward-list" @load="loadMore" :offset="listOffset"
-		          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
-			<a-back-top :style="{bottom: listOffset + 'px'}" :target="getElement"/>
-			<forward-item class="forward-item" v-for="forward in list" :forward="forward"
-			              :key="forward.id"/>
-		</van-list>
-	</van-pull-refresh>
+	<div style="height: 100%;">
+		<van-empty v-if="hasEverLoad && isEmpty" description="没有转发" />
+		<van-pull-refresh style="height: 100%" v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh" success-text="刷新成功">
+			<van-list class="forward-list" @load="loadMore" :offset="listOffset" :fill-parent="fillParent || $el"
+			          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
+				<a-back-top :style="{bottom: listOffset + 'px'}" :target="getElement"/>
+				<forward-item class="forward-item" v-for="forward in list" :forward="forward"
+				              :key="forward.id"/>
+			</van-list>
+		</van-pull-refresh>
+	</div>
 </template>
 
 <script>
@@ -20,6 +22,7 @@ import lpt from '@/lib/js/laputa/laputa';
 export default {
 	name: 'ForwardList',
 	props: {
+		fillParent: Object,
 		postId: String,
 		onBusyChange: Function,
 		onLoaded: Function,
@@ -72,7 +75,6 @@ export default {
 			this.list.unshift(forward);
 		},
 		loadMore() {
-			console.log('load forward list!');
 			const ref = this;
 			if (!this.querior.hasReachedBottom) {
 				lpt.forwardServ.query({

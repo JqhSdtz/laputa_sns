@@ -3,7 +3,7 @@
 		<van-empty v-if="hasEverLoad && isEmpty" description="没有点赞"/>
 		<van-pull-refresh style="height: 100%" v-show="hasEverLoad && !isEmpty" v-model="isRefreshing"
 		                  @refresh="onPullRefresh" success-text="刷新成功">
-			<van-list class="like-list" @load="loadMore" :offset="listOffset"
+			<van-list class="like-list" @load="loadMore" :offset="listOffset" :fill-parent="fillParent || $el"
 			          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
 				<a-back-top :style="{bottom: listOffset + 'px'}" :target="getElement"/>
 				<like-item class="like-item" v-for="like in list" :like="like"
@@ -27,6 +27,7 @@ export default {
 			type: String,
 			default: lpt.contentType.post
 		},
+		fillParent: Object,
 		targetId: Number,
 		onBusyChange: Function,
 		onLoaded: Function,

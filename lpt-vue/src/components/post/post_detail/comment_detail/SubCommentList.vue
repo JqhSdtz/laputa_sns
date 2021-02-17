@@ -2,7 +2,7 @@
 	<div>
 		<van-empty v-if="hasEverLoad && isEmpty" description="没有评论" />
 		<van-pull-refresh v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh" success-text="刷新成功">
-			<van-list class="comment-list" @load="loadMore" :offset="listOffset"
+			<van-list class="comment-list" @load="loadMore" :offset="listOffset" :fill-parent="$el"
 			          v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
 				<a-back-top :style="{bottom: listOffset + 'px'}" :target="getElement"/>
 				<comment-item class="comment-item" v-for="comment in list" :comment-id="comment.id"
