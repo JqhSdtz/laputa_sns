@@ -1,33 +1,32 @@
 <template>
-	<div class="post-area" style="padding-top: 1rem" :style="{height: scrollHeight, position: 'relative'}">
-		<div style="margin: 0 0.5rem">
-			<div class="post-item">
-				<top-bar class="top-bar" :post-id="post.id"></top-bar>
-				<content-area class="content-area" :post="post"></content-area>
+	<template v-if="forceReloadFlag">
+		<div class="post-area" style="padding-top: 1rem" :style="{height: scrollHeight, position: 'relative'}">
+			<div style="margin: 0 0.5rem">
+				<post-item class="post-item" :post-id="post.id" :show-bottom="false"/>
 			</div>
+			<div v-show="!showCommentDetail" ref="middleBar" id="middle-bar" style="width: 100%;height: 100%">
+				<van-tabs v-model:active="curTabKey" swipeable sticky lazy-render>
+					<van-tab name="forward" :title="'转发 ' + post.forward_cnt">
+						<forward-list v-if="curTabKey === 'forward'" ref="forwardList" :post-id="postId"
+						              @refresh="onRefresh" class="list-area" :fill-parent="$refs.middleBar"/>
+					</van-tab>
+					<van-tab name="comment" :title="'评论 ' + post.comment_cnt">
+						<comment-list v-if="curTabKey === 'comment'" ref="commentList" :post-id="postId"
+						              sort-type="popular" @refresh="onRefresh" class="list-area"
+						              :fill-parent="$refs.middleBar"/>
+					</van-tab>
+					<van-tab name="like" :title="'赞 ' + post.like_cnt">
+						<like-list v-if="curTabKey === 'like'" ref="likeList" :target-id="parseInt(postId)"
+						           @refresh="onRefresh" class="list-area" :fill-parent="$refs.middleBar"/>
+					</van-tab>
+				</van-tabs>
+			</div>
+			<comment-detail v-if="showCommentDetail" :comment-id="curCommentDetailId"/>
 		</div>
-		<div v-show="!showCommentDetail" ref="middleBar" id="middle-bar" style="width: 100%;height: 100%">
-			<van-tabs v-model:active="curTabKey" swipeable sticky lazy-render>
-				<van-tab name="forward" :title="'转发 ' + post.forward_cnt">
-					<forward-list v-if="curTabKey === 'forward'" ref="forwardList" :post-id="postId"
-					              @refresh="onRefresh" class="list-area" :fill-parent="$refs.middleBar"/>
-				</van-tab>
-				<van-tab name="comment" :title="'评论 ' + post.comment_cnt">
-					<comment-list v-if="curTabKey === 'comment'" ref="commentList" :post-id="postId"
-					              sort-type="popular" @refresh="onRefresh" class="list-area"
-					              :fill-parent="$refs.middleBar"/>
-				</van-tab>
-				<van-tab name="like" :title="'赞 ' + post.like_cnt">
-					<like-list v-if="curTabKey === 'like'" ref="likeList" :target-id="parseInt(postId)"
-					           @refresh="onRefresh" class="list-area" :fill-parent="$refs.middleBar"/>
-				</van-tab>
-			</van-tabs>
-		</div>
-		<comment-detail v-if="showCommentDetail" :comment-id="curCommentDetailId"/>
-	</div>
-	<input-panel :post-id="post.id"/>
-	<bottom-bar v-show="!showCommentDetail" style="position: fixed; bottom: 0;" :style="{height: mainBarHeight + 'px'}"
-	            :post-id="post.id"/>
+		<input-panel :post-id="post.id"/>
+		<bottom-bar v-show="!showCommentDetail" style="position: fixed; bottom: 0;" :style="{height: mainBarHeight + 'px'}"
+		            :post-id="post.id"/>
+	</template>
 </template>
 
 <script>
@@ -35,14 +34,13 @@ import lpt from '@/lib/js/laputa/laputa';
 import global from '@/lib/js/global';
 import {createEventBus} from '@/lib/js/global/global-events';
 import {Toast} from 'vant';
-import TopBar from '@/components/post/item/parts/TopBar';
-import ContentArea from '@/components/post/item/parts/ContentArea';
+import PostItem from '@/components/post/item/PostItem';
 import BottomBar from './BottomBar';
 import CommentList from './comment/CommentList';
 import ForwardList from "@/components/post/post_detail/forward/ForwardList";
-import LikeList from "@/components/post/post_detail/like/LikeList";
+import LikeList from '@/components/post/post_detail/like/LikeList';
 import CommentDetail from "@/components/post/post_detail/comment_detail/CommentDetail";
-import InputPanel from "@/components/post/post_detail/InputPanel";
+import InputPanel from '@/components/post/post_detail/InputPanel';
 
 export default {
 	name: 'PostDetail',
@@ -57,8 +55,7 @@ export default {
 	components: {
 		InputPanel,
 		CommentDetail,
-		TopBar,
-		ContentArea,
+		PostItem,
 		BottomBar,
 		CommentList,
 		ForwardList,
@@ -72,6 +69,12 @@ export default {
 			curTabKey: 'comment',
 			showCommentDetail: false,
 			curCommentDetailId: -1
+		}
+	},
+	watch: {
+		postId(newValue) {
+			this.post = global.states.postManager.get(newValue);
+			this.forceReload();
 		}
 	},
 	created() {

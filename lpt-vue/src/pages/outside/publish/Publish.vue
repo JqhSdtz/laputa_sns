@@ -100,7 +100,13 @@ export default {
 			}
 		}
 	},
+	watch: {
+		$route() {
+			this.parseQueryParam();
+		}
+	},
 	created() {
+		this.parseQueryParam();
 		const ref = this;
 		this.lptConsumer = lpt.createConsumer();
 		this.imgUrlMap = new Map();
@@ -118,6 +124,12 @@ export default {
 		});
 	},
 	methods: {
+		parseQueryParam() {
+			const query = this.$route.query;
+			this.form.isPublic = query.type === 'public';
+			this.form.categoryId = query.categoryId || '';
+			this.selectedCategory = query.categoryPath || '';
+		},
 		getFullRawUrl() {
 			const ref = this;
 			let fullRawUrl = '';

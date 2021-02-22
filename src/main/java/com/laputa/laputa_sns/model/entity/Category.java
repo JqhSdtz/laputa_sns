@@ -54,6 +54,12 @@ public class Category extends AbstractBaseEntity implements Cloneable {
      */
     @JsonProperty("cover_img")
     private String coverImg;
+
+    /**
+     * 图标图片地址
+     */
+    @JsonProperty("icon_img")
+    private String iconImg;
     /**
      * 本目录在父目录的展示顺序，由前端解析
      */
@@ -152,13 +158,18 @@ public class Category extends AbstractBaseEntity implements Cloneable {
 
     @JsonIgnore
     /**用于在Category对象作为参数对象的时候判断是否合法*/
-    public boolean isValidUpdateInfoParam() {
+    public boolean isValidUpdateInfoParam(boolean format) {
         if (id == null)
             return false;//id不能为空
-        if (postCnt != null || parent != null || topPostId != null || defSubId != null || dispSeq != null
-                || cacheNum != null)//这些不属于info的范畴，需特殊判断
-            return false;
-        if (name == null && intro == null && coverImg == null && type == null && state == null)
+        if (format) {
+            this.setPostCnt(null).setParent(null).setTopPostId(null).setDefSubId(null).setDispSeq(null)
+                    .setCacheNum(null);
+        } else {
+            if (postCnt != null || parent != null || topPostId != null || defSubId != null || dispSeq != null
+                    || cacheNum != null)//这些不属于info的范畴，需特殊判断
+                return false;
+        }
+        if (name == null && intro == null && coverImg == null && iconImg == null && type == null && state == null)
             return false;//这些不能全空
         return true;
     }
@@ -216,6 +227,7 @@ public class Category extends AbstractBaseEntity implements Cloneable {
         this.state = param.state == null ? this.state : param.state;
         this.intro = param.intro == null ? this.intro : param.intro;
         this.coverImg = param.coverImg == null ? this.coverImg : param.coverImg;
+        this.iconImg = param.iconImg == null ? this.iconImg : param.iconImg;
         return this;
     }
 

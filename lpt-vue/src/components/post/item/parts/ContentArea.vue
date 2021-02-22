@@ -1,6 +1,6 @@
 <template>
 	<div class="content-area">
-		<p class="title">{{ post.title }}</p>
+		<p class="title" @click="showPostDetail">{{ post.title }}</p>
 		<pre class="content" v-if="isShowFullText" @click="showPostDetail">{{ fullText }}</pre>
 		<pre class="content" v-else @click="showPostDetail">{{ post.content }}</pre>
 		<p v-if="post.full_text_id && !isShowFullText" class="full-text-btn" @click="showFullText">
@@ -12,6 +12,7 @@
 			</a>
 		</div>
 		<p v-if="post.type_str === 'public'" class="category-path">{{ categoryPath }}</p>
+		<slot/>
 	</div>
 </template>
 

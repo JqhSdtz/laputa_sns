@@ -8,7 +8,7 @@ import {Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload,
     Popover, Badge} from 'ant-design-vue';
 import {Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
     Popover as VPopOver, Dialog, Image as VanImage, Uploader, Form as VanForm, Field, Cascader,
-    Button as VanButton, Popup, Switch, Search, Checkbox} from 'vant';
+    Button as VanButton, Popup, Switch, Search, Checkbox, Grid, GridItem} from 'vant';
 import remHelper from '@/lib/js/uitls/rem-helper';
 import {customDirectionList} from '@/lib/js/laputa/laputa-vue';
 import globalMixins from '@/lib/js/global/global-mixins';
@@ -28,7 +28,7 @@ antdUseList.forEach(item => {
 
 const vantUseList = [Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
     VPopOver, Dialog, VanImage, Uploader, VanForm, Field, Cascader, VanButton, Popup, Switch, Search,
-    Checkbox];
+    Checkbox, Grid, GridItem];
 vantUseList.forEach(item => {
     app.use(item);
 });

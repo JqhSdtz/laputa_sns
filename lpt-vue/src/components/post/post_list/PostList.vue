@@ -42,6 +42,7 @@ export default {
 		userId: String,
 		onLoaded: Function
 	},
+	emits: ['refresh'],
 	provide(){
 		return {
 			postListEvents: this.postListEvents
@@ -121,7 +122,7 @@ export default {
 					top_post_id: post.id,
 					op_comment: param.comment
 				};
-			} else {
+			} if (ref.postOf === 'creator') {
 				fun = lpt.userServ.setTopPost;
 				data = {
 					top_post_id: post.id
@@ -136,6 +137,17 @@ export default {
 				success() {
 					Toast.success(isCancel ? '取消成功' : '置顶成功');
 					post.is_topped = !isCancel;
+					if (ref.postOf === 'category') {
+						const category = global.states.categoryManager.get(ref.categoryId);
+						if (category) {
+							category.top_post_id = isCancel ? -1 : post.id;
+						}
+					} else if (ref.postOf === 'creator') {
+						const user = global.states.userManager.get(ref.creatorId);
+						if (user) {
+							user.top_post_id = isCancel ? -1 : post.id;
+						}
+					}
 					param.callback && param.callback();
 				},
 				fail(result) {
@@ -204,6 +216,7 @@ export default {
 							ref.list = ref.list.concat(result.object);
 						}
 						if (isRefresh) {
+							ref.$emit('refresh');
 							ref.postListEvents.emit('refreshList');
 						}
 					},

@@ -7,28 +7,25 @@
 		</router-view>
 		<loading-area id="loading-area"></loading-area>
 	</a-config-provider>
-	<prompt-dialog v-model:show="showPromptDialog" @confirm="onPromptConfirm"/>
+	<global-prompt-dialog/>
 </template>
 
 <script>
 import zhCN from 'ant-design-vue/es/locale/zh_CN';
 import {registerCheckSignFailCallback} from '@/lib/js/laputa/laputa-vue';
 import {Modal} from 'ant-design-vue';
-import global from '@/lib/js/global';
 import LoadingArea from '@/components/global/LoadingArea';
-import PromptDialog from '@/components/global/PromptDialog';
+import GlobalPromptDialog from '@/components/global/GlobalPromptDialog';
 import {noCacheList} from '@/router/index';
 
 export default {
 	name: 'App',
 	components: {
 		LoadingArea,
-		PromptDialog
+		GlobalPromptDialog
 	},
 	data() {
 		return {
-			showPromptDialog: global.states.prompt.show,
-			onPromptConfirm: global.states.prompt.onConfirm,
 			locale: zhCN,
 			noCacheList
 		};

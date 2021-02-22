@@ -15,6 +15,10 @@ import FollowingList from '@/pages/outside/user/user_list/FollowingList';
 import NoticeList from '@/pages/outside/notice/NoticeList';
 import CommentLikeList from '@/components/post/post_detail/comment_detail/CommentLikeList';
 import SearchIndex from '@/pages/outside/search/SearchIndex';
+import CategoryDetail from '@/pages/outside/category/detail/CategoryDetail';
+import CategorySetting from '@/pages/outside/category/CategorySetting';
+import ModCategoryInfo from '@/pages/outside/category/ModCategoryInfo';
+import PermissionList from '@/pages/outside/user/PermissionList';
 
 const routers = [
     {
@@ -118,6 +122,42 @@ const routers = [
         path: '/search_index',
         name: 'searchIndex',
         component: SearchIndex,
+        meta: {
+            noCache: true
+        }
+    },
+    {
+        path: '/category_detail/:categoryId',
+        name: 'categoryDetail',
+        component: CategoryDetail,
+        props: true,
+        meta: {
+            noCache: true
+        }
+    },
+    {
+        path: '/category_setting/:categoryId',
+        name: 'categorySetting',
+        component: CategorySetting,
+        props: true,
+        meta: {
+            noCache: true
+        }
+    },
+    {
+        path: '/mod_category_info/:categoryId',
+        name: 'modCategoryInfo',
+        component: ModCategoryInfo,
+        props: true,
+        meta: {
+            noCache: true
+        }
+    },
+    {
+        path: '/permission_list/:userId',
+        name: 'permissionList',
+        component: PermissionList,
+        props: true,
         meta: {
             noCache: true
         }

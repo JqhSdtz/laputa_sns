@@ -28,7 +28,10 @@ function initItemManager(param) {
         return itemMap;
     }
     itemManager.add = function (item) {
-        param.processItem && param.processItem(item);
+        const res = param.processItem && param.processItem(item);
+        if (typeof res !== 'undefined') {
+            item = res;
+        }
         if (itemMap.has(item.id)) {
             // 因为直接通过map的set方法设置对象会直接覆盖，不会引起响应式变化
             // 所以这里需要逐一赋值
@@ -67,6 +70,24 @@ const userManager = initItemManager({
 });
 
 const categoryManager = initItemManager({
+    processItem(item) {
+        let newItem = item;
+        if (item.root)
+            newItem = item.root;
+        if (item.rights) {
+            const rights = item.rights;
+            newItem.rights = rights;
+            let hasRights = rights.this_level && rights.this_level > 0;
+            hasRights = hasRights || (rights.parent_level && rights.parent_level > 0);
+            newItem.hasRights = hasRights;
+        } else {
+            newItem.hasRights = false;
+        }
+        if (item.sub_list instanceof Array && item.sub_list.length > 0) {
+            newItem.sub_list = categoryManager.addList(item.sub_list);
+        }
+        return newItem;
+    },
     getDefault(id) {
         return lpt.categoryServ.getDefaultCategory(id);
     }
@@ -78,6 +99,9 @@ const postManager = initItemManager({
             item.rights = {};
         if (item.creator) {
             userManager.add(item.creator);
+        }
+        if (typeof item.ori_post === 'object') {
+            postManager.add(item.ori_post);
         }
     },
     getDefault(id) {
@@ -141,14 +165,6 @@ const states = {
                 default: 'popular'
             })
         }
-    },
-    prompt: {
-        show: wrap({
-            default: false
-        }),
-        onConfirm: wrap({
-            type: Function
-        })
     }
 }
 

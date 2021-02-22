@@ -28,6 +28,8 @@ public class OSSController {
         int bType;
         if ("ava".equals(type))
             bType = OSSService.AVATAR;
+        else if ("cat".equals(type))
+            bType = OSSService.CATEGORY;
         else if ("pst".equals(type))
             bType = OSSService.POST;
         else if ("com".equals(type))

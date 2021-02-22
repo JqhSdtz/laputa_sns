@@ -125,13 +125,14 @@ export default {
 					});
 				} else {
 					// 否则需要输入理由
-					global.states.prompt.show.value = true;
-					global.states.prompt.onConfirm.value = (value) => {
-						this.commentListEvents.emit(action.id, {
-							comment: this.comment,
-							op_comment: value
-						});
-					}
+					global.methods.prompt({
+						onConfirm(value) {
+							ref.commentListEvents.emit(action.id, {
+								comment: ref.comment,
+								op_comment: value
+							});
+						}
+					});
 				}
 			}
 		},

@@ -102,16 +102,17 @@ export default {
 			if (action.id === 'top' || action.id === 'unTop') {
 				if (ref.postOf === 'category') {
 					// 目录设置置顶贴需要输入理由
-					global.states.prompt.show.value = true;
-					global.states.prompt.onConfirm.value = (value) => {
-						this.postListEvents.emit(action.id, {
-							post: this.post,
-							comment: value,
-							callback() {
-								ref.actions = ref.initActions(ref.post);
-							}
-						});
-					}
+					global.methods.prompt({
+						onConfirm(value) {
+							ref.postListEvents.emit(action.id, {
+								post: ref.post,
+								comment: value,
+								callback() {
+									ref.actions = ref.initActions(ref.post);
+								}
+							});
+						}
+					});
 				} else {
 					// 个人设置置顶帖不需要
 					this.postListEvents.emit(action.id, {
@@ -129,13 +130,14 @@ export default {
 					});
 				} else {
 					// 否则需要输入理由
-					global.states.prompt.show.value = true;
-					global.states.prompt.onConfirm.value = (value) => {
-						this.postListEvents.emit(action.id, {
-							post: this.post,
-							comment: value
-						});
-					}
+					global.methods.prompt({
+						onConfirm(value) {
+							ref.postListEvents.emit(action.id, {
+								post: ref.post,
+								comment: value
+							});
+						}
+					});
 				}
 			}
 		},

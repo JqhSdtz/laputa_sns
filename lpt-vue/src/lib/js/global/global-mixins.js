@@ -29,10 +29,15 @@ const keepScrollTop = {
         fillParent: Object,
         keepScrollTop: Boolean
     },
+    data() {
+        return {
+            forceReloadFlag: true
+        }
+    },
     watch: {
-        loading(isLoading) {
+        finished(isFinished) {
             // 列表加载完后如果高度达不到父元素的高度，则将列表高度设为父元素的高度
-            if (isLoading)
+            if (!isFinished)
                 return;
             const parent = this.fillParent;
             if (this.fillParent && isDistinct('fill-parent', this.$el)) {
@@ -68,6 +73,14 @@ const keepScrollTop = {
         if (this._keepScrollTop) {
             this.$el.removeEventListener('scroll', this.scrollListener);
             removeDistinct('keep-scroll-top', this.$el);
+        }
+    },
+    methods: {
+        forceReload() {
+            this.forceReloadFlag = false;
+            this.$nextTick(() => {
+                this.forceReloadFlag = true;
+            });
         }
     }
 }

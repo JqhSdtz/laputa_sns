@@ -29,6 +29,7 @@
 				</template>
 			</van-cell>
 			<van-cell title="个人信息" is-link to="/mod_user_info"/>
+			<van-cell v-if="me.isAdmin" title="管理权限" is-link :to="'/permission_list/' + me.user.id"/>
 			<van-cell title="修改密码" is-link to="/mod_user_info"/>
 			<van-cell title="注销" is-link @click="signOut"/>
 		</div>

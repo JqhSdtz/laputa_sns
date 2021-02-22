@@ -16,7 +16,7 @@ import PostList from '@/components/post/post_list/PostList';
 import global from '@/lib/js/global';
 import lpt from '@/lib/js/laputa/laputa';
 import {Toast} from 'vant';
-import SortTypeSelector from "@/components/post/post_list/SortTypeSelector";
+import SortTypeSelector from '@/components/post/post_list/SortTypeSelector';
 
 export default {
 	name: 'Index',

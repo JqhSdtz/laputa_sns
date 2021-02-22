@@ -1,13 +1,147 @@
 <template>
-	<div>There are communities!</div>
+	<van-pull-refresh ref="pullArea" v-model="isRefreshing" @refresh="onRefresh"
+	                  style="height: 100%" success-text="刷新成功">
+		<div id="main-area">
+			<van-cell v-if="recentVisitList.length > 0" is-link style="box-shadow: 0 -2px 14px rgba(100, 100, 100, 0.2)"
+			          @click="showRecentVisitPopup = true">
+				<p style="margin-left: 1rem;">最近访问</p>
+				<div style="height: 4rem; overflow: hidden">
+					<div v-for="obj in recentVisitList" :key="obj.category.id" style="display: inline-block; position: relative; width: 4.25rem;">
+						<category-grid-item :category-id="obj.category.id" style="width: 4rem" size="2.5rem">
+							<pushpin-filled v-if="obj.pinned" class="pin-icon" :rotate="-45"/>
+						</category-grid-item>
+					</div>
+				</div>
+			</van-cell>
+			<van-popup v-model:show="showRecentVisitPopup" round :closeable="true" style="width: 80%; padding: 1.5rem">
+				<van-grid :column-num="4" :border="false">
+					<van-grid-item v-for="obj in recentVisitList" :key="obj.category.id">
+						<category-grid-item :category-id="obj.category.id" size="2.5rem">
+							<pushpin-filled v-if="obj.pinned" class="pin-icon popup-pin-icon" :rotate="-45"/>
+						</category-grid-item>
+					</van-grid-item>
+				</van-grid>
+			</van-popup>
+			<van-grid style="margin-top: 1rem;" :column-num="3" :border="false">
+				<van-grid-item v-for="category in categoryList" :key="category.id">
+					<category-grid-item :category-id="category.id"/>
+				</van-grid-item>
+			</van-grid>
+		</div>
+	</van-pull-refresh>
 </template>
 
 <script>
+import lpt from '@/lib/js/laputa/laputa';
+import {Toast} from 'vant';
+import CategoryGridItem from '@/components/category/item/CategoryGridItem';
+import global from '@/lib/js/global';
+import {
+	PushpinFilled
+} from '@ant-design/icons-vue';
+
 export default {
-	name: 'Community'
+	name: 'Community',
+	components: {
+		CategoryGridItem,
+		PushpinFilled
+	},
+	data() {
+		return {
+			isRefreshing: false,
+			categoryList: [],
+			recentVisitList: [],
+			showRecentVisitPopup: false
+		}
+	},
+	watch: {
+		$route() {
+			this.showRecentVisitPopup = false;
+		}
+	},
+	created() {
+		const ref = this;
+		this.lptConsumer = lpt.createConsumer();
+		this.rootCategoryId = 0;
+		global.events.on(['signIn', 'signOut'], () => {
+			ref.init();
+		});
+		this.init();
+	},
+	activated() {
+		if (!this.firstActivated) {
+			this.firstActivated = true;
+		} else {
+			this.initRecentVisitList();
+		}
+	},
+	methods: {
+		onRefresh() {
+			this.init();
+		},
+		init() {
+			this.initCategoryList();
+			this.initRecentVisitList();
+		},
+		initCategoryList() {
+			const ref = this;
+			lpt.categoryServ.get({
+				consumer: this.lptConsumer,
+				param: {
+					id: this.rootCategoryId
+				},
+				success(result) {
+					global.states.categoryManager.add(result.object);
+					ref.categoryList = result.object.sub_list;
+				},
+				fail(result) {
+					Toast.fail(result.message);
+				}
+			});
+		},
+		initRecentVisitList() {
+			const ref = this;
+			lpt.userServ.getRecentVisit({
+				success(result) {
+					ref.recentVisitList = result.object;
+					result.object.forEach(obj => {
+						const pinned = obj.score > 9000000000000;
+						obj.pinned = pinned;
+						obj.category.pinned = pinned;
+						obj.category = global.states.categoryManager.add(obj.category);
+					});
+				},
+				fail(result) {
+					Toast.fail(result.message);
+				}
+			});
+		}
+	}
 }
 </script>
 
 <style scoped>
+#main-area {
+	height: 100%;
+	overflow-y: scroll;
+}
 
+#main-area::-webkit-scrollbar {
+	display: none;
+}
+
+:global(.van-cell__value) {
+	overflow: visible;
+}
+
+.pin-icon {
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+
+.popup-pin-icon {
+	right: -1rem;
+	top: -0.25rem;
+}
 </style>

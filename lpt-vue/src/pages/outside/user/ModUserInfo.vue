@@ -157,11 +157,13 @@ export default {
 			this.$refs.uploader.$el.click();
 		},
 		handleChange(info) {
-			if (info.file.status === 'uploading') {
+			if (!this.isUploading && info.file.status === 'uploading') {
+				this.isUploading = true;
 				global.events.emit('pushGlobalBusy', {
 					isBusy: true
 				});
 			} else if (info.file.status === 'done') {
+				this.isUploading = false;
 				global.events.emit('pushGlobalBusy', {
 					isBusy: false
 				});
@@ -174,6 +176,7 @@ export default {
 					console.log(info);
 				}
 			} else if (info.file.status === 'error') {
+				this.isUploading = false;
 				global.events.emit('pushGlobalBusy', {
 					isBusy: false
 				});

@@ -168,8 +168,10 @@ function _initLaputa(option) {
             if (!param.param) {
                 param.param = {};
             }
-            // 没有回调函数才使用promise
-            param.usePromise = !(param.success || param.fail || param.complete);
+            if (typeof param.throwError === 'undefined') {
+                // 没有回调函数才抛出异常以供catch捕获
+                param.throwError = !(param.success || param.fail || param.complete);
+            }
             param.appendMethod = function (name, fun) {
                 lpt.util.appendMethod(param, name, fun);
             }
@@ -197,9 +199,19 @@ function _initLaputa(option) {
 
     function initUrlMethods() {
         lpt.getUserAvatarUrl = function (user) {
-            if (typeof user.raw_avatar === 'undefined')
+            if (!user.raw_avatar)
                 return lpt.baseStaticUrl + '/img/def_ava.svg';
             return lpt.imgBaseUrl + user.raw_avatar + '!ava.small/clip/50x50a0a0/gravity/center';
+        }
+        lpt.getCategoryCoverUrl = function (category) {
+            if (!category.cover_img)
+                return lpt.baseStaticUrl + '/img/def_cat.svg';
+            return lpt.imgBaseUrl + category.cover_img + '!cat.standard';
+        }
+        lpt.getCategoryIconUrl = function (category) {
+            if (!category.icon_img)
+                return lpt.baseStaticUrl + '/img/def_cat.svg';
+            return lpt.imgBaseUrl + category.icon_img +  '!cat.small/clip/50x50a0a0/gravity/center';
         }
         lpt.getPostThumbUrl = function (rawUrl) {
             return lpt.imgBaseUrl + rawUrl + '!/both/50x50';
@@ -229,7 +241,7 @@ function _initLaputa(option) {
 
         lpt.ajax = function (param) {
             if (!param.consumer) {
-                console.warn('no consumer defined for ajax request! use new consumer.');
+                // console.warn('no consumer defined for ajax request! use new consumer.');
                 param.consumer = lpt.createConsumer();
             }
             const consumer = param.consumer;
@@ -301,7 +313,7 @@ function _initLaputa(option) {
                 } else {
                     if (typeof param.fail === 'function')
                         param.fail(result);
-                    if (param.usePromise) {
+                    if (param.throwError) {
                         onComplete(param, result);
                         // 如果有throwObject选项，则抛出整个result对象，否则抛出错误信息
                         throw new Error(param.throwObject ? result : result.message);
@@ -427,7 +439,8 @@ function _initLaputa(option) {
                 id: -1
             },
             unread_notice_cnt: 0,
-            unread_news_cnt: 0
+            unread_news_cnt: 0,
+            permission_map: {}
         };
         let curOperator;
         const serv = {
@@ -460,7 +473,11 @@ function _initLaputa(option) {
                 if (_operator.user_id === -1) {
                     _operator.unread_notice_cnt = 0;
                     _operator.unread_news_cnt = 0;
-                    console.log(_operator);
+                } else {
+                    const permissionMap = _operator.permission_map;
+                    if (permissionMap && Object.keys(permissionMap).length > 0) {
+                        _operator.isAdmin = true;
+                    }
                 }
                 curOperator = _operator;
                 localStorage.setItem('lpt_operator', JSON.stringify(_operator));
@@ -489,6 +506,7 @@ function _initLaputa(option) {
                     isDefault: true,
                     id: id,
                     nick_name: '',
+                    raw_avatar: '',
                     followers_cnt: 0,
                     following_cnt: 0,
                     post_cnt: 0,
@@ -532,11 +550,11 @@ function _initLaputa(option) {
                 return lpt.get(param);
             }),
             pinRecentVisit: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/pin_category/' + param.data.categoryId;
+                param.url = lpt.baseUrl + '/user/pin_category/' + param.param.categoryId;
                 return lpt.post(param);
             }),
             unpinRecentVisit: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/unpin_category/' + param.data.categoryId;
+                param.url = lpt.baseUrl + '/user/unpin_category/' + param.param.categoryId;
                 return lpt.post(param);
             })
         };
@@ -661,14 +679,31 @@ function _initLaputa(option) {
     }
 
     function initCategoryService() {
+        function processList(list) {
+            // 对目录按照disp_seq排序
+            if (!list)
+                return;
+            list.forEach(category => category.disp_seq = category.disp_seq || 0);
+            list.sort((c1, c2) => {return c1 > c2});
+        }
         const serv = {
             getDefaultCategory: function(id) {
                 return {
                     isDefault: true,
                     id: id,
-                    top_post_id: -1
+                    name: '',
+                    top_post_id: -1,
+                    sub_list: [],
+                    cover_img: '',
+                    icon_img: '',
+                    rights: {},
+                    disp_seq: 0
                 }
             },
+            setInfo: wrap(function (param) {
+               param.url = lpt.baseUrl + '/category/info';
+               return lpt.patch(param);
+            }),
             setTopPost: wrap(function (param) {
                 param.url = lpt.baseUrl + '/category/top_post/' + (param.param.isCancel ? 'cancel' : 'create');
                 return lpt.patch(param);
@@ -691,7 +726,7 @@ function _initLaputa(option) {
             }),
             get: wrap(function (param) {
                 param.url = lpt.baseUrl + '/category/' + param.param.id;
-                return lpt.get(param);
+                return lpt.get(param).then(result => processList(result.object.sub_list));
             }),
             create: wrap(function (param) {
                 param.url = lpt.baseUrl + '/category';
@@ -703,11 +738,11 @@ function _initLaputa(option) {
             }),
             getRoots: wrap(function (param) {
                 param.url = lpt.baseUrl + '/category/roots';
-                return lpt.get(param);
+                return lpt.get(param).then(result => processList(result.object));
             }),
             getDirectSub: wrap(function (param) {
                 param.url = lpt.baseUrl + '/category/direct_sub/' + param.data.categoryId;
-                return lpt.get(param);
+                return lpt.get(param).then(result => processList(result.object));
             }),
             getPathStr: function (list) {
                 let pathStr = '';
@@ -795,11 +830,11 @@ function _initLaputa(option) {
     function initPermissionService() {
         const serv = {
             getForCategory: wrap(function (param) {
-                param.url = lpt.baseUrl + '/permission/category/' + param.data.category_id;
+                param.url = lpt.baseUrl + '/permission/category/' + param.param.categoryId;
                 return lpt.get(param);
             }),
             getForUser: wrap(function (param) {
-                param.url = lpt.baseUrl + '/permission/user/' + param.data.user_id;
+                param.url = lpt.baseUrl + '/permission/user/' + param.param.userId;
                 return lpt.get(param);
             }),
             setAdmin: wrap(function (param) {

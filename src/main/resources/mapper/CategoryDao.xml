@@ -11,6 +11,7 @@
 		<result column="category_creator_id" property="creator.id"/>
 		<result column="category_intro" property="intro"/>
 		<result column="category_cover_img" property="coverImg"/>
+		<result column="category_icon_img" property="iconImg"/>
 		<result column="category_def_sub_id" property="defSubId"/>
 		<result column="category_top_post_id" property="topPostId"/>
 		<result column="category_post_cnt" property="oriPostCnt"/>
@@ -34,6 +35,7 @@
 			<if test="state != null">category_state,</if>
 			<if test="intro != null">category_intro,</if>
 			<if test="coverImg != null">category_cover_img,</if>
+			<if test="iconImg != null">category_icon_img,</if>
 			<if test="cacheNum != null">category_cache_num,</if>
 		</trim>
 		values
@@ -43,6 +45,7 @@
 			<if test="state != null">#{state},</if>
 			<if test="intro != null">#{intro},</if>
 			<if test="coverImg != null">#{coverImg},</if>
+			<if test="iconImg != null">#{iconImg},</if>
 			<if test="cacheNum != null">#{cacheNum},</if>
 		</trim>
 	</insert>
@@ -55,6 +58,7 @@
 			<if test="state != null">category_state = #{state},</if>
 			<if test="intro != null">category_intro = #{intro},</if>
 			<if test="coverImg != null">category_cover_img = #{coverImg},</if>
+			<if test="iconImg != null">category_icon_img = #{iconImg},</if>
 			<if test="parentId != null">category_parent_id = #{parentId},</if>
 			<if test="dispSeq != null">category_disp_seq = #{dispSeq},</if>
 			<if test="cacheNum != null">category_cache_num = #{cacheNum},</if>

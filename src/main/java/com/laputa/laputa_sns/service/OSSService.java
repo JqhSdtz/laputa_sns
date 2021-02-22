@@ -27,11 +27,12 @@ import java.util.Map;
 public class OSSService {
 
     public static final int AVATAR = 0;
-    public static final int POST = 1;
-    public static final int COMMENT = 2;
+    public static final int CATEGORY = 1;
+    public static final int POST = 2;
+    public static final int COMMENT = 3;
 
     private final String BUCKET_NAME = "img-lpt";
-    private final String[] FILENAME_PREFIX = {"ava", "pst", "com"};
+    private final String[] FILENAME_PREFIX = {"ava", "cat", "pst", "com"};
 
     public Result<String> uploadImgSync(byte[] file, int fileType, @NotNull Operator operator) {
         //一次只能上传一个

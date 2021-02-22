@@ -229,7 +229,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     }
 
     /**
-     * 获取叶目录集合
+     * 获取一级目录集合
      */
     public Result<List<Category>> readRootCategoryList() {
         return new Result(SUCCESS).setObject(groundCategory.getSubCategoryList());
@@ -505,7 +505,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * 更新目录信息
      */
     public synchronized Result updateCategoryInfo(@NotNull Category paramObject, Operator operator) {
-        if (!paramObject.isValidUpdateInfoParam() || !paramObject.isValidOpComment())
+        if (!paramObject.isValidUpdateInfoParam(true) || !paramObject.isValidOpComment())
             return new Result(FAIL).setErrorCode(1010010213).setMessage("操作失败，参数不合法");
         if (!categoryValidator.checkUpdateInfoPermission(paramObject, operator))
             return new Result(FAIL).setErrorCode(1010010214).setMessage("操作失败，权限错误");

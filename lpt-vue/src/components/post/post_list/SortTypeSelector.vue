@@ -1,27 +1,29 @@
 <template>
-	<a-popover trigger="click" placement="bottomLeft" v-model:visible="showPopover">
-		<template v-slot:content>
-			<div style="width: 4rem">
-				<a-button class="pop-btn" :type="getPopBtnType('popular')"
-				          @click="changeSortType('popular')">
-					热门
-				</a-button>
-				<a-button class="pop-btn" :type="getPopBtnType('latest')"
-				          @click="changeSortType('latest')">
-					最新
-				</a-button>
-			</div>
-		</template>
-		<transition name="van-fade">
-			<a-button id="sortTypeBtn" v-show="showSortTypeSelector" >
-				<ordered-list-outlined/>
-				<span style="margin-left: 0.5rem">
+	<div>
+		<a-popover trigger="click" placement="bottomLeft" v-model:visible="showPopover">
+			<template v-slot:content>
+				<div style="width: 4rem">
+					<a-button class="pop-btn" :type="getPopBtnType('popular')"
+					          @click="changeSortType('popular')">
+						热门
+					</a-button>
+					<a-button class="pop-btn" :type="getPopBtnType('latest')"
+					          @click="changeSortType('latest')">
+						最新
+					</a-button>
+				</div>
+			</template>
+			<transition name="van-fade">
+				<a-button id="sortTypeBtn" v-show="showSortTypeSelector" :style="{...buttonStyle, top: offset}">
+					<ordered-list-outlined/>
+					<span style="margin-left: 0.5rem">
 						<span v-if="sortType === 'popular'">热门</span>
 						<span v-if="sortType === 'latest'">最新</span>
 					</span>
-			</a-button>
-		</transition>
-	</a-popover>
+				</a-button>
+			</transition>
+		</a-popover>
+	</div>
 </template>
 
 <script>
@@ -33,6 +35,19 @@ export default {
 		OrderedListOutlined
 	},
 	props: {
+		hideOffsetBase: {
+			type: Number,
+			default: 0
+		},
+		autoHide: {
+			type: Boolean,
+			default: true
+		},
+		buttonStyle: Object,
+		offset: {
+			type: String,
+			default: '4.5rem'
+		},
 		sortType: String
 	},
 	emits: ['update:sortType'],
@@ -49,9 +64,11 @@ export default {
 			const curScrollTop = listElem.scrollTop;
 			const diff = curScrollTop - preScrollTop;
 			preScrollTop = curScrollTop;
-			if (diff > 0 && curScrollTop > 300) {
-				this.showSortTypeSelector = false;
-				this.showPopover = false;
+			if (diff > 0 && curScrollTop - this.hideOffsetBase > 300) {
+				if (this.autoHide) {
+					this.showSortTypeSelector = false;
+					this.showPopover = false;
+				}
 			} else if (diff < 0) {
 				this.showSortTypeSelector = true;
 			}
@@ -84,7 +101,6 @@ export default {
 #sortTypeBtn {
 	position: fixed;
 	right: 1rem;
-	top: 4.5rem;
 	background-color: white;
 	z-index: 2;
 }
