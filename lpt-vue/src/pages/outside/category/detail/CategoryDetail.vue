@@ -4,11 +4,15 @@
 			<div ref="categoryInfoArea" id="main-area">
 				<div style="height: 200px; width: 100%; background-size: cover;"
 				     :style="{backgroundImage: `linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)), url(${coverImgUrl})`}"/>
-				<div>
+				<div style="margin-top: -2rem">
 					<img :src="iconImgUrl" id="icon-img"/>
-					<span style="font-size: 1.25rem; font-weight: bold; margin-left: 1rem">{{ category.name }}</span>
-					<action-bar :category-id="category.id"/>
+					<span style="margin-left: 1rem; display: inline-block">
+						<p style="font-size: 1.5rem; font-weight: bold;margin-bottom: 0">{{ category.name }}</p>
+						<p>帖数:{{ category.post_cnt }}</p>
+					</span>
+					<action-bar style="float: right; margin-top: 1.5rem;" :category-id="category.id"/>
 				</div>
+				<category-path style="margin-left: 1rem;" :path-list="category.path_list"/>
 				<ellipsis style="margin-left: 1rem; margin-top: 0.5rem" :content="category.intro" :rows="2"/>
 			</div>
 			<!-- 放到tab里面会改变viewport，影响position:fixed的效果，使其相对于tab页固定
@@ -21,7 +25,7 @@
 			                      :category="category" :hide-offset-base="mainAreaHeight"/>
 			<div ref="middleBar" id="middle-bar" style="width: 100%;height: 100%">
 				<van-tabs v-model:active="curTabKey" swipeable sticky lazy-render @scroll="onScroll">
-					<van-tab ref="postLista" name="postList" title="帖子">
+					<van-tab name="postList" title="帖子">
 						<sort-type-selector class="sort-type-selector" v-if="postListLoaded && !isTabFixed"
 						                    :button-style="{left: clientWidth - 100 + 'px'}" :auto-hide="false"
 						                    offset="0.75rem"
@@ -53,8 +57,9 @@ import PostList from '@/components/post/post_list/PostList';
 import CategoryGridItem from '@/components/category/item/CategoryGridItem';
 import SortTypeSelector from '@/components/post/post_list/SortTypeSelector';
 import FloatPublishButton from '@/components/post/post_list/FloatPublishButton';
-import Ellipsis from "@/components/global/Ellipsis";
+import Ellipsis from '@/components/global/Ellipsis';
 import ActionBar from "@/pages/outside/category/detail/parts/ActionBar";
+import CategoryPath from '@/components/category/CategoryPath';
 
 export default {
 	name: 'CategoryDetail',
@@ -62,6 +67,7 @@ export default {
 		categoryId: String
 	},
 	components: {
+		CategoryPath,
 		ActionBar,
 		Ellipsis,
 		FloatPublishButton,

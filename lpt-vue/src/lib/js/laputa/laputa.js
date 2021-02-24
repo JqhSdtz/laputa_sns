@@ -70,13 +70,19 @@ function _initLaputa(option) {
 
     function initCommonUtil() {
         const util = {
-            appendMethod(target, methodName, fun) {
+            appendMethod(target, methodName, fun, insertBefore) {
                 const ref = this;
                 const oriFun = target[methodName];
                 target[methodName] = function () {
-                    if (typeof oriFun == 'function')
-                        oriFun.apply(ref, arguments);
-                    fun.apply(ref, arguments);
+                    if (insertBefore) {
+                        fun.apply(ref, arguments);
+                        if (typeof oriFun == 'function')
+                            oriFun.apply(ref, arguments);
+                    } else {
+                        if (typeof oriFun == 'function')
+                            oriFun.apply(ref, arguments);
+                        fun.apply(ref, arguments);
+                    }
                 }
             }
         }
@@ -119,16 +125,21 @@ function _initLaputa(option) {
             const busyChangeListeners = [];
             let isBusy = false;
             let lastSentData;
+            let busyCount = 0;
             consumer.isBusy = function () {
                 return isBusy;
             }
-            consumer.changeBusy = function (_isBusy) {
-                isBusy = _isBusy;
-                busyChangeListeners.forEach(listener => {
-                    if (typeof listener === 'function') {
-                        listener(_isBusy);
-                    }
-                });
+            consumer.pushBusy = function (_isBusy) {
+                const oriBusyCount = busyCount;
+                busyCount += _isBusy ? 1 : -1;
+                if (Math.sign(oriBusyCount) !== Math.sign(busyCount)) {
+                    isBusy = _isBusy;
+                    busyChangeListeners.forEach(listener => {
+                        if (typeof listener === 'function') {
+                            listener(isBusy);
+                        }
+                    });
+                }
             }
             consumer.isDataRepeat = function (dataStr) {
                 return lastSentData && lastSentData === dataStr;
@@ -154,7 +165,8 @@ function _initLaputa(option) {
     function wrap(fun) {
         const ref = this;
         const defaultParam = {
-            allowRepeat: true
+            allowRepeat: true,
+            ignoreBusyChange: false
         }
         function processParam(param) {
             for (let key in defaultParam) {
@@ -172,11 +184,11 @@ function _initLaputa(option) {
                 // 没有回调函数才抛出异常以供catch捕获
                 param.throwError = !(param.success || param.fail || param.complete);
             }
-            param.appendMethod = function (name, fun) {
-                lpt.util.appendMethod(param, name, fun);
+            param.appendMethod = function (name, fun, insertBefore) {
+                lpt.util.appendMethod(param, name, fun, insertBefore);
             }
-            param.appendSuccess = function (fun) {
-                param.appendMethod('success', fun);
+            param.appendSuccess = function (fun, insertBefore) {
+                param.appendMethod('success', fun, insertBefore);
             }
             param.wrapped = true;
             return param;
@@ -235,7 +247,7 @@ function _initLaputa(option) {
             });
             if (!param.ignoreBusyChange) {
                 // 发起consumer内部繁忙状态改变
-                param.consumer.changeBusy(isBusy);
+                param.consumer.pushBusy(isBusy);
             }
         }
 
@@ -517,6 +529,10 @@ function _initLaputa(option) {
                 param.url = lpt.baseUrl + '/user/' + param.param.userId;
                 return lpt.get(param);
             }),
+            getByName: wrap(function (param) {
+                param.url = lpt.baseUrl + '/user/name/' + param.param.userName;
+                return lpt.get(param);
+            }),
             getInfo: wrap(function (param) {
                 param.url = lpt.baseUrl + '/user/info/' + param.param.userId;
                 return lpt.get(param);
@@ -684,7 +700,7 @@ function _initLaputa(option) {
             if (!list)
                 return;
             list.forEach(category => category.disp_seq = category.disp_seq || 0);
-            list.sort((c1, c2) => {return c1 > c2});
+            list.sort((c1, c2) => {return c2.disp_seq - c1.disp_seq});
         }
         const serv = {
             getDefaultCategory: function(id) {
@@ -697,6 +713,7 @@ function _initLaputa(option) {
                     cover_img: '',
                     icon_img: '',
                     rights: {},
+                    path_list: [],
                     disp_seq: 0
                 }
             },
@@ -726,7 +743,8 @@ function _initLaputa(option) {
             }),
             get: wrap(function (param) {
                 param.url = lpt.baseUrl + '/category/' + param.param.id;
-                return lpt.get(param).then(result => processList(result.object.sub_list));
+                param.appendSuccess(result => processList(result.object.sub_list), true);
+                return lpt.get(param)
             }),
             create: wrap(function (param) {
                 param.url = lpt.baseUrl + '/category';
@@ -738,15 +756,17 @@ function _initLaputa(option) {
             }),
             getRoots: wrap(function (param) {
                 param.url = lpt.baseUrl + '/category/roots';
-                return lpt.get(param).then(result => processList(result.object));
+                param.appendSuccess(result => processList(result.object), true);
+                return lpt.get(param);
             }),
             getDirectSub: wrap(function (param) {
                 param.url = lpt.baseUrl + '/category/direct_sub/' + param.data.categoryId;
-                return lpt.get(param).then(result => processList(result.object));
+                param.appendSuccess(result => processList(result.object), true);
+                return lpt.get(param)
             }),
             getPathStr: function (list) {
                 let pathStr = '';
-                for (let i = list.length - 1; i >= 0; --i)
+                for (let i = 0; i < list.length; ++i)
                     pathStr += list[i].name + '\\';
                 return pathStr;
             }

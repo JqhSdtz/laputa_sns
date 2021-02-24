@@ -256,8 +256,14 @@ public class PostIndexService implements ApplicationRunner {
         List<TmpEntry> remainedPopEntryList = new ArrayList();
         List<TmpEntry> remainedLatEntryList = new ArrayList();
         Set<Category> leafSet = categoryService.readLeafCategorySet().getObject();
+        Map<Integer, Integer> newCacheNumMap = new HashMap<>();
         for (Category category : leafSet) {
             int cacheNum = category.getCacheNum();
+            int newLength = Math.max(category.getPopularCacheNum(), category.getLatestCacheNum());
+            if (newLength < postIndexMaxCacheNum) {
+                // 新的预缓存值取最热列表和最新列表的最大值，且不超过最大缓存允许值
+                newCacheNumMap.put(category.getId(), newLength);
+            }
             List<Index> remainedPopList = category.getPopularPostList().trim(cacheNum, true);
             List<Index> remainedLatList = category.getLatestPostList().trim(cacheNum, true);
             for (int i = 0; i < remainedPopList.size(); ++i)
@@ -279,6 +285,14 @@ public class PostIndexService implements ApplicationRunner {
         loadSubPostIndexList(groundCategory, LATEST);
         loadSubPostIndexList(groundCategory, POPULAR);
         log.info("目录索引列表以缩减到默认缓存长度");
+        List<TmpEntry> entryList = new ArrayList(newCacheNumMap.size());
+        for (Map.Entry<Integer, Integer> entry: newCacheNumMap.entrySet()) {
+            Integer categoryId = entry.getKey();
+            Integer cacheNum = entry.getValue();
+            entryList.add(new TmpEntry(categoryId, cacheNum));
+        }
+        commonService.batchUpdate("lpt_category", "category_id", "category_cache_num", CommonService.OPS_COPY, entryList);
+        log.info("目录索引列表预缓存值更新成功" + entryList.size() + "条");
     }
 
 }

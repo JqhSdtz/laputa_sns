@@ -7,7 +7,7 @@
 		</router-view>
 		<loading-area id="loading-area"></loading-area>
 	</a-config-provider>
-	<global-prompt-dialog/>
+	<prompt-dialog ref="prompt"/>
 </template>
 
 <script>
@@ -15,14 +15,15 @@ import zhCN from 'ant-design-vue/es/locale/zh_CN';
 import {registerCheckSignFailCallback} from '@/lib/js/laputa/laputa-vue';
 import {Modal} from 'ant-design-vue';
 import LoadingArea from '@/components/global/LoadingArea';
-import GlobalPromptDialog from '@/components/global/GlobalPromptDialog';
+import PromptDialog from '@/components/global/PromptDialog';
 import {noCacheList} from '@/router/index';
+import global from '@/lib/js/global';
 
 export default {
 	name: 'App',
 	components: {
 		LoadingArea,
-		GlobalPromptDialog
+		PromptDialog
 	},
 	data() {
 		return {
@@ -43,6 +44,9 @@ export default {
 				}
 			});
 		});
+	},
+	mounted() {
+		global.methods.prompt = this.$refs.prompt.prompt;
 	},
 	methods: {
 		getPopupContainer(el, dialogContext) {

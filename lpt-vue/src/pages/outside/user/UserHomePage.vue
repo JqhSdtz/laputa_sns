@@ -6,7 +6,8 @@
 					<img class="ava" :src="myAvatarUrl"/>
 				</a-col>
 				<a-col span="9" offset="1">
-					<p class="name">{{ user.nick_name }}</p>
+					<p class="name" style="margin-bottom: 0; margin-top: 0.5rem">{{ user.nick_name }}</p>
+					<p>ID:{{ user.id }}</p>
 				</a-col>
 				<a-col span="3">
 					<a-button class="follow-btn" :type="user.followed_by_viewer ? 'default' : 'primary'"

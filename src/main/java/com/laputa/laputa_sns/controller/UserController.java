@@ -36,6 +36,11 @@ public class UserController {
         return userService.readUser(userId, false, true, true, operator).setOperator(operator);
     }
 
+    @RequestMapping(value = "/name/{userName}", method = RequestMethod.GET)
+    public Result<User> readUserByName(@PathVariable  String userName, @RequestAttribute Operator operator) {
+        return userService.readUserByName(userName, false, true, true, operator).setOperator(operator);
+    }
+
     @RequestMapping(value = "/info/{userId}", method = RequestMethod.GET)
     public Result<User> readUserInfo(@PathVariable  Integer userId, @RequestAttribute Operator operator) {
         return userService.readUser(userId, true, false, false, operator).setOperator(operator);

@@ -4,7 +4,7 @@
 		<div id="main-area">
 			<van-cell v-if="recentVisitList.length > 0" is-link style="box-shadow: 0 -2px 14px rgba(100, 100, 100, 0.2)"
 			          @click="showRecentVisitPopup = true">
-				<p style="margin-left: 1rem;">最近访问</p>
+				<p>最近访问</p>
 				<div style="height: 4rem; overflow: hidden">
 					<div v-for="obj in recentVisitList" :key="obj.category.id" style="display: inline-block; position: relative; width: 4.25rem;">
 						<category-grid-item :category-id="obj.category.id" style="width: 4rem" size="2.5rem">
@@ -13,6 +13,7 @@
 					</div>
 				</div>
 			</van-cell>
+			<van-cell is-link title="详情页查看" :to="'/category_detail/' + rootCategoryId"/>
 			<van-popup v-model:show="showRecentVisitPopup" round :closeable="true" style="width: 80%; padding: 1.5rem">
 				<van-grid :column-num="4" :border="false">
 					<van-grid-item v-for="obj in recentVisitList" :key="obj.category.id">
@@ -48,6 +49,7 @@ export default {
 	},
 	data() {
 		return {
+			rootCategoryId: 0,
 			isRefreshing: false,
 			categoryList: [],
 			recentVisitList: [],
@@ -62,7 +64,6 @@ export default {
 	created() {
 		const ref = this;
 		this.lptConsumer = lpt.createConsumer();
-		this.rootCategoryId = 0;
 		global.events.on(['signIn', 'signOut'], () => {
 			ref.init();
 		});
@@ -78,6 +79,9 @@ export default {
 	methods: {
 		onRefresh() {
 			this.init();
+			this.lptConsumer.onBusyChange((isBusy) => {
+				this.isRefreshing = isBusy;
+			});
 		},
 		init() {
 			this.initCategoryList();
@@ -91,8 +95,8 @@ export default {
 					id: this.rootCategoryId
 				},
 				success(result) {
-					global.states.categoryManager.add(result.object);
-					ref.categoryList = result.object.sub_list;
+					const category = global.states.categoryManager.add(result.object);
+					ref.categoryList = category.sub_list;
 				},
 				fail(result) {
 					Toast.fail(result.message);

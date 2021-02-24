@@ -1,8 +1,9 @@
 <template>
-	<span>
-		<setting-outlined v-if="category.hasRights"
-		                  style=" float: right; margin-right: 1rem; font-size: 1.5rem;"
-		                  @click="showCategorySetting"/>
+	<div style="display: inline-block">
+		<span @click="showCategorySetting">
+			<setting-outlined v-if="category.hasRights" class="setting-icon"/>
+			<info-circle-outlined v-else class="setting-icon"/>
+		</span>
 		<span v-if="typeof category.pinned !== 'undefined'" @click="changePin">
 			<pushpin-outlined v-if="!category.pinned" class="icon"/>
 			<pushpin-filled v-else class="icon" :rotate="-45"/>
@@ -11,7 +12,7 @@
 			<link-outlined v-if="category.type === 0 || category.type === 2" class="icon"/>
 			<disconnect-outlined v-else-if="category.type === 1" class="icon"/>
 		</span>
-	</span>
+	</div>
 </template>
 
 <script>
@@ -20,7 +21,7 @@ import lpt from '@/lib/js/laputa/laputa';
 import {Dialog, Toast} from 'vant';
 import {
 	SettingOutlined, PushpinOutlined, PushpinFilled,
-	LinkOutlined, DisconnectOutlined
+	LinkOutlined, DisconnectOutlined, InfoCircleOutlined
 } from '@ant-design/icons-vue';
 
 const categoryTypeStr = ['公开目录', '私有目录', '公开目录'];
@@ -35,7 +36,8 @@ export default {
 		PushpinOutlined,
 		PushpinFilled,
 		LinkOutlined,
-		DisconnectOutlined
+		DisconnectOutlined,
+		InfoCircleOutlined
 	},
 	data() {
 		const category = global.states.categoryManager.get(this.categoryId);
@@ -93,5 +95,11 @@ export default {
 	float: right;
 	font-size: 1.5rem;
 	margin-right: 1rem;
+}
+
+.setting-icon {
+	float: right;
+	margin-right: 1rem;
+	font-size: 1.5rem;
 }
 </style>

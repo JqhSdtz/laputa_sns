@@ -186,7 +186,9 @@ public class Category extends AbstractBaseEntity implements Cloneable {
 
     @JsonIgnore
     public boolean isValidUpdateCacheNumParam() {
-        return id != null && cacheNum != null && cacheNum >= 100 && cacheNum <= 10000;
+        // 禁用手动更新预缓存值
+//        return id != null && cacheNum != null && cacheNum >= 100 && cacheNum <= 10000;
+        return false;
     }
 
     @JsonIgnore

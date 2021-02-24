@@ -19,6 +19,7 @@ import CategoryDetail from '@/pages/outside/category/detail/CategoryDetail';
 import CategorySetting from '@/pages/outside/category/CategorySetting';
 import ModCategoryInfo from '@/pages/outside/category/ModCategoryInfo';
 import PermissionList from '@/pages/outside/user/PermissionList';
+import CategoryAdminList from '@/pages/outside/category/CategoryAdminList';
 
 const routers = [
     {
@@ -157,6 +158,15 @@ const routers = [
         path: '/permission_list/:userId',
         name: 'permissionList',
         component: PermissionList,
+        props: true,
+        meta: {
+            noCache: true
+        }
+    },
+    {
+        path: '/category_admin_list/:categoryId',
+        name: 'categoryAdminList',
+        component: CategoryAdminList,
         props: true,
         meta: {
             noCache: true

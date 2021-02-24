@@ -441,7 +441,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         Result checkResult = checkCategoryStructure(category, CREATE);//检查目录结构是否合法
         if (checkResult.getState() == FAIL)
             return checkResult;
-        category.setCreator(operator.getUser());//设置创建者
+        //设置创建者及预缓存数量初始值
+        category.setCreator(operator.getUser()).setCacheNum(20);
         int res = insertOne(category);//数据库操作
         if (res == -1)//数据库操作失败
             return new Result(FAIL).setErrorCode(1010010109).setMessage("数据库操作失败");

@@ -327,6 +327,17 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
     }
 
     /**
+     * 通过用户名获取用户
+     */
+    public Result<User> readUserByName(String name, boolean isFull, boolean withCnt, boolean withIsFollowedByViewer, Operator operator) {
+        Integer userId = getUserIdByName(name);
+        if (userId == null) {
+            return new Result(FAIL).setErrorCode(1010020224).setMessage("该用户名不存在");
+        }
+        return readUser(userId, isFull, withCnt, withIsFollowedByViewer, operator);
+    }
+
+    /**
      * 读取用户基本信息
      */
     public Result<User> readUser(Integer id, boolean isFull, boolean withCnt, boolean withIsFollowedByViewer, Operator operator) {

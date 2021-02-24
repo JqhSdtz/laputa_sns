@@ -11,19 +11,23 @@
 				<van-image :src="img" width="50" height="50" />
 			</a>
 		</div>
-		<p v-if="post.type_str === 'public'" class="category-path">{{ categoryPath }}</p>
+		<category-path v-if="post.type_str === 'public'" :path-list="post.category_path" class="category-path"/>
 		<slot/>
 	</div>
 </template>
 
 <script>
-import lpt from "@/lib/js/laputa/laputa";
+import lpt from '@/lib/js/laputa/laputa';
+import CategoryPath from '@/components/category/CategoryPath';
 import { ImagePreview } from 'vant';
 
 export default {
 	name: 'ContentArea',
 	props: {
 		post: Object
+	},
+	components: {
+		CategoryPath
 	},
 	data() {
 		const rawImg = this.post.raw_img || '';

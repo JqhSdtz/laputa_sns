@@ -83,6 +83,9 @@ const categoryManager = initItemManager({
         } else {
             newItem.hasRights = false;
         }
+        if (newItem.path_list) {
+            newItem.path_list.reverse();
+        }
         if (item.sub_list instanceof Array && item.sub_list.length > 0) {
             newItem.sub_list = categoryManager.addList(item.sub_list);
         }
@@ -99,6 +102,9 @@ const postManager = initItemManager({
             item.rights = {};
         if (item.creator) {
             userManager.add(item.creator);
+        }
+        if (item.category_path) {
+            item.category_path.reverse();
         }
         if (typeof item.ori_post === 'object') {
             postManager.add(item.ori_post);
