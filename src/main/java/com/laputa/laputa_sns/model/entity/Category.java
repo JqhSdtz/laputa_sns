@@ -129,6 +129,12 @@ public class Category extends AbstractBaseEntity implements Cloneable {
     @JsonProperty("is_leaf")
     private Boolean isLeaf;
 
+    /**
+     * 是否允许用户发帖，默认允许
+     */
+    @JsonProperty("allow_user_post")
+    private Boolean allowUserPost = true;
+
     public Category(Integer id) {
         this.id = id;
     }
@@ -148,12 +154,12 @@ public class Category extends AbstractBaseEntity implements Cloneable {
 
     @JsonProperty("popular_cache_num")
     public Integer getPopularCacheNum() {
-        return popularPostList == null ? null : popularPostList.size();
+        return popularPostList == null ? 0 : popularPostList.size();
     }
 
     @JsonProperty("latest_cache_num")
     public Integer getLatestCacheNum() {
-        return latestPostList == null ? null : latestPostList.size();
+        return latestPostList == null ? 0 : latestPostList.size();
     }
 
     @JsonIgnore

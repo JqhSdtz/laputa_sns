@@ -1,7 +1,7 @@
 <template>
 	<div @click.stop="showCategoryDetail" style="text-align: center; position: relative">
 		<img style="border-radius: 0.5rem;" :style="{width: size, height: size}" :src="iconImgUrl"/>
-		<p>{{category.name}}</p>
+		<p v-clamp="2">{{category.name}}</p>
 		<slot/>
 	</div>
 </template>

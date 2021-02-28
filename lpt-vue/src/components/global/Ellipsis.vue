@@ -30,7 +30,8 @@
 
 import resizeObserver from 'element-resize-detector'
 
-const observer = resizeObserver()
+const observer = resizeObserver();
+
 export default {
 	name: 'Ellipsis',
 	props: {

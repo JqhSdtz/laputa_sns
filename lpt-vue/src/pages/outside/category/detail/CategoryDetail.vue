@@ -21,7 +21,8 @@
 			                    v-show="curTabKey === 'postList'"
 			                    :button-style="{left: clientWidth - 100 + 'px'}" :auto-hide="isTabFixed" offset="4rem"
 			                    :hide-offset-base="mainAreaHeight" v-model:sort-type="sortType"/>
-			<float-publish-button v-if="postListLoaded" :style="{left: clientWidth - 60 + 'px'}" :auto-hide="isTabFixed"
+			<float-publish-button v-if="category.allow_user_post && postListLoaded"
+			                      :style="{left: clientWidth - 60 + 'px'}" :auto-hide="isTabFixed"
 			                      :category="category" :hide-offset-base="mainAreaHeight"/>
 			<div ref="middleBar" id="middle-bar" style="width: 100%;height: 100%">
 				<van-tabs v-model:active="curTabKey" swipeable sticky lazy-render @scroll="onScroll">
@@ -33,14 +34,16 @@
 						<a-back-top :style="{bottom: 10 + 'px'}" :target="getElement"/>
 						<post-list ref="postList" :category-id="category.id" :post-of="'category'"
 						           :top-post-id="category.top_post_id" :sort-type="sortType" @refresh="onRefresh"
-						           @loaded="onPostListLoaded"/>
+						           @loaded="onPostListLoaded" :fill-parent="$refs.middleBar"/>
 					</van-tab>
 					<van-tab name="subCategory" title="分区">
-						<van-grid :column-num="3" :border="false">
-							<van-grid-item v-for="subCategory in category.sub_list" :key="subCategory.id">
-								<category-grid-item :category-id="subCategory.id"/>
-							</van-grid-item>
-						</van-grid>
+						<div>
+							<van-grid :column-num="3" :border="false">
+								<van-grid-item v-for="subCategory in category.sub_list" :key="subCategory.id">
+									<category-grid-item :category-id="subCategory.id"/>
+								</van-grid-item>
+							</van-grid>
+						</div>
 					</van-tab>
 				</van-tabs>
 			</div>
@@ -95,6 +98,9 @@ export default {
 	watch: {
 		categoryId(newValue) {
 			this.category = global.states.categoryManager.get(newValue);
+			this.init();
+			this.isTabFixed = false;
+			this.postListLoaded = false;
 			this.curTabKey = 'postList';
 			this.forceReload();
 		}

@@ -1,5 +1,5 @@
 <template>
-	<div style="height: 100%;">
+	<div id="main-area">
 		<a-upload-m
 			ref="uploader"
 			accept="image/*"
@@ -16,15 +16,21 @@
 			</p>
 		</div>
 		<div style="text-align: center" @click="uploadIconImg">
-			<img style="width: 5rem; height: 5rem" :src="iconImgUrl"/>
-			<p style="color: rgb(150,150,150)">
-				点击修改图标
-			</p>
+			<div style="display: inline-block">
+				<img style="width: 5rem; height: 5rem" :src="iconImgUrl"/>
+				<p style="color: rgb(150,150,150)">
+					点击修改图标
+				</p>
+			</div>
+			<div v-if="opType === 'create'" style="display: inline-block; margin-left: 2rem">
+				<p style="margin-bottom: 0.5rem; font-size: 1.25rem;">公开</p>
+				<van-switch v-model="form.isPublic" size="24" style="margin-bottom: 1.25rem"/>
+			</div>
 		</div>
 		<a-button style="width: 50%; margin-left: 25%" @click="saveCategoryInfo">
-			保存
+			{{ opType === 'create' ? '创建' : '保存' }}
 		</a-button>
-		<a-form id="form" ref="form" :model="form"  :label-col="{span: 8}"
+		<a-form id="form" ref="form" :model="form" :label-col="{span: 8}"
 		        :wrapper-col="{span: 16}" :rules="rules"
 		        style="margin-top: 1rem"
 		        hide-required-mark="">
@@ -59,8 +65,17 @@ export default {
 		categoryId: String
 	},
 	data() {
-		const category = global.states.categoryManager.get(this.categoryId);
+		const opType = this.$route.query.opType;
+		let category;
+		if (opType === 'create') {
+			category = lpt.categoryServ.getDefaultCategory(-1);
+			category.parent_id = this.$route.query.parentId;
+		} else {
+			category = global.states.categoryManager.get(this.categoryId);
+		}
+		category.isPublic = true;
 		return {
+			opType,
 			category,
 			uploadUrl: lpt.baseUrl + '/oss/cat',
 			uploadHeader: {
@@ -165,19 +180,31 @@ export default {
 			this.uploadHeader["x-lpt-user-token"] = lpt.getCurUserToken();
 		},
 		saveCategoryInfo() {
-			const ref = this;
 			// 目录设置置顶贴需要输入理由
 			this.$refs.form.validate().then(() => {
 				global.methods.prompt({
-					onConfirm(value) {
-						lpt.categoryServ.setInfo({
-							consumer: ref.lptConsumer,
+					onConfirm: (value) => {
+						const isCreate = this.opType === 'create';
+						if (isCreate) {
+							this.category.parent = {
+								id: this.category.parent_id
+							};
+							this.category.type = this.category.isPublic ? 0 : 1;
+						}
+						const fun = isCreate ? lpt.categoryServ.create : lpt.categoryServ.setInfo;
+						fun({
+							consumer: this.lptConsumer,
 							data: {
-								...ref.form,
+								...this.form,
 								op_comment: value
 							},
-							success() {
-								Toast.success('修改成功');
+							success: (result) => {
+								Toast.success(isCreate ? '创建成功' : '修改成功');
+								if (isCreate) {
+									this.category.id = result.object;
+									this.opType = 'update';
+								}
+								Object.assign(this.form, this.category);
 							},
 							fail(result) {
 								Toast.fail(result.message);
@@ -192,19 +219,31 @@ export default {
 </script>
 
 <style scoped>
+#main-area {
+	height: 100%;
+	overflow-y: scroll;
+}
+
+#main-area::-webkit-scrollbar {
+	display: none;
+}
+
 .label {
 	line-height: 2.5rem;
 	margin-right: 1rem;
 }
+
 #form {
 	width: 80%;
 	margin-left: 10%;
 }
+
 .no-border-input {
 	border-top: none;
 	border-left: none;
 	border-right: none;
 }
+
 :global(.ant-form-item-label) {
 	text-align: right !important;
 	padding: 0.15rem 0 0 !important;

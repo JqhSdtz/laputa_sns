@@ -20,6 +20,7 @@ import CategorySetting from '@/pages/outside/category/CategorySetting';
 import ModCategoryInfo from '@/pages/outside/category/ModCategoryInfo';
 import PermissionList from '@/pages/outside/user/PermissionList';
 import CategoryAdminList from '@/pages/outside/category/CategoryAdminList';
+import DruidStat from "@/pages/outside/DruidStat";
 
 const routers = [
     {
@@ -171,6 +172,11 @@ const routers = [
         meta: {
             noCache: true
         }
+    },
+    {
+        path: '/druid_stat',
+        name: 'druidStat',
+        component: DruidStat
     }
 ];
 const router = createRouter({

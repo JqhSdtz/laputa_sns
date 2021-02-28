@@ -9,7 +9,7 @@
 		              :before-read="parseUpload" multiple :max-count="maxImgCount"/>
 		<van-cell center title="是否公开">
 			<template #right-icon>
-				<van-switch v-model="form.isPublic" size="24" />
+				<van-switch v-model="form.isPublic" size="24"/>
 			</template>
 		</van-cell>
 		<van-field v-if="form.isPublic" :rules="rules.category" v-model="selectedCategory" is-link readonly label="目录"
@@ -102,33 +102,74 @@ export default {
 	},
 	watch: {
 		$route() {
+			this.categoryOptions = [];
 			this.parseQueryParam();
+		},
+		showPopover(isShow) {
+			if (!isShow && this.curOption && !this.curOption.isLeaf) {
+				this.form.categoryId = '';
+			}
 		}
 	},
 	created() {
 		this.parseQueryParam();
-		const ref = this;
 		this.lptConsumer = lpt.createConsumer();
 		this.imgUrlMap = new Map();
-		lpt.categoryServ.getRoots({
-			consumer: this.lptConsumer,
-			success(result) {
-				ref.categoryOptions = result.object.map(category => {
-					return {
-						text: category.name,
-						value: category.id,
-						isLeaf: category.is_leaf
-					}
-				});
-			}
-		});
 	},
 	methods: {
 		parseQueryParam() {
 			const query = this.$route.query;
 			this.form.isPublic = query.type === 'public';
-			this.form.categoryId = query.categoryId || '';
-			this.selectedCategory = query.categoryPath || '';
+			if (query.isCategoryLeaf && query.categoryId) {
+				const categoryId = query.categoryId;
+				global.states.categoryManager.get(categoryId, category => {
+					const pathList = category.path_list;
+					if (pathList.length == 0)
+						return;
+					let option = this.categoryOptions;
+					let lastOption = {};
+					pathList.forEach(category => {
+						const children = [];
+						option.push({
+							text: category.name,
+							value: category.id,
+							isLeaf: false,
+							children
+						});
+						lastOption = option;
+						option = children;
+					});
+					if (!category.is_leaf) {
+						category.sub_list.forEach(category => {
+							option.push({
+								text: category.name,
+								value: category.id,
+								isLeaf: category.is_leaf
+							});
+						});
+					} else {
+						lastOption[0].isLeaf = true;
+						delete lastOption[0].children;
+					}
+					this.form.categoryId = parseInt(categoryId);
+					this.showPopover = true;
+				});
+			} else {
+				this.form.categoryId = query.categoryId || '';
+				this.selectedCategory = query.categoryPath || '';
+				lpt.categoryServ.getRoots({
+					consumer: this.lptConsumer,
+					success: (result) => {
+						this.categoryOptions = result.object.map(category => {
+							return {
+								text: category.name,
+								value: category.id,
+								isLeaf: category.is_leaf
+							}
+						});
+					}
+				});
+			}
 		},
 		getFullRawUrl() {
 			const ref = this;
@@ -163,7 +204,8 @@ export default {
 						Toast.fail(result.message);
 					}
 				});
-			}).catch(() => {});
+			}).catch(() => {
+			});
 		},
 		onCategorySelect({selectedOptions}) {
 			const option = selectedOptions[selectedOptions.length - 1];
@@ -186,8 +228,8 @@ export default {
 			});
 		},
 		onCategorySelectFinish({selectedOptions}) {
-			const curOption = selectedOptions[selectedOptions.length - 1];
-			if (curOption.isLeaf) {
+			this.curOption = selectedOptions[selectedOptions.length - 1];
+			if (this.curOption.isLeaf) {
 				this.showPopover = false;
 				this.selectedCategory = selectedOptions.map((option) => option.text).join('/');
 			}

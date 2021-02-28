@@ -17,6 +17,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Lazy;
@@ -71,6 +72,9 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
                 .addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("nick_name", "raw_avatar", "type", "state")));
     }
 
+    @Value("${admin-ops-record-category}")
+    private int adminOpsRecordCategoryId;
+
     @Override
     /**加载目录树*/
     public void run(ApplicationArguments args) {
@@ -79,6 +83,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             Category category = categoryList.get(i);
             category.setPopularPostList(new IndexList(10));
             category.setLatestPostList(new IndexList(10));
+            category.setAllowUserPost(category.getId() != adminOpsRecordCategoryId);
             categoryMap.put(category.getId(), category);
         }
         groundCategory = categoryMap.get(GROUND_ID);
@@ -426,7 +431,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     @SneakyThrows
     private Result writeToAdminOpsRecord(Category category, int type, Operator operator) {
         AdminOpsRecord record = new AdminOpsRecord();
-        record.setTargetId(category.getId()).setDesc(objectMapper.writeValueAsString(category)).setOpComment(category.getOpComment()).setType(type);
+        record.setTargetId(category.getId()).setTarget(category).setDesc(objectMapper.writeValueAsString(category)).setOpComment(category.getOpComment()).setType(type);
         return adminOpsService.createAdminOpsRecord(record, operator);
     }
 
@@ -442,7 +447,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         if (checkResult.getState() == FAIL)
             return checkResult;
         //设置创建者及预缓存数量初始值
-        category.setCreator(operator.getUser()).setCacheNum(20);
+        category.setCreator(operator.getUser()).setCacheNum(20).setOriPostCnt(0L);
         int res = insertOne(category);//数据库操作
         if (res == -1)//数据库操作失败
             return new Result(FAIL).setErrorCode(1010010109).setMessage("数据库操作失败");
@@ -593,7 +598,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             if (postResult.getState() == FAIL)
                 return postResult;
             Post post = postResult.getObject();
-            if (!resCategory.isParentOf(post.getCategory()))
+            if (!resCategory.getId().equals(post.getCategoryId()) &&
+                    !resCategory.isParentOf(post.getCategory()))
                 return new Result(FAIL).setErrorCode(1010010220).setMessage("操作失败，置顶目标不在本目录");
         }
         int res = dao.updateTopPost(param.getId(), param.getTopPostId());

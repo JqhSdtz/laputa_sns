@@ -76,6 +76,13 @@ const keepScrollTop = {
         }
     },
     methods: {
+        fillParentElem(parent) {
+            this.$nextTick(() => {
+                if (this.$el.clientHeight < parent.clientHeight) {
+                    this.$el.style.height = parent.clientHeight + 'px';
+                }
+            });
+        },
         forceReload() {
             this.forceReloadFlag = false;
             this.$nextTick(() => {

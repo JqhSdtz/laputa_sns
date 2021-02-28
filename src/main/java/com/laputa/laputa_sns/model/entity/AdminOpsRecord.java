@@ -37,9 +37,9 @@ public class AdminOpsRecord extends AbstractBaseEntity {
 
     private String entityType = "ADMIN_REC";
 
-    private static final String[] typeStr = {"delete_post", "delete_cml1", "delete_cml2", "create_category", "delete_category", "update_category_parent",
-            "update_category_info", "set_category_top_post", "cancel_category_top_post", "set_category_def_sub", "cancel_category_def_sub", "update_category_disp_seq",
-            "update_category_cache_num", "create_permission", "update_permission", "delete_permission"};
+    private static final String[] typeStr = {"删帖", "删除评论", "删除评论回复", "创建目录", "删除目录", "更改父目录",
+            "更新目录信息", "设置目录置顶贴", "取消目录置顶贴", "设置默认子目录", "取消默认子目录", "修改目录排序号",
+            "修改目录预缓存值", "添加管理员", "修改管理员权限", "删除管理员"};
 
     private User creator;
 

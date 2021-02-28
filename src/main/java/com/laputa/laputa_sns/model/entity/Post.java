@@ -16,6 +16,7 @@ import java.util.List;
 
 /**
  * 帖子
+ *
  * @author JQH
  * @since 下午 2:43 20/02/05
  */
@@ -62,7 +63,7 @@ public class Post extends AbstractContent<Post> {
     /**
      * 帖子的完整内容，短帖子没有该字段
      */
-    @JsonIgnore
+    @JsonProperty("full_text")
     private String fullText;
     /**
      * 帖子的完整内容ID，完整内容和帖子不在一个表中存储
@@ -290,6 +291,9 @@ public class Post extends AbstractContent<Post> {
         if (title != null && title.length() > 20)
             return false;
         if (content == null || content.length() < 10 || content.length() > 100000)
+            return false;
+        // 允许手动设置全文
+        if (fullText != null && (fullText.length() < 10 || fullText.length() > 100000))
             return false;
         if (rawImg != null && rawImg.length() > 256)
             return false;

@@ -4,9 +4,14 @@
 			<a-col span="5" offset="2">
 				<img class="ava" :src="myAvatarUrl"/>
 			</a-col>
-			<a-col span="16" offset="1">
-				<p v-if="hasSigned" class="name">{{ me.user.nick_name }}</p>
-				<a-button v-else type="link" class="name" @click="signIn">点击登录</a-button>
+			<a-col v-if="hasSigned" span="16" offset="1">
+				<div class="name">
+					<span>{{ me.user.nick_name }}</span>
+					<span style="margin-left: 1rem">ID: {{ me.user.id }}</span>
+				</div>
+			</a-col>
+			<a-col v-else>
+				<a-button type="link" class="name" @click="signIn">点击登录</a-button>
 			</a-col>
 		</a-row>
 		<a-row v-if="hasSigned" justify="center">
@@ -30,7 +35,7 @@
 			</van-cell>
 			<van-cell title="个人信息" is-link to="/mod_user_info"/>
 			<van-cell v-if="me.isAdmin" title="管理权限" is-link :to="'/permission_list/' + me.user.id"/>
-			<van-cell title="修改密码" is-link to="/mod_user_info"/>
+			<van-cell v-if="isSuperAdmin" title="查看数据库统计信息" is-link to="/druid_stat"/>
 			<van-cell title="注销" is-link @click="signOut"/>
 		</div>
 	</div>
@@ -66,6 +71,10 @@ export default {
 		}
 	},
 	computed: {
+		isSuperAdmin() {
+			const permissionMap = this.me.permission_map;
+			return permissionMap && permissionMap[0] == 99;
+		},
 		hasSigned() {
 			return global.states.hasSigned.value;
 		},

@@ -3,8 +3,12 @@
 		<a-col span="4" class="ava-div">
 			<img class="ava" :class="{'def-ava': !user.raw_avatar}" :src="avatarUrl"/>
 		</a-col>
-		<a-col class="name">
-			<p>{{user.nick_name}}</p>
+		<a-col v-if="showId" class="name">
+			<span>{{ user.nick_name }}</span>
+			<span style="margin-left: 1rem">ID:{{ user.id }}</span>
+		</a-col>
+		<a-col v-else class="name">
+			<p>{{ user.nick_name }}</p>
 		</a-col>
 		<van-divider style="margin: 5px 0"/>
 	</a-row>
@@ -16,7 +20,8 @@ import lpt from "@/lib/js/laputa/laputa";
 export default {
 	name: 'UserItem',
 	props: {
-		user: Object
+		user: Object,
+		showId: Boolean
 	},
 	computed: {
 		avatarUrl() {

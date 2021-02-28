@@ -4,7 +4,7 @@
 			<img class="ava" :class="{'def-ava': !user.raw_avatar}" :src="avatarUrl"/>
 		</a-col>
 		<a-col class="name">
-			<p>{{ user.nick_name }}</p>
+			<p v-clamp="2">{{ user.nick_name }}</p>
 		</a-col>
 		<a-col v-if="showId" class="name">
 			<p>ID:{{ user.id }}</p>

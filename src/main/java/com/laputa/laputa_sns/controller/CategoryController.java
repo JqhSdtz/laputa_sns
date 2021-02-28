@@ -76,7 +76,7 @@ public class CategoryController {
     }
 
     @RequestMapping(method = RequestMethod.DELETE)
-    public Result deleteCategory(@PathVariable Category category, @RequestAttribute Operator operator) {
+    public Result deleteCategory(@RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.deleteCategory(category, operator, false).setOperator(operator);
     }
 

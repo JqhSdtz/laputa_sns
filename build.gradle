@@ -37,7 +37,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.1'
-    implementation 'com.alibaba:druid-spring-boot-starter:1.1.10'               // https://mvnrepository.com/artifact/com.alibaba/druid-spring-boot-starter
+    implementation 'com.alibaba:druid-spring-boot-starter:1.2.5'               // https://mvnrepository.com/artifact/com.alibaba/druid-spring-boot-starter
     implementation 'org.projectlombok:lombok:1.18.10'                           // https://mvnrepository.com/artifact/org.projectlombok/lombok
     implementation 'org.springframework.boot:spring-boot-starter-data-redis' // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis
     //implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch:2.2.5.RELEASE' // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-elasticsearch

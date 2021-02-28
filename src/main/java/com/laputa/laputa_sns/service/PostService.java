@@ -37,6 +37,7 @@ import static com.laputa.laputa_sns.service.PostIndexService.*;
 
 /**
  * 帖子服务
+ *
  * @author JQH
  * @since 下午 6:22 20/02/21
  */
@@ -98,11 +99,21 @@ public class PostService extends BaseService<PostDao, Post> {
         this.indexOfCreatorExecutorCallBacks = initIndexOfCreatorExecutorCallBacks();
     }
 
-    @Value("${brief-post-length-limit}")//超过此长度的帖子会被当作长文章，这个值最大不能超过数据库lpt_post表的content字段的长度
+    // 超过此长度的帖子会被当作长文章，这个值最大不能超过数据库lpt_post表的content字段的长度
+    @Value("${brief-post-length-limit}")
     private int briefPostLengthLimit;
 
-    @Value("${user-news-out-box-length}")//#用户动态发件箱最大长度
+    // 用户动态发件箱最大长度
+    @Value("${user-news-out-box-length}")
     private int userNewsOutBoxLength;
+
+    // 管理员操作公开目录
+    @Value("${admin-ops-record-category}")
+    private int adminOpsRecordCategoryId;
+
+    // 管理员操作发布用户
+    @Value("${admin-ops-record-user}")
+    private int adminOpsRecordUserId;
 
     private List<Post> selectList(Post post, List<Category> categoryList) {
         return dao.selectList(post, categoryList);
@@ -131,7 +142,19 @@ public class PostService extends BaseService<PostDao, Post> {
     }
 
     public int insertOne(@NotNull Post post) {
-        if (post.getContent().length() > briefPostLengthLimit) {
+        if (post.getFullText() != null) {
+            // 手动设置全文
+            TmpEntry fullText = new TmpEntry(null, post.getFullText());
+            int row = dao.insertFullText(fullText);
+            if (row == -1)
+                return -1;
+            post.setFullTextId(fullText.getId());
+            if (post.getContent().length() > briefPostLengthLimit) {
+                // 手动设置全文的情况下，内容大于长度限制直接截取
+                post.setContent(post.getContent().substring(0, briefPostLengthLimit));
+            }
+        } else if (post.getContent().length() > briefPostLengthLimit) {
+            // 自动设置全文
             TmpEntry fullText = new TmpEntry(null, post.getContent());
             int row = dao.insertFullText(fullText);
             if (row == -1)
@@ -205,6 +228,15 @@ public class PostService extends BaseService<PostDao, Post> {
         categoryService.multiSetCategory(postList, Post.class.getMethod("getCategoryId"), Post.class.getMethod("setCategory", Category.class), operator);
     }
 
+    /**
+     * 处理帖子的内容信息，目前只有管理员记录帖子的区别
+     *
+     * @param post
+     */
+    private void processPayload(Post post) {
+        adminOpsService.processPost(post);
+    }
+
     public boolean existPost(Integer id) {
         return queryHelper.existEntity(new Post(id));
     }
@@ -238,6 +270,7 @@ public class PostService extends BaseService<PostDao, Post> {
         if (postList == null)
             return new Result(FAIL).setErrorCode(1010050101).setMessage("数据库操作失败");
         redisHelper.multiSetAndRefreshEntity(postList, null, isFull);
+        postList.forEach(this::processPayload);
         if (withCounter)//redis中存的对象是不带counter的，所以要在放入Redis之后设置counter
             multiSetCounter(postList);
         return new Result(SUCCESS).setObject(postList);
@@ -400,6 +433,7 @@ public class PostService extends BaseService<PostDao, Post> {
             if (ori != null)
                 resPost.setOriPost(ori);
         }
+        processPayload(resPost);
         return postResult;
     }
 
@@ -476,6 +510,7 @@ public class PostService extends BaseService<PostDao, Post> {
 
     /**
      * 给多个帖子设置原始帖子，即最开始被转发的那个帖子
+     *
      * @param postList
      * @param operator
      */
@@ -513,6 +548,10 @@ public class PostService extends BaseService<PostDao, Post> {
             return new Result(FAIL).setErrorCode(1010050202).setMessage("操作错误，参数不合法");
         Category category = null;
         if (post.getType().equals(Post.TYPE_PUBLIC)) {
+            if (post.getCategoryId() == adminOpsRecordCategoryId
+                    && operator.getUserId() != adminOpsRecordUserId) {
+                return new Result(FAIL).setErrorCode(1010050223).setMessage("该目录禁止发帖");
+            }
             Result<Category> categoryResult = categoryService.readCategory(post.getCategoryId(), false, operator);
             if (categoryResult.getState() == FAIL)
                 return (Result) categoryResult;
@@ -606,7 +645,7 @@ public class PostService extends BaseService<PostDao, Post> {
         userService.updatePostCnt(post.getCreatorId(), -1L);
         if (isAdminOp) {
             AdminOpsRecord record = new AdminOpsRecord();
-            record.setTargetId(post.getCreatorId()).setDesc(fullObjectMapper.writeValueAsString(post)).setOpComment(param.getOpComment()).setType(AdminOpsRecord.TYPE_DELETE_POST);
+            record.setTargetId(post.getCreatorId()).setTarget(post).setDesc(fullObjectMapper.writeValueAsString(post)).setOpComment(param.getOpComment()).setType(AdminOpsRecord.TYPE_DELETE_POST);
             return adminOpsService.createAdminOpsRecord(record, operator);
         }
         return new Result(SUCCESS).setObject(post);

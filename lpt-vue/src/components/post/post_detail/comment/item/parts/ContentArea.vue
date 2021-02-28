@@ -1,13 +1,18 @@
 <template>
 	<div class="content-area">
 		<p class="title">{{ comment.title }}</p>
-		<pre class="content">{{ comment.content }}</pre>
+<!--		<pre class="content">{{ comment.content }}</pre>-->
+		<ellipsis class="content" :content="comment.content" :rows="5"/>
 	</div>
 </template>
 
 <script>
+import Ellipsis from '@/components/global/Ellipsis';
 export default {
 	name: 'ContentArea',
+	components: {
+		Ellipsis
+	},
 	props: {
 		comment: Object
 	}

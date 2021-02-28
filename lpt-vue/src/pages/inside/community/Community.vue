@@ -2,11 +2,11 @@
 	<van-pull-refresh ref="pullArea" v-model="isRefreshing" @refresh="onRefresh"
 	                  style="height: 100%" success-text="刷新成功">
 		<div id="main-area">
-			<van-cell v-if="recentVisitList.length > 0" is-link style="box-shadow: 0 -2px 14px rgba(100, 100, 100, 0.2)"
+			<van-cell v-if="recentVisitList.length > 0" is-link style="overflow-x: scroll; box-shadow: 0 -2px 14px rgba(100, 100, 100, 0.2)"
 			          @click="showRecentVisitPopup = true">
 				<p>最近访问</p>
-				<div style="height: 4rem; overflow: hidden">
-					<div v-for="obj in recentVisitList" :key="obj.category.id" style="display: inline-block; position: relative; width: 4.25rem;">
+				<div style="white-space: nowrap;">
+					<div v-for="obj in recentVisitList" :key="obj.category.id" style="display: inline-block; position: relative; width: 4.5rem; vertical-align:top;">
 						<category-grid-item :category-id="obj.category.id" style="width: 4rem" size="2.5rem">
 							<pushpin-filled v-if="obj.pinned" class="pin-icon" :rotate="-45"/>
 						</category-grid-item>

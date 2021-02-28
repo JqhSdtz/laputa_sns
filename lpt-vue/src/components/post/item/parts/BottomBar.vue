@@ -33,7 +33,7 @@ import {
 } from '@ant-design/icons-vue';
 import lpt from '@/lib/js/laputa/laputa';
 import global from "@/lib/js/global";
-import {Toast} from "vant";
+import {Dialog, Toast} from "vant";
 
 export default {
 	name: 'BottomBar',
@@ -124,9 +124,14 @@ export default {
 				}
 			} else if (action.id === 'delete') {
 				if (this.post.creator.id === global.states.curOperator.user.id) {
-					// 删自己的，不需要理由
-					this.postListEvents.emit(action.id, {
-						post: this.post
+					Dialog.confirm({
+						title: '删帖',
+						message: '确认删除该帖？'
+					}).then(() => {
+						// 删自己的，不需要理由
+						this.postListEvents.emit(action.id, {
+							post: this.post
+						});
 					});
 				} else {
 					// 否则需要输入理由

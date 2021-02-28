@@ -51,12 +51,23 @@ function initItemManager(param) {
         });
         return itemList;
     }
-    itemManager.get = function (itemId) {
+    itemManager.get = function (itemId, callback) {
         const id = param.notIntegerId ? itemId : parseInt(itemId);
         let res = itemMap.get(id);
         if (!res) {
             const temp = param.getDefault(id);
+            temp.isDefault = true;
             res = itemManager.add(temp);
+            if (param.getRequest) {
+                param.getRequest(id).then((item) => {
+                    itemManager.add(item);
+                    callback && callback(item);
+                });
+            } else {
+                callback && callback(res);
+            }
+        } else {
+            callback && callback(res);
         }
         return res;
     }
@@ -93,6 +104,14 @@ const categoryManager = initItemManager({
     },
     getDefault(id) {
         return lpt.categoryServ.getDefaultCategory(id);
+    },
+    getRequest(id) {
+        return lpt.categoryServ.get({
+            objectOnly: true,
+            param: {
+                id: id
+            }
+        });
     }
 });
 

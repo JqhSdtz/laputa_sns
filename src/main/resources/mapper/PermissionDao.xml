@@ -13,7 +13,7 @@
 	<sql id="permissionColumn">
 		<choose>
 			<when test="queryParam == null or queryParam.queryType == null or queryParam.queryType == @com.laputa.laputa_sns.common.QueryParam@BASIC">
-				permission_category_id, permission_level
+				permission_category_id, permission_user_id, permission_level
 			</when>
 			<when test="queryParam.queryType == @com.laputa.laputa_sns.common.QueryParam@EXIST">permission_id</when>
 			<otherwise>*</otherwise>

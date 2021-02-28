@@ -1,5 +1,6 @@
 import lpt from '@/lib/js/laputa/laputa';
 import global from '@/lib/js/global';
+import globalDirectives from '@/lib/js/global/global-directives';
 
 lpt.event.on('onCurOperatorChange', operator => {
     // 不能直接替换operator对象，否则会失去响应性
@@ -48,6 +49,7 @@ const onClickOutsideDirection = {
 }
 
 export const customDirectionList = [
+    ...globalDirectives,
     {
         name: 'checkSign',
         handler: checkSignDirection

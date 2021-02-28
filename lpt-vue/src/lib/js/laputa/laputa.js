@@ -36,7 +36,7 @@ function _initLaputa(option) {
     const lpt = {};
     lpt.isLocalHost = false;
     lpt.localhostUrl = 'http://localhost:8080/lpt';
-    lpt.remoteUrl = 'https://lpt.jqh.zone';
+    lpt.remoteUrl = 'https://jqh.zone';
     lpt.imgBaseUrl = 'https://img.jqh.zone/';
 
     lpt.loadOption = function (_option) {
@@ -166,7 +166,8 @@ function _initLaputa(option) {
         const ref = this;
         const defaultParam = {
             allowRepeat: true,
-            ignoreBusyChange: false
+            ignoreBusyChange: false,
+            objectOnly: false
         }
         function processParam(param) {
             for (let key in defaultParam) {
@@ -334,7 +335,7 @@ function _initLaputa(option) {
                 if (typeof param.finish === 'function')
                     param.finish(result);
                 onComplete(param, result);
-                return Promise.resolve(result);
+                return Promise.resolve(param.objectOnly ? result.object : result);
             }).catch(error => {
                 if (typeof param.error === 'function')
                     param.error(error);
@@ -578,16 +579,23 @@ function _initLaputa(option) {
     }
 
     function initPostService() {
-        let currentCategory = {
-            id: '0'
-        };
+        function filterEmptyPost(result) {
+            result.object = result.object.filter(post => post);
+        }
         const serv = {
             getDefaultPost: function(id) {
                 return {
                     isDefault: true,
                     id: id,
                     creator: {},
-                    rights: {},
+                    rights: {
+                        this_level: 0,
+                        parent_level: 0,
+                        update_info: false,
+                        update_disp_seq: false,
+                        create: false,
+                        delete: false
+                    },
                     liked_by_viewer: false,
                     forward_cnt: 0,
                     comment_cnt: 0,
@@ -595,20 +603,15 @@ function _initLaputa(option) {
                     category_path: []
                 };
             },
-            setCurrentCategory: wrap(function (category) {
-                currentCategory = category;
-            }),
-            getCurrentCategory: wrap(function () {
-                return currentCategory;
-            }),
             queryForCategory: wrap(function (param) {
                 const queryType = param.param.queryType || 'popular';
                 param.url = lpt.baseUrl + '/post/' + queryType;
-                param.data.category_id = param.data.category_id || currentCategory.id;
+                param.appendSuccess(filterEmptyPost, true);
                 return param.querior.query(param);
             }),
             queryForCreator: wrap(function (param) {
                 param.url = lpt.baseUrl + '/post/creator';
+                param.appendSuccess(filterEmptyPost, true);
                 return param.querior.query(param);
             }),
             getFullText: wrap(function (param) {
@@ -706,6 +709,7 @@ function _initLaputa(option) {
             getDefaultCategory: function(id) {
                 return {
                     isDefault: true,
+                    parent_id: -1,
                     id: id,
                     name: '',
                     top_post_id: -1,
@@ -714,7 +718,9 @@ function _initLaputa(option) {
                     icon_img: '',
                     rights: {},
                     path_list: [],
-                    disp_seq: 0
+                    disp_seq: 0,
+                    allow_user_post: false,
+                    is_leaf: true
                 }
             },
             setInfo: wrap(function (param) {

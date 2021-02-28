@@ -314,7 +314,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         if (user == null || user.getToken() == null)
             return new Result(FAIL).setErrorCode(1010020205).setMessage("数据库操作失败");
         redisHelper.setEntity(user, false);
-        setCounter(user);
+//        setCounter(user);
         return new Result(SUCCESS).setObject(user);
     }
 

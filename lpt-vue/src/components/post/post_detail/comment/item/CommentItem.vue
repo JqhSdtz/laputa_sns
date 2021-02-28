@@ -2,7 +2,7 @@
 	<div class="comment-item">
 		<top-bar class="top-bar" :comment="comment"/>
 		<content-area class="content-area" :comment="comment"/>
-		<bottom-bar class="bottom-bar" :type="type" :comment-id="comment.id" :show-actions="showActions"/>
+		<bottom-bar v-if="showBottom" class="bottom-bar" :type="type" :comment-id="comment.id" :show-actions="showActions"/>
 		<sub-comment-area v-if="showSubArea" class="sub-comment-area" :comment="comment"/>
 		<van-divider style="margin: 5px 0"/>
 	</div>
@@ -20,6 +20,10 @@ export default {
 	name: 'CommentItem',
 	props: {
 		commentId: Number,
+		showBottom: {
+			type: Boolean,
+			default: true
+		},
 		showActions: Boolean,
 		type: {
 			type: String,

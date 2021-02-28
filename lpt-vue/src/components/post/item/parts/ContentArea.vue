@@ -1,9 +1,12 @@
 <template>
 	<div class="content-area">
 		<p class="title" @click="showPostDetail">{{ post.title }}</p>
-		<pre class="content" v-if="isShowFullText" @click="showPostDetail">{{ fullText }}</pre>
-		<pre class="content" v-else @click="showPostDetail">{{ post.content }}</pre>
-		<p v-if="post.full_text_id && !isShowFullText" class="full-text-btn" @click="showFullText">
+		<pre class="content" v-if="isShowFullText" @click="showPostDetail">
+			<p v-if="postType === 'normal'">{{ fullText }}</p>
+			<admin-ops-record v-if="postType === 'amOps' && payload" :payload="payload"/>
+		</pre>
+		<pre class="content" v-else @click="showPostDetail">{{ postContent }}</pre>
+		<p v-if="post.full_text_id && !isShowFullText" class="full-text-btn" @click.stop="showFullText">
 			查看全文
 		</p>
 		<div v-if="imgList.length > 0">
@@ -20,6 +23,9 @@
 import lpt from '@/lib/js/laputa/laputa';
 import CategoryPath from '@/components/category/CategoryPath';
 import { ImagePreview } from 'vant';
+import AdminOpsRecord from '@/components/post/item/parts/AdminOpsRecord';
+
+const typeReg = /tp:([a-zA-Z]*)#/;
 
 export default {
 	name: 'ContentArea',
@@ -27,6 +33,7 @@ export default {
 		post: Object
 	},
 	components: {
+		AdminOpsRecord,
 		CategoryPath
 	},
 	data() {
@@ -40,9 +47,21 @@ export default {
 				fullUrlList.push(lpt.getFullImgUrl(img));
 			}
 		});
+		let postContent = this.post.content;
+		let postType = 'normal';
+		if (typeReg.test(this.post.content)) {
+			postType = this.post.content.match(typeReg)[1];
+		}
+		if (postType === 'amOps') {
+			// 管理员操作记录帖
+			postContent = this.post.content.replace(typeReg, '');
+		}
 		return {
 			fullUrlList: fullUrlList,
 			imgList: imgList,
+			postContent,
+			payload: '',
+			postType,
 			fullText: '',
 			isShowFullText: false
 		}
@@ -73,6 +92,14 @@ export default {
 				startPosition: index
 			});
 		},
+		processAmOps(oriText) {
+			try {
+				this.payload = JSON.parse(oriText);
+			} catch (e) {
+				console.error(e);
+				return '';
+			}
+		},
 		showFullText() {
 			const ref = this;
 			lpt.postServ.getFullText({
@@ -82,7 +109,11 @@ export default {
 				},
 				success(result) {
 					ref.isShowFullText = true;
-					ref.fullText = result.object;
+					if (ref.postType === 'amOps') {
+						ref.processAmOps(result.object);
+					} else {
+						ref.fullText = result.object;
+					}
 				}
 			});
 		}
@@ -93,7 +124,7 @@ export default {
 <style scoped>
 .content {
 	text-align: left;
-	word-break: break-word;
+	word-break: break-all;
 	padding: 0 1rem;
 	white-space: pre-wrap;
 }

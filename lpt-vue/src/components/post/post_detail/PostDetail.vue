@@ -74,6 +74,7 @@ export default {
 	watch: {
 		postId(newValue) {
 			this.post = global.states.postManager.get(newValue);
+			this.init();
 			this.forceReload();
 		}
 	},

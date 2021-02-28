@@ -4,7 +4,7 @@
 			<slot name="tip">
 				<p v-if="curTipMessage !== ''">{{ curTipMessage }}</p>
 			</slot>
-			<a-form-item ref="formItemRef" style="width: 90%;margin-left: 5%;">
+			<a-form-item ref="formItemRef" v-if="curShowInput" style="width: 90%;margin-left: 5%;">
 				<a-textarea v-model:value="value" :placeholder="curPlaceHolder"
 				            @change="onInputChange" @focus="onInputFocus" @blur="onInputBlur" auto-size id="text-area"/>
 			</a-form-item>
@@ -22,9 +22,17 @@ export default {
 			type: String,
 			default: '输入操作原因'
 		},
+		focusTitle: {
+			type: String,
+			default: ''
+		},
 		tipMessage: {
 			type: String,
 			default: ''
+		},
+		showInput: {
+			type: Boolean,
+			default: true
 		},
 		placeholder: {
 			type: String,
@@ -45,7 +53,9 @@ export default {
 	data() {
 		return {
 			curTitle: this.title,
+			curFocusTitle: this.focusTitle,
 			curTipMessage: this.tipMessage,
+			curShowInput: this.showInput,
 			curPlaceHolder: this.placeholder,
 			curOnValidate: this.onValidate,
 			curErrorMessage: this.errorMessage,
@@ -58,15 +68,23 @@ export default {
 		this.promptSymbol = Symbol();
 	},
 	methods: {
+		getParam(param, name) {
+			if (typeof param[name] !== 'undefined') {
+				return param[name];
+			} else {
+				return this[name];
+			}
+		},
 		prompt(param) {
-			this.curTitle = param.title || this.title;
-			this.focusTitle = param.focusTitle;
-			this.curTipMessage = param.tipMessage || this.tipMessage;
-			this.curPlaceHolder = param.placeholder || this.placeholder;
-			this.curOnValidate = param.onValidate || this.onValidate;
-			this.curErrorMessage = param.errorMessage || this.errorMessage;
+			this.curTitle = this.getParam(param, 'title');
+			this.curFocusTitle = this.getParam(param, 'focusTitle');
+			this.curTipMessage = this.getParam(param, 'tipMessage');
+			this.curShowInput = this.getParam(param, 'showInput');
+			this.curPlaceHolder = this.getParam(param, 'placeholder');
+			this.curOnValidate = this.getParam(param, 'onValidate');
+			this.curErrorMessage = this.getParam(param, 'errorMessage');
 			this.oriValue = param.value;
-			this.value = param.value || this.value;
+			this.value = this.getParam(param, 'value');
 			this.onConfirm = param.onConfirm;
 			this.onCancel = param.onCancel;
 			this.onFinish = param.onFinish;

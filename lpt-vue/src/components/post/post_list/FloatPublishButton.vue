@@ -71,6 +71,7 @@ export default {
 				query: {
 					type: 'public',
 					categoryId: this.category.id,
+					isCategoryLeaf: this.category.is_leaf,
 					categoryName: this.category.name,
 					categoryPath: lpt.categoryServ.getPathStr(this.category.path_list)
 				}

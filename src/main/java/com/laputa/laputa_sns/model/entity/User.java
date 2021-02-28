@@ -79,17 +79,14 @@ public class User extends AbstractBaseEntity {
     /**
      * 粉丝数量
      */
-    @JsonProperty("followers_cnt")
     private Long followersCnt;
     /**
      * 关注数量
      */
-    @JsonProperty("following_cnt")
     private Long followingCnt;
     /**
      * 帖子数量
      */
-    @JsonProperty("post_cnt")
     private Long postCnt;
 
     /**
@@ -135,6 +132,21 @@ public class User extends AbstractBaseEntity {
 
     public User(Integer id) {
         this.id = id;
+    }
+
+    @JsonProperty("post_cnt")
+    public Long getPostCnt() {
+        return postCnt == null ? 0 :postCnt;
+    }
+
+    @JsonProperty("followers_cnt")
+    public Long getFollowersCnt() {
+        return followersCnt == null ? 0 : followersCnt;
+    }
+
+    @JsonProperty("following_cnt")
+    public Long getFollowingCnt() {
+        return followingCnt == null ? 0 : followingCnt;
     }
 
     @JsonIgnore

@@ -280,7 +280,7 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
         postService.updateCommentCnt(comment.getPostId(), -1L);
         if (isAdminOp) {
             AdminOpsRecord record = new AdminOpsRecord();
-            record.setTargetId(comment.getCreatorId()).setDesc(fullObjectMapper.writeValueAsString(comment)).setOpComment(param.getOpComment()).setType(AdminOpsRecord.TYPE_DELETE_CML1);
+            record.setTargetId(comment.getCreatorId()).setTarget(comment).setDesc(fullObjectMapper.writeValueAsString(comment)).setOpComment(param.getOpComment()).setType(AdminOpsRecord.TYPE_DELETE_CML1);
             return adminOpsService.createAdminOpsRecord(record, operator);
         }
         return Result.EMPTY_SUCCESS;

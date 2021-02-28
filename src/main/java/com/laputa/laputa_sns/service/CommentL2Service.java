@@ -332,7 +332,7 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
         commentL1Service.updateCounters(commentL1.getId(), -1L, pcmCnt);
         if (isAdminOp) {
             AdminOpsRecord record = new AdminOpsRecord();
-            record.setTargetId(commentL2.getCreatorId()).setDesc(fullObjectMapper.writeValueAsString(commentL2)).setOpComment(param.getOpComment()).setType(AdminOpsRecord.TYPE_DELETE_CML2);
+            record.setTargetId(commentL2.getCreatorId()).setTarget(commentL2).setDesc(fullObjectMapper.writeValueAsString(commentL2)).setOpComment(param.getOpComment()).setType(AdminOpsRecord.TYPE_DELETE_CML2);
             return adminOpsService.createAdminOpsRecord(record, operator);
         }
         return Result.EMPTY_SUCCESS;

@@ -1,10 +1,12 @@
 <template>
-	<div v-if="hasLoaded" style="height: 100%; padding-top: 1rem; background-color: rgb(245, 245, 245)">
+	<div id="main-area" v-if="hasLoaded" style="height: 100%; padding-top: 1rem; background-color: rgb(245, 245, 245)">
 		<van-cell class="cell" title="查看管理员列表" is-link :to="'/category_admin_list/' + category.id"/>
 		<van-cell v-if="category.rights.update_info" class="cell" title="修改信息" is-link
 		          :to="'/mod_category_info/' + category.id"/>
 		<van-cell v-if="category.rights.update_disp_seq" class="cell" title="查看/修改排序号" is-link @click="changeDispSeq"/>
-		<van-cell v-if="category.rights.parent_level > 1" class="cell" title="设置管理员" is-link @click="setAdmin"/>
+		<van-cell v-if="category.rights.parent_level > 1" class="cell" title="添加管理员" is-link @click="setAdmin"/>
+		<van-cell v-if="category.rights.create" class="cell" title="创建子目录" is-link @click="showCreatePage"/>
+		<van-cell v-if="category.rights.delete" class="cell" title="删除目录" is-link @click="deleteCategory"/>
 	</div>
 	<prompt-dialog ref="prompt">
 		<template v-if="showSelectedUser" v-slot:tip>
@@ -15,9 +17,9 @@
 
 <script>
 import global from '@/lib/js/global';
-import lpt from "@/lib/js/laputa/laputa";
+import lpt from '@/lib/js/laputa/laputa';
 import {Toast} from "vant";
-import PromptDialog from "@/components/global/PromptDialog";
+import PromptDialog from '@/components/global/PromptDialog';
 import UserItem from '@/components/user/item/UserItem';
 
 export default {
@@ -40,19 +42,23 @@ export default {
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
-		lpt.categoryServ.get({
-			consumer: this.lptConsumer,
-			param: {
-				id: this.categoryId
-			},
-			success: (result) => {
-				this.hasLoaded = true;
-				global.states.categoryManager.add(result.object);
-			},
-			fail(result) {
-				Toast.fail(result.message);
-			}
-		});
+		if (!this.category.isDefault) {
+			this.hasLoaded = true;
+		} else {
+			lpt.categoryServ.get({
+				consumer: this.lptConsumer,
+				param: {
+					id: this.categoryId
+				},
+				success: (result) => {
+					this.hasLoaded = true;
+					global.states.categoryManager.add(result.object);
+				},
+				fail(result) {
+					Toast.fail(result.message);
+				}
+			});
+		}
 	},
 	methods: {
 		changeDispSeq() {
@@ -130,9 +136,62 @@ export default {
 						},
 						onFinish: () => this.$nextTick(() => this.showSelectedUser = false),
 						onConfirm: (value) => {
-							console.log(value);
+							return prompt({
+								onFinish: () => this.$nextTick(() => this.showSelectedUser = false),
+								onConfirm: (opComment) => {
+									lpt.permissionServ.setAdmin({
+										consumer: this.lptConsumer,
+										data: {
+											category_id: this.category.id,
+											user_id: this.curSelectedUser.id,
+											level: value,
+											op_comment: opComment
+										},
+										success: () => {
+											Toast.success('添加管理员成功');
+										},
+										fail(result) {
+											Toast.fail(result.message);
+										}
+									});
+								}
+							});
 						}
 					});
+				}
+			});
+		},
+		deleteCategory() {
+			const prompt = this.$refs.prompt.prompt;
+			prompt({
+				onConfirm: (opComment) => {
+					lpt.categoryServ.delete({
+						consumer: this.lptConsumer,
+						data: {
+							id: this.category.id,
+							op_comment: opComment
+						},
+						success: () => {
+							const parent = global.states.categoryManager.get(this.category.parent_id);
+							if (parent && parent.sub_list) {
+								parent.sub_list = parent.sub_list.filter(sub => sub.id !== this.category.id);
+							}
+							this.$router.go(-2);
+							Toast.success('删除目录成功');
+						},
+						fail: (result) => {
+							Toast.fail(result.message);
+						}
+					});
+				}
+			});
+		},
+		showCreatePage() {
+			this.$router.push({
+				name: 'modCategoryInfo',
+				query: {
+					opType: 'create',
+					parentId: this.categoryId
 				}
 			});
 		}
@@ -141,6 +200,15 @@ export default {
 </script>
 
 <style scoped>
+#main-area {
+	height: 100%;
+	overflow-y: scroll;
+}
+
+#main-area::-webkit-scrollbar {
+	display: none;
+}
+
 .cell {
 	margin-top: 1rem;
 }

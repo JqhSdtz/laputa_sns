@@ -201,7 +201,7 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
         }
         updateRedisPermissionMap(permission.getUserId(), permission);
         AdminOpsRecord record = new AdminOpsRecord();
-        record.setTargetId(permission.getUserId()).setDesc(objectMapper.writeValueAsString(permission)).setOpComment(permission.getOpComment()).setType(AdminOpsRecord.TYPE_CREATE_PERMISSION);
+        record.setTargetId(permission.getUserId()).setTarget(permission).setTarget(permission).setDesc(objectMapper.writeValueAsString(permission)).setOpComment(permission.getOpComment()).setType(AdminOpsRecord.TYPE_CREATE_PERMISSION);
         return adminOpsService.createAdminOpsRecord(record, operator);
     }
 
@@ -224,7 +224,7 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
         newPerm.setCategory(categoryService.readCategory(newPerm.getCategoryId(), false, operator).getObject());
         updateRedisPermissionMap(newPerm.getUserId(), newPerm);
         AdminOpsRecord record = new AdminOpsRecord();
-        record.setTargetId(newPerm.getUserId()).setDesc(objectMapper.writeValueAsString(newPerm)).setOpComment(newPerm.getOpComment()).setType(AdminOpsRecord.TYPE_UPDATE_PERMISSION);
+        record.setTargetId(newPerm.getUserId()).setTarget(newPerm).setDesc(objectMapper.writeValueAsString(newPerm)).setOpComment(newPerm.getOpComment()).setType(AdminOpsRecord.TYPE_UPDATE_PERMISSION);
         return adminOpsService.createAdminOpsRecord(record, operator);
     }
 
@@ -233,18 +233,23 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
      */
     @SneakyThrows
     @Transactional(propagation = Propagation.REQUIRED)
-    public Result deletePermission(@NotNull Permission permission, Operator operator) {
-        if (!permission.isValidDeleteParam() || !permission.isValidOpComment())
+    public Result deletePermission(@NotNull Permission paramPermission, Operator operator) {
+        if (!paramPermission.isValidDeleteParam() || !paramPermission.isValidOpComment())
             return new Result(FAIL).setErrorCode(1010030203).setMessage("操作错误，参数不合法");
-        Result<Permission> oriResult = readPermission(permission, operator);
+        Result<Permission> oriResult = readPermission(paramPermission, operator);
         if (oriResult.getState() == FAIL)
             return oriResult;
-        permission = oriResult.getObject();//要判断是否有删除权限，必须和要删除的权限比较
+        Permission permission = oriResult.getObject();//要判断是否有删除权限，必须和要删除的权限比较
         if (!permissionValidator.checkDeletePermission(permission, operator))
             return new Result(FAIL).setErrorCode(1010030206).setMessage("操作失败，权限错误");
-        if (deleteOne(permission) == 0)
+        if (deleteOne(paramPermission) == 0)
             return new Result(FAIL).setErrorCode(1010030104).setMessage("数据库操作失败");
-        permission.setUser(userService.readUserWithAllFalse(permission.getUserId(), operator).getObject());
+        Result<User> userResult = userService.readUserWithAllFalse(permission.getUserId(), operator);
+        if (userResult.getState() == FAIL) {
+            return userResult;
+        } else {
+            permission.setUser(userResult.getObject());
+        }
         permission.setCategory(categoryService.readCategory(permission.getCategoryId(), false, operator).getObject());
         Result redefineResult = userService.redefineUserState(permission.getUserId(), progOperator);
         if (redefineResult.getState() == FAIL) {//更新用户状态失败，回滚
@@ -253,7 +258,7 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
         }
         removeRedisPermission(permission.getUserId(), permission.getCategoryId());
         AdminOpsRecord record = new AdminOpsRecord();
-        record.setTargetId(permission.getUserId()).setDesc(objectMapper.writeValueAsString(permission)).setOpComment(permission.getOpComment()).setType(AdminOpsRecord.TYPE_DELETE_PERMISSION);
+        record.setTargetId(permission.getUserId()).setTarget(permission).setDesc(objectMapper.writeValueAsString(permission)).setOpComment(permission.getOpComment()).setType(AdminOpsRecord.TYPE_DELETE_PERMISSION);
         return adminOpsService.createAdminOpsRecord(record, operator);
     }
 
