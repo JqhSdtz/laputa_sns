@@ -97,4 +97,10 @@ public class PostValidator {
         return post.getCreatorId().equals(operator.getUserId());
     }
 
+    public boolean checkUpdateContentPermission(@NotNull Post post, @NotNull Operator operator) {
+        if (operator .getId().equals(-1))
+            return false;
+        return post.getCreatorId().equals(operator.getUserId());
+    }
+
 }

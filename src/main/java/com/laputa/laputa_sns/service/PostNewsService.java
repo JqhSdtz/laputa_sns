@@ -10,6 +10,7 @@ import com.laputa.laputa_sns.model.entity.PostNews;
 import com.laputa.laputa_sns.util.CryptUtil;
 import com.laputa.laputa_sns.util.QueryTokenUtil;
 import com.laputa.laputa_sns.util.RedisUtil;
+import com.laputa.laputa_sns.util.ResourceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,27 +49,14 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
     private final PostService postService;
     private final StringRedisTemplate redisTemplate;
     private final IndexExecutor.CallBacks indexExecutorCallBacks;
-    private final DefaultRedisScript<Long> pushNewsScript = new DefaultRedisScript(
-            "redis.call('zadd', KEYS[1], tonumber(ARGV[2]), ARGV[3]) " +
-                    "local len = redis.call('zcard', KEYS[1]) if (len > tonumber(ARGV[1])) then " +
-                    "redis.call('zremrangebyrank', KEYS[1], 0, 0) end return len", Long.class);//redis 5.0之后可以使用ZPOPMIN命令;
-    private final DefaultRedisScript<List> pollNewsScript = new DefaultRedisScript(
-            "local from = redis.call('hget', KEYS[1], ARGV[1])\n" + "local totalList = {}\n" +
-                    "if (from == nil or from == false) then from = nil else from = tonumber(from) end\n" + "for i = 2, #KEYS do \n" +
-                    "\tlocal postList\n" + "\tif (from == nil) then\n" + "\t\tpostList = redis.call('zrevrange', KEYS[i], 0, 9)\n" +
-                    "\telse\n" + "\t\tpostList = redis.call('zrevrangebyscore', KEYS[i], '+inf', from) end\n" +
-                    "\tfor j = 1, #postList do \n" + "\t\ttable.insert(totalList, postList[j]..'-'..KEYS[i])\n" + "\tend\n" + "end\n" + "return totalList;", List.class);
-    private final DefaultRedisScript<Long> pollNewsCountScript = new DefaultRedisScript(
-            "local from = redis.call('hget', KEYS[1], ARGV[1])\n" + "if (from == nil or from == false) then \n" +
-                    "\tfrom = nil;\n" + "else\n" + "\tfrom = tonumber(from) \n" + "end\n" + "local cnt = 0\n" +
-                    "for i = 2, #KEYS do \n" + "\tif (from == nil) then\n" + "\t\tlocal zCard = redis.call('zcard', KEYS[i])\n" +
-                    "\t\tif (zCard > 10) then zCard = 10 end\n" + "\t\tcnt = cnt + zCard\n" +
-                    "\telse cnt = cnt + redis.call('zcount', KEYS[i], from, '+inf') end\n" + "end\n" + "return cnt", Long.class);//必须用Long类型来接收Redis返回的整型数
-    private final DefaultRedisScript<Long> multiPushNewsScript = new DefaultRedisScript(
-                    "local limit = tonumber(ARGV[1])\n" + "local argvOffset = 2\n" + "local cnt = 0\n" + "for keysOffset = 1, #KEYS, 2 do\n" + "\tlocal values = {}\n" +
-                            "\tlocal key = KEYS[keysOffset]\n" + "\tlocal endIdx = argvOffset + tonumber(KEYS[keysOffset + 1]) - 1\n" + "\tfor i = argvOffset, endIdx do\n" + "\t\ttable.insert(values, ARGV[i])\n" +
-                            "\tend\n" + "\targvOffset = endIdx + 1\n" + "\tcnt = cnt + redis.call('zadd', key, unpack(values))\n" + "\tlocal zCard = redis.call('zcard', key)\n" + "\tlocal dim = zCard - limit\n" +
-                            "\tif (dim > 0) then\n" + "\t\tredis.call('zremrangebyrank', key, 0, dim - 1)\n" + "\tend\n" + "end\n" + "return cnt", Long.class);
+    private final DefaultRedisScript<Long> pushNewsScript =
+            new DefaultRedisScript(ResourceUtil.getString("/lua/news/pushNews.lua"), Long.class);//redis 5.0之后可以使用ZPOPMIN命令;
+    private final DefaultRedisScript<List> pollNewsScript =
+            new DefaultRedisScript(ResourceUtil.getString("/lua/news/pollNews.lua"), List.class);
+    private final DefaultRedisScript<Long> pollNewsCountScript =
+            new DefaultRedisScript(ResourceUtil.getString("/lua/news/pollNewsCount.lua"), Long.class);//必须用Long类型来接收Redis返回的整型数
+    private final DefaultRedisScript<Long> multiPushNewsScript =
+            new DefaultRedisScript(ResourceUtil.getString("/lua/news/multiPushNews.lua"), Long.class);
 
     private String hmacKey;
 

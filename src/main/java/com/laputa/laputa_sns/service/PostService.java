@@ -141,11 +141,12 @@ public class PostService extends BaseService<PostDao, Post> {
         return res;
     }
 
-    public int insertOne(@NotNull Post post) {
+    private int setPostFullText(Post post) {
+        int row = 0;
         if (post.getFullText() != null) {
             // 手动设置全文
             TmpEntry fullText = new TmpEntry(null, post.getFullText());
-            int row = dao.insertFullText(fullText);
+            row = dao.insertFullText(fullText);
             if (row == -1)
                 return -1;
             post.setFullTextId(fullText.getId());
@@ -156,12 +157,17 @@ public class PostService extends BaseService<PostDao, Post> {
         } else if (post.getContent().length() > briefPostLengthLimit) {
             // 自动设置全文
             TmpEntry fullText = new TmpEntry(null, post.getContent());
-            int row = dao.insertFullText(fullText);
+            row = dao.insertFullText(fullText);
             if (row == -1)
                 return -1;
             post.setFullTextId(fullText.getId());
             post.setContent(post.getContent().substring(0, briefPostLengthLimit));
         }
+        return row;
+    }
+
+    public int insertOne(@NotNull Post post) {
+        setPostFullText(post);
         int res = dao.insertOne(post);
         return res == 0 ? -1 : post.getId();
     }
@@ -171,6 +177,15 @@ public class PostService extends BaseService<PostDao, Post> {
      */
     private int updateTopComment(int postId, Integer commentId) {
         return dao.updateTopComment(postId, commentId);
+    }
+
+    /**
+     * 修改帖子内容
+     * @param post
+     * @return
+     */
+    private int updateContent(Post post) {
+        return dao.updateContent(post);
     }
 
     public void updateCommentCnt(Integer postId, Long delta) {
@@ -586,13 +601,15 @@ public class PostService extends BaseService<PostDao, Post> {
             return new Result(FAIL).setErrorCode(1010050214).setMessage("操作错误，参数不合法");
         if (!isCancel && !param.isValidCancelTopCommentParam())
             return new Result(FAIL).setErrorCode(1010050217).setMessage("操作错误，参数不合法");
-        Result<Post> postResult = queryHelper.readDBEntity(param);//设置帖子置顶评论需要判断帖子的创建者
+        //设置帖子置顶评论需要判断帖子的创建者
+        Result<Post> postResult = readPostWithAllFalse(param.getId(), operator);
         if (postResult.getState() == FAIL)
             return postResult;
         Post resPost = postResult.getObject();
         if (!postValidator.checkSetTopCommentPermission(resPost, operator))
             return new Result(FAIL).setErrorCode(1010050215).setMessage("操作失败，权限错误");
-        Integer newCommentId = null;//取消置顶则将commentId设为空
+        //取消置顶则将commentId设为空
+        Integer newCommentId = null;
         if (!isCancel) {
             Result<CommentL1> commentL1Result = commentL1Service.readCommentWithAllFalse(param.getTopCommentId(), operator);
             if (commentL1Result.getState() == FAIL)
@@ -605,7 +622,30 @@ public class PostService extends BaseService<PostDao, Post> {
         if (res == 0)
             return new Result(FAIL).setErrorCode(1010050116).setMessage("数据库操作失败");
         resPost.setTopCommentId(newCommentId);
-        redisHelper.setEntity(resPost, false);
+        redisHelper.removeEntity(param.getId());
+        return Result.EMPTY_SUCCESS;
+    }
+
+    /**
+     *  更新贴子内容
+     */
+    public Result updateContent(@NotNull Post param, Operator operator) {
+        if (!param.isValidUpdateContentParam())
+            return new Result(FAIL).setErrorCode(1010050224).setMessage("操作错误，参数不合法");
+        Result<Post> postResult = readPostWithAllFalse(param.getId(), operator);
+        if (postResult.getState() == FAIL)
+            return postResult;
+        Post resPost = postResult.getObject();
+        if (resPost.getEditable() == null || resPost.getEditable() == false)
+            return new Result(FAIL).setErrorCode(1010050225).setMessage("操作失败，该帖不允许编辑");
+        if (!postValidator.checkUpdateContentPermission(resPost, operator))
+            return new Result(FAIL).setErrorCode(1010050226).setMessage("操作失败，权限错误");
+        param.setLength(param.getContent().length());
+        setPostFullText(param);
+        int res = updateContent(param);
+        if (res == 0)
+            return new Result(FAIL).setErrorCode(1010050127).setMessage("数据库操作失败");
+        redisHelper.removeEntity(param.getId());
         return Result.EMPTY_SUCCESS;
     }
 
@@ -616,7 +656,8 @@ public class PostService extends BaseService<PostDao, Post> {
     public Result deletePost(@NotNull Post param, Operator operator) {
         if (!param.isValidDeleteParam())
             return new Result(FAIL).setErrorCode(1010050208).setMessage("操作错误，参数不合法");
-        Result<Post> postResult = readPostWithCategoryInfoAndContent(param.getId(), operator);//删除帖子需要获取帖子的目录以判断权限
+        //删除帖子需要获取帖子的目录以判断权限
+        Result<Post> postResult = readPostWithCategoryInfoAndContent(param.getId(), operator);
         if (postResult.getState() == FAIL)
             return postResult;
         Post post = postResult.getObject();
@@ -625,8 +666,10 @@ public class PostService extends BaseService<PostDao, Post> {
             return new Result(FAIL).setErrorCode(1010050212).setMessage("只能在叶目录删帖");
         if (!postValidator.checkDeletePermission(post, operator))
             return new Result(FAIL).setErrorCode(1010050209).setMessage("操作失败，权限错误");
-        boolean isAdminOp = !post.getCreatorId().equals(operator.getUserId());//删帖人不是发帖人，则是管理员删帖
-        if (isAdminOp && !param.isValidOpComment())//管理员操作，且填写删除原因小于5个字
+        //删帖人不是发帖人，则是管理员删帖
+        boolean isAdminOp = !post.getCreatorId().equals(operator.getUserId());
+        //管理员操作，且填写删除原因小于5个字
+        if (isAdminOp && !param.isValidOpComment())
             return new Result(FAIL).setErrorCode(1010050222).setMessage("操作错误，操作原因字数在5-256");
         int res = deleteOne(post);
         if (res == 0)

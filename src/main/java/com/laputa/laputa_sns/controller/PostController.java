@@ -1,5 +1,7 @@
 package com.laputa.laputa_sns.controller;
 
+import com.laputa.laputa_sns.annotation.AccessLimit;
+import com.laputa.laputa_sns.annotation.LimitTimeUnit;
 import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.model.entity.Post;
@@ -25,11 +27,15 @@ public class PostController {
         this.postService = postService;
     }
 
+    @AccessLimit(value = 20, per = LimitTimeUnit.HOUR)
+    @AccessLimit(value = 5, per = LimitTimeUnit.MINUTE)
     @RequestMapping(value = "/public", method = RequestMethod.POST)
     public Result<Integer> createPublicPost(@NotNull @RequestBody Post post, @RequestAttribute Operator operator) {
         return postService.createPost((Post) post.setType(Post.TYPE_PUBLIC), operator).setOperator(operator);
     }
 
+    @AccessLimit(value = 40, per = LimitTimeUnit.HOUR)
+    @AccessLimit(value = 10, per = LimitTimeUnit.MINUTE)
     @RequestMapping(value = "/private", method = RequestMethod.POST)
     public Result<Integer> createPrivatePost(@NotNull @RequestBody Post post, @RequestAttribute Operator operator) {
         return postService.createPost((Post) post.setType(Post.TYPE_PRIVATE), operator).setOperator(operator);
@@ -69,6 +75,15 @@ public class PostController {
         return Result.EMPTY_FAIL;
     }
 
+    @AccessLimit(value = 40, per = LimitTimeUnit.HOUR)
+    @AccessLimit(value = 10, per = LimitTimeUnit.MINUTE)
+    @RequestMapping(value = "/content", method = RequestMethod.PATCH)
+    public Result updateContent(@RequestBody Post post, @RequestAttribute Operator operator) {
+        return postService.updateContent(post, operator).setOperator(operator);
+    }
+
+    @AccessLimit(value = 40, per = LimitTimeUnit.HOUR)
+    @AccessLimit(value = 10, per = LimitTimeUnit.MINUTE)
     @RequestMapping(method = RequestMethod.DELETE)
     public Result deletePost(@RequestBody Post post, @RequestAttribute Operator operator) {
         return postService.deletePost(post, operator).setOperator(operator);

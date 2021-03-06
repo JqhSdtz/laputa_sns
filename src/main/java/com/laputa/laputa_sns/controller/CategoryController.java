@@ -1,5 +1,8 @@
 package com.laputa.laputa_sns.controller;
 
+import com.laputa.laputa_sns.annotation.AccessLimit;
+import com.laputa.laputa_sns.annotation.AccessLimitTarget;
+import com.laputa.laputa_sns.annotation.LimitTimeUnit;
 import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.model.entity.Category;
 import com.laputa.laputa_sns.model.entity.Operator;
@@ -36,18 +39,24 @@ public class CategoryController {
         return categoryView.readCategoryVo(categoryId, operator).setOperator(operator);
     }
 
+    @AccessLimit(value = 5, per = LimitTimeUnit.HOUR)
+    @AccessLimit(value = 1, per = LimitTimeUnit.MINUTE)
     @RequestMapping(method = RequestMethod.POST)
     public Result createCategory(@RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.createCategory(category, operator).setOperator(operator);
     }
 
+    @AccessLimit(value = 10, per = LimitTimeUnit.HOUR)
+    @AccessLimit(value = 1, per = LimitTimeUnit.MINUTE)
     @RequestMapping(value = "/info", method = RequestMethod.PATCH)
-    public Result updateCategoryInfo(@RequestBody Category category, @RequestAttribute Operator operator) {
+    public Result updateCategoryInfo(@AccessLimitTarget @RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.updateCategoryInfo(category, operator).setOperator(operator);
     }
 
+    @AccessLimit(value = 10, per = LimitTimeUnit.HOUR)
+    @AccessLimit(value = 2, per = LimitTimeUnit.MINUTE)
     @RequestMapping(value = "/disp_seq", method = RequestMethod.PATCH)
-    public Result updateCategoryDispSeq(@RequestBody Category category, @RequestAttribute Operator operator) {
+    public Result updateCategoryDispSeq(@AccessLimitTarget @RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.updateCategoryDispSeq(category, operator).setOperator(operator);
     }
 
@@ -56,6 +65,8 @@ public class CategoryController {
         return categoryService.updateCategoryCacheNum(category, operator).setOperator(operator);
     }
 
+    @AccessLimit(value = 5, per = LimitTimeUnit.HOUR)
+    @AccessLimit(value = 1, per = LimitTimeUnit.MINUTE)
     @RequestMapping(value = "/parent", method = RequestMethod.PATCH)
     public Result updateCategoryParent(@RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.updateCategoryParent(category, operator).setOperator(operator);
@@ -75,6 +86,8 @@ public class CategoryController {
         return categoryService.setDefaultSubCategory(category, false, operator).setOperator(operator);
     }
 
+    @AccessLimit(value = 5, per = LimitTimeUnit.HOUR)
+    @AccessLimit(value = 1, per = LimitTimeUnit.MINUTE)
     @RequestMapping(method = RequestMethod.DELETE)
     public Result deleteCategory(@RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.deleteCategory(category, operator, false).setOperator(operator);

@@ -14,32 +14,21 @@ import java.util.*;
 
 /**
  * Redis相关的工具类，包括一些常用的lua脚本封装的方法
+ *
  * @author JQH
  * @since 下午 3:42 20/03/19
  */
 
 @Slf4j
 public class RedisUtil {
-    private static final DefaultRedisScript<List<String>> zRevRangeUseStartIdFirstScript = new DefaultRedisScript(
-            "if (redis.call('exists', KEYS[1]) == 0) then \n" + "\treturn nil end \n" + "local startId = tonumber(ARGV[1])\n" +
-                    "local from = tonumber(ARGV[2])\n" + "if (startId ~= 0) then \n" + "\tlocal rank = redis.call('zrevrank', KEYS[1], ARGV[1])\n" +
-                    "\tif (rank ~= nil and rank ~= false) then \n" + "\t\tfrom = rank + 1\n" + "\tend \n" + "end \n" + "if (ARGV[4] == '0') then\n" +
-                    "\treturn redis.call('zrevrange', KEYS[1], from, from + tonumber(ARGV[3]) - 1) end\n" +
-                    "return redis.call('zrevrange', KEYS[1], from, from + tonumber(ARGV[3]) - 1, 'WITHSCORES')", List.class);
+    private static final DefaultRedisScript<List<String>> zRevRangeUseStartIdFirstScript =
+            new DefaultRedisScript(ResourceUtil.getString("/lua/index/zRevRangeUseStartIdFirst.lua"), List.class);
 
-    private static final DefaultRedisScript<List<String>> zRevRangeUseFromFirstScript = new DefaultRedisScript(
-            "if (redis.call('exists', KEYS[1]) == 0) then \n" + "\treturn nil end \n" + "local from = tonumber(ARGV[1]) \n" +
-                    "if (from > redis.call('zcard', KEYS[1])) then\n" + "\tlocal rank = redis.call('zrevrank', KEYS[1], ARGV[2]) \n" + "\tif (rank ~= nil and rank ~= false) then \n" +
-                    "\t\tfrom = rank end\n" + "end \n" + "if (ARGV[4] == '0') then\n" + "\treturn redis.call('zrevrange', KEYS[1], from, from + tonumber(ARGV[3]) - 1) end\n" +
-                    "return redis.call('zrevrange', KEYS[1], from, from + tonumber(ARGV[3]) - 1, 'WITHSCORES')", List.class);
+    private static final DefaultRedisScript<List<String>> zRevRangeUseFromFirstScript =
+            new DefaultRedisScript(ResourceUtil.getString("/lua/index/zRevRangeUseFromFirst.lua"), List.class);
 
-    private static final DefaultRedisScript<List<Object>> zAddAndGetLastScript = new DefaultRedisScript(
-            "local zCard = tonumber(redis.call('zcard', KEYS[1]))\n" + "local insertLen = #ARGV / 2\n" + "local limit = tonumber(KEYS[2])\n" +
-                    "if (zCard + insertLen > limit) then\n" + "\tif (KEYS[3] == '0') then\n" + "\t\treturn 'f' end\n" + "\tlocal dim = zCard + insertLen - limit\n" +
-                    "\tredis.call('zremrangebyrank', KEYS[1], 0, dim - 1)\n" + "\tif (insertLen > limit) then\n" + "\t\tlocal tmpTable = {}\n" +
-                    "\t\tfor i = 1, limit do table.insert(tmpTable, tonumber(ARGV[i * 2 - 1])) table.insert(tmpTable, ARGV[i * 2]) end\n" +
-                    "\t\tARGV = tmpTable\n" + "\tend\n" + "end\n" + "redis.call('zadd', KEYS[1], unpack(ARGV))\n" +
-                    "return {redis.call('zrange', KEYS[1], 0, 0), redis.call('zcard', KEYS[1])}", List.class);
+    private static final DefaultRedisScript<List<Object>> zAddAndGetLastScript =
+            new DefaultRedisScript(ResourceUtil.getString("/lua/index/zAddAndGetLast.lua"), List.class);
 
     private static final DefaultRedisScript<Long> zRemRangeByLex = new DefaultRedisScript("return redis.call('zremrangebylex', KEYS[1], ARGV[1], ARGV[2])", Long.class);
 

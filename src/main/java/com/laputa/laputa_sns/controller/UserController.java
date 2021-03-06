@@ -1,5 +1,7 @@
 package com.laputa.laputa_sns.controller;
 
+import com.laputa.laputa_sns.annotation.AccessLimit;
+import com.laputa.laputa_sns.annotation.LimitTimeUnit;
 import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.model.entity.User;
@@ -51,6 +53,7 @@ public class UserController {
         return userService.updateUserInfo(user, operator).setOperator(operator);
     }
 
+    @AccessLimit(value = 2, per = LimitTimeUnit.HOUR)
     @RequestMapping(value = "/name", method = RequestMethod.PATCH)
     public Result updateUserName(@RequestBody User user, @RequestAttribute Operator operator) {
         return userService.updateUserName(user, operator).setOperator(operator);
@@ -66,6 +69,7 @@ public class UserController {
         return userService.setTalkBanTo(user, operator).setOperator(operator);
     }
 
+    @AccessLimit(value = 10, per = LimitTimeUnit.HALF_HOUR)
     @RequestMapping(value = "/top_post/{action}", method = RequestMethod.PATCH)
     public Result setUserTopPost(@RequestBody User user, @PathVariable String action, @RequestAttribute Operator operator) {
         if ("create".equals(action))

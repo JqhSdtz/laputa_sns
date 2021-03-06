@@ -1,5 +1,8 @@
 package com.laputa.laputa_sns.controller;
 
+import com.laputa.laputa_sns.annotation.AccessLimit;
+import com.laputa.laputa_sns.annotation.AccessLimitTarget;
+import com.laputa.laputa_sns.annotation.LimitTimeUnit;
 import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.helper.CommentServiceHelper;
 import com.laputa.laputa_sns.model.entity.CommentL1;
@@ -27,13 +30,17 @@ public class CommentL1Controller {
         return commentL1Service.readComment(id, true, true, true, true, operator).setOperator(operator);
     }
 
+    @AccessLimit(value = 40, per = LimitTimeUnit.HOUR)
+    @AccessLimit(value = 10, per = LimitTimeUnit.MINUTE)
     @RequestMapping(method = RequestMethod.POST)
-    public Result createComment(@RequestBody CommentL1 comment, @RequestAttribute Operator operator) {
+    public Result createComment(@AccessLimitTarget(byMethod = "getPost") @RequestBody CommentL1 comment, @RequestAttribute Operator operator) {
         return commentL1Service.createComment(comment, operator).setOperator(operator);
     }
 
+    @AccessLimit(value = 40, per = LimitTimeUnit.HOUR)
+    @AccessLimit(value = 10, per = LimitTimeUnit.MINUTE)
     @RequestMapping(method = RequestMethod.DELETE)
-    public Result deleteComment(@RequestBody CommentL1 comment, @RequestAttribute Operator operator) {
+    public Result deleteComment(@AccessLimitTarget(byMethod = "getPost") @RequestBody CommentL1 comment, @RequestAttribute Operator operator) {
         return commentL1Service.deleteComment(comment, operator).setOperator(operator);
     }
 

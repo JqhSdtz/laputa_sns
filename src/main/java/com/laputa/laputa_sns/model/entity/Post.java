@@ -167,6 +167,11 @@ public class Post extends AbstractContent<Post> {
     private Integer topCommentId;
 
     /**
+     * 当前帖子是否可编辑
+     */
+    private Boolean editable;
+
+    /**
      * 帖子创建者
      */
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
@@ -324,6 +329,11 @@ public class Post extends AbstractContent<Post> {
     @JsonIgnore
     public boolean isValidSetTopCommentParam() {
         return id != null && topCommentId != null;
+    }
+
+    @JsonIgnore
+    public boolean isValidUpdateContentParam() {
+        return id != null && (rawImg != null || content != null);
     }
 
     @JsonIgnore

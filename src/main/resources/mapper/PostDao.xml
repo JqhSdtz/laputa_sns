@@ -8,6 +8,7 @@
 		<result column="post_sup_id" property="supId"/>
 		<result column="post_ori_id" property="oriId"/>
 		<result column="post_type" property="type"/>
+		<result column="post_editable" property="editable"/>
 		<result column="post_state" property="state"/>
 		<result column="post_length" property="length"/>
 		<result column="post_title" property="title"/>
@@ -26,7 +27,7 @@
 	</resultMap>
 
 	<sql id="basicColumns">
-		post_id, post_full_text_id, post_allow_forward, post_sup_id, post_ori_id, post_type, post_state, post_category_id,
+		post_id, post_full_text_id, post_allow_forward, post_sup_id, post_ori_id, post_type, post_editable, post_state, post_category_id,
 		post_like_cnt, post_comment_cnt, post_view_cnt, post_top_comment_id, post_creator_id, post_create_time
 	</sql>
 
@@ -138,7 +139,8 @@
 			<if test="oriId != null">post_ori_id,</if>
 			<if test="allowForward != null">post_allow_forward,</if>
 			<if test="type != null">post_type,</if>
-			<if test="state != null">post_state</if>
+			<if test="editable != null">post_editable,</if>
+			<if test="state != null">post_state,</if>
 			<if test="lIndexedFlag != null">post_l_indexed_flag,</if>
 			<if test="pIndexedFlag != null">post_p_indexed_flag,</if>
 		</trim>
@@ -150,6 +152,7 @@
 			<if test="oriId != null">#{oriId},</if>
 			<if test="allowForward != null">#{post.allowForward},</if>
 			<if test="type != null">#{type},</if>
+			<if test="editable != null">#{editable},</if>
 			<if test="state != null">#{state}</if>
 			<if test="lIndexedFlag != null">#{lIndexedFlag},</if>
 			<if test="pIndexedFlag != null">${pIndexedFlag},</if>
@@ -160,6 +163,17 @@
 		update lpt_post
 		set post_top_comment_id = #{commentId}
 		where post_id = #{postId}
+	</update>
+
+	<update id="updateContent" parameterType="com.laputa.laputa_sns.model.entity.Post">
+		update lpt_post
+		<set>
+			<if test="length != null">post_length = #{length},</if>
+			<if test="content != null">post_content = #{content},</if>
+			<if test="fullTextId != null">post_full_text_id = #{fullTextId},</if>
+			<if test="rawImg != null">post_raw_img = #{rawImg},</if>
+		</set>
+		where post_id = #{id}
 	</update>
 
 	<update id="deleteOne">

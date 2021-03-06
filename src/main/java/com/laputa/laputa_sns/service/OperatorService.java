@@ -41,7 +41,6 @@ public class OperatorService {
     private final PermissionService permissionService;
     private final PostNewsService postNewsService;
     private final NoticeService noticeService;
-    private final StringRedisTemplate redisTemplate;
     private final RedisHelper<Operator> redisHelper;
 
     private final int operatorTimeOut;
@@ -53,12 +52,11 @@ public class OperatorService {
         this.permissionService = permissionService;
         this.postNewsService = postNewsService;
         this.noticeService = noticeService;
-        this.redisTemplate = redisTemplate;
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setFilterProvider(new SimpleFilterProvider().addFilter("OperatorFilter", SimpleBeanPropertyFilter
                 .filterOutAllExcept("user_id", "token", "permission_map", "unread_news_cnt", "unread_notice_cnt", "last_access_time")));
         operatorTimeOut = Integer.valueOf(environment.getProperty("timeout.redis.operator"));
-        this.redisHelper = new RedisHelper(RedisPrefix.ONLINE_OPERATOR, objectMapper, operatorTimeOut, null, null, null, null, Operator.class, redisTemplate);
+        this.redisHelper = new RedisHelper(RedisPrefix.OPERATOR_ONLINE, objectMapper, operatorTimeOut, null, null, null, null, Operator.class, redisTemplate);
     }
 
     @Value("${pass-token-through-header}")
@@ -97,12 +95,14 @@ public class OperatorService {
     @Nullable
     public Operator readOperatorWithToken(Integer userId, HttpServletResponse response) {
         Operator operator = redisHelper.getEntity(userId, false, false);
-        if (operator == null) {//缓存中没有该用户，从数据库中读取
+        if (operator == null) {
+            //缓存中没有该用户，从数据库中读取
             Result<User> userResult = userService.readUserWithToken(userId);
             if (userResult.getState() == FAIL)
                 return null;
             Operator resOperator = new Operator().setUser(userResult.getObject()).setToken(userResult.getObject().getToken());
-            return resOperator.setFromLogin(true);//返回的是包含旧的token的operator
+            //返回的是包含旧的token的operator
+            return resOperator.setFromLogin(true);
         } else
             return operator;
     }
@@ -144,10 +144,13 @@ public class OperatorService {
 
     private Result afterLogin(@NotNull Operator operator, HttpServletResponse response, boolean fromLoad, boolean fromRegister) {
         User user = operator.getUser();
-        if (user.getState() != null && user.getState() > 0) {//该用户涉及管理权限
+        if (user.getState() != null && user.getState() > 0) {
+            //该用户涉及管理权限
             Result<Map<Integer, Integer>> permissionMapResult = permissionService.readPermissionMapOfUser(user.getId(), progOperator);
-            if (permissionMapResult.getState() == FAIL)//获取权限映射表失败
+            if (permissionMapResult.getState() == FAIL) {
+                //获取权限映射表失败
                 return permissionMapResult;
+            }
             operator.setPermissionMap(permissionMapResult.getObject());
         }
         setToken(operator, response);
