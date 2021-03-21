@@ -19,7 +19,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/user")
+@RequestMapping(value = "/api/user")
 public class UserController {
 
     private final UserService userService;
@@ -57,6 +57,12 @@ public class UserController {
     @RequestMapping(value = "/name", method = RequestMethod.PATCH)
     public Result updateUserName(@RequestBody User user, @RequestAttribute Operator operator) {
         return userService.updateUserName(user, operator).setOperator(operator);
+    }
+
+    @AccessLimit(value = 10, per = LimitTimeUnit.HOUR)
+    @RequestMapping(value = "/password", method = RequestMethod.PATCH)
+    public Result updatePassword(@RequestBody User user, @RequestAttribute Operator operator) {
+        return userService.updatePassword(user, operator).setOperator(operator);
     }
 
     @RequestMapping(value = "/recv_setting", method = RequestMethod.PATCH)

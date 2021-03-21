@@ -46,7 +46,9 @@ export default {
 	},
 	data() {
 		this.curCommentTargetKey = lpt.commentServ.level1 + '#' + this.postId;
-		const post = global.states.postManager.get(this.postId);
+		const post = global.states.postManager.get({
+			itemId: this.postId
+		});
 		return {
 			post: post,
 			showCommentPanel: false,
@@ -158,7 +160,9 @@ export default {
 						} else if (type === lpt.commentServ.level2) {
 							// 当前打开了评论列表，且发出的是二级评论
 							// 增加该评论所属一级评论的二级评论数量
-							const comment = global.states.commentL1Manager.get(parentId);
+							const comment = global.states.commentL1Manager.get({
+								itemId: parentId
+							});
 							++comment.l2_cnt;
 							if (global.states.curOperator.user.id === ref.post.creator.id) {
 								// 当前用户是帖子创建者，则增加帖子创建者回复数量

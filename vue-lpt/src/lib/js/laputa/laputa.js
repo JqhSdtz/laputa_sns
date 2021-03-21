@@ -273,6 +273,7 @@ function _initLaputa(option) {
                 param.consumer.pushBusy(isBusy);
             }
         }
+
         let firstAjax;
         lpt.ajax = function (param) {
             // 要等到第一个ajax请求执行完后再执行后续请求
@@ -314,22 +315,20 @@ function _initLaputa(option) {
                 url: param.url,
                 data: jsonDataStr
             });
-            if (!param.isResend) {
-                if (!allowRepeat && consumer.isDataRepeat(dataStr))
-                    return {
-                        success: 0,
-                        from: 'local',
-                        message: '当前请求不允许重复发送！'
-                    };
-                if (param.consumer.isBusy()) {
-                    return {
-                        success: 0,
-                        from: 'local',
-                        message: '正在执行其他请求!'
-                    };
-                }
-                changeBusy(param, true);
+            if (!allowRepeat && consumer.isDataRepeat(dataStr))
+                return {
+                    success: 0,
+                    from: 'local',
+                    message: '当前请求不允许重复发送！'
+                };
+            if (param.consumer.isBusy()) {
+                return {
+                    success: 0,
+                    from: 'local',
+                    message: '正在执行其他请求!'
+                };
             }
+            changeBusy(param, true);
             const headers = {
                 'Content-Type': 'application/json'
             };
@@ -354,13 +353,6 @@ function _initLaputa(option) {
                 data: method === 'GET' ? undefined : jsonDataStr
             }).then(response => {
                 const result = response.data;
-                if (curUserToken && headers['X-LPT-USER-TOKEN'] !== curUserToken) {
-                    // token已更新，但这个请求发送的时候还没有更新
-                    // 则该请求必然token验证失败，重发该请求
-                    return Promise.reject({
-                        resend: true
-                    });
-                }
                 const tmpUserToken = response.headers['x-lpt-user-token'];
                 if (typeof tmpUserToken !== 'undefined') {
                     curUserToken = tmpUserToken;
@@ -388,10 +380,6 @@ function _initLaputa(option) {
                 onComplete(param, result);
                 return Promise.resolve(param.objectOnly ? result.object : result);
             }).catch(error => {
-                if (error.resend) {
-                    param.isResend = true;
-                    return Promise.resolve(lpt.ajax(param));
-                }
                 if (typeof param.error === 'function')
                     param.error(error);
                 onComplete(param, error);
@@ -538,8 +526,8 @@ function _initLaputa(option) {
                 return lpt.post(param);
             }),
             emptyAction: wrap(function (param) {
-               param.url = lpt.baseApiUrl + '/operator/empty';
-               return lpt.get(param);
+                param.url = lpt.baseApiUrl + '/operator/empty';
+                return lpt.get(param);
             }),
             hasSigned: wrap(function () {
                 return serv.getCurrent().user.id !== -1;
@@ -581,6 +569,7 @@ function _initLaputa(option) {
                     isDefault: true,
                     id: id,
                     nick_name: '',
+                    intro: '',
                     raw_avatar: '',
                     followers_cnt: 0,
                     following_cnt: 0,
@@ -679,6 +668,8 @@ function _initLaputa(option) {
                     forward_cnt: 0,
                     comment_cnt: 0,
                     like_cnt: 0,
+                    type_str: undefined,
+                    full_text_id: undefined,
                     category_path: []
                 };
             },

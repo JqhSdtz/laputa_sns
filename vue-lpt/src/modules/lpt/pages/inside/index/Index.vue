@@ -26,7 +26,12 @@ export default {
 	},
 	data() {
 		const indexCategoryId = 0;
-		const category = global.states.categoryManager.get(indexCategoryId);
+		const category = global.states.categoryManager.get({
+			itemId: indexCategoryId,
+			fail(result) {
+				Toast.fail(result.message);
+			}
+		});
 		return {
 			category,
 			indexCategoryId,
@@ -47,18 +52,6 @@ export default {
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
-		lpt.categoryServ.get({
-			consumer: this.lptConsumer,
-			param: {
-				id: this.category.id
-			},
-			success(result) {
-				global.states.categoryManager.add(result.object.root);
-			},
-			fail(result) {
-				Toast.fail(result.message);
-			}
-		});
 	},
 	methods: {
 		onSearch() {

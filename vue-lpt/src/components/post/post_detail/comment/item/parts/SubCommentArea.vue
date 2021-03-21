@@ -36,7 +36,9 @@ export default {
 	},
 	computed: {
 		posterId() {
-			const post = global.states.postManager.get(this.comment.post_id);
+			const post = global.states.postManager.get({
+				itemId: this.comment.post_id
+			});
 			return post.creator.id;
 		},
 		previewL2Length() {

@@ -138,12 +138,16 @@ export default {
 					Toast.success(isCancel ? '取消成功' : '置顶成功');
 					post.is_topped = !isCancel;
 					if (ref.postOf === 'category') {
-						const category = global.states.categoryManager.get(ref.categoryId);
+						const category = global.states.categoryManager.get({
+							itemId: ref.categoryId
+						});
 						if (category) {
 							category.top_post_id = isCancel ? -1 : post.id;
 						}
 					} else if (ref.postOf === 'creator') {
-						const user = global.states.userManager.get(ref.creatorId);
+						const user = global.states.userManager.get({
+							itemId: ref.creatorId
+						});
 						if (user) {
 							user.top_post_id = isCancel ? -1 : post.id;
 						}

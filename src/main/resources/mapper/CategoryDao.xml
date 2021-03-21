@@ -14,6 +14,7 @@
 		<result column="category_icon_img" property="iconImg"/>
 		<result column="category_def_sub_id" property="defSubId"/>
 		<result column="category_top_post_id" property="topPostId"/>
+		<result column="category_allow_post_level" property="oriAllowPostLevel"/>
 		<result column="category_post_cnt" property="oriPostCnt"/>
 		<result column="category_disp_seq" property="dispSeq"/>
 		<result column="category_cache_num" property="cacheNum"/>
@@ -69,6 +70,12 @@
 	<update id="updateTopPost">
 		update lpt_category
 		set category_top_post_id = #{postId}
+		where category_id = #{categoryId}
+	</update>
+
+	<update id="updateAllowPostLevel">
+		update lpt_category
+		set category_allow_post_level = #{allowPostLevel}
 		where category_id = #{categoryId}
 	</update>
 

@@ -39,13 +39,10 @@ const draggable = {
             }
         }
         el.addEventListener('mousedown', startDrag, true);
-        el.addEventListener('touchstart', startDrag, true);
         el.addEventListener('mouseup', endDrag, true);
-        el.addEventListener('touchend', endDrag, true);
         // 如果用el监听移动事件，移动过快时鼠标移动到元素外还没来得及更改位置，就会停止移动
         // 所以要监听全局的移动事件
         window.document.addEventListener('mousemove', dragging, true);
-        window.document.addEventListener('touchmove', dragging, true);
     }
 }
 

@@ -5,7 +5,7 @@
 <script>
 import { markRaw } from 'vue'
 import Icon from '@ant-design/icons-vue'
-import RiDashboardFillSvg from "@/assets/icons/svg/RiDashboardFillSvg";
+import RiDashboardFillSvg from '@/assets/icons/svg/RiDashboardFillSvg';
 
 export default {
 	name: 'RiDashboardFill',

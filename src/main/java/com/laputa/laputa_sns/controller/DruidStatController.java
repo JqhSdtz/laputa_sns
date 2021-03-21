@@ -5,6 +5,7 @@ import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.model.entity.Operator;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -17,8 +18,9 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
  * @since 上午 12:12 21/02/27
  */
 @RestController
+@RequestMapping(value = "/api/druid")
 public class DruidStatController {
-    @GetMapping("/druid/stat")
+    @GetMapping("/stat")
     public Result druidStat(@RequestAttribute Operator operator){
         Map permissionMap = operator.getPermissionMap();
         Integer rootPermLevel  = permissionMap == null ? null : (Integer) permissionMap.get(0);

@@ -14,7 +14,7 @@ import java.util.List;
  */
 
 @RestController
-@RequestMapping(value = "/forward")
+@RequestMapping(value = "/api/forward")
 public class ForwardController {
     private final ForwardService forwardService;
 

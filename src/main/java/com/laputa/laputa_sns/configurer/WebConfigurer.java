@@ -35,14 +35,14 @@ public class WebConfigurer implements WebMvcConfigurer {
                 .excludePathPatterns("/**/*.js", "/**/*.html", "/**/*.css", "/**/*.jpg", "/**/*.png");
     }
 
-    @Override
-    public void addCorsMappings(@NotNull CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowCredentials(true)
-                .exposedHeaders("X-LPT-USER-TOKEN")
-                .allowedMethods("GET", "POST", "PATCH", "DELETE");
-    }
+//    @Override
+//    public void addCorsMappings(@NotNull CorsRegistry registry) {
+//        registry.addMapping("/**")
+//                .allowedOrigins("*")
+//                .allowCredentials(true)
+//                .exposedHeaders("X-LPT-USER-TOKEN")
+//                .allowedMethods("GET", "POST", "PATCH", "DELETE");
+//    }
 
     @Override
     public void extendMessageConverters(@NotNull List<HttpMessageConverter<?>> converters) {

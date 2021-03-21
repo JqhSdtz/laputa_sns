@@ -1,19 +1,25 @@
 <template>
 	<van-dialog v-model:show="showDialog" :title="curTitle" :before-close="beforeClose" show-cancel-button>
 		<slot>
-			<slot name="tip">
-				<p v-if="curTipMessage !== ''">{{ curTipMessage }}</p>
-			</slot>
-			<a-form-item ref="formItemRef" v-if="curShowInput" style="width: 90%;margin-left: 5%;">
+			<p v-if="curTipMessage !== ''" style="text-align: center">{{ curTipMessage }}</p>
+			<slot name="tip"/>
+			<a-form-item ref="formItemRef" v-if="curInputType === 'textArea'" style="width: 90%;margin-left: 5%;">
 				<a-textarea v-model:value="value" :placeholder="curPlaceHolder"
 				            @change="onInputChange" @focus="onInputFocus" @blur="onInputBlur" auto-size id="text-area"/>
+			</a-form-item>
+			<a-form-item ref="formItemRef" v-if="curInputType === 'password'" style="width: 90%;margin-left: 5%;">
+				<a-input-password v-model:value="value" :placeholder="curPlaceHolder"
+				            @change="onInputChange" @focus="onInputFocus" @blur="onInputBlur" auto-size id="password"/>
+			</a-form-item>
+			<a-form-item ref="formItemRef" v-if="curInputType === 'datePicker'" style="width: 90%;margin-left: 5%;">
+				<van-datetime-picker v-model="value" :min-date="minDate" :show-toolbar="false"
+				                     @change="onInputChange" @focus="onInputFocus" @blur="onInputBlur" id="date-picker"/>
 			</a-form-item>
 		</slot>
 	</van-dialog>
 </template>
 <script>
 import {clearError, makeError} from '@/lib/js/uitls/form-util';
-import global from '@/lib/js/global';
 
 export default {
 	name: 'PromptDialog',
@@ -30,9 +36,9 @@ export default {
 			type: String,
 			default: ''
 		},
-		showInput: {
-			type: Boolean,
-			default: true
+		inputType: {
+			type: String,
+			default: 'textArea'
 		},
 		placeholder: {
 			type: String,
@@ -55,13 +61,14 @@ export default {
 			curTitle: this.title,
 			curFocusTitle: this.focusTitle,
 			curTipMessage: this.tipMessage,
-			curShowInput: this.showInput,
+			curInputType: this.inputType,
 			curPlaceHolder: this.placeholder,
 			curOnValidate: this.onValidate,
 			curErrorMessage: this.errorMessage,
 			showDialog: false,
 			oriValue: '',
-			value: ''
+			value: '',
+			minDate: new Date()
 		}
 	},
 	created() {
@@ -79,7 +86,7 @@ export default {
 			this.curTitle = this.getParam(param, 'title');
 			this.curFocusTitle = this.getParam(param, 'focusTitle');
 			this.curTipMessage = this.getParam(param, 'tipMessage');
-			this.curShowInput = this.getParam(param, 'showInput');
+			this.curInputType = this.getParam(param, 'inputType');
 			this.curPlaceHolder = this.getParam(param, 'placeholder');
 			this.curOnValidate = this.getParam(param, 'onValidate');
 			this.curErrorMessage = this.getParam(param, 'errorMessage');
@@ -89,6 +96,9 @@ export default {
 			this.onCancel = param.onCancel;
 			this.onFinish = param.onFinish;
 			this.showDialog = true;
+			if (this.curInputType === 'datePicker') {
+				this.minDate = new Date();
+			}
 			return this.promptSymbol;
 		},
 		beforeClose(action) {

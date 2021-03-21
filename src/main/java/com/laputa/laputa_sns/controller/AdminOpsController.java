@@ -14,7 +14,7 @@ import java.util.List;
  */
 
 @RestController
-@RequestMapping(value = "/admin_ops")
+@RequestMapping(value = "/api/admin_ops")
 public class AdminOpsController {
 
     private final AdminOpsService adminOpsService;

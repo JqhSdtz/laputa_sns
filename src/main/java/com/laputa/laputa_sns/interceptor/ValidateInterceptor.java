@@ -12,7 +12,6 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -44,9 +43,13 @@ public class ValidateInterceptor implements HandlerInterceptor {
             return false;
         }
         String servletPath = request.getServletPath();
-        if ("/operator/login".equals(servletPath) || "/operator/register".equals(servletPath))
-            return true;//不拦截注册登录请求
+        if ("api/operator/login".equals(servletPath) || "api/operator/register".equals(servletPath)
+                || "api/qq/login".equals(servletPath)) {
+            //不拦截注册登录请求
+            return true;
+        }
         String cookieStr = getTokenFromCookie(request.getCookies());
+        // 优先从cookie中获取token，没有的话从请求头里获取
         if (cookieStr == null && passTokenThroughHeader) {
             cookieStr = request.getHeader("X-LPT-USER-TOKEN");
         }
@@ -73,7 +76,7 @@ public class ValidateInterceptor implements HandlerInterceptor {
                 message = "Token不正确";
                 break loadOperator;
             }
-            Result<Operator> operatorResult = operatorService.loadOperator(userId, operator, response);
+            Result<Operator> operatorResult = operatorService.loadOperator(userId, operator, request, response);
             if (operatorResult.getState() == Result.FAIL) {
                 message = operatorResult.getMessage();
                 break loadOperator;
@@ -91,13 +94,15 @@ public class ValidateInterceptor implements HandlerInterceptor {
 
     @Nullable
     private String getTokenFromCookie(@NotNull Cookie[] cookies) {
+        // 注意，cookie中可能包含多个token，以最后一个为准
         if (cookies == null || cookies.length == 0)
             return null;
+        String token = null;
         for (int i = 0; i < cookies.length; ++i) {
             if (cookies[i].getName().equals("token"))
-                return cookies[i].getValue();
+                token = cookies[i].getValue();
         }
-        return null;
+        return token;
     }
 
     private void writeResponse(@NotNull HttpServletResponse response, String message) {

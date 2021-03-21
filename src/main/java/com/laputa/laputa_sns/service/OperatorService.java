@@ -20,15 +20,20 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.laputa.laputa_sns.common.Result.FAIL;
 import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
  * 操作者相关的服务
+ *
  * @author JQH
  * @since 上午 9:50 20/02/19
  */
@@ -43,8 +48,6 @@ public class OperatorService {
     private final NoticeService noticeService;
     private final RedisHelper<Operator> redisHelper;
 
-    private final int operatorTimeOut;
-
     private final Operator progOperator = ProgOperatorManager.register(OperatorService.class);
 
     public OperatorService(@Lazy UserService userService, @Lazy PermissionService permissionService, PostNewsService postNewsService, NoticeService noticeService, StringRedisTemplate redisTemplate, @NotNull Environment environment) {
@@ -55,12 +58,15 @@ public class OperatorService {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setFilterProvider(new SimpleFilterProvider().addFilter("OperatorFilter", SimpleBeanPropertyFilter
                 .filterOutAllExcept("user_id", "token", "permission_map", "unread_news_cnt", "unread_notice_cnt", "last_access_time")));
-        operatorTimeOut = Integer.valueOf(environment.getProperty("timeout.redis.operator"));
+        int operatorTimeOut = Integer.parseInt(Objects.requireNonNull(environment.getProperty("timeout.redis.operator")));
         this.redisHelper = new RedisHelper(RedisPrefix.OPERATOR_ONLINE, objectMapper, operatorTimeOut, null, null, null, null, Operator.class, redisTemplate);
     }
 
     @Value("${pass-token-through-header}")
     private boolean passTokenThroughHeader;
+
+    @Value("${pow-zero-length}")
+    private int powZeroLength;
 
     public Operator getOnlineOperator(Integer userId) {
         return redisHelper.getEntity(userId, false, false);
@@ -74,7 +80,7 @@ public class OperatorService {
         redisHelper.setEntity(operator, false);
     }
 
-    private void setToken(@NotNull Operator operator, @NotNull HttpServletResponse response) {
+    private void setToken(@NotNull Operator operator, @NotNull HttpServletRequest request, @NotNull HttpServletResponse response) {
         String token = CryptUtil.randUrlSafeStr(32, true);
         operator.setToken(token);
         if (operator.getUser() != null)
@@ -82,7 +88,14 @@ public class OperatorService {
         String cookieToken = operator.getUserId() + "@" + token;
         Cookie cookie = new Cookie("token", cookieToken);
         cookie.setPath("/");
-        cookie.setHttpOnly(true);
+        // cookie.setHttpOnly(true);
+        // 设置子域名共享cookie
+        String[] domainParts = request.getServerName().split("\\.");
+        if (domainParts.length >= 2) {
+            int len = domainParts.length;
+            String domainNamePrefix = domainParts[len - 2] + '.' + domainParts[len - 1];
+            cookie.setDomain(domainNamePrefix);
+        }
         // 一个月
         cookie.setMaxAge(2592000);
         //cookie.setSecure(true);
@@ -107,26 +120,55 @@ public class OperatorService {
             return operator;
     }
 
-    public Result<Operator> login(@NotNull User paramUser, HttpServletResponse response) {
-        Result<User> loginResult = userService.login(paramUser);
-        if (loginResult.getState() == FAIL)
-            return (Result<Operator>) (Result) loginResult;
-        User resUser = loginResult.getObject();
+    public Result<Operator> login(@NotNull User paramUser, HttpServletRequest request, HttpServletResponse response) {
+        User resUser;
+        if (paramUser.getQqOpenId() != null && paramUser.getId() != null) {
+            // 通过QQ登录，无需校验登录名和密码
+            resUser = paramUser;
+        } else {
+            Result<User> loginResult = userService.login(paramUser);
+            if (loginResult.getState() == FAIL)
+                return (Result<Operator>) (Result) loginResult;
+            resUser = loginResult.getObject();
+        }
         Operator operator = new Operator();
         operator.setUser(resUser).setFromLogin(true);
-        afterLogin(operator, response, false, false);
+        afterLogin(operator, request, response, false, false);
         return new Result(SUCCESS).setObject(operator);
     }
 
-    public Result<Operator> register(User paramUser, HttpServletResponse response) {
+    public Result<Operator> registerWithPow(User paramUser, String extra64, String rand, String calRes,
+                                            HttpServletRequest request, HttpServletResponse response) {
+        String nickName = paramUser.getNickName();
+        if (nickName == null) {
+            return new Result(FAIL).setErrorCode(1010130202).setMessage("用户名不能为空");
+        }
+        if (calRes == null || calRes.length() < powZeroLength) {
+            return new Result(FAIL).setErrorCode(1010130203).setMessage("工作量证明结果格式错误");
+        }
+        for (int i = 0; i < powZeroLength; ++i) {
+            if (calRes.charAt(i) != '0') {
+                return new Result(FAIL).setErrorCode(1010130204).setMessage("工作量证明结果验证失败");
+            }
+        }
+        String name64 = new String(Base64.getEncoder().encode(paramUser.getNickName().getBytes(StandardCharsets.UTF_8)));
+        String nameMd5 = CryptUtil.md5(name64);
+        String testRes = CryptUtil.md5(nameMd5 + extra64 + rand);
+        if (!testRes.equals(calRes)) {
+            return new Result(FAIL).setErrorCode(1010130204).setMessage("工作量证明结果与参数不符");
+        }
+        return register(paramUser, request, response);
+    }
+
+    public Result<Operator> register(User paramUser, HttpServletRequest request, HttpServletResponse response) {
         Operator operator = new Operator();
         operator.setUser(paramUser);
-        setToken(operator, response);
+        setToken(operator, request, response);
         Result<Integer> registerResult = userService.createUser(paramUser);
         if (registerResult.getState() == FAIL)
             return (Result<Operator>) (Result) registerResult;
         operator.setUserId(registerResult.getObject()).setFromLogin(true);
-        afterLogin(operator, response, false, true);
+        afterLogin(operator, request, response, false, true);
         return new Result(SUCCESS).setObject(operator);
     }
 
@@ -142,7 +184,7 @@ public class OperatorService {
         return Result.EMPTY_SUCCESS;
     }
 
-    private Result afterLogin(@NotNull Operator operator, HttpServletResponse response, boolean fromLoad, boolean fromRegister) {
+    private Result afterLogin(@NotNull Operator operator, HttpServletRequest request, HttpServletResponse response, boolean fromLoad, boolean fromRegister) {
         User user = operator.getUser();
         if (user.getState() != null && user.getState() > 0) {
             //该用户涉及管理权限
@@ -153,7 +195,7 @@ public class OperatorService {
             }
             operator.setPermissionMap(permissionMapResult.getObject());
         }
-        setToken(operator, response);
+        setToken(operator, request, response);
         //operator.setLastAccessTime(new Date().getTime()).setFromLogin(null);
         //更新数据库，增加登录次数
         Result afterLogin = userService.afterLogin(user, operator.getToken(), fromRegister);
@@ -166,14 +208,14 @@ public class OperatorService {
         return Result.EMPTY_SUCCESS;
     }
 
-    public Result<Operator> loadOperator(Integer userId, Operator operator, HttpServletResponse response) {
+    public Result<Operator> loadOperator(Integer userId, Operator operator, HttpServletRequest request, HttpServletResponse response) {
         if (operator == null)
             operator = getOnlineOperator(userId);
         if (operator == null)
             return new Result(FAIL).setErrorCode(1010130201).setMessage("用户离线");
         boolean fromLogin = operator.getFromLogin() != null && operator.getFromLogin();
         if (fromLogin) {
-            afterLogin(operator, response, true, false);
+            afterLogin(operator, request, response, true, false);
         } else {
             //获取用户基本信息
             Result<User> userResult = userService.readUserWithCounter(userId, operator);
@@ -189,7 +231,7 @@ public class OperatorService {
 
     /**
      * 获取操作者的动态和通知数量
-     * @param operator
+     *
      */
     private void pullNewsAndNoticeCnt(Operator operator) {
         long curTime = new Date().getTime();

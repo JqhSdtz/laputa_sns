@@ -27,10 +27,15 @@
 					发帖:{{ user.post_cnt }}
 				</a-col>
 			</a-row>
+			<a-row>
+				<a-col offset="2">
+					<ellipsis style="margin: 0.5rem 1rem" v-if="user.intro" :content="user.intro" :rows="2"/>
+				</a-col>
+			</a-row>
 			<van-divider style="margin: 5px 0"/>
 			<div style="height: 5px; width: 100%; background-color: #ECECEC"/>
 		</div>
-		<a-back-top :style="{bottom: '30px'}" :target="getElement"/>
+		<a-back-top v-show="showDrawer" style="bottom: 25px;" :style="{left: clientWidth - 60 + 'px'}" :target="getElement"/>
 		<post-list ref="postList" :post-of="'creator'" :creator-id="parseInt(userId)"
 		           :top-post-id="user.top_post_id" keep-scroll-top/>
 	</div>
@@ -38,22 +43,29 @@
 
 <script>
 import PostList from '@/components/post/post_list/PostList';
+import Ellipsis from '@/components/global/Ellipsis';
 import global from '@/lib/js/global';
 import lpt from "@/lib/js/laputa/laputa";
 import {Toast} from "vant";
+import {toRef} from "vue";
 
 export default {
 	name: 'UserHomePage',
 	components: {
-		PostList
+		PostList,
+		Ellipsis
 	},
 	props: {
 		userId: String
 	},
 	data() {
-		const user = global.states.userManager.get(parseInt(this.userId));
+		const user = global.states.userManager.get({
+			itemId: parseInt(this.userId)
+		});
 		return {
 			user,
+			showDrawer: toRef(global.states.blog, 'showDrawer'),
+			clientWidth: toRef(global.states.style, 'lptWidth'),
 			postListLoaded: false,
 			showSortTypeSelector: false,
 			showPopover: false
@@ -69,7 +81,7 @@ export default {
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
-		lpt.userServ.get({
+		lpt.userServ.getInfo({
 			consumer: this.lptConsumer,
 			param: {
 				userId: this.user.id

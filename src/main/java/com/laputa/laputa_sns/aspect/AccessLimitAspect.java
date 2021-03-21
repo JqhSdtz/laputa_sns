@@ -10,9 +10,11 @@ import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.util.RedisUtil;
 import com.laputa.laputa_sns.util.ResourceUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.reflections.Reflections;
@@ -74,6 +76,28 @@ public class AccessLimitAspect implements ApplicationRunner {
     public void point() {
     }
 
+    @Pointcut("@annotation(com.laputa.laputa_sns.annotation.NeedLogin)")
+    public void needLoginPoint() {
+    }
+
+    @Around("needLoginPoint()")
+    public Result testIfLogin(ProceedingJoinPoint joinPoint) throws Throwable {
+        Object[] args = joinPoint.getArgs();
+        boolean hasLogin = false;
+        for (int i = 0; i < args.length; ++i) {
+            if (args[i] instanceof Operator) {
+                Operator operator = (Operator) args[i];
+                hasLogin = operator.getUser() != null && !operator.getUserId().equals(-1);
+                break;
+            }
+        }
+        if (hasLogin) {
+            return (Result) joinPoint.proceed();
+        } else {
+            return new Result(Result.FAIL).setErrorCode(1010220202).setMessage("请求失败，该请求需要登录");
+        }
+    }
+
     @Around("point()")
     public Result parseAccessLimit(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature sign = (MethodSignature) joinPoint.getSignature();
@@ -111,7 +135,7 @@ public class AccessLimitAspect implements ApplicationRunner {
         if (result) {
             return (Result) joinPoint.proceed();
         } else {
-            return new Result(Result.FAIL).setErrorCode(1010220201).setMessage("请求过于频繁，请稍后再试");
+            return new Result(Result.FAIL).setErrorCode(1010220201).setMessage("请求过于频繁，请稍后再试").setOperator(operator);
         }
     }
 

@@ -60,6 +60,19 @@ public class Category extends AbstractBaseEntity implements Cloneable {
      */
     @JsonProperty("icon_img")
     private String iconImg;
+
+    /**
+     * 允许发帖的管理员等级，加载时根据父节点设置，同步父节点更新
+     */
+    @JsonProperty("allow_post_level")
+    private Integer allowPostLevel;
+
+    /**
+     * 帖子原本的允许发帖管理等级，为空则表示不限制，和数据库保持一致
+     */
+    @JsonIgnore
+    private Integer oriAllowPostLevel;
+
     /**
      * 本目录在父目录的展示顺序，由前端解析
      */
@@ -200,6 +213,11 @@ public class Category extends AbstractBaseEntity implements Cloneable {
     @JsonIgnore
     public boolean isValidSetTopPostParam() {
         return id != null && topPostId != null;
+    }
+
+    @JsonIgnore
+    public boolean isValidSetAllowPostLevelParam() {
+        return id != null && allowPostLevel != null;
     }
 
     @JsonIgnore

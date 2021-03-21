@@ -15,7 +15,7 @@ import java.io.IOException;
  */
 
 @RestController
-@RequestMapping(value = "/oss")
+@RequestMapping(value = "/api/oss")
 public class OSSController {
     private final OSSService ossService;
 

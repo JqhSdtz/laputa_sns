@@ -9,13 +9,15 @@
   },
   "dependencies": {
     "@ant-design/icons-vue": "^5.1.9",
-    "ant-design-vue": "^2.0.0-rc.8",
+    "@kangc/v-md-editor": "^2.2.2",
+    "ant-design-vue": "^2.0.1",
     "axios": "^0.21.1",
+    "clipboard": "^2.0.7",
     "core-js": "^3.6.5",
     "crypto-js": "^4.0.0",
     "javascript-time-ago": "^2.3.4",
     "spinkit": "^2.0.1",
-    "vant": "^3.0.6",
+    "vant": "^3.0.7",
     "vue": "^3.0.5",
     "vue-router": "^4.0.3",
     "vue3-json-viewer": "^1.0.4"

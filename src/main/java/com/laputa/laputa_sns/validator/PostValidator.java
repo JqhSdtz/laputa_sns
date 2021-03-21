@@ -1,5 +1,6 @@
 package com.laputa.laputa_sns.validator;
 
+import com.laputa.laputa_sns.model.entity.Category;
 import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.model.entity.Post;
 import com.laputa.laputa_sns.right.PostRight;
@@ -28,8 +29,12 @@ public class PostValidator {
         post.setRights(new PostRight());
         if (operator.getUserId().equals(-1))
             return;
-        if (post.getCreatorId().equals(operator.getUserId()))
-            post.getRights().setTop(true);
+        if (post.getCreatorId().equals(operator.getUserId())) {
+            post.getRights().setTopComment(true);
+            if (post.getEditable() != null && post.getEditable()) {
+                post.getRights().setEdit(true);
+            }
+        }
         //非公开的帖子删除需要根目录权限
         if (level == null)
             level = permissionService.readPermissionLevel(post.getCategoryIdForRight(), operator).getObject();
@@ -63,8 +68,20 @@ public class PostValidator {
         if (operator.getId().equals(-1))
             return false;
         Date talkBanTo = operator.getUser().getTalkBanTo();
-        if (talkBanTo != null && talkBanTo.before(new Date()))
+        if (talkBanTo != null && talkBanTo.after(new Date()))
             return false;
+        Integer permissionLevel = permissionService.readPermissionLevel(post.getCategoryId(), operator).getObject();
+        if (post.getType().equals(Post.TYPE_PUBLIC)) {
+            Integer allowPostLevel = post.getCategory().getAllowPostLevel();
+            if (allowPostLevel != null && (permissionLevel == null || permissionLevel < allowPostLevel)) {
+                return false;
+            }
+        }
+        if (post.getEditable() != null && post.getEditable()) {
+            if (!operator.isAdmin())
+                return false;
+            return permissionLevel != null && permissionLevel >= AdminLevel.CREATE_EDITABLE_POST;
+        }
         return true;
     }
 

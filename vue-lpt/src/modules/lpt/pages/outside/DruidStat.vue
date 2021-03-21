@@ -14,7 +14,7 @@ export default {
 	},
 	created() {
 		lpt.ajax({
-			url: lpt.baseUrl + '/druid/stat',
+			url: lpt.baseApiUrl + '/druid/stat',
 			success: (result) => {
 				this.statData = result.object;
 			}

@@ -57,6 +57,8 @@ public class BaseService<DaoType extends BaseDao<EntityType>, EntityType extends
      * 插入多条数据，返回插入成功的条数
      */
     public int insertList(@NotNull List<EntityType> entityList) {
+        if (entityList.isEmpty())
+            return 0;
         int res = 0;
         if (entityList.size() < insertNumLimit)
             res = dao.insertList(entityList);

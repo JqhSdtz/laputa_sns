@@ -43,9 +43,13 @@ export default {
 	data() {
 		let comment;
 		if (this.type === lpt.commentServ.level1) {
-			comment = global.states.commentL1Manager.get(this.commentId)
+			comment = global.states.commentL1Manager.get({
+				itemId: this.commentId
+			})
 		} else {
-			comment = global.states.commentL2Manager.get(this.commentId)
+			comment = global.states.commentL2Manager.get({
+				itemId: this.commentId
+			})
 		}
 		return {
 			comment

@@ -6,9 +6,17 @@
 			</keep-alive>
 		</router-view>
 		<loading-area id="loading-area"></loading-area>
+		<a-drawer :visible="showDrawer" placement="left" :closable="false"
+		          @close="showDrawer = false" width="33%">
+			<router-view v-slot="{ Component }" name="leftDrawer">
+				<keep-alive :exclude="noCacheList">
+					<component :is="Component"/>
+				</keep-alive>
+			</router-view>
+		</a-drawer>
+		<float-menu id="main-bar"/>
+		<prompt-dialog ref="prompt"/>
 	</a-config-provider>
-	<float-menu id="main-bar"/>
-	<prompt-dialog ref="prompt"/>
 </template>
 
 <script>
@@ -28,13 +36,23 @@ export default {
 		LoadingArea,
 		PromptDialog
 	},
+	watch: {
+		$route() {
+			this.checkRoute();
+		},
+		showDrawer(newValue) {
+			global.states.blog.showDrawer = newValue;
+		}
+	},
 	data() {
 		return {
+			showDrawer: false,
 			locale: zhCN,
 			noCacheList
 		};
 	},
 	created() {
+		this.checkRoute();
 		registerCheckSignFailCallback(() => {
 			// 注册全局未登录提示
 			const ref = this;
@@ -47,11 +65,24 @@ export default {
 				}
 			});
 		});
+		global.events.on('menuClick',(param) => {
+			if (param.name === 'mine') {
+				this.showDrawer = true;
+			}
+		});
 	},
 	mounted() {
 		global.methods.prompt = this.$refs.prompt.prompt;
+		global.states.style.lptWidth = document.body.clientWidth * 0.33;
 	},
 	methods: {
+		checkRoute() {
+			if (this.$route.name !== 'home') {
+				this.showDrawer = true;
+			} else {
+				this.showDrawer = false;
+			}
+		},
 		getPopupContainer(el, dialogContext) {
 			if (dialogContext) {
 				return dialogContext.getDialogWrap();
@@ -81,5 +112,9 @@ body {
 	position: fixed;
 	left: 5%;
 	bottom: 11%;
+}
+
+.ant-drawer-body {
+	padding: 0;
 }
 </style>

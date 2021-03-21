@@ -14,6 +14,7 @@ import java.util.Date;
 
 /**
  * 用户
+ *
  * @author JQH
  * @since 上午 11:49 20/02/05
  */
@@ -51,9 +52,12 @@ public class User extends AbstractBaseEntity {
     @JsonIgnore
     private String token;
 
-    @JsonProperty("wx_unionid")
+    @JsonIgnore
     private String wxUnionId;
     private String email;
+
+    @JsonIgnore
+    private String qqOpenId;
     /**
      * 用户的学校信息
      */
@@ -136,7 +140,7 @@ public class User extends AbstractBaseEntity {
 
     @JsonProperty("post_cnt")
     public Long getPostCnt() {
-        return postCnt == null ? 0 :postCnt;
+        return postCnt == null ? 0 : postCnt;
     }
 
     @JsonProperty("followers_cnt")
@@ -150,15 +154,33 @@ public class User extends AbstractBaseEntity {
     }
 
     @JsonIgnore
-    private boolean validateNickName() {
-        if (nickName == null || nickName.length() < 2 || nickName.length() > 12)
+    private boolean validateNickName(boolean format) {
+        if (nickName == null || nickName.length() < 2)
             return false;
+        if (nickName.length() > 40) {
+            if (!format)
+                return false;
+            nickName = nickName.substring(0, 40);
+        }
+        StringBuilder builder = null;
+        if (format)
+            builder = new StringBuilder();
         for (int i = 0; i < nickName.length(); ++i) {
             char ch = nickName.charAt(i);
-            for (int j = 0; j < invalidChar.length; ++j)
-                if (ch == invalidChar[j])
-                    return false;
+            boolean valid = true;
+            for (int j = 0; j < invalidChar.length; ++j) {
+                if (ch == invalidChar[j]) {
+                    if (!format)
+                        return false;
+                    valid = false;
+                    break;
+                }
+            }
+            if (format && valid)
+                builder.append(ch);
         }
+        if (format)
+            nickName = builder.toString();
         return true;
     }
 
@@ -178,16 +200,29 @@ public class User extends AbstractBaseEntity {
     }
 
     @JsonIgnore
-    public boolean isValidUpdateNickNameParam() {
-        return validateNickName();
+    public boolean isValidUpdateNickNameParam(boolean format) {
+        return validateNickName(format);
     }
 
     @JsonIgnore
-    public boolean isValidInsertParam() {
-        if (!validateNickName())//验证用户名是否合法
+    public boolean isValidUpdatePasswordParam() {
+        return password != null;
+    }
+
+    @JsonIgnore
+    public boolean isValidInsertParam(boolean format) {
+        if (!validateNickName(format)) {
+            // 验证用户名是否合法
             return false;
-        if (type != null || state != null)//禁止用户手动设置type和state
+        }
+        if (type != null || state != null) {
+            // 禁止用户手动设置type和state
             return false;
+        }
+        if (qqOpenId != null) {
+            // 通过QQ登录，无需输入密码
+            return true;
+        }
         return password != null && password.length() == 32;
     }
 

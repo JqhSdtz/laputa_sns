@@ -4,17 +4,29 @@
 		<pre class="content" v-if="isShowFullText" @click="showPostDetail">
 			<p v-if="postType === 'normal'">{{ fullText }}</p>
 			<admin-ops-record v-if="postType === 'amOps' && payload" :payload="payload"/>
+			<v-md-preview v-if="postType === 'md'" :text="fullText"></v-md-preview>
 		</pre>
 		<pre class="content" v-else @click="showPostDetail">{{ postContent }}</pre>
 		<p v-if="post.full_text_id && !isShowFullText" class="full-text-btn" @click.stop="showFullText">
 			查看全文
 		</p>
+		<p v-if="isShowFullText" class="full-text-btn" @click.stop="hideFullText">
+			收起全文
+		</p>
 		<div v-if="imgList.length > 0">
-			<a v-for="(img, idx) in imgList" :key="img" @click="showImgPreview(idx)" style="display: inline; margin-left: 1em">
-				<van-image :src="img" width="50" height="50" />
+			<a v-for="(img, idx) in imgList" :key="img" @click="showImgPreview(idx)"
+			   style="display: inline; margin-left: 1em">
+				<van-image :src="img" width="50" height="50"/>
 			</a>
 		</div>
-		<category-path v-if="post.type_str === 'public'" :path-list="post.category_path" class="category-path"/>
+		<a-row tyle="flex" justify="end">
+			<a-col pull="1">
+				<p v-if="post.editable" class="editable-label">可被修改</p>
+			</a-col>
+			<a-col>
+				<category-path v-if="post.type_str === 'public'" :path-list="post.category_path" class="category-path"/>
+			</a-col>
+		</a-row>
 		<slot/>
 	</div>
 </template>
@@ -22,7 +34,7 @@
 <script>
 import lpt from '@/lib/js/laputa/laputa';
 import CategoryPath from '@/components/category/CategoryPath';
-import { ImagePreview } from 'vant';
+import {ImagePreview} from 'vant';
 import AdminOpsRecord from '@/components/post/item/parts/AdminOpsRecord';
 
 const typeReg = /tp:([a-zA-Z]*)#/;
@@ -51,9 +63,6 @@ export default {
 		let postType = 'normal';
 		if (typeReg.test(this.post.content)) {
 			postType = this.post.content.match(typeReg)[1];
-		}
-		if (postType === 'amOps') {
-			// 管理员操作记录帖
 			postContent = this.post.content.replace(typeReg, '');
 		}
 		return {
@@ -102,20 +111,27 @@ export default {
 		},
 		showFullText() {
 			const ref = this;
-			lpt.postServ.getFullText({
-				consumer: this.lptConsumer,
-				param: {
-					fullTextId: this.post.full_text_id
-				},
-				success(result) {
-					ref.isShowFullText = true;
-					if (ref.postType === 'amOps') {
-						ref.processAmOps(result.object);
-					} else {
-						ref.fullText = result.object;
+			if (this.fullText) {
+				this.isShowFullText = true;
+			} else {
+				lpt.postServ.getFullText({
+					consumer: this.lptConsumer,
+					param: {
+						fullTextId: this.post.full_text_id
+					},
+					success(result) {
+						ref.isShowFullText = true;
+						if (ref.postType === 'amOps') {
+							ref.processAmOps(result.object);
+						} else {
+							ref.fullText = result.object;
+						}
 					}
-				}
-			});
+				});
+			}
+		},
+		hideFullText() {
+			this.isShowFullText = false;
 		}
 	}
 }
@@ -136,9 +152,14 @@ export default {
 	word-break: normal;
 }
 
+.editable-label {
+	color: #6c757d;
+	margin-left: 1rem;
+	font-size: 0.75rem;
+}
+
 .category-path {
 	color: #6c757d;
-	text-align: right;
 	margin-right: 1rem;
 	font-size: 0.75rem;
 }

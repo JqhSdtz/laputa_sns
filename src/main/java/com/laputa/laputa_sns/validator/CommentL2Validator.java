@@ -36,7 +36,7 @@ public class CommentL2Validator {
         if (operator.getId().equals(-1))
             return false;
         Date talkBanTo = operator.getUser().getTalkBanTo();
-        if (talkBanTo != null && talkBanTo.before(new Date()))
+        if (talkBanTo != null && talkBanTo.after(new Date()))
             return false;
         return true;
     }

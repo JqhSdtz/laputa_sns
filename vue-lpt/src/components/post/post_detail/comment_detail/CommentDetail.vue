@@ -38,7 +38,9 @@ export default {
 	data() {
 		return {
 			mainBarHeight: global.vars.style.postDetailBarHeight,
-			comment: global.states.commentL1Manager.get(this.commentId)
+			comment: global.states.commentL1Manager.get({
+				itemId: this.commentId
+			})
 		}
 	},
 	created() {

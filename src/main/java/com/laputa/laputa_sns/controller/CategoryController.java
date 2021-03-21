@@ -23,7 +23,7 @@ import java.util.Set;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/category")
+@RequestMapping(value = "/api/category")
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -78,6 +78,15 @@ public class CategoryController {
             return categoryService.setCategoryTopPost(category, false, operator).setOperator(operator);
         if ("cancel".equals(action))
             return categoryService.setCategoryTopPost(category, true, operator).setOperator(operator);
+        return Result.EMPTY_FAIL;
+    }
+
+    @RequestMapping(value = "/allow_post_level/{action}", method = RequestMethod.PATCH)
+    public Result setAllowPostLevel(@RequestBody Category category, @PathVariable String action, @RequestAttribute Operator operator) {
+        if ("create".equals(action))
+            return categoryService.setAllowPostLevel(category, false, operator).setOperator(operator);
+        if ("cancel".equals(action))
+            return categoryService.setAllowPostLevel(category, true, operator).setOperator(operator);
         return Result.EMPTY_FAIL;
     }
 

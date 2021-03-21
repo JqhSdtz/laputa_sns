@@ -34,12 +34,14 @@ public class AdminOpsRecord extends AbstractBaseEntity {
     public static final int TYPE_CREATE_PERMISSION = 13;
     public static final int TYPE_UPDATE_PERMISSION = 14;
     public static final int TYPE_DELETE_PERMISSION = 15;
+    public static final int TYPE_SET_ALLOW_POST_LEVEL = 16;
+    public static final int TYPE_CANCEL_ALLOW_POST_LEVEL = 17;
 
     private String entityType = "ADMIN_REC";
 
     private static final String[] typeStr = {"删帖", "删除评论", "删除评论回复", "创建目录", "删除目录", "更改父目录",
             "更新目录信息", "设置目录置顶贴", "取消目录置顶贴", "设置默认子目录", "取消默认子目录", "修改目录排序号",
-            "修改目录预缓存值", "添加管理员", "修改管理员权限", "删除管理员"};
+            "修改目录预缓存值", "添加管理员", "修改管理员权限", "删除管理员", "设置允许发帖等级", "取消允许发帖等级"};
 
     private User creator;
 

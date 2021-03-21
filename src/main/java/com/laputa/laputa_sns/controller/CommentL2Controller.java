@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 下午 4:28 20/02/29
  */
 @RestController
-@RequestMapping(value = "/comment/l2")
+@RequestMapping(value = "/api/comment/l2")
 public class CommentL2Controller {
 
     private final CommentL2Service commentL2Service;

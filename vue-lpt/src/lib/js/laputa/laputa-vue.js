@@ -2,6 +2,7 @@ import lpt from '@/lib/js/laputa/laputa';
 import global from '@/lib/js/global';
 import globalDirectives from '@/lib/js/global/global-directives';
 import globalMethods from '@/lib/js/global/global-methods';
+import {notification} from 'ant-design-vue';
 
 lpt.event.on('onCurOperatorChange', operator => {
     // 不能直接替换operator对象，否则会失去响应性
@@ -10,6 +11,21 @@ lpt.event.on('onCurOperatorChange', operator => {
 lpt.event.on('pushGlobalBusy', isBusy => {
     // 注册全局繁忙状态响应式属性
     global.events.emit('pushGlobalBusy', isBusy);
+});
+
+global.events.on('signUp', (msg) => {
+    notification.success({
+        message: '注册成功',
+        description: msg || '快来发现新世界！',
+        duration: 1.5
+    });
+});
+
+global.events.on('signIn', () => {
+    notification.open({
+        message: '登录成功',
+        duration: 1
+    });
 });
 
 let checkSignFailCallback;

@@ -227,7 +227,7 @@ function initLaputa(option) {
         const serv = {
             querior: lpt.createQuerior(),
             queryAdminOps: wrap(function (param) {
-                param.url = lpt.baseUrl + '/admin_ops/list';
+                param.url = lpt.baseApiUrl + '/admin_ops/list';
                 return serv.querior.query(param);
             })
         };
@@ -237,15 +237,15 @@ function initLaputa(option) {
     function initOperatorService() {
         const serv = {
             login: wrap(function (param) {
-                param.url = lpt.baseUrl + '/operator/login';
+                param.url = lpt.baseApiUrl + '/operator/login';
                 return lpt.post(param);
             }),
             logout: wrap(function (param) {
-                param.url = lpt.baseUrl + '/operator/logout';
+                param.url = lpt.baseApiUrl + '/operator/logout';
                 return lpt.post(param);
             }),
             register: wrap(function (param) {
-                param.url = lpt.baseUrl + '/operator/register';
+                param.url = lpt.baseApiUrl + '/operator/register';
                 return lpt.post(param);
             }),
             setCurrent: wrap(function (_operator) {
@@ -271,37 +271,37 @@ function initLaputa(option) {
     function initUserService() {
         const serv = {
             get: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/' + param.data.user_id;
+                param.url = lpt.baseApiUrl + '/user/' + param.data.user_id;
                 return lpt.get(param);
             }),
             checkName: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/check_name/' + param.data.userName;
+                param.url = lpt.baseApiUrl + '/user/check_name/' + param.data.userName;
                 return lpt.get(param);
             }),
             setInfo: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/info';
+                param.url = lpt.baseApiUrl + '/user/info';
                 const operator = lpt.operatorServ.getCurrent();
                 param.data.id = operator.user_id;
                 return lpt.patch(param);
             }),
             setTopPost: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/top_post/create';
+                param.url = lpt.baseApiUrl + '/user/top_post/create';
                 return lpt.patch(param);
             }),
             cancelTopPost: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/top_post/cancel';
+                param.url = lpt.baseApiUrl + '/user/top_post/cancel';
                 return lpt.patch(param);
             }),
             getRecentVisit: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/recent_visit_categories';
+                param.url = lpt.baseApiUrl + '/user/recent_visit_categories';
                 return lpt.get(param);
             }),
             pinRecentVisit: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/pin_category/' + param.data.categoryId;
+                param.url = lpt.baseApiUrl + '/user/pin_category/' + param.data.categoryId;
                 return lpt.post(param);
             }),
             unpinRecentVisit: wrap(function (param) {
-                param.url = lpt.baseUrl + '/user/unpin_category/' + param.data.categoryId;
+                param.url = lpt.baseApiUrl + '/user/unpin_category/' + param.data.categoryId;
                 return lpt.post(param);
             })
         };
@@ -322,29 +322,29 @@ function initLaputa(option) {
             }),
             queryForCategory: wrap(function (param) {
                 const queryType = param.data.queryType || 'popular';
-                param.url = lpt.baseUrl + '/post/' + queryType;
+                param.url = lpt.baseApiUrl + '/post/' + queryType;
                 param.data.category_id = param.data.category_id || currentCategory.id;
                 return serv.querior.query(param);
             }),
             queryForCreator: wrap(function (param) {
-                param.url = lpt.baseUrl + '/post/creator';
+                param.url = lpt.baseApiUrl + '/post/creator';
                 return serv.querior.query(param);
             }),
             getFullText: wrap(function (param) {
-                param.url = lpt.baseUrl + '/post/full_text/' + param.data.fullTextId;
+                param.url = lpt.baseApiUrl + '/post/full_text/' + param.data.fullTextId;
                 return lpt.get(param);
             }),
             create: wrap(function (param) {
                 const type = param.data.type || 'public';
-                param.url = lpt.baseUrl + '/post/' + type;
+                param.url = lpt.baseApiUrl + '/post/' + type;
                 return lpt.post(param);
             }),
             setTopComment: wrap(function (param) {
-                param.url = lpt.baseUrl + '/post/top_comment/create';
+                param.url = lpt.baseApiUrl + '/post/top_comment/create';
                 return lpt.patch(param);
             }),
             cancelTopComment: wrap(function (param) {
-                param.url = lpt.baseUrl + '/post/top_comment/cancel';
+                param.url = lpt.baseApiUrl + '/post/top_comment/cancel';
                 return lpt.patch(param);
             })
         };
@@ -365,14 +365,14 @@ function initLaputa(option) {
                 queriorMap.clear();
             },
             query: wrap(function (param) {
-                param.url = `${lpt.baseUrl}/comment/${param.data.type}/${param.data.rankType}/`;
+                param.url = `${lpt.baseApiUrl}/comment/${param.data.type}/${param.data.rankType}/`;
                 const data = param.data;
                 const type = data.type;
                 data.type = undefined;
                 return serv.getQuerior(type, data.parent_id).query(param);
             }),
             create: wrap(function (param) {
-                param.url = lpt.baseUrl + '/comment/' + param.data.type;
+                param.url = lpt.baseApiUrl + '/comment/' + param.data.type;
                 return lpt.post(param);
             })
         };
@@ -383,11 +383,11 @@ function initLaputa(option) {
         const serv = {
             delete: wrap(function (param) {
                 if (param.data.type == 'POST') {
-                    param.url = lpt.baseUrl + '/post';
+                    param.url = lpt.baseApiUrl + '/post';
                 } else if (param.data.type == 'CML1') {
-                    param.url = lpt.baseUrl + '/comment/l1';
+                    param.url = lpt.baseApiUrl + '/comment/l1';
                 } else if (param.data.type == 'CML2') {
-                    param.url = lpt.baseUrl + '/comment/l2';
+                    param.url = lpt.baseApiUrl + '/comment/l2';
                 } else
                     return;
                 return lpt.delete(param);
@@ -399,43 +399,43 @@ function initLaputa(option) {
     function initCategoryService() {
         const serv = {
             setTopPost: wrap(function (param) {
-                param.url = lpt.baseUrl + '/category/top_post/' + (param.data.isCancel ? 'cancel' : 'create');
+                param.url = lpt.baseApiUrl + '/category/top_post/' + (param.data.isCancel ? 'cancel' : 'create');
                 return lpt.patch(param);
             }),
             setCacheNum: wrap(function (param) {
-                param.url = lpt.baseUrl + '/category/cache_num';
+                param.url = lpt.baseApiUrl + '/category/cache_num';
                 return lpt.patch(param);
             }),
             setDispSeq: wrap(function (param) {
-                param.url = lpt.baseUrl + '/category/disp_seq';
+                param.url = lpt.baseApiUrl + '/category/disp_seq';
                 return lpt.patch(param);
             }),
             setDefaultSub: wrap(function (param) {
-                param.url = lpt.baseUrl + '/category/def_sub';
+                param.url = lpt.baseApiUrl + '/category/def_sub';
                 return lpt.patch(param);
             }),
             setParent: wrap(function (param) {
-                param.url = lpt.baseUrl + '/category/parent';
+                param.url = lpt.baseApiUrl + '/category/parent';
                 return lpt.patch(param);
             }),
             get: wrap(function (param) {
-                param.url = lpt.baseUrl + '/category/' + param.data.id;
+                param.url = lpt.baseApiUrl + '/category/' + param.data.id;
                 return lpt.get(param);
             }),
             create: wrap(function (param) {
-                param.url = lpt.baseUrl + '/category';
+                param.url = lpt.baseApiUrl + '/category';
                 return lpt.post(param);
             }),
             delete: wrap(function (param) {
-                param.url = lpt.baseUrl + '/category/';
+                param.url = lpt.baseApiUrl + '/category/';
                 return lpt.delete(param);
             }),
             getRoots: wrap(function (param) {
-                param.url = lpt.baseUrl + '/category/roots';
+                param.url = lpt.baseApiUrl + '/category/roots';
                 return lpt.get(param);
             }),
             getDirectSub: wrap(function (param) {
-                param.url = lpt.baseUrl + '/category/direct_sub/' + param.data.categoryId;
+                param.url = lpt.baseApiUrl + '/category/direct_sub/' + param.data.categoryId;
                 return lpt.get(param);
             })
         };
@@ -446,19 +446,19 @@ function initLaputa(option) {
         const serv = {
             querior: lpt.createQuerior(),
             queryFollower: wrap(function (param) {
-                param.url = lpt.baseUrl + '/follow/follower';
+                param.url = lpt.baseApiUrl + '/follow/follower';
                 return serv.querior.query(param);
             }),
             getFollowing: wrap(function (param) {
-                param.url = lpt.baseUrl + '/follow/following/' + param.data.userId;
+                param.url = lpt.baseApiUrl + '/follow/following/' + param.data.userId;
                 return lpt.get(param);
             }),
             follow: wrap(function (param) {
-                param.url = lpt.baseUrl + '/follow';
+                param.url = lpt.baseApiUrl + '/follow';
                 return lpt.post(param);
             }),
             unFollow: wrap(function (param) {
-                param.url = lpt.baseUrl + '/follow';
+                param.url = lpt.baseApiUrl + '/follow';
                 return lpt.delete(param);
             })
         };
@@ -479,11 +479,11 @@ function initLaputa(option) {
                 queriorMap.clear();
             },
             query: wrap(function (param) {
-                param.url = lpt.baseUrl + '/forward/list';
+                param.url = lpt.baseApiUrl + '/forward/list';
                 return serv.getQuerior(param.data.sup_id).query(param);
             }),
             create: wrap(function (param) {
-                param.url = lpt.baseUrl + '/forward';
+                param.url = lpt.baseApiUrl + '/forward';
                 return lpt.post(param);
             })
         };
@@ -494,15 +494,15 @@ function initLaputa(option) {
         const serv = {
             querior: lpt.createQuerior(),
             query: wrap(function (param) {
-                param.url = lpt.baseUrl + '/like/list/' + param.data.type;
+                param.url = lpt.baseApiUrl + '/like/list/' + param.data.type;
                 return serv.querior.query(param);
             }),
             like: wrap(function (param) {
-                param.url = lpt.baseUrl + '/like/' + param.data.type;
+                param.url = lpt.baseApiUrl + '/like/' + param.data.type;
                 return lpt.post(param);
             }),
             unlike: wrap(function (param) {
-                param.url = lpt.baseUrl + '/like/' + param.data.type;
+                param.url = lpt.baseApiUrl + '/like/' + param.data.type;
                 return lpt.delete(param);
             })
         };

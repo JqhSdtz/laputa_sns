@@ -3,6 +3,7 @@ package com.laputa.laputa_sns.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.laputa.laputa_sns.annotation.NeedLogin;
 import com.laputa.laputa_sns.common.*;
 import com.laputa.laputa_sns.dao.UserDao;
 import com.laputa.laputa_sns.helper.QueryHelper;
@@ -102,6 +103,10 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
 
     private int updateRecvSetting(UserRecvSetting recvSetting) {
         return dao.updateRecvSetting(recvSetting);
+    }
+
+    private int updatePassword(User user) {
+        return dao.updatePassword(user);
     }
 
     @Override
@@ -294,13 +299,13 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
      * 创建用户
      */
     public Result<Integer> createUser(@NotNull User user) {
-        if (!user.isValidInsertParam())
+        if (!user.isValidInsertParam(true))
             return new Result(FAIL).setErrorCode(1010020203).setMessage("操作错误，参数不合法");
         Result checkNameResult = checkNickName(user.getNickName());
         if (checkNameResult.getState() == FAIL)
             return checkNameResult;
         user.setPwdSalt(CryptUtil.randUrlSafeStr(32, true));
-        user.setPassword(CryptUtil.md5(user.getPassword() + user.getPwdSalt(), true));
+        user.setPassword(CryptUtil.md5(user.getPassword() + user.getPwdSalt()));
         int res = insertOne(user);
         if (res == -1)
             return new Result(FAIL).setErrorCode(1010020104).setMessage("数据库操作失败");
@@ -315,6 +320,15 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
             return new Result(FAIL).setErrorCode(1010020205).setMessage("数据库操作失败");
         redisHelper.setEntity(user, false);
 //        setCounter(user);
+        return new Result(SUCCESS).setObject(user);
+    }
+
+    public Result<User> readUserWithQqOpenId(String openId) {
+        User queryEntity = new User().setQqOpenId(openId).setWithTokenInfo(true).setFromLogin(true);
+        User user = selectOne(queryEntity);
+        if (user != null) {
+            redisHelper.setEntity(user, false);
+        }
         return new Result(SUCCESS).setObject(user);
     }
 
@@ -393,7 +407,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         User resUser = selectOne(paramUser);
         if (resUser == null || resUser.getPassword() == null || resUser.getPwdSalt() == null)
             return new Result(FAIL).setErrorCode(1010020208).setMessage("数据库操作失败");
-        String testPwd = CryptUtil.md5(paramUser.getPassword() + resUser.getPwdSalt(), true);
+        String testPwd = CryptUtil.md5(paramUser.getPassword() + resUser.getPwdSalt());
         if (!testPwd.equals(resUser.getPassword()))
             return new Result(FAIL).setErrorCode(1010130209).setMessage("密码错误");
         return new Result(SUCCESS).setObject(resUser);
@@ -453,7 +467,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
     }
 
     public Result updateUserName(@NotNull User paramUser, @NotNull Operator operator) {
-        if (!paramUser.isValidUpdateNickNameParam())
+        if (!paramUser.isValidUpdateNickNameParam(true))
             return new Result(FAIL).setErrorCode(1010020215).setMessage("操作错误，参数不合法");
         String newName = paramUser.getNickName();
         Result checkNameResult = checkNickName(newName);
@@ -469,6 +483,22 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         return Result.EMPTY_SUCCESS;
     }
 
+    @NeedLogin
+    public Result updatePassword(@NotNull User paramUser, @NotNull Operator operator) {
+        if (!paramUser.isValidUpdatePasswordParam())
+            return new Result(FAIL).setErrorCode(1010020225).setMessage("操作错误，参数不合法");
+        paramUser.setWithPwdInfo(true).setFromLogin(true).setId(operator.getUserId());
+        User resUser = selectOne(paramUser);
+        if (resUser == null || resUser.getPassword() == null || resUser.getPwdSalt() == null)
+            return new Result(FAIL).setErrorCode(1010020126).setMessage("数据库操作失败");
+        paramUser.setPassword(CryptUtil.md5(paramUser.getPassword() + resUser.getPwdSalt()));
+        int res = updatePassword(paramUser);
+        if (res == 0)
+            return new Result(FAIL).setErrorCode(1010020227).setMessage("数据库操作失败");
+        return Result.EMPTY_SUCCESS;
+    }
+
+    @NeedLogin
     public Result updateRecvSetting(@NotNull UserRecvSetting param, Operator operator) {
         if (!param.isValidUpdateParam())
             return new Result(FAIL).setErrorCode(1010020217).setMessage("操作错误，参数不合法");

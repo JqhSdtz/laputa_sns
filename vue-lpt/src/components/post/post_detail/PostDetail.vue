@@ -24,7 +24,7 @@
 			<comment-detail v-if="showCommentDetail" :comment-id="curCommentDetailId"/>
 		</div>
 		<input-panel :post-id="post.id"/>
-		<bottom-bar v-show="!showCommentDetail" style="position: fixed; bottom: 0;" :style="{height: mainBarHeight + 'px'}"
+		<bottom-bar v-show="!showCommentDetail" style="position: absolute; bottom: 0; left: 0" :style="{height: mainBarHeight + 'px'}"
 		            :post-id="post.id"/>
 	</template>
 </template>
@@ -65,7 +65,9 @@ export default {
 		this.postDetailEvents = createEventBus();
 		return {
 			mainBarHeight: global.vars.style.postDetailBarHeight,
-			post: global.states.postManager.get(this.postId),
+			post: global.states.postManager.get({
+				itemId: this.postId
+			}),
 			curTabKey: 'comment',
 			showCommentDetail: false,
 			curCommentDetailId: -1
@@ -73,7 +75,9 @@ export default {
 	},
 	watch: {
 		postId(newValue) {
-			this.post = global.states.postManager.get(newValue);
+			this.post = global.states.postManager.get({
+				itemId: newValue
+			});
 			this.init();
 			this.forceReload();
 		}

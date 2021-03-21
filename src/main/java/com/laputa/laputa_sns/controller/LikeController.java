@@ -16,7 +16,7 @@ import java.util.List;
  */
 
 @RestController
-@RequestMapping(value = "/like")
+@RequestMapping(value = "/api/like")
 public class LikeController {
 
     private final LikeRecordService likeRecordService;

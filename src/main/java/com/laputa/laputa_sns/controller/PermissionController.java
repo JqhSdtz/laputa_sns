@@ -16,7 +16,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/permission")
+@RequestMapping(value = "/api/permission")
 public class PermissionController {
 
     private final PermissionService permissionService;

@@ -51,25 +51,38 @@ function initItemManager(param) {
         });
         return itemList;
     }
-    itemManager.get = function (itemId, callback) {
-        const id = param.notIntegerId ? itemId : parseInt(itemId);
+    itemManager.get = function (getParam) {
+        const id = param.notIntegerId ? getParam.itemId : parseInt(getParam.itemId);
         let res = itemMap.get(id);
+        const doRequest = () => {
+            if (param.getRequest) {
+                return param.getRequest(id).then((item) => {
+                    const itemRes = itemManager.add(item);
+                    getParam.success && getParam.success(itemRes);
+                    return Promise.resolve(itemRes);
+                }).catch((error) => {
+                    getParam.fail && getParam.fail(error);
+                });
+            } else {
+                getParam.success && getParam.success(res)
+                return Promise.resolve(res);
+            }
+        };
+        let promise;
         if (!res) {
             const temp = param.getDefault(id);
             temp.isDefault = true;
             res = itemManager.add(temp);
-            if (param.getRequest) {
-                param.getRequest(id).then((item) => {
-                    const itemRes = itemManager.add(item);
-                    callback && callback(itemRes);
-                });
-            } else {
-                callback && callback(res);
-            }
+            promise = doRequest();
         } else {
-            callback && callback(res);
+            if (getParam.filter && !getParam.filter(res)) {
+                promise = doRequest();
+            } else {
+                getParam.success && getParam.success(res)
+                promise = Promise.resolve(res);
+            }
         }
-        return res;
+        return getParam.getPromise ? promise : res;
     }
     return itemManager;
 }
@@ -131,6 +144,14 @@ const postManager = initItemManager({
     },
     getDefault(id) {
         return lpt.postServ.getDefaultPost(id);
+    },
+    getRequest(id) {
+        return lpt.postServ.get({
+            objectOnly: true,
+            param: {
+                postId: id
+            }
+        });
     }
 });
 
@@ -176,6 +197,16 @@ const states = {
     }),
     curOperator: wrap({
         default: lpt.operatorServ.getCurrent()
+    }),
+    style: wrap({
+        default: {
+            lptWidth: document.body.clientWidth
+        }
+    }),
+    blog: wrap({
+        default: {
+            showDrawer: true
+        }
     }),
     hasSigned: computed(() => states.curOperator.user.id !== -1),
     postManager,

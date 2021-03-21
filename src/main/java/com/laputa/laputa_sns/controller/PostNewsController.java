@@ -14,7 +14,7 @@ import java.util.List;
  */
 
 @RestController
-@RequestMapping(value = "/news")
+@RequestMapping(value = "/api/news")
 public class PostNewsController {
 
     private final PostNewsService postNewsService;

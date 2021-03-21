@@ -1,6 +1,6 @@
 <template>
-	<template v-if="forceReloadFlag">
-		<div class="category-area" :style="{height: scrollHeight, position: 'relative'}">
+	<template v-if="forceReloadFlag && showDrawer">
+		<div id="category-area" :style="{height: scrollHeight, position: 'relative'}">
 			<div ref="categoryInfoArea" id="main-area">
 				<div style="height: 200px; width: 100%; background-size: cover;"
 				     :style="{backgroundImage: `linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)), url(${coverImgUrl})`}"/>
@@ -21,17 +21,17 @@
 			                    v-show="curTabKey === 'postList'"
 			                    :button-style="{left: clientWidth - 100 + 'px'}" :auto-hide="isTabFixed" offset="4rem"
 			                    :hide-offset-base="mainAreaHeight" v-model:sort-type="sortType"/>
-			<float-publish-button v-if="category.allow_user_post && postListLoaded"
+			<float-publish-button v-if="hasPublishRight && postListLoaded"
 			                      :style="{left: clientWidth - 60 + 'px'}" :auto-hide="isTabFixed"
 			                      :category="category" :hide-offset-base="mainAreaHeight"/>
+			<a-back-top style="left: 30px; bottom: 2rem;" :target="getElement"/>
 			<div ref="middleBar" id="middle-bar" style="width: 100%;height: 100%">
 				<van-tabs v-model:active="curTabKey" swipeable sticky lazy-render @scroll="onScroll">
-					<van-tab name="postList" title="帖子">
+					<van-tab ref="postArea" name="postList" title="帖子">
 						<sort-type-selector class="sort-type-selector" v-if="postListLoaded && !isTabFixed"
 						                    :button-style="{left: clientWidth - 100 + 'px'}" :auto-hide="false"
 						                    offset="0.75rem"
 						                    v-model:sort-type="sortType"/>
-						<a-back-top :style="{bottom: 10 + 'px'}" :target="getElement"/>
 						<post-list ref="postList" :category-id="category.id" :post-of="'category'"
 						           :top-post-id="category.top_post_id" :sort-type="sortType" @refresh="onRefresh"
 						           @loaded="onPostListLoaded" :fill-parent="$refs.middleBar"/>
@@ -63,6 +63,7 @@ import FloatPublishButton from '@/components/post/post_list/FloatPublishButton';
 import Ellipsis from '@/components/global/Ellipsis';
 import ActionBar from "@/modules/lpt/pages/outside/category/detail/parts/ActionBar";
 import CategoryPath from '@/components/category/CategoryPath';
+import {toRef} from "vue";
 
 export default {
 	name: 'CategoryDetail',
@@ -85,9 +86,12 @@ export default {
 	},
 	data() {
 		this.categoryDetailEvents = createEventBus();
-		const category = global.states.categoryManager.get(this.categoryId);
+		const category = global.states.categoryManager.get({
+			itemId: this.categoryId
+		});
 		return {
 			category,
+			showDrawer: toRef(global.states.blog, 'showDrawer'),
 			mainAreaHeight: 0,
 			isTabFixed: false,
 			curTabKey: 'postList',
@@ -97,7 +101,9 @@ export default {
 	},
 	watch: {
 		categoryId(newValue) {
-			this.category = global.states.categoryManager.get(newValue);
+			this.category = global.states.categoryManager.get({
+				itemId: newValue
+			});
 			this.init();
 			this.isTabFixed = false;
 			this.postListLoaded = false;
@@ -117,7 +123,21 @@ export default {
 			return mainViewHeight + 'px';
 		},
 		clientWidth() {
-			return document.body.clientWidth;
+			if (global.vars.env === 'lpt') {
+				return document.body.clientWidth;
+			} else {
+				return this.$parent.$el.clientWidth;
+			}
+		},
+		hasPublishRight() {
+			if (!this.category.allow_user_post) {
+				return false;
+			} else if (typeof this.category.allow_post_level !== 'undefined') {
+				const permissionMap = global.states.curOperator.permission_map;
+				return permissionMap && permissionMap[this.category.id] >= this.category.allow_post_level;
+			} else {
+				return true;
+			}
 		}
 	},
 	created() {
@@ -170,11 +190,11 @@ export default {
 	height: 100%;
 }
 
-.category-area {
+#category-area {
 	overflow-y: scroll;
 }
 
-.category-area::-webkit-scrollbar {
+#category-area::-webkit-scrollbar {
 	display: none;
 }
 

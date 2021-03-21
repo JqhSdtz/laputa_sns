@@ -1,20 +1,34 @@
 <template>
 	<van-action-sheet v-model:show="showCapturePanel" :actions="actions" @select="onSelect"
-	                  close-on-click-action cancel-text="取消" description="请选择上传方式"/>
+	                  cancel-text="取消" description="请选择上传方式"/>
 	<van-form ref="form" style="margin-top: 1.5rem">
 		<van-field :rules="rules.title" v-model="form.title" placeholder="输入标题（可选，最多20字符）"/>
+		<van-field  v-if="selectedCategory.rights.create_editable_post" :rules="rules.abstract"
+		            v-model="form.abstract" type="textarea" placeholder="输入摘要（可选，最多256字符）"
+		           :autosize="{minHeight: 100}"/>
 		<van-field :rules="rules.content" v-model="form.content" type="textarea" placeholder="输入内容（必填，最多100000字符）"
 		           :autosize="{minHeight: 100}"/>
 		<van-uploader ref="uploader" class="uploader" v-model="fileList" @click="beforeChoose"
 		              :before-read="parseUpload" multiple :max-count="maxImgCount"/>
 		<van-cell center title="是否公开">
 			<template #right-icon>
-				<van-switch v-model="form.isPublic" size="24"/>
+				<van-switch v-model="form.isPublic" :disabled="opType !== 'create'" size="24"/>
 			</template>
 		</van-cell>
-		<van-field v-if="form.isPublic" :rules="rules.category" v-model="selectedCategory" is-link readonly label="目录"
+		<van-cell v-if="selectedCategory.rights.create_editable_post" center title="是否可编辑">
+			<template #right-icon>
+				<van-switch v-model="form.editable" :disabled="opType !== 'create'" size="24"/>
+			</template>
+		</van-cell>
+		<van-cell v-if="selectedCategory.rights.create_editable_post" center title="是否使用MarkDown">
+			<template #right-icon>
+				<van-switch v-model="form.useMarkDown" :disabled="opType !== 'create'" size="24" @change="onUseMarkDownChange"/>
+			</template>
+		</van-cell>
+		<van-field v-if="form.isPublic" :disabled="opType !== 'create'" :rules="rules.category"
+		           v-model="selectedCategoryPath" is-link readonly label="目录"
 		           placeholder="选择发布目录（必填）" @click="showPopover = true" style="margin-top: 1rem"/>
-		<van-popup v-model:show="showPopover" round position="bottom">
+		<van-popup v-if="opType === 'create'" v-model:show="showPopover" round position="bottom">
 			<van-cascader v-model="form.categoryId" title="选择发布目录" :options="categoryOptions"
 			              @change="onCategorySelect" @finish="onCategorySelectFinish"
 			              @close="showPopover = false"/>
@@ -23,10 +37,11 @@
 	<van-button @click="onSubmit" type="primary" round block style="width: 80%; margin-left: 10%; margin-top: 1rem">
 		发布
 	</van-button>
+	<div id="testDiv"></div>
 </template>
 
 <script>
-import {Toast} from "vant";
+import {Dialog, Toast} from "vant";
 import lpt from '@/lib/js/laputa/laputa';
 import uploadRequest from 'ant-design-vue/es/vc-upload/src/request'
 import global from '@/lib/js/global';
@@ -35,6 +50,8 @@ export default {
 	name: 'Publish',
 	data() {
 		return {
+			postId: '',
+			opType: '',
 			showCapturePanel: false,
 			maxImgCount: 9,
 			actions: [
@@ -49,11 +66,15 @@ export default {
 			fileList: [],
 			showPopover: false,
 			categoryOptions: [],
-			selectedCategory: '',
+			selectedCategory: lpt.categoryServ.getDefaultCategory(-1),
+			selectedCategoryPath: '',
 			form: {
 				title: '',
+				abstract: '',
 				content: '',
 				categoryId: '',
+				useMarkDown: false,
+				editable: false,
 				isPublic: false
 			},
 			rules: {
@@ -65,6 +86,20 @@ export default {
 								return true;
 							} else if (value.length > 20) {
 								return '标题不能超过20个字符';
+							} else {
+								return true;
+							}
+						}
+					}
+				],
+				abstract: [
+					{
+						trigger: 'onBlur',
+						validator(value) {
+							if (!value) {
+								return true;
+							} else if (value.length > 256) {
+								return '摘要不能超过256个字符';
 							} else {
 								return true;
 							}
@@ -101,14 +136,16 @@ export default {
 		}
 	},
 	watch: {
-		$route() {
-			this.categoryOptions = [];
-			this.parseQueryParam();
-		},
 		showPopover(isShow) {
 			if (!isShow && this.curOption && !this.curOption.isLeaf) {
 				this.form.categoryId = '';
 			}
+		},
+		'form.abstract'() {
+			this.checkInputContent();
+		},
+		'form.content'() {
+			this.checkInputContent();
 		}
 	},
 	created() {
@@ -116,54 +153,84 @@ export default {
 		this.lptConsumer = lpt.createConsumer();
 		this.imgUrlMap = new Map();
 	},
+	activated() {
+		if (!this.preHref)
+			return;
+		if (!this.form.title && !this.form.content && this.fileList.length !== 0) {
+			// 当前无内容，则直接解析参数
+			this.parseQueryParam();
+		} else if (this.$route.fullPath !== this.preHref) {
+			// 当前有内容，并且参数有变化
+			Dialog.confirm({
+				title: '是否清空',
+				message: '当前有未提交内容，是否清空内容？'
+			}).then(() => {
+				this.preHref = this.$route.fullPath;
+				this.form.title = '';
+				this.form.content = '';
+				this.form.abstract = '';
+				this.fileList = [];
+				this.form.categoryId = '';
+				this.selectedCategoryPath = '';
+				this.selectedCategory = lpt.categoryServ.getDefaultCategory(-1);
+				this.parseQueryParam();
+			}).catch(() => {
+			});
+		}
+	},
 	methods: {
-		parseQueryParam() {
+		parseCreatePostParam() {
 			const query = this.$route.query;
+			this.preHref = this.$route.fullPath;
 			this.form.isPublic = query.type === 'public';
 			if (query.isCategoryLeaf && query.categoryId) {
 				const categoryId = query.categoryId;
-				global.states.categoryManager.get(categoryId, category => {
-					const pathList = category.path_list;
-					if (pathList.length == 0)
-						return;
-					let option = this.categoryOptions;
-					let lastOption = {};
-					pathList.forEach(category => {
-						if (category.id === lpt.categoryServ.rootCategoryId)
+				global.states.categoryManager.get({
+					itemId: categoryId,
+					success: (category) => {
+						this.selectedCategory = category;
+						const pathList = category.path_list;
+						if (pathList.length == 0)
 							return;
-						const children = [];
-						option.push({
-							text: category.name,
-							value: category.id,
-							isLeaf: false,
-							children
-						});
-						lastOption = option;
-						option = children;
-					});
-					if (!category.is_leaf) {
-						category.sub_list.forEach(category => {
+						let option = this.categoryOptions;
+						let lastOption = {};
+						pathList.forEach(category => {
+							if (category.id === lpt.categoryServ.rootCategoryId)
+								return;
+							const children = [];
 							option.push({
 								text: category.name,
 								value: category.id,
-								isLeaf: category.is_leaf
+								isLeaf: false,
+								children
 							});
+							lastOption = option;
+							option = children;
 						});
-					} else {
-						lastOption[0].isLeaf = true;
-						delete lastOption[0].children;
+						if (!category.is_leaf) {
+							category.sub_list.forEach(category => {
+								option.push({
+									text: category.name,
+									value: category.id,
+									isLeaf: category.is_leaf
+								});
+							});
+						} else {
+							lastOption[0].isLeaf = true;
+							delete lastOption[0].children;
+						}
+						this.form.categoryId = parseInt(categoryId);
+						this.showPopover = true;
 					}
-					this.form.categoryId = parseInt(categoryId);
-					this.showPopover = true;
 				});
 			} else {
 				this.form.categoryId = query.categoryId || '';
-				this.selectedCategory = query.categoryPath || '';
+				this.selectedCategoryPath = query.categoryPath || '';
 				lpt.categoryServ.getRoots({
 					consumer: this.lptConsumer,
 					success: (result) => {
 						result.object.forEach(category => {
-							if (category.allow_user_post) {
+							if (this.hasPublishRight(category)) {
 								this.categoryOptions.push({
 									text: category.name,
 									value: category.id,
@@ -175,34 +242,132 @@ export default {
 				});
 			}
 		},
+		hasPublishRight(category) {
+			if (!category.allow_user_post) {
+				return false;
+			} else if (typeof category.allow_post_level !== 'undefined') {
+				const permissionMap = global.states.curOperator.permission_map;
+				return permissionMap && permissionMap[category.id] >= category.allow_post_level;
+			} else {
+				return true;
+			}
+		},
+		parseEditPostParam() {
+			const query = this.$route.query;
+			const postId = query.postId;
+			this.postId = postId;
+			global.states.postManager.get({
+				itemId: postId,
+				success: (post) => {
+					this.form.isPublic = post.type_str === 'public';
+					this.selectedCategoryPath = lpt.categoryServ.getPathStr(post.category_path);
+					this.form.editable = post.editable;
+					this.form.title = post.title;
+					this.form.content = post.content;
+					const rawImg = post.raw_img;
+					if (rawImg) {
+						rawImg.split('#').forEach(str => {
+							this.fileList.push({
+								rawImg: str,
+								url: lpt.getPostThumbUrl(str),
+								isImage: true
+							});
+						});
+					}
+				}
+			});
+		},
+		parseQueryParam() {
+			const query = this.$route.query;
+			query.opType = query.opType || 'create';
+			this.opType = query.opType;
+			if (query.opType === 'edit') {
+				this.parseEditPostParam();
+			} else {
+				this.parseCreatePostParam();
+			}
+		},
 		getFullRawUrl() {
 			const ref = this;
 			let fullRawUrl = '';
 			this.fileList.forEach((file, idx) => {
-				const url = ref.imgUrlMap.get(file.file);
+				let url = file.rawImg;
+				if (!url) {
+					url = ref.imgUrlMap.get(file.file);
+				}
 				fullRawUrl += idx === 0 ? url : ('#' + url);
 			});
 			return fullRawUrl
 		},
+		checkIsTpMd(str) {
+			return str && str.length >= 6 && str.substring(0, 6) === 'tp:md#';
+		},
+		checkInputContent() {
+			if (this.form.abstract) {
+				this.form.useMarkDown = this.checkIsTpMd(this.form.abstract);
+			} else {
+				this.form.useMarkDown = this.checkIsTpMd(this.form.content);
+			}
+		},
+		onUseMarkDownChange(value) {
+			if (this.form.abstract) {
+				if (value) {
+					if (!this.checkIsTpMd(this.form.abstract))
+						this.form.abstract = 'tp:md#' + this.form.abstract;
+				} else {
+					if (this.checkIsTpMd(this.form.abstract))
+						this.form.abstract = this.form.abstract.substring(6);
+				}
+			} else {
+				if (value) {
+					if (!this.checkIsTpMd(this.form.content))
+						this.form.content = 'tp:md#' + this.form.content;
+				} else {
+					if (this.checkIsTpMd(this.form.content))
+						this.form.content = this.form.content.substring(6);
+				}
+			}
+		},
 		onSubmit() {
 			const ref = this;
 			this.$refs.form.validate().then(() => {
-				lpt.postServ.create({
+				let fun = () => {
+				};
+				if (this.opType === 'create') {
+					fun = lpt.postServ.create;
+				} else if (this.opType === 'edit') {
+					fun = lpt.postServ.updateContent;
+				}
+				const data = {
+					category_id: ref.form.categoryId,
+					title: ref.form.title,
+					content: ref.form.content,
+					editable: ref.form.editable,
+					raw_img: ref.getFullRawUrl()
+				};
+				if (ref.form.abstract) {
+					// 有设置摘要
+					data.content = ref.form.abstract;
+					data.full_text = ref.form.content;
+				}
+				if (ref.opType === 'edit') {
+					data.id = ref.postId;
+				}
+				fun({
 					consumer: ref.lptConsumer,
 					param: {
 						type: ref.form.isPublic ? 'public' : 'private'
 					},
-					data: {
-						category_id: ref.form.categoryId,
-						title: ref.form.title,
-						content: ref.form.content,
-						raw_img: ref.getFullRawUrl()
-					},
+					data: data,
 					success: function () {
 						ref.form.title = '';
 						ref.form.content = '';
 						ref.fileList = [];
-						Toast.success('发布成功');
+						if (ref.opType === 'create') {
+							Toast.success('发布成功');
+						} else if (ref.opType === 'edit') {
+							Toast.success('编辑成功');
+						}
 					},
 					fail: function (result) {
 						Toast.fail(result.message);
@@ -235,7 +400,14 @@ export default {
 			this.curOption = selectedOptions[selectedOptions.length - 1];
 			if (this.curOption.isLeaf) {
 				this.showPopover = false;
-				this.selectedCategory = selectedOptions.map((option) => option.text).join('/');
+				this.selectedCategoryPath = selectedOptions.map((option) => option.text).join('/');
+				global.states.categoryManager.get({
+					itemId: this.curOption.value,
+					success: category => {
+						this.selectedCategory = category;
+					},
+					filter: (res) => res.rights
+				});
 			}
 		},
 		onSelect(item) {
@@ -246,6 +418,7 @@ export default {
 				inputElem.removeAttribute('capture');
 			}
 			inputElem.click();
+			this.showCapturePanel = false;
 		},
 		beforeChoose(event) {
 			if (this.fileList.length >= this.maxImgCount) {
@@ -275,7 +448,7 @@ export default {
 			});
 			return new Promise((resolve, reject) => {
 				const requestOption = {
-					action: lpt.baseUrl + '/oss/pst',
+					action: lpt.baseApiUrl + '/oss/pst',
 					method: 'post',
 					filename: 'file',
 					data: {},
@@ -334,5 +507,9 @@ export default {
 <style scoped>
 .uploader {
 	margin: 1rem
+}
+
+:global(.van-uploader__input) {
+	display: none;
 }
 </style>

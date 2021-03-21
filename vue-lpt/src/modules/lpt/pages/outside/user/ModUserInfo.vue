@@ -87,7 +87,7 @@ export default {
 	},
 	data() {
 		const ref = this;
-		this.uploadUrl = lpt.baseUrl + '/oss/ava';
+		this.uploadUrl = lpt.baseApiUrl + '/oss/ava';
 		return {
 			me: global.states.curOperator,
 			uploadHeader: {
@@ -108,7 +108,9 @@ export default {
 					{
 						trigger: 'blur',
 						validator(rule, value) {
-							if (value === ref.oriUserName) {
+							if (!value) {
+								return Promise.reject('请输入用户名');
+							} if (value === ref.oriUserName) {
 								// 用户名没变，则直接返回成功
 								return Promise.resolve();
 							} else {

@@ -11,6 +11,7 @@
 		<result column="user_pwd_salt" property="pwdSalt"/>
 		<result column="user_token" property="token"/>
 		<result column="user_wx_unionid" property="wxUnionId"/>
+		<result column="user_qq_openid" property="qqOpenId"/>
 		<result column="user_email" property="email"/>
 		<result column="user_sch_info" property="schInfo"/>
 		<result column="user_phone" property="phone"/>
@@ -37,7 +38,7 @@
 	<sql id="userColumns">
 		<choose>
 			<when test="${prefix}queryParam == null or ${prefix}queryParam.queryType == null or ${prefix}queryParam.queryType == @com.laputa.laputa_sns.common.QueryParam@BASIC">
-				user_id, user_nickname, user_raw_avatar, user_type, user_state, user_top_post_id, user_following_cnt,
+				user_id, user_nickname, user_qq_openid, user_raw_avatar, user_type, user_state, user_top_post_id, user_following_cnt,
 				user_followers_cnt, user_post_cnt
 				<if test="${prefix}withTokenInfo != null and ${prefix}withTokenInfo">
 					, user_token
@@ -113,7 +114,10 @@
 			<property name="prefix" value=""/>
 		</include>
 		from lpt_user
-		where user_id = #{id}
+		<where>
+			<if test="id != null">and user_id = #{id}</if>
+			<if test="qqOpenId != null">and user_qq_openid = #{qqOpenId}</if>
+		</where>
 	</select>
 
 	<select id="selectListByMultiId" resultMap="UserResultMap">
@@ -137,13 +141,13 @@
 	<insert id="insertOne" parameterType="com.laputa.laputa_sns.model.entity.User" useGeneratedKeys="true" keyProperty="id">
 		insert into lpt_user
 		<trim prefix="(" suffix=")" suffixOverrides=",">
-			user_nickname, user_wx_unionid, user_email, user_phone, user_password, user_pwd_salt
+			user_nickname, user_wx_unionid, user_qq_openid, user_raw_avatar, user_email, user_phone, user_password, user_pwd_salt
 			<if test="type != null">user_type,</if>
 			<if test="state != null">user_state</if>
 		</trim>
 		values
 		<trim prefix="(" suffix=")" suffixOverrides=",">
-			#{nickName}, #{wxUnionId}, #{email}, #{phone}, #{password}, #{pwdSalt},
+			#{nickName}, #{wxUnionId}, #{qqOpenId}, #{rawAvatar}, #{email}, #{phone}, #{password}, #{pwdSalt},
 			<if test="type != null">#{type},</if>
 			<if test="state != null">#{state}</if>
 		</trim>
@@ -176,6 +180,10 @@
 			<if test="recvWx != null">user_recv_wx = #{recvWx},</if>
 		</set>
 		where user_id = #{id}
+	</update>
+
+	<update id="updatePassword"  parameterType="com.laputa.laputa_sns.model.entity.User">
+		update lpt_user set user_password = #{password} where user_id = #{id}
 	</update>
 
 	<update id="updateTopPost">

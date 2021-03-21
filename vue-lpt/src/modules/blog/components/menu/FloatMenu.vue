@@ -1,54 +1,29 @@
 <template>
 	<div>
-		<div v-show="isMenuShow">
-			<menu-item class="item" ref="index" path="/home/index">
-				<template v-slot:normal>
-					<ri-home3-line class="icon icon-normal"/>
-					<div class="text text-normal">首页</div>
-				</template>
-				<template v-slot:active>
-					<ri-home3-fill class="icon icon-active"/>
-					<div class="text text-active">首页</div>
-				</template>
+		<div v-show="isMenuShown">
+			<menu-item class="item" ref="index" name="">
+				<ri-home3-fill class="icon"/>
+				<div class="text">相册</div>
 			</menu-item>
-			<menu-item class="item" ref="community" path="/home/community">
-				<template v-slot:normal>
-					<ri-dashboard-line class="icon icon-normal"/>
-					<div class="text text-normal">社区</div>
-				</template>
-				<template v-slot:active>
-					<ri-dashboard-fill class="icon icon-active"/>
-					<div class="text text-active">社区</div>
-				</template>
+			<menu-item class="item" ref="community" name="">
+				<ri-dashboard-fill class="icon"/>
+				<div class="text">文章</div>
 			</menu-item>
-			<menu-item class="item" ref="news" path="/home/news">
-				<template v-slot:normal>
-					<a-badge :count="unreadNewsCnt" :overflow-count="99" style="line-height: inherit">
-						<ri-apps-line class="icon icon-normal"/>
-						<div class="text text-normal">动态</div>
-					</a-badge>
-				</template>
-				<template v-slot:active>
-					<ri-apps-fill class="icon icon-active"/>
-					<div class="text text-active">动态</div>
-				</template>
+			<menu-item class="item" ref="news" name="">
+				<ri-apps-fill class="icon"/>
+				<div class="text">分类</div>
 			</menu-item>
-			<menu-item class="item" ref="mine" path="/home/mine">
-				<template v-slot:normal>
-					<a-badge :count="unreadNoticeCnt" :overflow-count="99" style="line-height: inherit">
-						<ri-user3-line class="icon icon-normal"/>
-						<div class="text text-normal">我的</div>
-					</a-badge>
-				</template>
-				<template v-slot:active>
-					<ri-user3-fill class="icon icon-active"/>
-					<div class="text text-active">我的</div>
-				</template>
+			<menu-item class="item" ref="mine" name="mine">
+				<img class="ava" :class="{'def-ava': !me.user.raw_avatar}" :src="myAvatarUrl"/>
+				<div class="text">{{ me.user.nick_name || '未登录' }}</div>
 			</menu-item>
 		</div>
 		<div id="round-menu" ref="floatBall" v-draggable="dragOption">
-			<div id="round-outer" ref="ballOuter">
-				<div id="round-inner"></div>
+			<div id="round-outer" :class="{inactive: !isMenuShown}" ref="ballOuter">
+				<div v-show="isMenuShown">
+					<ri-close-fill id="close-icon"/>
+				</div>
+				<div v-show="!isMenuShown" id="round-inner"></div>
 			</div>
 		</div>
 	</div>
@@ -57,49 +32,55 @@
 <script>
 import MenuItem from './MenuItem';
 import {
-	RiHome3Line, RiAppsLine, RiDashboardLine, RiUser3Line,
-	RiHome3Fill, RiAppsFill, RiDashboardFill, RiUser3Fill
+	RiHome3Fill, RiAppsFill, RiDashboardFill, RiCloseFill
 } from '@/assets/icons/remix-icon';
 import global from '@/lib/js/global';
 import {toRef} from "vue";
+import lpt from "@/lib/js/laputa/laputa";
 
 export default {
 	name: 'FloatMenu',
 	components: {
 		MenuItem,
-		RiHome3Line,
-		RiAppsLine,
-		RiDashboardLine,
-		RiUser3Line,
 		RiHome3Fill,
 		RiAppsFill,
 		RiDashboardFill,
-		RiUser3Fill
+		RiCloseFill
 	},
 	data() {
 		return {
-			isMenuShow: false,
+			me: global.states.curOperator,
+			isMenuShown: false,
 			startDrag: false,
 			dragOption: {
 				click: this.showMenu,
 				move: () => {
-					this.isMenuShow = false;
+					this.isMenuShown = false;
 				}
 			},
 			unreadNoticeCnt: toRef(global.states.curOperator, 'unread_notice_cnt'),
 			unreadNewsCnt: toRef(global.states.curOperator, 'unread_news_cnt')
 		}
 	},
+	computed: {
+		hasSigned() {
+			return global.states.hasSigned.value;
+		},
+		myAvatarUrl() {
+			return lpt.getUserAvatarUrl(this.me.user);
+		}
+	},
 	methods: {
 		showMenu() {
+			// 这一句不能放到最后
+			this.isMenuShown = true;
 			const refNames = ['index', 'community', 'news', 'mine'];
 			const floatBallElem = this.$refs.floatBall;
 			const ballOuterElem = this.$refs.ballOuter;
 			const ballX = floatBallElem.offsetLeft + ballOuterElem.offsetWidth / 2;
 			const ballY = floatBallElem.offsetTop + ballOuterElem.offsetHeight / 2;
-			this.isMenuShow = true;
 			this.dragOption.click = () => {
-				this.isMenuShow = false;
+				this.isMenuShown = false;
 				this.dragOption.click = this.showMenu;
 			};
 			const radius = 200;
@@ -133,7 +114,7 @@ export default {
 	/* 不要使用translate实现悬浮球居中，
 		否则会导致悬浮球位置计算错误 */
 	position: fixed;
-	top: 50%;
+	bottom: 50%;
 	right: 0;
 }
 
@@ -146,15 +127,32 @@ export default {
 	padding: 0.45rem;
 }
 
-#round-outer:hover {
+#round-outer:not(.inactive) {
+	opacity: 0.65;
+}
+
+#round-outer:not(.inactive):hover {
+	opacity: 0.45;
+}
+
+#round-outer.inactive:hover {
 	opacity: 0.65;
 }
 
 #round-inner {
+	position: absolute;
 	height: 1.6rem;
 	width: 1.6rem;
 	border-radius: 1.6rem;
 	border: white solid 0.1rem;
+}
+
+#close-icon {
+	position: absolute;
+	color: white;
+	height: 1.6rem;
+	width: 1.6rem;
+	font-size: 1.6rem;
 }
 
 .icon {
@@ -166,11 +164,16 @@ export default {
 	font-size: 0.9rem;
 }
 
-.icon-active {
-	color: forestgreen;
+.ava {
+	border-radius: 100%;
+	margin: 0.5rem 1rem;
+	width: 2rem;
+	height: 2rem;
 }
 
-.text-active {
-	color: forestgreen;
+.def-ava {
+	margin: 0.3rem 0.6rem;
+	width: 2.2rem;
+	height: 2.2rem;
 }
 </style>

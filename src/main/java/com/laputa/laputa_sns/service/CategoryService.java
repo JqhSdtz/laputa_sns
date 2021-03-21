@@ -109,9 +109,14 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
                 setLeaf(category, true);
             else//只有叶子节点的帖子计数值可以保证准确，因为校对时只校对叶子节点
                 category.setIsLeaf(false).setOriPostCnt(0L);
-            setPathList(category);//设置路径
+            //设置路径
+            setPathList(category);
         }
-        cascadeSetOriPostCnt(groundCategory);//设置帖子数
+        //设置帖子数
+        cascadeSetOriPostCnt(groundCategory);
+        // 设置允许发帖管理等级
+        groundCategory.setAllowPostLevel(groundCategory.getOriAllowPostLevel());
+        cascadeSetAllowPostLevel(groundCategory);
         Globals.CategoryServiceInitialized = true;
         log.info("目录树加载完成");
     }
@@ -128,6 +133,31 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         for (int i = 0; i < subList.size(); ++i)
             root.setOriPostCnt(root.getOriPostCnt() + cascadeSetOriPostCnt(subList.get(i)));
         return root.getOriPostCnt();
+    }
+
+    /**
+     * 级联地设置基础目录对象的允许发帖管理等级，在初始化和校正数据的时候调用
+     * @param root
+     * @return
+     */
+    private void cascadeSetAllowPostLevel(@NotNull Category root) {
+        // 原则是子目录等级不能低于父目录，通过调用前判断以及递归操作保证
+        if (root.getIsLeaf() == null || root.getIsLeaf())
+            return;
+        List<Category> subList = root.getSubCategoryList();
+        for (int i = 0; i < subList.size(); ++i) {
+            Category sub = subList.get(i);
+            Integer rootLevel = root.getAllowPostLevel();
+            Integer subOriLevel = sub.getOriAllowPostLevel();
+            if (rootLevel == null) {
+                // 父目录等级为空，则设为该目录的原始等级
+                sub.setAllowPostLevel(subOriLevel);
+            } else if (subOriLevel == null || subOriLevel < rootLevel) {
+                // 否则若原始等级为空或原始等级小于父目录等级，则设为父目录等级
+                sub.setAllowPostLevel(rootLevel);
+            }
+            cascadeSetAllowPostLevel(sub);
+        }
     }
 
     /**
@@ -352,6 +382,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     /**获取目录，设置父目录的counter和子目录列表的counter*/
     public Result<Category> readCategoryWithAllCounters(Integer categoryId, Operator operator) {
         Result<Category> result = readCategory(categoryId, true, operator);
+        if (result.getState() == FAIL)
+            return result;
         List<Category> oriSubList = result.getObject().getSubCategoryList();
         List<Category> subListClone = new ArrayList(oriSubList.size());
         for (int i = 0; i < oriSubList.size(); ++i)
@@ -525,6 +557,10 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         //数据库操作成功后才修改内存数据
         Category resCategory = categoryResult.getObject();
         resCategory.copyUpdateInfoParam(paramObject);
+        if (paramObject.getName() != null) {
+            // 更改名字，要级联更新该目录及子目录的路径信息
+            setPathListOfCascadeSub(resCategory);
+        }
         return writeToAdminOpsRecord((Category) opParam.setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_INFO, operator);
     }
 
@@ -608,6 +644,39 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         resCategory.setTopPostId(param.getTopPostId());
         int type = isCancel ? AdminOpsRecord.TYPE_CANCEL_CATEGORY_TOP_POST : AdminOpsRecord.TYPE_SET_CATEGORY_TOP_POST;
         return writeToAdminOpsRecord((Category) new Category(param.getId()).setTopPostId(param.getTopPostId()).setOpComment(param.getOpComment()), type, operator);
+    }
+
+    /**
+     * 设置允许发帖管理等级
+     */
+    public synchronized Result setAllowPostLevel(@NotNull Category param, boolean isCancel, Operator operator) {
+        if (!isCancel && !param.isValidSetAllowPostLevelParam())
+            return new Result(FAIL).setErrorCode(1010010238).setMessage("操作失败，参数不合法");
+        if (isCancel) {
+            if (param.getId() == null)
+                return new Result(FAIL).setErrorCode(1010010239).setMessage("操作失败，参数不合法");
+            param.setAllowPostLevel(null);
+        }
+        if (!param.isValidOpComment())
+            return new Result(FAIL).setErrorCode(1010010240).setMessage("操作失败，参数不合法");
+        Result<Category> categoryResult = readOriginalCategory(param.getId(), false, operator);
+        if (categoryResult.getState() == FAIL)
+            return categoryResult;
+        Category resCategory = categoryResult.getObject();
+        Integer parentLevel = resCategory.getParent().getAllowPostLevel();
+        if (parentLevel != null && parentLevel > param.getAllowPostLevel()) {
+            return new Result(FAIL).setErrorCode(1010010241).setMessage("操作失败，子目录等级不能低于父目录");
+        }
+        if (!categoryValidator.checkUpdateAllowPostLevelPermission(resCategory, param, operator))
+            return new Result(FAIL).setErrorCode(1010010242).setMessage("操作失败，权限错误");
+        int res = dao.updateAllowPostLevel(param.getId(), param.getAllowPostLevel());
+        if (res == 0)//数据库操作失败
+            return new Result(FAIL).setErrorCode(1010010143).setMessage("数据库操作失败");
+        resCategory.setOriAllowPostLevel(param.getAllowPostLevel()).setAllowPostLevel(param.getAllowPostLevel());
+        // 级联更新子节点
+        cascadeSetAllowPostLevel(resCategory);
+        int type = isCancel ? AdminOpsRecord.TYPE_CANCEL_ALLOW_POST_LEVEL : AdminOpsRecord.TYPE_SET_ALLOW_POST_LEVEL;
+        return writeToAdminOpsRecord((Category) new Category(param.getId()).setAllowPostLevel(param.getAllowPostLevel()).setOpComment(param.getOpComment()), type, operator);
     }
 
     /**

@@ -20,6 +20,7 @@ public interface UserDao extends BaseDao<User> {
     int updateTopPost(@Param("userId") int userId, @Param("postId") Integer postId);
     UserRecvSetting selectRecvSetting(Integer id);
     int updateRecvSetting(UserRecvSetting entity);
+    int updatePassword(User user);
     int correctPostCnt();
     int correctFollowersCnt();
     int correctFollowingCnt();

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
  */
 
 @RestController
-@RequestMapping(value = "/correct_data")
+@RequestMapping(value = "/api/correct_data")
 public class CorrectDataController {
 //$.post(baseUrl + '/correct_data/all',function(data){console.log(data)})
     private final UserService userService;

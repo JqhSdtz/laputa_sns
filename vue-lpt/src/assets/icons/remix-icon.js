@@ -6,3 +6,4 @@ export { default as RiHome3Fill } from './components/RiHome3Fill';
 export { default as RiAppsFill } from './components/RiAppsFill';
 export { default as RiDashboardFill } from './components/RiDashboardFill';
 export { default as RiUser3Fill } from './components/RiUser3Fill';
+export { default as RiCloseFill } from './components/RiCloseFill';

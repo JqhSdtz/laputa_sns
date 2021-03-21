@@ -27,7 +27,9 @@ export default {
 		noticeId: String
 	},
 	data() {
-		const notice = global.states.noticeManager.get(this.noticeId);
+		const notice = global.states.noticeManager.get({
+			itemId: this.noticeId
+		});
 		return {
 			notice
 		}
@@ -89,6 +91,7 @@ export default {
 				},
 				success() {
 					ref.notice.hasRead = true;
+					--global.states.curOperator.unread_notice_cnt;
 				},
 				fail(result) {
 					Toast.fail(result.message);

@@ -89,6 +89,9 @@ public class Operator extends AbstractBaseEntity {
     @JsonProperty("from_login")
     private Boolean fromLogin;
 
+    @JsonProperty("from_register")
+    private Boolean fromRegister;
+
     public Operator(Integer id) {
         user = new User(id);
     }

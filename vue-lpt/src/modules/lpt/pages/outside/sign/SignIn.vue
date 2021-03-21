@@ -32,11 +32,10 @@
 
 <script>
 import lpt from '@/lib/js/laputa/laputa';
-import md5 from 'crypto-js/md5';
-import {notification} from 'ant-design-vue';
-import {Toast} from 'vant';
-import {makeError} from '@/lib/js/uitls/form-util';
 import global from '@/lib/js/global';
+import {makeError} from '@/lib/js/uitls/form-util';
+import md5 from 'crypto-js/md5';
+import {Toast} from 'vant';
 
 export default {
 	name: 'SignIn',
@@ -81,10 +80,6 @@ export default {
 					success() {
 						global.events.emit('signIn');
 						ref.backToHome();
-						notification.open({
-							message: '登录成功',
-							duration: 1
-						});
 					},
 					fail(result) {
 						if (result.error_code === 1010130207) {

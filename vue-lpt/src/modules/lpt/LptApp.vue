@@ -6,8 +6,8 @@
 			</keep-alive>
 		</router-view>
 		<loading-area id="loading-area"></loading-area>
+		<prompt-dialog ref="prompt"/>
 	</a-config-provider>
-	<prompt-dialog ref="prompt"/>
 </template>
 
 <script>
@@ -72,11 +72,16 @@ body, html {
 
 body {
 	margin: 0;
+	font-family: -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Helvetica Neue, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
 }
 
 #loading-area {
 	position: fixed;
 	left: 5%;
 	bottom: 11%;
+}
+
+.van-overlay {
+	background-color: @overlay-background-color;
 }
 </style>

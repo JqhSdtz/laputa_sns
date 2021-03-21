@@ -15,6 +15,7 @@ import java.util.List;
 @Repository
 public interface CategoryDao extends BaseDao<Category> {
     int updateTopPost(@Param("categoryId") int categoryId, @Param("postId") Integer postId);
+    int updateAllowPostLevel(@Param("categoryId") int categoryId, @Param("allowPostLevel") Integer allowPostLevel);
     int updateDefSub(@Param("categoryId") int categoryId, @Param("defSubId") int defSubId);
     int correctPostCnt(List<Category> categoryList);
 }

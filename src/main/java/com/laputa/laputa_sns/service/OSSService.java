@@ -36,16 +36,23 @@ public class OSSService {
 
     public Result<String> uploadImgSync(byte[] file, int fileType, @NotNull Operator operator) {
         //一次只能上传一个
-        if (operator.getUserId().equals(-1))
+        boolean hasSigned;
+        if (fileType == POST || fileType == COMMENT) {
+            hasSigned = !operator.getUserId().equals(-1);
+        } else {
+            hasSigned = !operator.getUserId().equals(-1) || operator.getUser().getQqOpenId() != null;
+        }
+        if (!hasSigned)
             return new Result(Result.FAIL).setErrorCode(1010150201).setMessage("未登录");
         FormUploader uploader = new FormUploader(BUCKET_NAME, Secrets.OSS_Operator_Name, Secrets.OSS_Operator_Pwd);
         final Map<String, Object> paramsMap = new HashMap();
         String path = getPath(fileType, operator);
         paramsMap.put(Params.SAVE_KEY, path);
-        String mark = Base64Utils.encodeToString(operator.getUser().getNickName().getBytes());
         String style = FILENAME_PREFIX[fileType] + ".standard";
-        if (fileType == POST || fileType == COMMENT)
+        if (fileType == POST || fileType == COMMENT) {
+            String mark = Base64Utils.encodeToString(operator.getUser().getNickName().getBytes());
             style += "/watermark/text/" + mark + "/size/16/color/FFFFFF/font/simhei/margin/25x10/align/southeast/animate/true";
+        }
         paramsMap.put(Params.X_GMKERL_THUMB, style);
         try {
             com.upyun.Result result = uploader.upload(paramsMap, file);
@@ -63,8 +70,13 @@ public class OSSService {
 
     @NotNull
     private String getPath(int fileType, @NotNull Operator operator) {
-        return FILENAME_PREFIX[fileType] + "-" + CryptUtil.longToStr(new Date().getTime()) + CryptUtil.randUrlSafeStr(5, false)
-                + CryptUtil.longToStr(operator.getUserId());
+        if (operator.getUserId().equals(-1) && operator.getUser().getQqOpenId() != null) {
+            return FILENAME_PREFIX[fileType] + "-" + CryptUtil.randUrlSafeStr(5, false)
+                    + operator.getUser().getQqOpenId();
+        } else {
+            return FILENAME_PREFIX[fileType] + "-" + CryptUtil.longToStr(new Date().getTime()) + CryptUtil.randUrlSafeStr(5, false)
+                    + CryptUtil.longToStr(operator.getUserId());
+        }
     }
     
 }

@@ -82,7 +82,7 @@ public class PostService extends BaseService<PostDao, Post> {
         this.hmacKey = CryptUtil.randUrlSafeStr(64, true);
         ObjectMapper basicMapper = new ObjectMapper();
         basicMapper.setFilterProvider(new SimpleFilterProvider().addFilter("PostFilter", SimpleBeanPropertyFilter
-                .filterOutAllExcept("full_text_id", "category_id", "allow_forward", "sup_id", "ori_id", "like_cnt", "comment_cnt", "view_cnt", "forward_cnt", "create_time", "type", "top_comment_id", "creator_id")));
+                .filterOutAllExcept("full_text_id", "category_id", "allow_forward", "sup_id", "ori_id", "like_cnt", "comment_cnt", "view_cnt", "forward_cnt", "create_time", "type", "editable", "top_comment_id", "creator_id")));
         ObjectMapper contentMapper = new ObjectMapper();
         contentMapper.setFilterProvider(new SimpleFilterProvider().addFilter("PostFilter", SimpleBeanPropertyFilter
                 .filterOutAllExcept("title", "content", "raw_img")));

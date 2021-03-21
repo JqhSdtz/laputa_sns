@@ -29,7 +29,9 @@ export default {
 	},
 	data() {
 		return {
-			post: global.states.postManager.get(this.postId)
+			post: global.states.postManager.get({
+				itemId: this.postId
+			})
 		};
 	},
 	components: {

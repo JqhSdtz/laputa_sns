@@ -20,7 +20,9 @@ export default {
 		categoryId: Number,
 	},
 	data() {
-		const category = global.states.categoryManager.get(this.categoryId);
+		const category = global.states.categoryManager.get({
+			itemId: this.categoryId
+		});
 		return {
 			category
 		};

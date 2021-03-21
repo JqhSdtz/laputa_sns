@@ -1,11 +1,6 @@
 <template>
 	<div class="item" @click="itemClick">
-		<div v-if="!isActive">
-			<slot name="normal"></slot>
-		</div>
-		<div v-else>
-			<slot name="active"></slot>
-		</div>
+		<slot></slot>
 	</div>
 </template>
 
@@ -15,7 +10,7 @@ import global from '@/lib/js/global';
 export default {
 	name: 'MenuItem',
 	props: {
-		path: String,
+		name: String,
 		alias: String
 	},
 	data() {
@@ -23,13 +18,7 @@ export default {
 	},
 	computed: {
 		isActive() {
-			const path = this.$route.path;
-			if (path.indexOf(this.path) > -1) {
-				return true;
-			} else if (this.alias && path.indexOf(this.alias) > -1) {
-				return true;
-			}
-			return false;
+			return this.name && this.$route.name == this.name;
 		}
 	},
 	methods: {
@@ -37,8 +26,13 @@ export default {
 			if (this.isActive) {
 				global.events.emit('forceRefresh');
 			} else {
-				this.$router.push(this.path);
+				this.$router.push({
+					name: this.name
+				});
 			}
+			global.events.emit('menuClick', {
+				name: this.name
+			});
 		}
 	}
 }

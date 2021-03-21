@@ -4,12 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.util.DigestUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -85,13 +87,8 @@ public class CryptUtil {
         return new BigInteger(1, secretBytes).toString(16);
     }
 
-    public static String md5(@NotNull String str, boolean withPadding) {
-        String md5code = messageDigest(str, "MD5");
-        if (withPadding) {
-            for (int i = 0; i < 32 - md5code.length(); i++)
-                md5code = "0" + md5code;
-        }
-        return md5code;
+    public static String md5(@NotNull String str) {
+        return DigestUtils.md5DigestAsHex(str.getBytes(StandardCharsets.UTF_8));
     }
 
     public static String sha1(@NotNull String str) {

@@ -55,7 +55,9 @@ export default {
 		EllipsisOutlined
 	},
 	data() {
-		const post = global.states.postManager.get(this.postId);
+		const post = global.states.postManager.get({
+			itemId: this.postId
+		});
 		return {
 			post: post,
 			showPopover: false,
@@ -81,6 +83,12 @@ export default {
 					actions.push({
 						id: isTopped ? 'unTop' : 'top',
 						text: isTopped ? '取消置顶' : '置顶'
+					});
+				}
+				if (rights.edit) {
+					actions.push({
+						id: 'edit',
+						text: '编辑'
 					});
 				}
 				if (rights.delete) {
@@ -132,7 +140,7 @@ export default {
 						this.postListEvents.emit(action.id, {
 							post: this.post
 						});
-					});
+					}).catch(() => {});
 				} else {
 					// 否则需要输入理由
 					global.methods.prompt({
@@ -144,6 +152,14 @@ export default {
 						}
 					});
 				}
+			} else if (action.id === 'edit') {
+				this.$router.push({
+					name: 'publish',
+					query: {
+						opType: 'edit',
+						postId: ref.post.id
+					}
+				});
 			}
 		},
 		showPostDetail() {

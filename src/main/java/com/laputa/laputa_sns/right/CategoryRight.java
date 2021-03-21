@@ -56,6 +56,18 @@ public class CategoryRight {
      */
     @JsonProperty("top_post")
     private Boolean topPost;
+
+    /**
+     * 是否有设置发帖允许管理等级权限
+     */
+    @JsonProperty("update_allow_post_level")
+    private Boolean updateAllowPostLevel;
+
+    @JsonProperty("talk_ban")
+    private Boolean talkBan;
+
+    @JsonProperty("create_editable_post")
+    private Boolean createEditablePost;
     /**
      * 是否有更新目录的默认子目录权限
      */

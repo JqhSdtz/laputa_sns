@@ -71,13 +71,15 @@ export default {
 			category = lpt.categoryServ.getDefaultCategory(-1);
 			category.parent_id = this.$route.query.parentId;
 		} else {
-			category = global.states.categoryManager.get(this.categoryId);
+			category = global.states.categoryManager.get({
+				itemId: this.categoryId
+			});
 		}
 		category.isPublic = true;
 		return {
 			opType,
 			category,
-			uploadUrl: lpt.baseUrl + '/oss/cat',
+			uploadUrl: lpt.baseApiUrl + '/oss/cat',
 			uploadHeader: {
 				'x-lpt-user-token': ''
 			},

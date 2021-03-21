@@ -31,7 +31,9 @@ export default {
 		isTopPost: Boolean
 	},
 	data() {
-		const post = global.states.postManager.get(this.postId);
+		const post = global.states.postManager.get({
+			itemId: this.postId
+		});
 		return {
 			post: post
 		}

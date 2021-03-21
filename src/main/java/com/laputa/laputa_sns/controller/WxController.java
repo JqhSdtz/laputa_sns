@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 
 @RestController
-@RequestMapping(value = "/wx")
+@RequestMapping(value = "/api/wx")
 public class WxController {
 
     private final WxService wxService;
