@@ -231,9 +231,10 @@ public class Category extends AbstractBaseEntity implements Cloneable {
         if (name == null || parent == null || parent.id == null)
             return false;
         if (format) {
-            this.setPostCnt(null).setTopPostId(null).setDefSubId(null).setDispSeq(null);
+            this.setPostCnt(null).setTopPostId(null).setDefSubId(null).setDispSeq(null).setAllowPostLevel(null);
         } else {
-            if (postCnt != null || topPostId != null || defSubId != null || dispSeq != null)//过滤掉新添加数据不应该出现的字段
+            //过滤掉新添加数据不应该出现的字段
+            if (postCnt != null || topPostId != null || defSubId != null || dispSeq != null || allowPostLevel != null)
                 return false;
         }
         return true;

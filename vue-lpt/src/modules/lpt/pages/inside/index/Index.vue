@@ -1,5 +1,5 @@
 <template>
-	<div id="main-area" :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top>
+	<div class="main-area" :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top>
 		<van-search v-model="searchValue" @search="onSearch" placeholder="请输入搜索关键词">
 			<template v-slot:right-icon>
 				<van-checkbox v-model="enableBoolMode">多关键字</van-checkbox>
@@ -25,7 +25,7 @@ export default {
 		PostList
 	},
 	data() {
-		const indexCategoryId = 0;
+		const indexCategoryId = lpt.categoryServ.rootCategoryId;
 		const category = global.states.categoryManager.get({
 			itemId: indexCategoryId,
 			fail(result) {
@@ -46,7 +46,10 @@ export default {
 		scrollHeight() {
 			const mainViewHeight = document.body.clientHeight;
 			// 底部高度加0.5的padding
-			const barHeight = this.mainBarHeight;
+			let barHeight = this.mainBarHeight;
+			if (global.vars.env === 'blog') {
+				barHeight = global.vars.blog.style.mainViewOffsetBottom;
+			}
 			return mainViewHeight - barHeight + 'px';
 		}
 	},
@@ -74,11 +77,11 @@ export default {
 </script>
 
 <style scoped>
-#main-area {
+.main-area {
 	overflow-y: scroll;
 }
 
-#main-area::-webkit-scrollbar {
+.main-area::-webkit-scrollbar {
 	display: none;
 }
 </style>

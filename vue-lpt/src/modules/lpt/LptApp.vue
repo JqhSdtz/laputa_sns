@@ -25,6 +25,9 @@ export default {
 		LoadingArea,
 		PromptDialog
 	},
+	provide: {
+		lptContainer: 'default'
+	},
 	data() {
 		return {
 			locale: zhCN,
@@ -40,7 +43,7 @@ export default {
 				// icon: createVNode(ExclamationCircleOutlined),
 				content: '登录打开新世界！',
 				onOk() {
-					ref.$router.push({name: 'signIn'});
+					ref.$router.push({path: '/sign_in'});
 				}
 			});
 		});

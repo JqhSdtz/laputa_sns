@@ -1,5 +1,5 @@
 <template>
-	<div id="main-area" style="height: 100%; padding-top: 1rem; background-color: rgb(245, 245, 245)">
+	<div class="main-area" style="height: 100%; padding-top: 1rem; background-color: rgb(245, 245, 245)">
 		<van-cell class="cell" title="目录ID" :value="categoryId"/>
 		<van-cell class="cell" title="查看管理员列表" is-link :to="'/category_admin_list/' + category.id"/>
 		<van-cell v-if="category.rights.update_info" class="cell" title="修改信息" is-link
@@ -327,7 +327,7 @@ export default {
 		},
 		showCreatePage() {
 			this.$router.push({
-				name: 'modCategoryInfo',
+				path: '/mod_category_info',
 				query: {
 					opType: 'create',
 					parentId: this.categoryId
@@ -339,12 +339,12 @@ export default {
 </script>
 
 <style scoped>
-#main-area {
+.main-area {
 	height: 100%;
 	overflow-y: scroll;
 }
 
-#main-area::-webkit-scrollbar {
+.main-area::-webkit-scrollbar {
 	display: none;
 }
 

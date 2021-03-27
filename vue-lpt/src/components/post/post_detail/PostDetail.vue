@@ -1,31 +1,33 @@
 <template>
 	<template v-if="forceReloadFlag">
-		<div class="post-area" style="padding-top: 1rem" :style="{height: scrollHeight, position: 'relative'}">
-			<div style="margin: 0 0.5rem">
-				<post-item class="post-item" :post-id="post.id" :show-bottom="false"/>
+		<div v-show="showDrawer">
+			<div class="post-area" style="padding-top: 1rem" :style="{height: scrollHeight, position: 'relative'}">
+				<post-item style="padding: 0 0.5rem" :post-id="post.id" :show-bottom="false"/>
+				<div v-show="!showCommentDetail" ref="middleBar" id="middle-bar"
+				     :style="{width: clientWidth + 'px'}">
+					<van-tabs v-model:active="curTabKey" swipeable sticky lazy-render>
+						<van-tab name="forward" :title="'转发 ' + post.forward_cnt">
+							<forward-list v-if="curTabKey === 'forward'" ref="forwardList" :post-id="postId"
+							              @refresh="onRefresh" class="list-area" :fill-parent="$refs.middleBar"/>
+						</van-tab>
+						<van-tab name="comment" :title="'评论 ' + post.comment_cnt">
+							<comment-list v-if="curTabKey === 'comment'" ref="commentList" :post-id="postId"
+							              sort-type="popular" @refresh="onRefresh" class="list-area"
+							              :fill-parent="$refs.middleBar"/>
+						</van-tab>
+						<van-tab name="like" :title="'赞 ' + post.like_cnt">
+							<like-list v-if="curTabKey === 'like'" ref="likeList" :target-id="parseInt(postId)"
+							           @refresh="onRefresh" class="list-area" :fill-parent="$refs.middleBar"/>
+						</van-tab>
+					</van-tabs>
+				</div>
+				<comment-detail v-if="showCommentDetail" :comment-id="curCommentDetailId"/>
 			</div>
-			<div v-show="!showCommentDetail" ref="middleBar" id="middle-bar" style="width: 100%;height: 100%">
-				<van-tabs v-model:active="curTabKey" swipeable sticky lazy-render>
-					<van-tab name="forward" :title="'转发 ' + post.forward_cnt">
-						<forward-list v-if="curTabKey === 'forward'" ref="forwardList" :post-id="postId"
-						              @refresh="onRefresh" class="list-area" :fill-parent="$refs.middleBar"/>
-					</van-tab>
-					<van-tab name="comment" :title="'评论 ' + post.comment_cnt">
-						<comment-list v-if="curTabKey === 'comment'" ref="commentList" :post-id="postId"
-						              sort-type="popular" @refresh="onRefresh" class="list-area"
-						              :fill-parent="$refs.middleBar"/>
-					</van-tab>
-					<van-tab name="like" :title="'赞 ' + post.like_cnt">
-						<like-list v-if="curTabKey === 'like'" ref="likeList" :target-id="parseInt(postId)"
-						           @refresh="onRefresh" class="list-area" :fill-parent="$refs.middleBar"/>
-					</van-tab>
-				</van-tabs>
-			</div>
-			<comment-detail v-if="showCommentDetail" :comment-id="curCommentDetailId"/>
+			<input-panel :post-id="post.id"/>
+			<bottom-bar v-show="!showCommentDetail" style="position: absolute; bottom: 0; left: 0"
+			            :style="{height: mainBarHeight + 'px'}"
+			            :post-id="post.id"/>
 		</div>
-		<input-panel :post-id="post.id"/>
-		<bottom-bar v-show="!showCommentDetail" style="position: absolute; bottom: 0; left: 0" :style="{height: mainBarHeight + 'px'}"
-		            :post-id="post.id"/>
 	</template>
 </template>
 
@@ -41,6 +43,7 @@ import ForwardList from "@/components/post/post_detail/forward/ForwardList";
 import LikeList from '@/components/post/post_detail/like/LikeList';
 import CommentDetail from "@/components/post/post_detail/comment_detail/CommentDetail";
 import InputPanel from '@/components/post/post_detail/InputPanel';
+import {toRef} from "vue";
 
 export default {
 	name: 'PostDetail',
@@ -50,6 +53,11 @@ export default {
 	provide() {
 		return {
 			postDetailEvents: this.postDetailEvents
+		}
+	},
+	inject: {
+		lptContainer: {
+			type: String
 		}
 	},
 	components: {
@@ -68,6 +76,7 @@ export default {
 			post: global.states.postManager.get({
 				itemId: this.postId
 			}),
+			showDrawer: this.lptContainer === 'blogDrawer' ? toRef(global.states.blog, 'showDrawer') : true,
 			curTabKey: 'comment',
 			showCommentDetail: false,
 			curCommentDetailId: -1
@@ -107,6 +116,18 @@ export default {
 				return mainViewHeight + 'px';
 			} else {
 				return mainViewHeight - barHeight + 'px';
+			}
+		},
+		clientWidth() {
+			// 巨坑，深扒van-tabs组件发现是在swipe组件中获取了一个tabs的宽度
+			// 但是如果tabs组件不占满屏幕，又没有固定的px值，则返回0
+			// tabs组件错乱
+			if (global.vars.env === 'blog' && this.lptContainer === 'blogDrawer') {
+				return global.states.style.drawerWidth;
+			} else if (this.lptContainer === 'blogMain') {
+				return global.states.style.blogMainWidth;
+			} else {
+				return document.body.clientWidth;
 			}
 		}
 	},
@@ -166,5 +187,10 @@ export default {
 
 .list-area {
 	overflow-y: visible;
+}
+
+#middle-bar {
+	height: 100%;
+	background-color: white;
 }
 </style>

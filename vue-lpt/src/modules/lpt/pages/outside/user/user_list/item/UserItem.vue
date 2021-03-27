@@ -35,7 +35,7 @@ export default {
 	methods: {
 		showUserHomePage() {
 			this.$router.push({
-				name: 'userHomePage',
+				path: '/user_home_page',
 				params: {
 					userId: this.user.id
 				}

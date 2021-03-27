@@ -49,34 +49,42 @@ export default {
 		CategoryPath
 	},
 	data() {
-		const rawImg = this.post.raw_img || '';
-		const imgListStr = rawImg.split('#');
-		const imgList = [];
-		const fullUrlList = [];
-		imgListStr.forEach(img => {
-			if (img) {
-				imgList.push(lpt.getPostThumbUrl(img));
-				fullUrlList.push(lpt.getFullImgUrl(img));
-			}
-		});
-		let postContent = this.post.content;
-		let postType = 'normal';
-		if (typeReg.test(this.post.content)) {
-			postType = this.post.content.match(typeReg)[1];
-			postContent = this.post.content.replace(typeReg, '');
-		}
 		return {
-			fullUrlList: fullUrlList,
-			imgList: imgList,
-			postContent,
+			fullUrlList: [],
+			imgList: [],
+			postContent: this.post.content,
 			payload: '',
-			postType,
+			postType: 'normal',
 			fullText: '',
 			isShowFullText: false
 		}
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
+	},
+	watch: {
+		'post.content': {
+			immediate: true,
+			handler() {
+				if (typeReg.test(this.post.content)) {
+					this.postType = this.post.content.match(typeReg)[1];
+					this.postContent = this.post.content.replace(typeReg, '');
+				}
+			}
+		},
+		'post.raw_img': {
+			immediate: true,
+			handler() {
+				const rawImg = this.post.raw_img || '';
+				const imgListStr = rawImg.split('#');
+				imgListStr.forEach(img => {
+					if (img) {
+						this.imgList.push(lpt.getPostThumbUrl(img));
+						this.fullUrlList.push(lpt.getFullImgUrl(img));
+					}
+				});
+			}
+		}
 	},
 	computed: {
 		categoryPath() {
@@ -89,10 +97,7 @@ export default {
 	methods: {
 		showPostDetail() {
 			this.$router.push({
-				name: 'postDetail',
-				params: {
-					postId: this.post.id
-				}
+				path: '/post_detail/' + this.post.id
 			});
 		},
 		showImgPreview(index) {

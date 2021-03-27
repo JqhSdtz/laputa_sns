@@ -1,5 +1,5 @@
 <template>
-	<div id="main-area">
+	<div class="main-area">
 		<a-row v-if="hasSigned" style="padding-top: 2rem;">
 			<a-col span="5" offset="2">
 				<img class="ava" :src="myAvatarUrl"/>
@@ -112,22 +112,16 @@ export default {
 	methods: {
 		showFollowersList() {
 			this.$router.push({
-				name: 'followersList',
-				params: {
-					userId: this.me.user.id.toString()
-				}
+				path: '/followers_list/' + this.me.user.id.toString()
 			});
 		},
 		showFollowingList() {
 			this.$router.push({
-				name: 'followingList',
-				params: {
-					userId: this.me.user.id.toString()
-				}
+				path: '/following_list/' + this.me.user.id.toString()
 			});
 		},
 		signIn() {
-			this.$router.push({name: 'signIn'});
+			this.$router.push({path: '/sign_in'});
 		},
 		signOut() {
 			Dialog.confirm({
@@ -236,12 +230,12 @@ export default {
 </script>
 
 <style scoped>
-#main-area {
+.main-area {
 	height: 100%;
 	overflow-y: scroll;
 }
 
-#main-area::-webkit-scrollbar {
+.main-area::-webkit-scrollbar {
 	display: none;
 }
 

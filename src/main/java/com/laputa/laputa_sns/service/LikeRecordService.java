@@ -40,7 +40,6 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
     private final CommentL1Service commentL1Service;
     private final CommentL2Service commentL2Service;
     private final UserService userService;
-    private final PostIndexService postIndexService;
     private final NoticeService noticeService;
     private final CommonService commonService;
     private final IndexExecutor.CallBacks indexExecutorCallBacks;
@@ -49,12 +48,11 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
 
     private String hmacKey;
 
-    public LikeRecordService(PostService postService, @Lazy CommentL1Service commentL1Service, @Lazy CommentL2Service commentL2Service, UserService userService, PostIndexService postIndexService, NoticeService noticeService, CommonService commonService, @NotNull StringRedisTemplate redisTemplate, LikeRecordValidator likeRecordValidator) {
+    public LikeRecordService(PostService postService, @Lazy CommentL1Service commentL1Service, @Lazy CommentL2Service commentL2Service, UserService userService, NoticeService noticeService, CommonService commonService, @NotNull StringRedisTemplate redisTemplate, LikeRecordValidator likeRecordValidator) {
         this.postService = postService;
         this.commentL1Service = commentL1Service;
         this.commentL2Service = commentL2Service;
         this.userService = userService;
-        this.postIndexService = postIndexService;
         this.noticeService = noticeService;
         this.commonService = commonService;
         this.redisTemplate = redisTemplate;

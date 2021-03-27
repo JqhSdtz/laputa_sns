@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "clamp-js": "^0.7.0",
-    "element-resize-detector": "^1.2.1",
-    "vant": "^3.0.6",
-    "vue": "^2.6.12"
-  }
-}

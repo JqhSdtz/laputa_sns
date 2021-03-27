@@ -332,6 +332,11 @@ public class Post extends AbstractContent<Post> {
     }
 
     @JsonIgnore
+    public boolean isValidSetCategoryParam() {
+        return id != null && getCategoryId() != null;
+    }
+
+    @JsonIgnore
     public boolean isValidUpdateContentParam() {
         return id != null && (rawImg != null || content != null);
     }

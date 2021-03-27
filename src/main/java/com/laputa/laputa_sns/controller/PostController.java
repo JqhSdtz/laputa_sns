@@ -75,6 +75,13 @@ public class PostController {
         return Result.EMPTY_FAIL;
     }
 
+    @AccessLimit(value = 3, per = LimitTimeUnit.HOUR)
+    @AccessLimit(value = 1, per = LimitTimeUnit.MINUTE)
+    @RequestMapping(value = "/category", method = RequestMethod.PATCH)
+    public Result setCategory(@RequestBody Post post, @RequestAttribute Operator operator) {
+        return postService.setCategory(post, operator).setOperator(operator);
+    }
+
     @AccessLimit(value = 40, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 10, per = LimitTimeUnit.MINUTE)
     @RequestMapping(value = "/content", method = RequestMethod.PATCH)

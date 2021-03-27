@@ -5,5 +5,11 @@ export default {
         tabBarHeight: remHelper.remToPx(3.65),
         postDetailBarHeight: remHelper.remToPx(2.75)
     },
-    env: 'lpt'
+    env: 'lpt',
+    blog: {
+        coverUrl: '',
+        style: {
+            mainViewOffsetBottom: 20
+        }
+    }
 }

@@ -1,5 +1,5 @@
 <template>
-	<div id="main-area" :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top>
+	<div class="main-area" :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top>
 		<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px'}" :target="getElement"/>
 		<post-list ref="postList" :post-of="'news'"/>
 	</div>
@@ -36,11 +36,11 @@ export default {
 </script>
 
 <style scoped>
-#main-area {
+.main-area {
 	overflow-y: scroll;
 }
 
-#main-area::-webkit-scrollbar {
+.main-area::-webkit-scrollbar {
 	display: none;
 }
 </style>

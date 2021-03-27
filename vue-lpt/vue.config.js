@@ -28,21 +28,6 @@ module.exports = {
     },
     pages: {
         lpt: {
-            css: {
-                loaderOptions: {
-                    less: {
-                        lessOptions: {
-                            modifyVars: {
-                                // 'primary-color': '#F0AAAA',
-                                'button-primary-background-color': '#F0AAAA',
-                                'overlay-background-color': 'rgba(255, 0, 0, 0.35)',
-                                'action-sheet-header-height': '2rem'
-                            },
-                            javascriptEnabled: true
-                        }
-                    }
-                }
-            },
             entry: './src/modules/lpt/lpt-main.js',
             template: 'public/lpt.html',
             title: 'laputa'

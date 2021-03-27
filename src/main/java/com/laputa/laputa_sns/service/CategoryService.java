@@ -52,6 +52,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     private Category groundCategory;
 
     private final PostService postService;
+    private final PostIndexService postIndexService;
     private final AdminOpsService adminOpsService;
     private final CommonService commonService;
     private final CategoryValidator categoryValidator;
@@ -61,8 +62,9 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
 
     private final Operator progOperator = ProgOperatorManager.register(CategoryService.class);
 
-    public CategoryService(PostService postService, AdminOpsService adminOpsService, CommonService commonService, @Lazy CategoryValidator categoryValidator, StringRedisTemplate redisTemplate) {
+    public CategoryService(PostService postService, PostIndexService postIndexService, AdminOpsService adminOpsService, CommonService commonService, @Lazy CategoryValidator categoryValidator, StringRedisTemplate redisTemplate) {
         this.postService = postService;
+        this.postIndexService = postIndexService;
         this.adminOpsService = adminOpsService;
         this.commonService = commonService;
         this.categoryValidator = categoryValidator;
@@ -355,7 +357,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
                     return new Result(FAIL).setErrorCode(1010010204).setMessage("操作失败，新的父目录不能和原有的父目录相同");
                 if (category.isParentOf(parent))//新的父目录是原目录的子目录
                     return new Result(FAIL).setErrorCode(1010010205).setMessage("操作失败，新的父目录不能是原目录的子目录");
-                if (parent.getIsLeaf() && !parent.getPostCnt().equals(0))//要移向的父目录是叶子节点且有内容
+                if (parent.getIsLeaf() && !parent.getPostCnt().equals(0L))//要移向的父目录是叶子节点且有内容
                     return new Result(FAIL).setErrorCode(1010010206).setMessage("操作失败，新的父目录不能包含帖子");
             }
         }
@@ -479,15 +481,21 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         if (checkResult.getState() == FAIL)
             return checkResult;
         //设置创建者及预缓存数量初始值
-        category.setCreator(operator.getUser()).setCacheNum(20).setOriPostCnt(0L);
+        category.setCreator(operator.getUser()).setCacheNum(20).setOriPostCnt(0L).setAllowUserPost(true);
         int res = insertOne(category);//数据库操作
         if (res == -1)//数据库操作失败
             return new Result(FAIL).setErrorCode(1010010109).setMessage("数据库操作失败");
         //数据库操作成功后才修改内存数据
-        setAsParent(category, category.getParentId());//设置父目录
-        setLeaf(category, true);//新添加的目录一定是叶目录
-        categoryMap.put(category.getId(), category);//添加到内存
-        setPathList(category);//设置路径
+        //设置父目录
+        setAsParent(category, category.getParentId());
+        //新添加的目录一定是叶目录
+        setLeaf(category, true);
+        category.setPopularPostList(new IndexList(10));
+        category.setLatestPostList(new IndexList(10));
+        //添加到内存
+        categoryMap.put(category.getId(), category);
+        //设置路径
+        setPathList(category);
         return writeToAdminOpsRecord(category, AdminOpsRecord.TYPE_CREATE_CATEGORY, operator);
     }
 
@@ -526,6 +534,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         if (res == 0)//数据库操作失败
             return new Result(FAIL).setErrorCode(1010010112).setMessage("数据库操作失败");
         applyUpdateParentParam(categoryResult.getObject(), paramObject.getParentId());
+        postIndexService.refreshIndexAfterUpdateParent(categoryResult.getObject());
         return writeToAdminOpsRecord((Category) opParam.setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_PARENT, operator);
     }
 

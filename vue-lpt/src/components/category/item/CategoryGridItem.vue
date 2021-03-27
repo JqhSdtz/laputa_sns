@@ -35,10 +35,7 @@ export default {
 	methods: {
 		showCategoryDetail() {
 			this.$router.push({
-				name: 'categoryDetail',
-				params: {
-					categoryId: this.categoryId
-				}
+				path: '/category_detail/' + this.categoryId
 			});
 		}
 	}

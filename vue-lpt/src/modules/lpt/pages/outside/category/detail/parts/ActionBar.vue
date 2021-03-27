@@ -68,10 +68,7 @@ export default {
 		},
 		showCategorySetting() {
 			this.$router.push({
-				name: 'categorySetting',
-				param: {
-					categoryId: this.categoryId
-				}
+				path: '/category_setting/' + this.categoryId
 			});
 		},
 		showCategoryTypeTip() {

@@ -1,5 +1,5 @@
 <template>
-	<div id="main-area" :style="{height: scrollHeight, position: 'relative'}">
+	<div class="main-area" :style="{height: scrollHeight, position: 'relative'}">
 		<div ref="infoBar">
 			<a-row style="padding-top: 0.5rem;">
 				<a-col span="5" offset="2">
@@ -65,7 +65,7 @@ export default {
 		return {
 			user,
 			showDrawer: toRef(global.states.blog, 'showDrawer'),
-			clientWidth: toRef(global.states.style, 'lptWidth'),
+			clientWidth: toRef(global.states.style, 'drawerWidth'),
 			postListLoaded: false,
 			showSortTypeSelector: false,
 			showPopover: false
@@ -97,15 +97,12 @@ export default {
 	methods: {
 		showFollowersList() {
 			this.$router.push({
-				name: 'followersList',
-				params: {
-					userId: this.userId
-				}
+				path: '/followers_list/' + this.userId
 			});
 		},
 		showFollowingList() {
 			this.$router.push({
-				name: 'followingList',
+				path: '/following_list',
 				params: {
 					userId: this.userId
 				}
@@ -138,11 +135,11 @@ export default {
 </script>
 
 <style scoped>
-#main-area {
+.main-area {
 	overflow-y: scroll;
 }
 
-#main-area::-webkit-scrollbar {
+.main-area::-webkit-scrollbar {
 	display: none;
 }
 

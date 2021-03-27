@@ -8,6 +8,8 @@
 </template>
 
 <script>
+import global from '@/lib/js/global';
+
 export default {
 	name: 'CategoryPath',
 	props: {
@@ -15,11 +17,11 @@ export default {
 	},
 	methods: {
 		showCategoryDetail(path) {
+			if (global.vars.env === 'blog') {
+				global.states.blog.showDrawer = true;
+			}
 			this.$router.push({
-				name: 'categoryDetail',
-				params: {
-					categoryId: path.id
-				}
+				path: '/category_detail/' + path.id
 			});
 		}
 	}

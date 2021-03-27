@@ -60,10 +60,7 @@ export default {
 	methods: {
 		showUserHomePage() {
 			this.$router.push({
-				name: 'userHomePage',
-				params: {
-					userId: this.comment.creator.id
-				}
+				path: '/user_home_page/' + this.comment.creator.id
 			});
 		}
 	}

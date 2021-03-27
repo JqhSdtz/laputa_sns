@@ -14,7 +14,7 @@
 				</div>
 			</template>
 			<transition name="van-fade">
-				<a-button id="sortTypeBtn" v-show="showSortTypeSelector" :style="{...buttonStyle, top: offset}">
+				<a-button id="sortTypeBtn" v-show="showSortTypeSelector" :style="{...buttonStyle, top: offset, right: offsetRight}">
 					<ordered-list-outlined/>
 					<span style="margin-left: 0.5rem">
 						<span v-if="sortType === 'popular'">热门</span>
@@ -27,7 +27,8 @@
 </template>
 
 <script>
-import {OrderedListOutlined} from "@ant-design/icons-vue";
+import {OrderedListOutlined} from '@ant-design/icons-vue';
+import global from '@/lib/js/global';
 
 export default {
 	name: 'SortTypeSelector',
@@ -53,6 +54,7 @@ export default {
 	emits: ['update:sortType'],
 	data() {
 		return {
+			offsetRight: global.vars.env === 'blog' ? '11%' : '1rem',
 			showSortTypeSelector: true,
 			showPopover: false
 		}
@@ -100,7 +102,6 @@ export default {
 
 #sortTypeBtn {
 	position: fixed;
-	right: 1rem;
 	background-color: white;
 	z-index: 2;
 }

@@ -1,6 +1,5 @@
 package com.laputa.laputa_sns.controller;
 
-import com.laputa.laputa_sns.common.QueryParam;
 import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.model.entity.Notice;
 import com.laputa.laputa_sns.model.entity.Operator;

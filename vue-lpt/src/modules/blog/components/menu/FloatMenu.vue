@@ -1,19 +1,19 @@
 <template>
 	<div>
 		<div v-show="isMenuShown">
-			<menu-item class="item" ref="index" name="">
+			<menu-item class="item" ref="index" path="">
 				<ri-home3-fill class="icon"/>
 				<div class="text">相册</div>
 			</menu-item>
-			<menu-item class="item" ref="community" name="">
+			<menu-item class="item" ref="community" path="">
 				<ri-dashboard-fill class="icon"/>
 				<div class="text">文章</div>
 			</menu-item>
-			<menu-item class="item" ref="news" name="">
+			<menu-item class="item" ref="news" path="">
 				<ri-apps-fill class="icon"/>
 				<div class="text">分类</div>
 			</menu-item>
-			<menu-item class="item" ref="mine" name="mine">
+			<menu-item class="item" ref="mine" path="/mine" :show-in-drawer="true">
 				<img class="ava" :class="{'def-ava': !me.user.raw_avatar}" :src="myAvatarUrl"/>
 				<div class="text">{{ me.user.nick_name || '未登录' }}</div>
 			</menu-item>
@@ -116,6 +116,8 @@ export default {
 	position: fixed;
 	bottom: 50%;
 	right: 0;
+	height: 2.5rem;
+	width: 2.5rem;
 }
 
 #round-outer {

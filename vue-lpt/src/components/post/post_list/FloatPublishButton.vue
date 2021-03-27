@@ -67,7 +67,7 @@ export default {
 	methods: {
 		goPublish() {
 			this.$router.push({
-				name: 'publish',
+				path: '/publish',
 				query: {
 					type: 'public',
 					categoryId: this.category.id,

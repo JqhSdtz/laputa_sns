@@ -31,4 +31,9 @@ public class PostRight {
      * 是否有删除该帖子的权限
      */
     private Boolean delete;
+    /**
+     * 是否有更新目录的权限
+     */
+    @JsonProperty("update_category")
+    private Boolean updateCategory;
 }

@@ -1,43 +1,44 @@
 <template>
-	<van-action-sheet v-model:show="showCapturePanel" :actions="actions" @select="onSelect"
-	                  cancel-text="取消" description="请选择上传方式"/>
-	<van-form ref="form" style="margin-top: 1.5rem">
-		<van-field :rules="rules.title" v-model="form.title" placeholder="输入标题（可选，最多20字符）"/>
-		<van-field  v-if="selectedCategory.rights.create_editable_post" :rules="rules.abstract"
-		            v-model="form.abstract" type="textarea" placeholder="输入摘要（可选，最多256字符）"
-		           :autosize="{minHeight: 100}"/>
-		<van-field :rules="rules.content" v-model="form.content" type="textarea" placeholder="输入内容（必填，最多100000字符）"
-		           :autosize="{minHeight: 100}"/>
-		<van-uploader ref="uploader" class="uploader" v-model="fileList" @click="beforeChoose"
-		              :before-read="parseUpload" multiple :max-count="maxImgCount"/>
-		<van-cell center title="是否公开">
-			<template #right-icon>
-				<van-switch v-model="form.isPublic" :disabled="opType !== 'create'" size="24"/>
-			</template>
-		</van-cell>
-		<van-cell v-if="selectedCategory.rights.create_editable_post" center title="是否可编辑">
-			<template #right-icon>
-				<van-switch v-model="form.editable" :disabled="opType !== 'create'" size="24"/>
-			</template>
-		</van-cell>
-		<van-cell v-if="selectedCategory.rights.create_editable_post" center title="是否使用MarkDown">
-			<template #right-icon>
-				<van-switch v-model="form.useMarkDown" :disabled="opType !== 'create'" size="24" @change="onUseMarkDownChange"/>
-			</template>
-		</van-cell>
-		<van-field v-if="form.isPublic" :disabled="opType !== 'create'" :rules="rules.category"
-		           v-model="selectedCategoryPath" is-link readonly label="目录"
-		           placeholder="选择发布目录（必填）" @click="showPopover = true" style="margin-top: 1rem"/>
-		<van-popup v-if="opType === 'create'" v-model:show="showPopover" round position="bottom">
-			<van-cascader v-model="form.categoryId" title="选择发布目录" :options="categoryOptions"
-			              @change="onCategorySelect" @finish="onCategorySelectFinish"
-			              @close="showPopover = false"/>
-		</van-popup>
-	</van-form>
-	<van-button @click="onSubmit" type="primary" round block style="width: 80%; margin-left: 10%; margin-top: 1rem">
-		发布
-	</van-button>
-	<div id="testDiv"></div>
+	<div>
+		<van-action-sheet v-model:show="showCapturePanel" :actions="actions" @select="onSelect"
+		                  cancel-text="取消" description="请选择上传方式"/>
+		<van-form ref="form" style="margin-top: 1.5rem">
+			<van-field :rules="rules.title" v-model="form.title" placeholder="输入标题（可选，最多20字符）"/>
+			<van-field  v-if="selectedCategory.rights.create_editable_post" :rules="rules.abstract"
+			            v-model="form.abstract" type="textarea" placeholder="输入摘要（可选，最多256字符）"
+			            :autosize="{minHeight: 100}"/>
+			<van-field :rules="rules.content" v-model="form.content" type="textarea" placeholder="输入内容（必填，最多100000字符）"
+			           :autosize="{minHeight: 100}"/>
+			<van-uploader ref="uploader" class="uploader" v-model="fileList" @click="beforeChoose"
+			              :before-read="parseUpload" multiple :max-count="maxImgCount"/>
+			<van-cell center title="是否公开">
+				<template #right-icon>
+					<van-switch v-model="form.isPublic" :disabled="opType !== 'create'" size="24"/>
+				</template>
+			</van-cell>
+			<van-cell v-if="selectedCategory.rights.create_editable_post" center title="是否可编辑">
+				<template #right-icon>
+					<van-switch v-model="form.editable" :disabled="opType !== 'create'" size="24"/>
+				</template>
+			</van-cell>
+			<van-cell v-if="selectedCategory.rights.create_editable_post" center title="是否使用MarkDown">
+				<template #right-icon>
+					<van-switch v-model="form.useMarkDown" :disabled="opType !== 'create'" size="24" @change="onUseMarkDownChange"/>
+				</template>
+			</van-cell>
+			<van-field v-if="form.isPublic" :disabled="opType !== 'create'" :rules="rules.category"
+			           v-model="selectedCategoryPath" is-link readonly label="目录"
+			           placeholder="选择发布目录（必填）" @click="showPopover = true" style="margin-top: 1rem"/>
+			<van-popup v-if="opType === 'create'" v-model:show="showPopover" round position="bottom">
+				<van-cascader v-model="form.categoryId" title="选择发布目录" :options="categoryOptions"
+				              @change="onCategorySelect" @finish="onCategorySelectFinish"
+				              @close="showPopover = false"/>
+			</van-popup>
+		</van-form>
+		<van-button @click="onSubmit" type="primary" round block style="width: 80%; margin: 1rem 10%">
+			发布
+		</van-button>
+	</div>
 </template>
 
 <script>
@@ -226,10 +227,10 @@ export default {
 			} else {
 				this.form.categoryId = query.categoryId || '';
 				this.selectedCategoryPath = query.categoryPath || '';
-				lpt.categoryServ.getRoots({
-					consumer: this.lptConsumer,
-					success: (result) => {
-						result.object.forEach(category => {
+				global.states.categoryManager.get({
+					itemId: lpt.categoryServ.rootCategoryId,
+					success: (item) => {
+						item.sub_list.forEach(category => {
 							if (this.hasPublishRight(category)) {
 								this.categoryOptions.push({
 									text: category.name,
@@ -238,6 +239,9 @@ export default {
 								});
 							}
 						});
+					},
+					fail(result) {
+						Toast.fail(result.message);
 					}
 				});
 			}
@@ -246,8 +250,8 @@ export default {
 			if (!category.allow_user_post) {
 				return false;
 			} else if (typeof category.allow_post_level !== 'undefined') {
-				const permissionMap = global.states.curOperator.permission_map;
-				return permissionMap && permissionMap[category.id] >= category.allow_post_level;
+				const this_level = category.rights.this_level;
+				return this_level && this_level >= category.allow_post_level;
 			} else {
 				return true;
 			}
@@ -261,9 +265,24 @@ export default {
 				success: (post) => {
 					this.form.isPublic = post.type_str === 'public';
 					this.selectedCategoryPath = lpt.categoryServ.getPathStr(post.category_path);
+					this.selectedCategory = global.states.categoryManager.get({
+						itemId: post.category_id
+					});
 					this.form.editable = post.editable;
 					this.form.title = post.title;
-					this.form.content = post.content;
+					if (post.full_text_id) {
+						lpt.postServ.getFullText({
+							param: {
+								fullTextId: post.full_text_id
+							},
+							success: (result) => {
+								this.form.abstract = post.content;
+								this.form.content = result.object;
+							}
+						});
+					} else {
+						this.form.content = post.content;
+					}
 					const rawImg = post.raw_img;
 					if (rawImg) {
 						rawImg.split('#').forEach(str => {
@@ -362,6 +381,7 @@ export default {
 					success: function () {
 						ref.form.title = '';
 						ref.form.content = '';
+						ref.form.abstract = '';
 						ref.fileList = [];
 						if (ref.opType === 'create') {
 							Toast.success('发布成功');
@@ -380,19 +400,23 @@ export default {
 			const option = selectedOptions[selectedOptions.length - 1];
 			if (option.isLeaf)
 				return;
-			lpt.categoryServ.getDirectSub({
-				consumer: this.lptConsumer,
-				data: {
-					categoryId: option.value
-				},
-				success(result) {
-					option.children = result.object.map(category => {
-						return {
-							text: category.name,
-							value: category.id,
-							isLeaf: category.is_leaf
+			global.states.categoryManager.get({
+				itemId: option.value,
+				filter: (res) => res.sub_list,
+				success: (item) => {
+					option.children = [];
+					item.sub_list.forEach(category => {
+						if (this.hasPublishRight(category)) {
+							option.children.push({
+								text: category.name,
+								value: category.id,
+								isLeaf: category.is_leaf
+							});
 						}
 					});
+				},
+				fail(result) {
+					Toast.fail(result.message);
 				}
 			});
 		},

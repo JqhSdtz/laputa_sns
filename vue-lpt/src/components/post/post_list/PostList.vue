@@ -9,6 +9,13 @@
 				           :key="post.id" :is-top-post="post.id === topPostId" :class="{post, 'last-post': post.last}"/>
 			</van-list>
 		</van-pull-refresh>
+		<teleport to="body">
+			<prompt-dialog ref="categoryPrompt">
+				<template v-if="showSelectedCategory" v-slot:tip>
+					<category-grid-item :category-id="curSelectedCategory.id"/>
+				</template>
+			</prompt-dialog>
+		</teleport>
 	</div>
 </template>
 
@@ -18,6 +25,8 @@ import global from '@/lib/js/global';
 import {toRef} from "vue";
 import {Toast} from 'vant';
 import PostItem from '../item/PostItem';
+import PromptDialog from '@/components/global/PromptDialog';
+import CategoryGridItem from "@/components/category/item/CategoryGridItem";
 import {createEventBus} from "@/lib/js/global/global-events";
 
 export default {
@@ -43,19 +52,23 @@ export default {
 		onLoaded: Function
 	},
 	emits: ['refresh'],
-	provide(){
+	provide() {
 		return {
 			postListEvents: this.postListEvents
 		}
 	},
 	components: {
-		PostItem
+		PostItem,
+		PromptDialog,
+		CategoryGridItem
 	},
 	data() {
 		this.querior = lpt.createQuerior();
 		this.postListEvents = createEventBus();
 		return {
 			finished: toRef(this.querior, 'hasReachedBottom'),
+			showSelectedCategory: false,
+			curSelectedCategory: lpt.categoryServ.getDefaultCategory(-1),
 			hasEverLoad: false,
 			isEmpty: false,
 			list: [],
@@ -122,7 +135,8 @@ export default {
 					top_post_id: post.id,
 					op_comment: param.comment
 				};
-			} if (ref.postOf === 'creator') {
+			}
+			if (ref.postOf === 'creator') {
 				fun = lpt.userServ.setTopPost;
 				data = {
 					top_post_id: post.id
@@ -180,6 +194,49 @@ export default {
 				}
 			});
 		});
+		this.postListEvents.on('updateCategory', (param) => {
+			const prompt = this.$refs.categoryPrompt.prompt;
+			prompt({
+				title: '输入目标目录的ID',
+				placeholder: ' ',
+				onValidate: (value) => {
+					return global.states.categoryManager.get({
+						itemId: value,
+						getPromise: true
+					}).then((category) => {
+						this.curSelectedCategory = category;
+					}).catch(() => {
+						return Promise.reject(`ID为"${value}"的目录不存在`);
+					});
+				},
+				onConfirm: (value) => {
+					this.showSelectedCategory = true;
+					return prompt({
+						inputType: 'none',
+						title: '迁移目录',
+						tipMessage: '确认迁移到该目录？',
+						onFinish: () => this.$nextTick(() => this.showSelectedCategory = false),
+						onValidate: () => true,
+						onConfirm: () => {
+							lpt.postServ.setCategory({
+								consumer: this.lptConsumer,
+								data: {
+									id: param.post.id,
+									category_id: value
+								},
+								success: () => {
+									Toast.success('迁移目录成功');
+									// ref.list.splice(ref.list.indexOf(param.post), 1);
+								},
+								fail(result) {
+									Toast.fail(result.message);
+								}
+							});
+						}
+					});
+				}
+			});
+		});
 	},
 	unmounted() {
 		this.querior.reset();
@@ -225,7 +282,10 @@ export default {
 						}
 					},
 					fail(result) {
-						Toast.fail(result.message);
+						if (result.error_code !== 1010140204) {
+							// 屏蔽掉刷新频繁的错误提示
+							Toast.fail(result.message);
+						}
 					},
 					complete() {
 						if (!ref.hasReallyLoaded) {

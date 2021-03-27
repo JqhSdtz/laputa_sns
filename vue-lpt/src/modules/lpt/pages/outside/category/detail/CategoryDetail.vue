@@ -1,7 +1,7 @@
 <template>
-	<template v-if="forceReloadFlag && showDrawer">
-		<div id="category-area" :style="{height: scrollHeight, position: 'relative'}">
-			<div ref="categoryInfoArea" id="main-area">
+	<template v-if="forceReloadFlag">
+		<div id="category-area" v-show="showDrawer" :style="{height: scrollHeight, position: 'relative'}">
+			<div ref="categoryInfoArea" class="main-area">
 				<div style="height: 200px; width: 100%; background-size: cover;"
 				     :style="{backgroundImage: `linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)), url(${coverImgUrl})`}"/>
 				<div style="margin-top: -2rem">
@@ -10,7 +10,8 @@
 						<p style="font-size: 1.5rem; font-weight: bold;margin-bottom: 0">{{ category.name }}</p>
 						<p>帖数:{{ category.post_cnt }}</p>
 					</span>
-					<action-bar style="float: right; margin-top: 1.5rem;" :category-id="category.id"/>
+					<!-- action-bar使用float布局会影响tabs组件的正常加载。。。未找到原因 -->
+					<action-bar style="position: absolute; right: 0; margin-top: 2.5rem;" :category-id="category.id"/>
 				</div>
 				<category-path style="margin-left: 1rem;" :path-list="category.path_list"/>
 				<ellipsis style="margin-left: 1rem; margin-top: 0.5rem" :content="category.intro" :rows="2"/>
@@ -25,7 +26,7 @@
 			                      :style="{left: clientWidth - 60 + 'px'}" :auto-hide="isTabFixed"
 			                      :category="category" :hide-offset-base="mainAreaHeight"/>
 			<a-back-top style="left: 30px; bottom: 2rem;" :target="getElement"/>
-			<div ref="middleBar" id="middle-bar" style="width: 100%;height: 100%">
+			<div ref="middleBar" id="middle-bar" style="height: 100%" :style="{width: clientWidth + 'px'}">
 				<van-tabs v-model:active="curTabKey" swipeable sticky lazy-render @scroll="onScroll">
 					<van-tab ref="postArea" name="postList" title="帖子">
 						<sort-type-selector class="sort-type-selector" v-if="postListLoaded && !isTabFixed"
@@ -87,11 +88,12 @@ export default {
 	data() {
 		this.categoryDetailEvents = createEventBus();
 		const category = global.states.categoryManager.get({
-			itemId: this.categoryId
+			itemId: this.categoryId,
+			filter: (res) => res.isFull
 		});
 		return {
 			category,
-			showDrawer: toRef(global.states.blog, 'showDrawer'),
+			showDrawer: this.lptContainer === 'blogDrawer' ? toRef(global.states.blog, 'showDrawer') : true,
 			mainAreaHeight: 0,
 			isTabFixed: false,
 			curTabKey: 'postList',
@@ -102,7 +104,8 @@ export default {
 	watch: {
 		categoryId(newValue) {
 			this.category = global.states.categoryManager.get({
-				itemId: newValue
+				itemId: newValue,
+				filter: (res) => res.isFull
 			});
 			this.init();
 			this.isTabFixed = false;
@@ -123,18 +126,18 @@ export default {
 			return mainViewHeight + 'px';
 		},
 		clientWidth() {
-			if (global.vars.env === 'lpt') {
-				return document.body.clientWidth;
+			if (global.vars.env === 'blog') {
+				return global.states.style.drawerWidth;
 			} else {
-				return this.$parent.$el.clientWidth;
+				return document.body.clientWidth;
 			}
 		},
 		hasPublishRight() {
-			if (!this.category.allow_user_post) {
+			if (!this.category.is_leaf || !this.category.allow_user_post) {
 				return false;
 			} else if (typeof this.category.allow_post_level !== 'undefined') {
-				const permissionMap = global.states.curOperator.permission_map;
-				return permissionMap && permissionMap[this.category.id] >= this.category.allow_post_level;
+				const this_level = this.category.rights.this_level;
+				return this_level && this_level >= this.category.allow_post_level;
 			} else {
 				return true;
 			}
@@ -154,22 +157,9 @@ export default {
 			}
 			this.isTabFixed = isFixed;
 		},
-		afterCategoryLoad() {
-			this.categoryLoaded = true;
-		},
 		init() {
-			const ref = this;
-			lpt.categoryServ.get({
-				consumer: this.lptConsumer,
-				param: {
-					id: this.categoryId
-				},
-				success(result) {
-					global.states.categoryManager.add(result.object);
-					ref.$nextTick(() => {
-						ref.afterCategoryLoad();
-					});
-				},
+			global.states.categoryManager.get({
+				itemId: this.categoryId,
 				fail(result) {
 					Toast.fail(result.message);
 				}
@@ -202,7 +192,7 @@ export default {
 	right: auto
 }
 
-#main-area {
+.main-area {
 	position: relative;
 }
 

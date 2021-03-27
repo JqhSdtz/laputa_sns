@@ -136,7 +136,7 @@ export default {
 	},
 	methods: {
 		backToHome() {
-			this.$router.push({path: '/home'});
+			this.$router.push({path: '/home/mine'});
 		},
 		toSignIn() {
 			this.$router.push({path: '/sign_in'});

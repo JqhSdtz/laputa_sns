@@ -42,6 +42,8 @@ public class PostValidator {
             return;
         if (level >= AdminLevel.DELETE_CATEGORY_POST)
             post.getRights().setDelete(true);
+        if (level >= AdminLevel.UPDATE_POST_CATEGORY)
+            post.getRights().setUpdateCategory(true);
     }
 
     public void multiSetRights(Post param, @NotNull List<Post> postList, @NotNull Operator operator) {
@@ -112,6 +114,16 @@ public class PostValidator {
         if (operator .getId().equals(-1))
             return false;
         return post.getCreatorId().equals(operator.getUserId());
+    }
+
+    public boolean checkSetCategoryPermission(@NotNull Post oriPost, @NotNull Operator operator) {
+        // 需要是自己创建的，并且自己还要有该目录的管理等级，才可以更改目录
+        if (operator .getId().equals(-1))
+            return false;
+        if (!oriPost.getCreatorId().equals(operator.getUserId()))
+            return false;
+        Integer permissionLevel = permissionService.readPermissionLevel(oriPost.getCategoryId(), operator).getObject();
+        return permissionLevel != null && permissionLevel >= AdminLevel.UPDATE_POST_CATEGORY;
     }
 
     public boolean checkUpdateContentPermission(@NotNull Post post, @NotNull Operator operator) {

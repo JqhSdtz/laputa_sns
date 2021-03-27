@@ -57,12 +57,13 @@ export default {
 			}
 		};
 	},
+	inject: ['lptContainer'],
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 	},
 	methods: {
 		backToHome() {
-			this.$router.push({path: '/home'});
+			this.$router.push({path: '/home/mine'});
 		},
 		toSignUp() {
 			this.$router.push({path: '/sign_up'});

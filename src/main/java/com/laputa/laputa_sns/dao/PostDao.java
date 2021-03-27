@@ -17,6 +17,7 @@ import java.util.List;
 @Repository
 public interface PostDao extends BaseDao<Post> {
     int updateTopComment(@Param("postId") int postId, @Param("commentId") Integer commentId);
+    int updateCategory(@Param("postId") int postId, @Param("categoryId") Integer categoryId);
     int updateContent(Post post);
     List<Post> selectList(@Param("post") Post post, @Param("category_list") List<Category> categoryList);
     int insertFullText(TmpEntry fullText);

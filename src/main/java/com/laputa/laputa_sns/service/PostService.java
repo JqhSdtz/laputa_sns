@@ -26,10 +26,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.laputa.laputa_sns.common.Result.FAIL;
 import static com.laputa.laputa_sns.common.Result.SUCCESS;
@@ -121,7 +118,7 @@ public class PostService extends BaseService<PostDao, Post> {
 
     public void incrLikeCnt(Post post, int delta) {
         post.setLikeCnt(post.getLikeCnt() + delta);
-        if (delta > 0) {
+        if (delta >= 0) {
             Map<Integer, TmpEntry> tmpMap = new HashMap(1);
             postIndexService.updatePostPopIndex(post, true, true, tmpMap);
             if (tmpMap.size() == 1)
@@ -177,6 +174,13 @@ public class PostService extends BaseService<PostDao, Post> {
      */
     private int updateTopComment(int postId, Integer commentId) {
         return dao.updateTopComment(postId, commentId);
+    }
+
+    /**
+     * 设置帖子目录，返回1表示成功，0表示失败
+     */
+    private int updateCategory(int postId, Integer categoryId) {
+        return dao.updateCategory(postId, categoryId);
     }
 
     /**
@@ -556,12 +560,9 @@ public class PostService extends BaseService<PostDao, Post> {
     }
 
     /**
-     * 创建帖子
+     * 检查帖子目录是否合规
      */
-    public Result<Integer> createPost(@NotNull Post post, Operator operator) {
-        if (!post.isValidInsertParam())
-            return new Result(FAIL).setErrorCode(1010050202).setMessage("操作错误，参数不合法");
-        Category category = null;
+    private Result checkCategoryOfPost(Post post, Operator operator) {
         if (post.getType().equals(Post.TYPE_PUBLIC)) {
             if (post.getCategoryId() == adminOpsRecordCategoryId
                     && operator.getUserId() != adminOpsRecordUserId) {
@@ -569,12 +570,24 @@ public class PostService extends BaseService<PostDao, Post> {
             }
             Result<Category> categoryResult = categoryService.readCategory(post.getCategoryId(), false, operator);
             if (categoryResult.getState() == FAIL)
-                return (Result) categoryResult;
-            category = categoryResult.getObject();
+                return categoryResult;
+            Category category = categoryResult.getObject();
             if (category.getIsLeaf() != null && !category.getIsLeaf())
                 return new Result(FAIL).setErrorCode(1010050211).setMessage("只能在叶目录发帖");
             post.setCategory(category);
         }
+        return Result.EMPTY_SUCCESS;
+    }
+
+    /**
+     * 创建帖子
+     */
+    public Result<Integer> createPost(@NotNull Post post, Operator operator) {
+        if (!post.isValidInsertParam())
+            return new Result(FAIL).setErrorCode(1010050202).setMessage("操作错误，参数不合法");
+        Result checkCategoryResult = checkCategoryOfPost(post, operator);
+        if (checkCategoryResult.getState() == FAIL)
+            return checkCategoryResult;
         post.setLength(post.getContent().length()).setCreator(operator.getUser());
         if (!postValidator.checkCreatePermission(post, operator))
             return new Result(FAIL).setErrorCode(1010050205).setMessage("操作失败，权限错误");
@@ -585,12 +598,56 @@ public class PostService extends BaseService<PostDao, Post> {
             return new Result(FAIL).setErrorCode(1010050103).setMessage("数据库操作失败");
         post.setLikeCnt(0L).setCommentCnt(0L).setViewCnt(0L).setForwardCnt(0L);
         if (post.getType().equals(Post.TYPE_PUBLIC)) {
-            categoryService.cascadeUpdatePostCnt(category.getId(), 1L);//修改目录的帖子数
-            postIndexService.addPostIndex(post, LATEST, true, null);//新创建的post的latest索引标志默认为1
+            //修改目录的帖子数
+            categoryService.cascadeUpdatePostCnt(post.getCategoryId(), 1L);
+            //新创建的post的latest索引标志默认为1
+            postIndexService.addPostIndex(post, LATEST, true, null);
         }
         userService.updatePostCnt(post.getCreatorId(), 1L);
         postNewsService.pushNews(post.getCreatorId(), post.getId());
         return new Result(SUCCESS).setObject(post.getId());
+    }
+
+    /**
+     * 修改帖子所在目录
+     * 该操作需要管理等级，但不算做管理员操作，不记录到管理员操作公开中
+     */
+    public Result setCategory(@NotNull Post param,  Operator operator) {
+        if (!param.isValidSetCategoryParam())
+            return new Result(FAIL).setErrorCode(1010050228).setMessage("操作错误，参数不合法");
+        //设置帖子目录需要判断帖子的创建者
+        Result<Post> postResult = readPostWithAllFalse(param.getId(), operator);
+        if (postResult.getState() == FAIL)
+            return postResult;
+        Post resPost = postResult.getObject();
+        if (!resPost.getType().equals(Post.TYPE_PUBLIC))
+            return new Result(FAIL).setErrorCode(1010050232).setMessage("操作失败，帖子类型错误");
+        if (!postValidator.checkSetCategoryPermission(resPost, operator))
+            return new Result(FAIL).setErrorCode(1010050229).setMessage("操作失败，权限错误");
+        Integer oriCategoryId = resPost.getCategoryId();
+        resPost.setCategoryId(param.getCategoryId());
+        Result checkCategoryResult = checkCategoryOfPost(resPost, operator);
+        if (checkCategoryResult.getState() == FAIL)
+            return checkCategoryResult;
+        // 需要检查是否有在目标目录创建帖子的权限
+        if (!postValidator.checkCreatePermission(resPost, operator))
+            return new Result(FAIL).setErrorCode(1010050230).setMessage("操作失败，权限错误");
+        int res = updateCategory(param.getId(), param.getCategoryId());
+        if (res == 0)
+            return new Result(FAIL).setErrorCode(1010050131).setMessage("数据库操作失败");
+        redisHelper.removeEntity(param.getId());
+        //修改原目录的帖子数
+        categoryService.cascadeUpdatePostCnt(oriCategoryId, -1L);
+        //修改目标目录的帖子数
+        categoryService.cascadeUpdatePostCnt(param.getCategoryId(), 1L);
+        // 加入目标目录的索引
+        postIndexService.addPostIndex(Arrays.asList(resPost), resPost.getCategory(), POPULAR);
+        postIndexService.addPostIndex(Arrays.asList(resPost), resPost.getCategory(), LATEST);
+        // 从原目录的索引中删除，需要注意，这里把帖子的目录改回了原目录
+        resPost.setCategory(new Category(oriCategoryId));
+        postIndexService.deletePostIndex(resPost, LATEST);
+        postIndexService.deletePostIndex(resPost, POPULAR);
+        return Result.EMPTY_SUCCESS;
     }
 
     /**

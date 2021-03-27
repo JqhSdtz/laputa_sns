@@ -22,6 +22,7 @@ import static com.laputa.laputa_sns.common.Result.FAIL;
 
 /**
  * 帖子索引服务
+ *
  * @author JQH
  * @since 下午 5:31 20/02/21
  */
@@ -43,7 +44,7 @@ public class PostIndexService implements ApplicationRunner {
 
     private final Operator progOperator = ProgOperatorManager.register(PostIndexService.class);
 
-    public PostIndexService(@NotNull CategoryService categoryService, @Lazy PostService postService, CommonService commonService) {
+    public PostIndexService(@NotNull @Lazy CategoryService categoryService, @Lazy PostService postService, CommonService commonService) {
         this.categoryService = categoryService;
         this.postService = postService;
         this.commonService = commonService;
@@ -154,38 +155,61 @@ public class PostIndexService implements ApplicationRunner {
         return res;
     }
 
+    /**
+     * 更新父目录后将本目录索引刷新到父目录中
+     */
+    public void refreshIndexAfterUpdateParent(Category category) {
+        if (category.getType().equals(Category.TYPE_PRIVATE))
+            return;
+        Category parent = categoryService.readCategory(category.getParentId(), false, progOperator).getObject();
+        IndexList popularList = category.getPopularPostList();
+        IndexList latestList = category.getLatestPostList();
+        for (Iterator<Index> iter = popularList.iterator(); iter.hasNext(); )
+            doUpdatePopularIndex(iter.next(), parent, true, false, new HashMap<>());
+        for (Iterator<Index> iter = latestList.iterator(); iter.hasNext(); )
+            doUpdateLatestIndex(iter.next(), parent, false, new HashMap<>());
+    }
+
     public void addPostIndex(Post post, int type, boolean isNew, Map<Integer, TmpEntry> changeMap) {
         if (type == LATEST) {
             long date = isNew ? new Date().getTime() : post.getCreateTime().getTime();
             Index index = new Index(post.getId(), date);
             Category category = categoryService.readCategory(post.getCategoryId(), false, progOperator).getObject();
-            while (category != null) {
-                IndexList indexList = category.getLatestPostList();
-                if (!indexList.hasIndex(index.getId())) {//没有该节点才放入
-                    if (indexList.size() >= postIndexMaxCacheNum) {
-                        Index last = indexList.popLast();
-                        if (last != null && changeMap != null)
-                            changeMap.put(last.getId(), new TmpEntry(last.getId(), 0));
-                    }
-                    if (isNew)//新加入的latest索引不需要设置index_flag，见PostService.createComment
-                        indexList.addFirst(index, false);
-                    else {
-                        Index last = indexList.addLast(index, true);
-                        if (last != null && changeMap != null)
-                            changeMap.put(last.getId(), new TmpEntry(last.getId(), 1));
-                    }
-                }
-                if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE))//私有目录，不向上展示
-                    break;
-                category = category.getParent();
-            }
+            doUpdateLatestIndex(index, category, isNew, changeMap);
         } else if (type == POPULAR)
             updatePostPopIndex(post, true, false, changeMap);
+    }
+
+    private void doUpdateLatestIndex(Index index, Category category, boolean isNew, Map<Integer, TmpEntry> changeMap) {
+        while (category != null) {
+            IndexList indexList = category.getLatestPostList();
+            if (!indexList.hasIndex(index.getId())) {//没有该节点才放入
+                if (indexList.size() >= postIndexMaxCacheNum) {
+                    Index last = indexList.popLast();
+                    if (last != null && changeMap != null)
+                        changeMap.put(last.getId(), new TmpEntry(last.getId(), 0));
+                }
+                if (isNew)//新加入的latest索引不需要设置index_flag，见PostService.createComment
+                    indexList.addFirst(index, false);
+                else {
+                    Index last = indexList.addLast(index, true);
+                    if (last != null && changeMap != null)
+                        changeMap.put(last.getId(), new TmpEntry(last.getId(), 1));
+                }
+            }
+            if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE))//私有目录，不向上展示
+                break;
+            category = category.getParent();
+        }
     }
 
     public boolean updatePostPopIndex(@NotNull Post post, boolean incr, boolean onlyIfExistsOrGreaterThanLast, Map<Integer, TmpEntry> changeMap) {
         Index index = new Index(post.getId(), post.getLikeCnt());
         Category category = categoryService.readCategory(post.getCategoryId(), false, progOperator).getObject();
+        return doUpdatePopularIndex(index, category, incr, onlyIfExistsOrGreaterThanLast, changeMap);
+    }
+
+    private boolean doUpdatePopularIndex(Index index, Category category, boolean incr, boolean onlyIfExistsOrGreaterThanLast, Map<Integer, TmpEntry> changeMap) {
         boolean success = false;
         while (category != null) {
             IndexList indexList = category.getPopularPostList();
@@ -286,7 +310,7 @@ public class PostIndexService implements ApplicationRunner {
         loadSubPostIndexList(groundCategory, POPULAR);
         log.info("目录索引列表以缩减到默认缓存长度");
         List<TmpEntry> entryList = new ArrayList(newCacheNumMap.size());
-        for (Map.Entry<Integer, Integer> entry: newCacheNumMap.entrySet()) {
+        for (Map.Entry<Integer, Integer> entry : newCacheNumMap.entrySet()) {
             Integer categoryId = entry.getKey();
             Integer cacheNum = entry.getValue();
             entryList.add(new TmpEntry(categoryId, cacheNum));

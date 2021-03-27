@@ -1,5 +1,5 @@
 <template>
-	<div id="main-area">
+	<div class="main-area">
 		<van-cell v-for="permission in list" :key="permission.id" style="margin-top: 1.5rem">
 			<span>{{getPathStr(permission.category_path)}}</span>
 			<span style="float:right; margin-right: 1rem">等级：{{permission.level}}</span>
@@ -46,12 +46,12 @@ export default {
 </script>
 
 <style scoped>
-#main-area {
+.main-area {
 	height: 100%;
 	overflow-y: scroll;
 }
 
-#main-area::-webkit-scrollbar {
+.main-area::-webkit-scrollbar {
 	display: none;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-	<div id="main-area" :style="{height: scrollHeight, position: 'relative'}">
+	<div class="main-area" :style="{height: scrollHeight, position: 'relative'}">
 		<van-empty v-if="hasEverLoad && isEmpty" description="没有关注"/>
 		<van-pull-refresh v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onPullRefresh"
 		                  success-text="刷新成功" style="height: 100%">
@@ -89,12 +89,12 @@ export default {
 	overflow-y: visible;
 }
 
-#main-area {
+.main-area {
 	height: 100%;
 	overflow-y: scroll;
 }
 
-#main-area::-webkit-scrollbar {
+.main-area::-webkit-scrollbar {
 	display: none;
 }
 </style>

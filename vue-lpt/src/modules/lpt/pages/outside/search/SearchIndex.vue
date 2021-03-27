@@ -1,5 +1,5 @@
 <template>
-	<van-tabs v-model:active="curTabKey" swipeable lazy-render>
+	<van-tabs v-model:active="curTabKey" swipeable lazy-render :style="{width: clientWidth + 'px'}">
 		<van-tab name="post" title="帖子">
 			<post-item class="post-item" v-for="post in postList" :post-id="post.id" :key="post.id"/>
 		</van-tab>
@@ -39,6 +39,15 @@ export default {
 		curTabKey() {
 			this.init();
 		}
+	},
+	computed: {
+		clientWidth() {
+			if (global.vars.env === 'blog') {
+				return global.states.style.drawerWidth;
+			} else {
+				return document.body.clientWidth;
+			}
+		},
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();

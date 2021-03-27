@@ -14,6 +14,12 @@ import remHelper from '@/lib/js/uitls/rem-helper';
 import globalMixins from '@/lib/js/global/global-mixins';
 import globalDirectives from '@/lib/js/global/global-directives';
 import globalVariables from '@/lib/js/global/global-vars';
+import lpt from '@/lib/js/laputa/laputa';
+import JsonViewer from 'vue3-json-viewer';
+import VMdPreview from '@kangc/v-md-editor/lib/preview';
+import '@kangc/v-md-editor/lib/style/preview.css';
+import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
+import axios from "axios";
 
 // 设置rem单位的相对大小
 remHelper.initRem({
@@ -25,6 +31,9 @@ remHelper.initRem({
 const app = createApp(BlogApp);
 
 app.use(router);
+app.use(JsonViewer);
+VMdPreview.use(githubTheme);
+app.use(VMdPreview);
 
 const antdUseList = [ConfigProvider, Button, Row, Col, Spin, Form, Input, Badge, BackTop,
     Popover, Drawer];
@@ -51,4 +60,8 @@ globalMixins.forEach(mixin => {
 
 globalVariables.env = 'blog';
 
-app.mount('#app');
+axios.get('/static/blog/description.json').then((result) => {
+    globalVariables.blog.desc = result.data;
+    lpt.categoryServ.rootCategoryId = result.data.rootCategoryId;
+    app.mount('#app');
+});

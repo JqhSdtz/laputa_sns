@@ -1,5 +1,5 @@
 <template>
-	<div id="main-area">
+	<div class="main-area">
 		<a-upload-m
 			ref="uploader"
 			accept="image/*"
@@ -221,12 +221,12 @@ export default {
 </script>
 
 <style scoped>
-#main-area {
+.main-area {
 	height: 100%;
 	overflow-y: scroll;
 }
 
-#main-area::-webkit-scrollbar {
+.main-area::-webkit-scrollbar {
 	display: none;
 }
 

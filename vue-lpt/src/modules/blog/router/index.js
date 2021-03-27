@@ -1,5 +1,4 @@
 import {processRouters} from '@/lib/js/router/util';
-import Home from '@/modules/blog/pages/home/Home';
 import SignIn from '@/modules/lpt/pages/outside/sign/SignIn';
 import SignUp from '@/modules/lpt/pages/outside/sign/SignUp';
 import Mine from "@/modules/lpt/pages/inside/mine/Mine";
@@ -18,58 +17,35 @@ import ModCategoryInfo from "@/modules/lpt/pages/outside/category/ModCategoryInf
 import PermissionList from "@/modules/lpt/pages/outside/user/PermissionList";
 import CategoryAdminList from "@/modules/lpt/pages/outside/category/CategoryAdminList";
 import DruidStat from "@/modules/lpt/pages/outside/DruidStat";
+import Index from "@/modules/lpt/pages/inside/index/Index";
+import global from "@/lib/js/global";
+import pathToRegexp from 'path-to-regexp';
 
-const routers = [
+const drawerRouters = [
     {
-        path: '/',
-        redirect: '/home'
-    },
-    {
-        path: '/home',
-        name: 'home',
-        components: {
-            default: Home
-        }
-    },
-    {
-        path: '/mine',
+        path: '/home/mine',
         name: 'mine',
-        components: {
-            default: Home,
-            leftDrawer: Mine
-        }
+        component: Mine
     },
     {
         path: '/mod_user_info',
         name: 'modUserInfo',
-        components: {
-            default: Home,
-            leftDrawer: ModUserInfo
-        }
+        component: ModUserInfo
     },
     {
         path: '/sign_in',
         name: 'signIn',
-        components: {
-            default: Home,
-            leftDrawer: SignIn
-        }
+        component: SignIn
     },
     {
         path: '/sign_up',
         name: 'signUp',
-        components: {
-            default: Home,
-            leftDrawer: SignUp
-        }
+        component: SignUp
     },
     {
         path: '/post_detail/:postId',
         name: 'postDetail',
-        components: {
-            default: Home,
-            leftDrawer: PostDetail
-        },
+        component: PostDetail,
         props: true,
         meta: {
             noCache: true
@@ -78,10 +54,7 @@ const routers = [
     {
         path: '/publish',
         name: 'publish',
-        components: {
-            default: Home,
-            leftDrawer: Publish
-        },
+        component: Publish,
         meta: {
             checkSign: true
         }
@@ -89,10 +62,7 @@ const routers = [
     {
         path: '/user_home_page/:userId',
         name: 'userHomePage',
-        components: {
-            default: Home,
-            leftDrawer: UserHomePage
-        },
+        component: UserHomePage,
         props: true,
         meta: {
             noCache: true
@@ -101,10 +71,7 @@ const routers = [
     {
         path: '/followers_list/:userId',
         name: 'followersList',
-        components: {
-            default: Home,
-            leftDrawer: FollowersList
-        },
+        component: FollowersList,
         props: true,
         meta: {
             noCache: true
@@ -113,10 +80,7 @@ const routers = [
     {
         path: '/following_list/:userId',
         name: 'followingList',
-        components: {
-            default: Home,
-            leftDrawer: FollowingList
-        },
+        component: FollowingList,
         props: true,
         meta: {
             noCache: true
@@ -125,18 +89,12 @@ const routers = [
     {
         path: '/notice_list',
         name: 'noticeList',
-        components: {
-            default: Home,
-            leftDrawer: NoticeList
-        },
+        component: NoticeList,
     },
     {
         path: '/comment_like_list/:type/:commentId',
         name: 'commentLikeList',
-        components: {
-            default: Home,
-            leftDrawer: CommentLikeList
-        },
+        component: CommentLikeList,
         props: true,
         meta: {
             noCache: true
@@ -145,10 +103,7 @@ const routers = [
     {
         path: '/search_index',
         name: 'searchIndex',
-        components: {
-            default: Home,
-            leftDrawer: SearchIndex
-        },
+        component: SearchIndex,
         meta: {
             noCache: true
         }
@@ -156,10 +111,7 @@ const routers = [
     {
         path: '/category_detail/:categoryId',
         name: 'categoryDetail',
-        components: {
-            default: Home,
-            leftDrawer: CategoryDetail
-        },
+        component: CategoryDetail,
         props: true,
         meta: {
             noCache: true
@@ -168,10 +120,7 @@ const routers = [
     {
         path: '/category_setting/:categoryId',
         name: 'categorySetting',
-        components: {
-            default: Home,
-            leftDrawer: CategorySetting
-        },
+        component: CategorySetting,
         props: true,
         meta: {
             noCache: true
@@ -180,10 +129,7 @@ const routers = [
     {
         path: '/mod_category_info/:categoryId',
         name: 'modCategoryInfo',
-        components: {
-            default: Home,
-            leftDrawer: ModCategoryInfo
-        },
+        component: ModCategoryInfo,
         props: true,
         meta: {
             noCache: true
@@ -192,10 +138,7 @@ const routers = [
     {
         path: '/permission_list/:userId',
         name: 'permissionList',
-        components: {
-            default: Home,
-            leftDrawer: PermissionList
-        },
+        component: PermissionList,
         props: true,
         meta: {
             noCache: true
@@ -204,10 +147,7 @@ const routers = [
     {
         path: '/category_admin_list/:categoryId',
         name: 'categoryAdminList',
-        components: {
-            default: Home,
-            leftDrawer: CategoryAdminList
-        },
+        component: CategoryAdminList,
         props: true,
         meta: {
             noCache: true
@@ -216,16 +156,101 @@ const routers = [
     {
         path: '/druid_stat',
         name: 'druidStat',
-        components: {
-            default: Home,
-            leftDrawer: DruidStat
-        }
+        component: DruidStat
     }
 ];
+const routers = [
+    {
+        path: '/',
+        redirect: '/blog/index'
+    },
+    {
+        path: '/blog/index',
+        component: Index
+    },
+    {
+        path: '/blog/post_detail/:postId',
+        name: 'blogPostDetail',
+        component: PostDetail,
+        props: true,
+        meta: {
+            noCache: true
+        }
+    },
+];
+
+// 以下循环创建路由项，为每一个主页面和抽屉页面的组合都创建一个路由
+// 以此实现主页面和抽屉页面分别路由
+const len = routers.length;
+for (let i = 0; i < len; ++i) {
+    const route = routers[i];
+    if (route.path === '/')
+        continue;
+    drawerRouters.forEach((dRoute) => {
+        const newRoute = {
+            path: route.path + dRoute.path,
+            name: (route.name || '') + '_' +(dRoute.name || ''),
+            props: {
+                default: route.props,
+                leftDrawer: dRoute.props
+            },
+            meta: {
+                ...route.meta,
+                ...dRoute.meta,
+                mainPath: route.path,
+                drawerPath: dRoute.path,
+                isDrawer: true,
+                // 用于匹配到main部分的路径，并用于后续的部分更改路径实现路由分离
+                mainPathReg: pathToRegexp(`(${route.path})(/*)`)
+            },
+            components: {
+                default: route.component,
+                leftDrawer: dRoute.component
+            }
+        }
+        routers.push(newRoute);
+    });
+}
+for (let i = 0; i < len; ++i) {
+    const route = routers[i];
+    if (!route.meta) route.meta = {};
+    route.meta.isMain = true;
+}
+drawerRouters.forEach((dRoute) => {
+    if (!dRoute.meta) dRoute.meta = {};
+    dRoute.meta.isDrawer = true;
+});
+console.log(routers);
 const {router, noCacheList} = processRouters({
-    routers,
-    homePath: 'home',
-    homeIndexPath: '/home'
+    routers
+});
+
+let curBlogPath = '/blog/index';
+let curDrawerPath = '';
+router.beforeEach((to, from, next) => {
+    if (to.meta && to.meta.checkSign && !global.methods.checkSign()) {
+        return;
+    }
+    if (to.path.indexOf('blog') === -1) {
+        to.path = curBlogPath + to.path;
+        next(to);
+        global.states.blog.showDrawer = true;
+        return;
+    } else {
+        if (to.meta && to.meta.isMain) {
+            curBlogPath = to.path;
+            if (curDrawerPath) {
+                to.path = curBlogPath + curDrawerPath;
+                next(to);
+                return;
+            }
+        } else if (to.meta && to.meta.mainPathReg) {
+            const execRes = to.meta.mainPathReg.exec(to.path);
+            if (execRes.length > 1) curBlogPath = execRes[1];
+            if (execRes.length > 2) curDrawerPath = execRes[2];
+        }
+        next();
+    }
 });
 
 export {

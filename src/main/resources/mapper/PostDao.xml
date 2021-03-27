@@ -176,6 +176,12 @@
 		where post_id = #{id}
 	</update>
 
+	<update id="updateCategory">
+		update lpt_post
+		set post_category_id = #{categoryId}
+		where post_id = #{postId}
+	</update>
+
 	<update id="deleteOne">
 		update lpt_post
 		set post_del_flag = 1

@@ -463,10 +463,10 @@ function _initLaputa(option) {
                         }
                         executor.curQueryToken = result.attached_token;
                     }
-                });
+                }, true);
                 const res = param.method ? lpt.ajax(param) : lpt.post(param);
                 return res;
-            }, 600);
+            }, 1000);
             executor.reset = function (param) {
                 param = param || {};
                 executor.curStartId = param.curStartId || 0;
@@ -654,11 +654,7 @@ function _initLaputa(option) {
                     id: id,
                     creator: {},
                     rights: {
-                        this_level: 0,
-                        parent_level: 0,
-                        update_info: false,
-                        update_disp_seq: false,
-                        talk_ban: false,
+                        update_category: false,
                         edit: false,
                         create: false,
                         delete: false
@@ -702,7 +698,11 @@ function _initLaputa(option) {
             setTopComment: wrap(function (param) {
                 param.url = lpt.baseApiUrl + '/post/top_comment/' + (param.param.isCancel ? 'cancel' : 'create');
                 return lpt.patch(param);
-            })
+            }),
+            setCategory: wrap(function (param) {
+                param.url = lpt.baseApiUrl + '/post/category';
+                return lpt.patch(param);
+            }),
         };
         lpt.postServ = serv;
     }
@@ -780,7 +780,22 @@ function _initLaputa(option) {
             });
         }
 
+        const adminLevel = {
+            // 发布可修改帖子，需要本目录权限
+            create_editable_post: 1
+        };
+
         const serv = {
+            setAdminRights: function (category) {
+                if (!category.rights)
+                    return;
+                const rights = category.rights;
+                const thisLevel = rights.this_level;
+                if (typeof thisLevel !== 'undefined') {
+                    if (thisLevel > adminLevel.create_editable_post)
+                        rights.create_editable_post = true;
+                }
+            },
             getDefaultCategory: function (id) {
                 return {
                     isDefault: true,
@@ -793,13 +808,18 @@ function _initLaputa(option) {
                     icon_img: '',
                     allow_post_level: undefined,
                     rights: {
+                        this_level: 0,
+                        parent_level: 0,
+                        update_info: false,
+                        update_disp_seq: false,
                         update_parent: false,
                         create_editable_post: false,
-                        update_allow_post_level: false
+                        update_allow_post_level: false,
+                        talk_ban: false
                     },
                     path_list: [],
                     disp_seq: 0,
-                    allow_user_post: false,
+                    allow_user_post: undefined,
                     is_leaf: true
                 }
             },

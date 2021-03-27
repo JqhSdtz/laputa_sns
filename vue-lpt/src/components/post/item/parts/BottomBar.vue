@@ -45,6 +45,9 @@ export default {
 	inject: {
 		postListEvents: {
 			type: Object
+		},
+		lptContainer: {
+			type: String
 		}
 	},
 	components: {
@@ -89,6 +92,12 @@ export default {
 					actions.push({
 						id: 'edit',
 						text: '编辑'
+					});
+				}
+				if (rights.update_category) {
+					actions.push({
+						id: 'updateCategory',
+						text: '迁移目录'
 					});
 				}
 				if (rights.delete) {
@@ -140,7 +149,8 @@ export default {
 						this.postListEvents.emit(action.id, {
 							post: this.post
 						});
-					}).catch(() => {});
+					}).catch(() => {
+					});
 				} else {
 					// 否则需要输入理由
 					global.methods.prompt({
@@ -154,21 +164,31 @@ export default {
 				}
 			} else if (action.id === 'edit') {
 				this.$router.push({
-					name: 'publish',
+					path: '/publish',
 					query: {
 						opType: 'edit',
 						postId: ref.post.id
 					}
 				});
+			} else if (action.id === 'updateCategory') {
+				this.postListEvents.emit(action.id, {
+					post: this.post
+				});
 			}
 		},
 		showPostDetail() {
-			this.$router.push({
-				name: 'postDetail',
-				params: {
-					postId: this.post.id
-				}
-			});
+			if (this.lptContainer === 'blogMain') {
+				this.$router.push({
+					name: 'blogPostDetail',
+					params: {
+						postId: this.post.id
+					}
+				});
+			} else {
+				this.$router.push({
+					path: '/post_detail/' + this.post.id
+				});
+			}
 		},
 		changeLike() {
 			const ref = this;

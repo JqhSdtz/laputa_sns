@@ -10,29 +10,34 @@ import global from '@/lib/js/global';
 export default {
 	name: 'MenuItem',
 	props: {
-		name: String,
-		alias: String
+		path: String,
+		alias: String,
+		showInDrawer: Boolean
 	},
 	data() {
 		return {}
 	},
 	computed: {
 		isActive() {
-			return this.name && this.$route.name == this.name;
+			if (!this.path) return false;
+			if (this.$route.path == this.path) return true;
+			const meta = this.$route.meta;
+			if (meta && (meta.drawerPath == this.path || meta.mainPath == this.path)) return true;
+			return false;
 		}
 	},
 	methods: {
 		itemClick() {
+			if (this.showInDrawer) {
+				global.states.blog.showDrawer = true;
+			}
 			if (this.isActive) {
 				global.events.emit('forceRefresh');
 			} else {
 				this.$router.push({
-					name: this.name
+					path: this.path
 				});
 			}
-			global.events.emit('menuClick', {
-				name: this.name
-			});
 		}
 	}
 }

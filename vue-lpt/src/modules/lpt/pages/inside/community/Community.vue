@@ -1,7 +1,7 @@
 <template>
 	<van-pull-refresh ref="pullArea" v-model="isRefreshing" @refresh="onRefresh"
 	                  style="height: 100%" success-text="刷新成功">
-		<div id="main-area">
+		<div class="main-area">
 			<van-cell v-if="recentVisitList.length > 0" is-link style="overflow-x: scroll; box-shadow: 0 -2px 14px rgba(100, 100, 100, 0.2)"
 			          @click="showRecentVisitPopup = true">
 				<p>最近访问</p>
@@ -125,12 +125,12 @@ export default {
 </script>
 
 <style scoped>
-#main-area {
+.main-area {
 	height: 100%;
 	overflow-y: scroll;
 }
 
-#main-area::-webkit-scrollbar {
+.main-area::-webkit-scrollbar {
 	display: none;
 }
 

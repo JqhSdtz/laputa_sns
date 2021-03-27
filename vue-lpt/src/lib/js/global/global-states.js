@@ -62,6 +62,7 @@ function initItemManager(param) {
                     return Promise.resolve(itemRes);
                 }).catch((error) => {
                     getParam.fail && getParam.fail(error);
+                    if (getParam.getPromise) return Promise.reject(error);
                 });
             } else {
                 getParam.success && getParam.success(res)
@@ -75,7 +76,7 @@ function initItemManager(param) {
             res = itemManager.add(temp);
             promise = doRequest();
         } else {
-            if (getParam.filter && !getParam.filter(res)) {
+            if (getParam.filter && !getParam.filter(res) && !getParam.justLocal) {
                 promise = doRequest();
             } else {
                 getParam.success && getParam.success(res)
@@ -98,15 +99,41 @@ const categoryManager = initItemManager({
         let newItem = item;
         if (item.root)
             newItem = item.root;
+        else
+            newItem.isFull = false;
+        let rights;
         if (item.rights) {
-            const rights = item.rights;
+            rights = item.rights;
             newItem.rights = rights;
-            let hasRights = rights.this_level && rights.this_level > 0;
-            hasRights = hasRights || (rights.parent_level && rights.parent_level > 0);
-            newItem.hasRights = hasRights;
+        } else if (states.curOperator.user.id !== -1) {
+            // 没有返回权限信息，则根据permission_map手动判断
+            const permissionMap = states.curOperator.permission_map;
+            rights = {};
+            rights.this_level = permissionMap[newItem.id];
+            let tmpItem = newItem;
+            while (typeof tmpItem.parent_id !== 'undefined') {
+                rights.parent_level = permissionMap[tmpItem.parent_id];
+                if (typeof rights.parent_level !== 'undefined')
+                    break;
+                tmpItem = categoryManager.get({
+                    itemId: tmpItem.parent_id,
+                    justLocal: true
+                });
+                // 如果本地没有已经获取的父目录，则直接退出，不请求服务器
+                if (tmpItem.isDefault)
+                    break;
+            }
+            if (typeof rights.this_level === 'undefined'
+                && typeof rights.parent_level !== 'undefined')
+                rights.this_level = rights.parent_level;
+            newItem.rights = rights;
+            lpt.categoryServ.setAdminRights(newItem);
         } else {
-            newItem.hasRights = false;
+            rights = {};
         }
+        let hasRights = rights.this_level && rights.this_level > 0;
+        hasRights = hasRights || (rights.parent_level && rights.parent_level > 0);
+        newItem.hasRights = hasRights;
         if (newItem.path_list) {
             newItem.path_list.reverse();
         }
@@ -121,6 +148,7 @@ const categoryManager = initItemManager({
     getRequest(id) {
         return lpt.categoryServ.get({
             objectOnly: true,
+            throwError: true,
             param: {
                 id: id
             }
@@ -200,12 +228,12 @@ const states = {
     }),
     style: wrap({
         default: {
-            lptWidth: document.body.clientWidth
+            drawerWidth: document.body.clientWidth
         }
     }),
     blog: wrap({
         default: {
-            showDrawer: true
+            showDrawer: false
         }
     }),
     hasSigned: computed(() => states.curOperator.user.id !== -1),
