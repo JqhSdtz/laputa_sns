@@ -8,26 +8,27 @@
 				          @click="showRecentVisitPopup = true">
 					<div style="white-space: nowrap;">
 						<div v-for="obj in recentVisitList" :key="obj.category.id" style="display: inline-block; position: relative; width: 4.5rem; vertical-align:top;">
-							<category-grid-item :category-id="obj.category.id" style="width: 4rem" size="2.5rem">
+							<category-grid-item :category-id="obj.category.id" style="width: 4rem" size="2.5rem"
+							                    @click.capture.stop="showCategory(obj.category)">
 								<pushpin-filled v-if="obj.pinned" class="pin-icon" :rotate="-45"/>
 							</category-grid-item>
 						</div>
 					</div>
 				</van-cell>
 			</div>
-			<van-cell is-link title="详情页查看" :to="'/category_detail/' + rootCategoryId"/>
 			<van-popup v-model:show="showRecentVisitPopup" round :closeable="true" style="width: 80%; padding: 1.5rem">
 				<van-grid :column-num="4" :border="false">
 					<van-grid-item v-for="obj in recentVisitList" :key="obj.category.id">
-						<category-grid-item :category-id="obj.category.id" size="2.5rem">
+						<category-grid-item :category-id="obj.category.id" size="2.5rem" @click.capture.stop="showCategory(obj.category)">
 							<pushpin-filled v-if="obj.pinned" class="pin-icon popup-pin-icon" :rotate="-45"/>
 						</category-grid-item>
 					</van-grid-item>
 				</van-grid>
 			</van-popup>
+			<category-path style="margin-left: 1rem;" :path-list="baseCategory.path_list"/>
 			<van-grid style="margin-top: 1rem;" :column-num="3" :border="false">
 				<van-grid-item v-for="category in categoryList" :key="category.id">
-					<category-grid-item :category-id="category.id"/>
+					<category-grid-item :category-id="category.id" @click.capture.stop="showCategory(category)"/>
 				</van-grid-item>
 			</van-grid>
 		</div>
@@ -38,20 +39,29 @@
 import lpt from '@/lib/js/laputa/laputa';
 import {Toast} from 'vant';
 import CategoryGridItem from '@/components/category/item/CategoryGridItem';
+import CategoryPath from '@/components/category/CategoryPath';
 import global from '@/lib/js/global';
 import {
 	PushpinFilled
 } from '@ant-design/icons-vue';
 
 export default {
-	name: 'Community',
+	name: 'Categories',
 	components: {
 		CategoryGridItem,
+		CategoryPath,
 		PushpinFilled
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	data() {
+		const baseCategoryId = lpt.categoryServ.rootCategoryId;
 		return {
-			rootCategoryId: lpt.categoryServ.rootCategoryId,
+			baseCategoryId,
+			baseCategory: lpt.categoryServ.getDefaultCategory(baseCategoryId),
 			isRefreshing: false,
 			categoryList: [],
 			recentVisitList: [],
@@ -61,6 +71,18 @@ export default {
 	watch: {
 		$route() {
 			this.showRecentVisitPopup = false;
+		}
+	},
+	computed: {
+		clientWidth() {
+			// 巨坑，深扒van-tabs组件发现是在swipe组件中获取了一个tabs的宽度
+			// 但是如果tabs组件不占满屏幕，又没有固定的px值，则返回0
+			// tabs组件错乱
+			if (this.lptContainer === 'blogDrawer') {
+				return global.states.style.drawerWidth;
+			} else {
+				return document.body.clientWidth;
+			}
 		}
 	},
 	created() {
@@ -90,15 +112,14 @@ export default {
 			this.initRecentVisitList();
 		},
 		initCategoryList() {
-			const ref = this;
 			lpt.categoryServ.get({
 				consumer: this.lptConsumer,
 				param: {
-					id: this.rootCategoryId
+					id: this.baseCategoryId
 				},
-				success(result) {
-					const category = global.states.categoryManager.add(result.object);
-					ref.categoryList = category.sub_list;
+				success: (result) => {
+					this.baseCategory = global.states.categoryManager.add(result.object);
+					this.categoryList = this.baseCategory.sub_list;
 				},
 				fail(result) {
 					Toast.fail(result.message);
@@ -121,6 +142,16 @@ export default {
 					Toast.fail(result.message);
 				}
 			});
+		},
+		showCategory(category) {
+			if (!category.is_leaf) {
+				this.baseCategoryId = category.id;
+				this.initCategoryList();
+			}
+			this.$router.push({
+				path: '/blog/index/' + category.id
+			});
+			global.states.blog.showDrawer = false;
 		}
 	}
 }

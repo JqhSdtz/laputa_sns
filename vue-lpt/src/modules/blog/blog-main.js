@@ -3,7 +3,7 @@ import 'ant-design-vue/dist/antd.less';
 
 import {createApp} from 'vue';
 import BlogApp from './BlogApp.vue';
-import router from './router';
+import router, {initRouter} from './router';
 import {ConfigProvider, Button, Row, Col, Spin, Form, Input, Badge, BackTop, Drawer, Popover} from 'ant-design-vue';
 import {
     Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
@@ -28,40 +28,40 @@ remHelper.initRem({
     responsive: true
 });
 
-const app = createApp(BlogApp);
-
-app.use(router);
-app.use(JsonViewer);
-VMdPreview.use(githubTheme);
-app.use(VMdPreview);
-
-const antdUseList = [ConfigProvider, Button, Row, Col, Spin, Form, Input, Badge, BackTop,
-    Popover, Drawer];
-antdUseList.forEach(item => {
-    app.use(item);
-});
-
-const vantUseList = [Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
-    VPopOver, Dialog, VanImage, VanButton, Popup, Switch, Search,
-    Checkbox, Grid, GridItem, DatetimePicker];
-vantUseList.forEach(item => {
-    app.use(item);
-});
-
-// 添加全局自定义指令
-globalDirectives.forEach(item => {
-    app.directive(item.name, item.handler);
-});
-
-// 添加全局混入选项
-globalMixins.forEach(mixin => {
-    app.mixin(mixin);
-});
-
-globalVariables.env = 'blog';
-
 axios.get('/static/blog/description.json').then((result) => {
+    globalVariables.env = 'blog';
     globalVariables.blog.desc = result.data;
     lpt.categoryServ.rootCategoryId = result.data.rootCategoryId;
+
+    const app = createApp(BlogApp);
+    initRouter();
+    app.use(router);
+    app.use(JsonViewer);
+    VMdPreview.use(githubTheme);
+    app.use(VMdPreview);
+
+    const antdUseList = [ConfigProvider, Button, Row, Col, Spin, Form, Input, Badge, BackTop,
+        Popover, Drawer];
+    antdUseList.forEach(item => {
+        app.use(item);
+    });
+
+    const vantUseList = [Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
+        VPopOver, Dialog, VanImage, VanButton, Popup, Switch, Search,
+        Checkbox, Grid, GridItem, DatetimePicker];
+    vantUseList.forEach(item => {
+        app.use(item);
+    });
+
+// 添加全局自定义指令
+    globalDirectives.forEach(item => {
+        app.directive(item.name, item.handler);
+    });
+
+// 添加全局混入选项
+    globalMixins.forEach(mixin => {
+        app.mixin(mixin);
+    });
+
     app.mount('#app');
 });

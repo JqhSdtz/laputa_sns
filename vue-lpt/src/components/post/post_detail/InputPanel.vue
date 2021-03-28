@@ -1,28 +1,32 @@
 <template>
-	<van-action-sheet v-model:show="showCommentPanel" title="发表评论">
-		<div ref="commentPanel" class="ant-input-group-wrapper panels">
-			<div class="ant-input-wrapper ant-input-group comment-input-wrapper" style="width: 95%; margin-left: 2.5%;">
-				<a-textarea ref="commentTextArea" style="font-size: 1rem; background-color: rgb(250,250,250)"
-				            v-model:value="commentInput" :maxlength="250" auto-size
-				            autofocus placeholder="输入评论"/>
-				<span class="ant-input-group-addon" @click="sendComment">
+	<div>
+		<van-action-sheet v-model:show="showCommentPanel" title="发表评论">
+			<div ref="commentPanel" class="ant-input-group-wrapper panels">
+				<div class="ant-input-wrapper ant-input-group comment-input-wrapper"
+				     style="width: 95%; margin-left: 2.5%;">
+					<a-textarea ref="commentTextArea" style="font-size: 1rem; background-color: rgb(250,250,250)"
+					            v-model:value="commentInput" :maxlength="250" auto-size
+					            autofocus placeholder="输入评论"/>
+					<span class="ant-input-group-addon" @click="sendComment">
 						<send-outlined style="font-size: 1.35rem;" :rotate="-45"/>
 					</span>
+				</div>
 			</div>
-		</div>
-	</van-action-sheet>
-	<van-action-sheet v-model:show="showForwardPanel" title="转发帖子">
-		<div ref="forwardPanel" class="panels forward-panel">
-			<div class="ant-input-wrapper ant-input-group forward-input-wrapper" style="width: 95%; margin-left: 2.5%;">
-				<a-textarea ref="forwardTextArea" style="font-size: 1rem; background-color: rgb(250,250,250)"
-				            v-model:value="forwardInput" :maxlength="250" auto-size
-				            autofocus placeholder="输入评论"/>
-				<span class="ant-input-group-addon" @click="sendForward">
+		</van-action-sheet>
+		<van-action-sheet v-model:show="showForwardPanel" title="转发帖子">
+			<div ref="forwardPanel" class="panels forward-panel">
+				<div class="ant-input-wrapper ant-input-group forward-input-wrapper"
+				     style="width: 95%; margin-left: 2.5%;">
+					<a-textarea ref="forwardTextArea" style="font-size: 1rem; background-color: rgb(250,250,250)"
+					            v-model:value="forwardInput" :maxlength="250" auto-size
+					            autofocus placeholder="输入评论"/>
+					<span class="ant-input-group-addon" @click="sendForward">
 						<send-outlined style="font-size: 1.35rem;" :rotate="-45"/>
 					</span>
+				</div>
 			</div>
-		</div>
-	</van-action-sheet>
+		</van-action-sheet>
+	</div>
 </template>
 
 <script>

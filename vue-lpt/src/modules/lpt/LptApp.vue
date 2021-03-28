@@ -87,4 +87,8 @@ body {
 .van-overlay {
 	background-color: @overlay-background-color;
 }
+
+::-webkit-scrollbar {
+	display: none;
+}
 </style>

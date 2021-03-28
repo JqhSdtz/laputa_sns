@@ -71,6 +71,7 @@ function _initLaputa(option) {
     initPermissionService();
     initNewsService();
     initSearchService();
+    initCorrectService();
 
     function initCommonUtil() {
         const util = {
@@ -183,7 +184,9 @@ function _initLaputa(option) {
             allowRepeat: true,
             ignoreBusyChange: false,
             objectOnly: false,
-            filterEmpty: true
+            filterEmpty: true,
+            useResultFormat: true,
+            responseType: 'json'
         }
 
         function processParam(param) {
@@ -202,6 +205,7 @@ function _initLaputa(option) {
                 // 没有回调函数才抛出异常以供catch捕获
                 param.throwError = !(param.success || param.fail || param.complete);
             }
+            if (param.responseType !== 'json') param.useResultFormat = false;
             param.appendMethod = function (name, fun, insertBefore) {
                 lpt.util.appendMethod(param, name, fun, insertBefore);
             }
@@ -348,7 +352,7 @@ function _initLaputa(option) {
                 method: method,
                 url: param.url,
                 headers: headers,
-                responseType: 'json',
+                responseType: param.responseType,
                 param: method === 'GET' ? param.data : undefined,
                 data: method === 'GET' ? undefined : jsonDataStr
             }).then(response => {
@@ -360,7 +364,7 @@ function _initLaputa(option) {
                 }
                 if (result.operator)
                     lpt.operatorServ.setCurrent(result.operator);
-                if (result.state === 1) {
+                if (!param.useResultFormat || result.state === 1) {
                     if (param.filterEmpty && result.object instanceof Array) {
                         result.object = result.object.filter(obj => obj);
                     }
@@ -1002,6 +1006,18 @@ function _initLaputa(option) {
             })
         };
         lpt.searchServ = serv;
+    }
+
+    function initCorrectService() {
+        const serv = {
+            correct: wrap(function (param) {
+                param.url = lpt.baseApiUrl + '/correct_data/' + param.param.type;
+                param.responseType = 'text';
+                param.useResultFormat = false;
+                return lpt.post(param);
+            })
+        }
+        lpt.correctServ = serv;
     }
 
     return lpt;

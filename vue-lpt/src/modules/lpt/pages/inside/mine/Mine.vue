@@ -34,6 +34,7 @@
 			<van-cell title="设置/修改密码" is-link @click="changePassword"/>
 			<van-cell v-if="me.isAdmin" title="管理权限" is-link :to="'/permission_list/' + me.user.id"/>
 			<van-cell v-if="isSuperAdmin" title="查看数据库统计信息" is-link to="/druid_stat"/>
+			<van-cell v-if="isSuperAdmin" title="校正数据" is-link @click="correctData"/>
 			<van-cell v-if="env === 'blog'" title="完整功能请访问社区" is-link @click="openLptPage"/>
 			<van-cell title="注销" is-link @click="signOut"/>
 		</div>
@@ -224,6 +225,27 @@ export default {
 		},
 		openLptPage() {
 			window.open('https://lpt.jqh.zone');
+		},
+		correctData() {
+			const prompt = global.methods.prompt;
+			prompt({
+				title: '输入校正类型',
+				placeholder: '',
+				onValidate: () => true,
+				onConfirm: (value) => {
+					lpt.correctServ.correct({
+						param: {
+							type: value
+						},
+						success: (result) => {
+							Toast.success(result);
+						},
+						error: (error) => {
+							console.error(error);
+						}
+					});
+				}
+			});
 		}
 	}
 }

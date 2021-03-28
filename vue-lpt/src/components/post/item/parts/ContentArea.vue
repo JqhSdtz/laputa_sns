@@ -48,6 +48,11 @@ export default {
 		AdminOpsRecord,
 		CategoryPath
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	data() {
 		return {
 			fullUrlList: [],
@@ -96,9 +101,18 @@ export default {
 	},
 	methods: {
 		showPostDetail() {
-			this.$router.push({
-				path: '/post_detail/' + this.post.id
-			});
+			if (this.lptContainer === 'blogMain') {
+				this.$router.push({
+					name: 'blogPostDetail',
+					params: {
+						postId: this.post.id
+					}
+				});
+			} else {
+				this.$router.push({
+					path: '/post_detail/' + this.post.id
+				});
+			}
 		},
 		showImgPreview(index) {
 			ImagePreview({

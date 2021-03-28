@@ -16,6 +16,7 @@ const draggable = {
         const param = binding.value;
         const startDrag = (event) => {
             isDragging = true;
+            hasMoved = false;
             const curX = event.type === 'touchstart' ? event.touches[0].clientX : event.clientX;
             const curY = event.type === 'touchstart' ? event.touches[0].clientY : event.clientY;
             offset.x = el.offsetLeft - curX;
@@ -44,7 +45,7 @@ const draggable = {
                 const x = offset.x + curX;
                 const y = offset.y + curY;
                 el.style.left = x + 'px';
-                el.style.top  = y + 'px';
+                el.style.top = y + 'px';
                 param && param.move && param.move({x, y});
             }
         }
@@ -59,6 +60,33 @@ const draggable = {
     }
 }
 
+const scrollView = {
+    mounted(el, binding, vNode) {
+        let hasScrolledTop = false;
+        if (vNode.dirs[0].instance.lptContainer === 'blogMain') {
+            el.onwheel = (event) => {
+                if (event.deltaY < 0 && window.scrollY !== 0) {
+                    // 向上滚动，且页面滚动条不在顶端，则内容不滚动，整个页面滚动
+                    if (!hasScrolledTop) {
+                        window.scroll({
+                            top: 0,
+                            left: 0,
+                            behavior: 'smooth'
+                        });
+                    }
+                    hasScrolledTop = true;
+                    event.preventDefault();
+                }
+            };
+            window.addEventListener('wheel', (event) => {
+                if (!el.contains(event.target) && (window.scrollY !== 0 || event.deltaY > 0)) {
+                    hasScrolledTop = false;
+                }
+            });
+        }
+    }
+}
+
 export default [
     {
         name: 'clamp',
@@ -67,5 +95,9 @@ export default [
     {
         name: 'draggable',
         handler: draggable
+    },
+    {
+        name: 'scrollView',
+        handler: scrollView
     }
 ];

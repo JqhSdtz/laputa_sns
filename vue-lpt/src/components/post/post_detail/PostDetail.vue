@@ -1,7 +1,8 @@
 <template>
 	<template v-if="forceReloadFlag">
 		<div v-show="showDrawer">
-			<div class="post-area" style="padding-top: 1rem" :style="{height: scrollHeight, position: 'relative'}">
+			<div class="post-area" :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
+			        :style="{height: scrollHeight, position: 'relative'}" v-scroll-view>
 				<post-item style="padding: 0 0.5rem" :post-id="post.id" :show-bottom="false"/>
 				<div v-show="!showCommentDetail" ref="middleBar" id="middle-bar"
 				     :style="{width: clientWidth + 'px'}">
@@ -174,11 +175,9 @@ export default {
 }
 
 .post-area {
+	padding-top: 1rem;
+	background-color: white;
 	overflow-y: scroll;
-}
-
-.post-area::-webkit-scrollbar {
-	display: none;
 }
 
 .content-area {

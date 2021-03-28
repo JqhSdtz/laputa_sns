@@ -11,7 +11,7 @@
 				</a-col>
 				<a-col span="3">
 					<a-button class="follow-btn" :type="user.followed_by_viewer ? 'default' : 'primary'"
-							@click="changeFollow">
+					          v-check-sign="{click: changeFollow}">
 						{{user.followed_by_viewer ? '取消关注' : '关注'}}
 					</a-button>
 				</a-col>

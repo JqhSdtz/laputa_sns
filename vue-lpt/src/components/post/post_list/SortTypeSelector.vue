@@ -35,6 +35,11 @@ export default {
 	components: {
 		OrderedListOutlined
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	props: {
 		hideOffsetBase: {
 			type: Number,
@@ -54,7 +59,7 @@ export default {
 	emits: ['update:sortType'],
 	data() {
 		return {
-			offsetRight: global.vars.env === 'blog' ? '11%' : '1rem',
+			offsetRight: this.lptContainer === 'blogMain' ? '11%' : '1rem',
 			showSortTypeSelector: true,
 			showPopover: false
 		}

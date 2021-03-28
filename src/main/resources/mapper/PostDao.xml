@@ -215,7 +215,7 @@
 		update lpt_post
 		set post_like_cnt = (select count(*)
 		                     from lpt_like_record
-		                     where like_record_target_id = post_id and like_record_type = ${@com.laputa.laputa_sns.model.LikeRecord@TYPE_POST})
+		                     where like_record_target_id = post_id and like_record_type = ${@com.laputa.laputa_sns.model.entity.LikeRecord@TYPE_POST})
 		where post_del_flag = 0
 	</update>
 

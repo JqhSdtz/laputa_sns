@@ -1,16 +1,14 @@
 <template>
 	<a-config-provider :locale="locale" :getPopupContainer="getPopupContainer">
 		<main-container>
-
-				<div style="position: absolute; height: 98%; width: 80%; left: 10%">
-					<router-view id="main-view" ref="mainView" v-slot="{ Component }" :style="{marginBottom: mainViewOffsetBottom + 'px'}">
-						<keep-alive :exclude="noCacheList">
-							<component :is="Component"/>
-						</keep-alive>
-					</router-view>
-				</div>
-
-
+			<div style="position: absolute; height: 96%; top: 2%; width: 80%; left: 10%">
+				<router-view id="main-view" ref="mainView" v-slot="{ Component }"
+				             :style="{marginBottom: mainViewOffsetBottom + 'px'}">
+					<keep-alive :exclude="noCacheList">
+						<component :is="Component"/>
+					</keep-alive>
+				</router-view>
+			</div>
 		</main-container>
 		<div style="position: absolute; top: 100%; width: 100%; padding: 1rem; background-color: white">
 			<p style="text-align: center; font-size: 0.85rem">鲁ICP备19009966号</p>
@@ -27,6 +25,9 @@
 				</router-view>
 			</a-drawer>
 		</drawer-container>
+		<div id="right-hidden-side" style="position: fixed; left: 0; height: 100%; width: 3rem;">
+			<right-outlined style="position: absolute; bottom: 50%; font-size: 2rem" @click="showDrawer = true"/>
+		</div>
 		<float-menu id="main-bar"/>
 		<prompt-dialog ref="prompt"/>
 	</a-config-provider>
@@ -36,6 +37,9 @@
 import zhCN from 'ant-design-vue/es/locale/zh_CN';
 import {registerCheckSignFailCallback} from '@/lib/js/laputa/laputa-vue';
 import {Modal} from 'ant-design-vue';
+import {
+	RightOutlined
+} from '@ant-design/icons-vue';
 import FloatMenu from '@/modules/blog/components/menu/FloatMenu';
 import MainContainer from '@/modules/blog/components/container/MainContainer';
 import DrawerContainer from '@/modules/blog/components/container/DrawerContainer';
@@ -52,7 +56,8 @@ export default {
 		LoadingArea,
 		PromptDialog,
 		MainContainer,
-		DrawerContainer
+		DrawerContainer,
+		RightOutlined
 	},
 	provide: {
 		lptContainer: 'default'
@@ -88,27 +93,6 @@ export default {
 		window.addEventListener('resize', () => {
 			global.states.style.drawerWidth = document.body.clientWidth * 0.33;
 		});
-		let hasScrolledTop = false;
-		const mainViewElem = this.$refs.mainView.$el;
-		mainViewElem.onwheel = (event) => {
-			if (event.deltaY < 0 && window.scrollY !== 0) {
-				// 向上滚动，且页面滚动条不在顶端，则内容不滚动，整个页面滚动
-				if (!hasScrolledTop) {
-					window.scroll({
-						top: 0,
-						left: 0,
-						behavior: 'smooth'
-					});
-				}
-				hasScrolledTop = true;
-				event.preventDefault();
-			}
-		};
-		window.onwheel = (event) => {
-			if (!mainViewElem.contains(event.target) && (window.scrollY !== 0 || event.deltaY > 0)) {
-				hasScrolledTop = false;
-			}
-		};
 	},
 	methods: {
 		getPopupContainer(el, dialogContext) {
@@ -156,5 +140,27 @@ body::-webkit-scrollbar {
 
 .post-list {
 	background-color: transparent !important;
+}
+
+div:not(.with-scroll-bar)::-webkit-scrollbar {
+	display: none;
+}
+
+.with-scroll-bar::-webkit-scrollbar {
+	width: 5px;
+	height: 16px;
+	background-color: #F5F5F5;
+}
+
+.with-scroll-bar::-webkit-scrollbar-track {
+	-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+	border-radius: 10px;
+	background-color: #F5F5F5;
+}
+
+.with-scroll-bar::-webkit-scrollbar-thumb {
+	border-radius: 10px;
+	-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
+	background-color: #555;
 }
 </style>

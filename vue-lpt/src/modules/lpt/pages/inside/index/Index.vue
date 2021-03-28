@@ -1,14 +1,18 @@
 <template>
-	<div class="main-area" :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top>
-		<van-search v-model="searchValue" @search="onSearch" placeholder="请输入搜索关键词">
-			<template v-slot:right-icon>
-				<van-checkbox v-model="enableBoolMode">多关键字</van-checkbox>
-			</template>
-		</van-search>
-		<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType"/>
-		<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px'}" :target="getElement"/>
-		<post-list ref="postList" :category-id="indexCategoryId" :top-post-id="category.top_post_id" :sort-type="sortType" @loaded="onPostListLoaded"/>
-	</div>
+	<template v-if="forceReloadFlag">
+		<div class="main-area" :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
+		     :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top v-scroll-view>
+			<van-search v-model="searchValue" @search="onSearch" placeholder="请输入搜索关键词">
+				<template v-slot:right-icon>
+					<van-checkbox v-model="enableBoolMode">多关键字</van-checkbox>
+				</template>
+			</van-search>
+			<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType"/>
+			<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px'}" :target="getElement"/>
+			<post-list ref="postList" :category-id="category.id" :top-post-id="category.top_post_id"
+			           :sort-type="sortType" @loaded="onPostListLoaded"/>
+		</div>
+	</template>
 </template>
 
 <script>
@@ -24,22 +28,42 @@ export default {
 		SortTypeSelector,
 		PostList
 	},
+	props: {
+		categoryId: {
+			type: String,
+			default: lpt.categoryServ.rootCategoryId.toString()
+		}
+	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	data() {
-		const indexCategoryId = lpt.categoryServ.rootCategoryId;
 		const category = global.states.categoryManager.get({
-			itemId: indexCategoryId,
+			itemId: parseInt(this.categoryId),
 			fail(result) {
 				Toast.fail(result.message);
 			}
 		});
 		return {
 			category,
-			indexCategoryId,
 			enableBoolMode: false,
 			searchValue: '',
 			mainBarHeight: global.vars.style.tabBarHeight,
 			sortType: global.states.pages.index.sortType,
 			postListLoaded: false
+		}
+	},
+	watch: {
+		categoryId() {
+			this.category = global.states.categoryManager.get({
+				itemId: parseInt(this.categoryId),
+				fail(result) {
+					Toast.fail(result.message);
+				}
+			});
+			this.forceReload();
 		}
 	},
 	computed: {
@@ -79,9 +103,5 @@ export default {
 <style scoped>
 .main-area {
 	overflow-y: scroll;
-}
-
-.main-area::-webkit-scrollbar {
-	display: none;
 }
 </style>

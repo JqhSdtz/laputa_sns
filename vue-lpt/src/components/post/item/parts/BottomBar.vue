@@ -1,5 +1,5 @@
 <template>
-	<a-row class="bottom-bar" justify="space-between">
+	<a-row class="bottom-bar" :class="{'with-scroll-bar': lptContainer === 'blogMain'}" justify="space-between">
 		<a-col class="icon-col" span="6" @click="showPostDetail">
 			<share-alt-outlined class="icon"/>
 			<span class="cnt">{{ post.forward_cnt }}</span>

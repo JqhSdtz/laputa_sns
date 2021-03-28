@@ -80,6 +80,11 @@ export default {
 		PostList,
 		SortTypeSelector
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	provide() {
 		return {
 			categoryDetailEvents: this.categoryDetailEvents

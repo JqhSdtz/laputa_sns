@@ -31,13 +31,9 @@ export default {
 			if (this.showInDrawer) {
 				global.states.blog.showDrawer = true;
 			}
-			if (this.isActive) {
-				global.events.emit('forceRefresh');
-			} else {
-				this.$router.push({
-					path: this.path
-				});
-			}
+			this.$router.push({
+				path: this.path
+			});
 		}
 	}
 }

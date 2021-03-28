@@ -141,7 +141,7 @@
 		update lpt_comment_l2
 		set comment_l2_like_cnt = (select count(*)
 		                           from lpt_like_record
-		                           where like_record_target_id = comment_l2_id and like_record_type = ${@com.laputa.laputa_sns.model.LikeRecord@TYPE_CML2})
+		                           where like_record_target_id = comment_l2_id and like_record_type = ${@com.laputa.laputa_sns.model.entity.LikeRecord@TYPE_CML2})
 		where comment_l2_del_flag = 0
 	</update>
 

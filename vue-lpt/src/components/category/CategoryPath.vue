@@ -15,6 +15,11 @@ export default {
 	props: {
 		pathList: Array
 	},
+	watch: {
+		pathList() {
+			console.log(this.pathList)
+		}
+	},
 	methods: {
 		showCategoryDetail(path) {
 			if (global.vars.env === 'blog') {

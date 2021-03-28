@@ -95,7 +95,7 @@
 		update lpt_category
 		set category_post_cnt = (select count(*)
 		from lpt_post
-		where post_category_id = category_id and post_type = ${@com.laputa.laputa_sns.model.Post@TYPE_PUBLIC} and post_del_flag = 0)
+		where post_category_id = category_id and post_type = ${@com.laputa.laputa_sns.model.entity.Post@TYPE_PUBLIC} and post_del_flag = 0)
 		where category_id in
 		<foreach collection="list" item="category" open="(" separator="," close=")">
 			#{category.id}
