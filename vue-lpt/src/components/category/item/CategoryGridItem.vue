@@ -1,7 +1,12 @@
 <template>
-	<div @click.stop="showCategoryDetail" style="text-align: center; position: relative">
-		<img style="border-radius: 0.5rem;" :style="{width: size, height: size}" :src="iconImgUrl"/>
-		<p v-clamp="2" style="white-space: break-spaces;">{{category.name}}</p>
+	<div style="text-align: center; position: relative">
+		<img style="border-radius: 0.5rem;" :style="{width: size, height: size}" :src="iconImgUrl"
+		     @click="(clickImg || showCategoryDetail)()"/>
+		<p :class="{'link-name': isLinkName}" :title="linkTitle" v-clamp="2"
+		   style="white-space: break-spaces;"
+		   @click="(clickName || showCategoryDetail)()">
+			{{ category.name }}
+		</p>
 		<slot/>
 	</div>
 </template>
@@ -18,6 +23,10 @@ export default {
 			default: '5.5rem'
 		},
 		categoryId: Number,
+		isLinkName: Boolean,
+		linkTitle: String,
+		clickImg: Function,
+		clickName: Function
 	},
 	data() {
 		const category = global.states.categoryManager.get({
@@ -43,5 +52,11 @@ export default {
 </script>
 
 <style scoped>
+.link-name {
+	cursor: pointer;
+}
 
+.link-name:hover {
+	text-decoration: underline;
+}
 </style>

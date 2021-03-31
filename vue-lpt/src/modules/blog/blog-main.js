@@ -1,6 +1,7 @@
 // TODO 按照官方实例未能实现样式的按需引入
 import 'ant-design-vue/dist/antd.less';
 
+import description from './description';
 import {createApp} from 'vue';
 import BlogApp from './BlogApp.vue';
 import router, {initRouter} from './router';
@@ -19,7 +20,6 @@ import JsonViewer from 'vue3-json-viewer';
 import VMdPreview from '@kangc/v-md-editor/lib/preview';
 import '@kangc/v-md-editor/lib/style/preview.css';
 import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
-import axios from "axios";
 
 // 设置rem单位的相对大小
 remHelper.initRem({
@@ -28,40 +28,37 @@ remHelper.initRem({
     responsive: true
 });
 
-axios.get('/static/blog/description.json').then((result) => {
-    globalVariables.env = 'blog';
-    globalVariables.blog.desc = result.data;
-    lpt.categoryServ.rootCategoryId = result.data.rootCategoryId;
+globalVariables.env = 'blog';
+lpt.categoryServ.rootCategoryId = description.rootCategoryId;
 
-    const app = createApp(BlogApp);
-    initRouter();
-    app.use(router);
-    app.use(JsonViewer);
-    VMdPreview.use(githubTheme);
-    app.use(VMdPreview);
+const app = createApp(BlogApp);
+initRouter();
+app.use(router);
+app.use(JsonViewer);
+VMdPreview.use(githubTheme);
+app.use(VMdPreview);
 
-    const antdUseList = [ConfigProvider, Button, Row, Col, Spin, Form, Input, Badge, BackTop,
-        Popover, Drawer];
-    antdUseList.forEach(item => {
-        app.use(item);
-    });
+const antdUseList = [ConfigProvider, Button, Row, Col, Spin, Form, Input, Badge, BackTop,
+    Popover, Drawer];
+antdUseList.forEach(item => {
+    app.use(item);
+});
 
-    const vantUseList = [Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
-        VPopOver, Dialog, VanImage, VanButton, Popup, Switch, Search,
-        Checkbox, Grid, GridItem, DatetimePicker];
-    vantUseList.forEach(item => {
-        app.use(item);
-    });
+const vantUseList = [Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
+    VPopOver, Dialog, VanImage, VanButton, Popup, Switch, Search,
+    Checkbox, Grid, GridItem, DatetimePicker];
+vantUseList.forEach(item => {
+    app.use(item);
+});
 
 // 添加全局自定义指令
-    globalDirectives.forEach(item => {
-        app.directive(item.name, item.handler);
-    });
+globalDirectives.forEach(item => {
+    app.directive(item.name, item.handler);
+});
 
 // 添加全局混入选项
-    globalMixins.forEach(mixin => {
-        app.mixin(mixin);
-    });
-
-    app.mount('#app');
+globalMixins.forEach(mixin => {
+    app.mixin(mixin);
 });
+
+app.mount('#app');

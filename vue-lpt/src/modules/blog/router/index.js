@@ -167,42 +167,55 @@ function initRouter() {
             component: Categories
         }
     ];
-    const routers = [
+    let curBlogPath = '/blog/index/' + lpt.categoryServ.rootCategoryId;
+    let curDrawerPath = '/home/mine';
+    const mainRouters = [
         {
             path: '/',
-            redirect: '/blog/index/' + lpt.categoryServ.rootCategoryId
+            redirect: curBlogPath + curDrawerPath
         },
         {
-            path: '/blog/index/:categoryId',
+            path: '/blog/index/:blogCategoryId',
             component: Index,
-            props: true,
+            props: route => ({
+                categoryId: route.params.blogCategoryId
+            }),
             meta: {
                 mainPathPropNum: 1
             }
         },
         {
-            path: '/blog/post_detail/:postId',
+            path: '/blog/post_detail/:blogPostId',
             name: 'blogPostDetail',
             component: PostDetail,
-            props: true,
+            props: route => ({
+                postId: route.params.blogPostId
+            }),
             meta: {
                 noCache: true,
                 mainPathPropNum: 1
             }
         },
     ];
+    mainRouters.forEach((route) => {
+        if (!route.meta) route.meta = {};
+        route.meta.isMain = true;
+    });
+    drawerRouters.forEach((dRoute) => {
+        if (!dRoute.meta) dRoute.meta = {};
+        dRoute.meta.isDrawer = true;
+    });
+    const routers = mainRouters.concat(drawerRouters);
 
 // 以下循环创建路由项，为每一个主页面和抽屉页面的组合都创建一个路由
 // 以此实现主页面和抽屉页面分别路由
-    const len = routers.length;
-    for (let i = 0; i < len; ++i) {
-        const route = routers[i];
+    mainRouters.forEach((route) => {
         if (route.path === '/')
-            continue;
+            return;
         drawerRouters.forEach((dRoute) => {
             const newRoute = {
                 path: route.path + dRoute.path,
-                name: (route.name || '') + '_' +(dRoute.name || ''),
+                name: (route.name || '') + '_' + (dRoute.name || ''),
                 props: {
                     default: route.props,
                     leftDrawer: dRoute.props
@@ -210,9 +223,9 @@ function initRouter() {
                 meta: {
                     ...route.meta,
                     ...dRoute.meta,
+                    combined: true,
                     mainPath: route.path,
                     drawerPath: dRoute.path,
-                    isDrawer: true,
                     // 用于匹配到main部分的路径，并用于后续的部分更改路径实现路由分离
                     mainPathReg: pathToRegexp(`(${route.path})(\/*)`)
                 },
@@ -223,15 +236,6 @@ function initRouter() {
             }
             routers.push(newRoute);
         });
-    }
-    for (let i = 0; i < len; ++i) {
-        const route = routers[i];
-        if (!route.meta) route.meta = {};
-        route.meta.isMain = true;
-    }
-    drawerRouters.forEach((dRoute) => {
-        if (!dRoute.meta) dRoute.meta = {};
-        dRoute.meta.isDrawer = true;
     });
     const res = processRouters({
         routers
@@ -241,72 +245,64 @@ function initRouter() {
 
     let isRouterBack = false;
     const oriFun = router.push;
-    router.push = function(to) {
+    router.push = function (to) {
         isRouterBack = false;
         return oriFun.apply(router, arguments);
     }
 
-    let curBlogPath = '/blog/index';
-    let curDrawerPath = '';
     let blogMainHistoryStack = [];
     router.beforeEach((to, from, next) => {
-        if (to.meta && to.meta.checkSign && !global.methods.checkSign()) {
+        if (to.meta.checkSign && !global.methods.checkSign()) {
             return;
-        }
-        if (isRouterBack) {
-            // 当前是回退
-            if (!global.states.blog.showDrawer) {
-                // 主页面回退，要回到上一个主页面
-                if (blogMainHistoryStack.length === 0) {
-                    next();
-                } else {
-                    blogMainHistoryStack.pop();
-                    const preMainPath = blogMainHistoryStack[blogMainHistoryStack.length - 1];
-                    const newTo = {
-                        path: preMainPath + curDrawerPath,
-                        query: to.query,
-                        params: to.params
-                    }
-                    next(newTo);
+        } else if (isRouterBack && !global.states.blog.showDrawer) {
+            // 当前是主页面回退，要回到上一个主页面
+            if (blogMainHistoryStack.length <= 1) {
+                next();
+            } else {
+                blogMainHistoryStack.pop();
+                const preMainPath = blogMainHistoryStack[blogMainHistoryStack.length - 1];
+                const newTo = {
+                    path: preMainPath + curDrawerPath,
+                    query: to.query,
+                    params: to.params
                 }
-                isRouterBack = false;
-                return;
+                next(newTo);
             }
-        }
-        if (to.path.indexOf('blog') === -1) {
-            const newTo = {
+            isRouterBack = false;
+        } else if (to.meta.combined) {
+            const execRes = to.meta.mainPathReg.exec(to.path);
+            if (execRes.length > 1) {
+                curBlogPath = execRes[1];
+                // 主页面历史堆栈为空，则是直接从组合路径进入，此时要向主页面历史堆栈推入当前主页面路径
+                if (blogMainHistoryStack.length === 0) blogMainHistoryStack.push(curBlogPath);
+            }
+            const mainPathPropNum = to.meta.mainPathPropNum || 0;
+            const drawerPathPos = 2 + mainPathPropNum;
+            if (execRes.length > drawerPathPos) curDrawerPath = execRes[drawerPathPos];
+            next();
+            isRouterBack = true;
+        } else if (to.meta.isMain) {
+            curBlogPath = to.path;
+            blogMainHistoryStack.push(curBlogPath);
+            if (curDrawerPath) {
+                next({
+                    path: curBlogPath + curDrawerPath,
+                    query: to.query,
+                    params: to.params
+                });
+            } else {
+                next();
+            }
+        } else if (to.meta.isDrawer) {
+            next({
                 path: curBlogPath + to.path,
                 query: to.query,
                 params: to.params
-            };
-            next(newTo);
+            });
             global.states.blog.showDrawer = true;
-            return;
-        } else {
-            if (to.meta && to.meta.isMain) {
-                curBlogPath = to.path;
-                blogMainHistoryStack.push(curBlogPath);
-                if (curDrawerPath) {
-                    const newTo = {
-                        path: curBlogPath + curDrawerPath,
-                        query: to.query,
-                        params: to.params
-                    };
-                    next(newTo);
-                    return;
-                }
-            } else if (to.meta && to.meta.mainPathReg) {
-                const execRes = to.meta.mainPathReg.exec(to.path);
-                if (execRes.length > 1) curBlogPath = execRes[1];
-                const mainPathPropNum = to.meta.mainPathPropNum || 0;
-                const drawerPathPos = 2 + mainPathPropNum;
-                if (execRes.length > drawerPathPos) curDrawerPath = execRes[drawerPathPos];
-            }
-            next();
         }
-        isRouterBack = true;
     });
-    return
+    return;
 }
 
 let router, noCacheList

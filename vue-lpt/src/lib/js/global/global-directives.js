@@ -37,7 +37,7 @@ const draggable = {
             param && param.end && param.end();
         };
         const dragging = (event) => {
-            event.preventDefault();
+            //event.preventDefault();
             if (isDragging) {
                 hasMoved = true;
                 const curX = event.type === 'touchmove' ? event.touches[0].clientX : event.clientX;

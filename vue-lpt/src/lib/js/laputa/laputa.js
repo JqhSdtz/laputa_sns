@@ -250,8 +250,12 @@ function _initLaputa(option) {
         lpt.getPostThumbUrl = function (rawUrl) {
             return lpt.imgBaseUrl + rawUrl + '!/both/50x50';
         }
-        lpt.getFullImgUrl = function (rawUrl) {
-            return lpt.imgBaseUrl + rawUrl;
+        lpt.getFullImgUrl = function (rawUrl, width) {
+            if (width) {
+                return lpt.imgBaseUrl + rawUrl + '!/fw/' + width;
+            } else {
+                return lpt.imgBaseUrl + rawUrl;
+            }
         }
     }
 

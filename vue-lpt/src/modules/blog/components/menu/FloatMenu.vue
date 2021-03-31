@@ -2,7 +2,7 @@
 	<div ref="menuMain">
 		<div v-show="isMenuShown" @click="closeMenu">
 			<menu-item class="item" ref="index" path="">
-				<ri-home3-fill class="icon"/>
+				<ri-landscape-line class="icon"/>
 				<div class="text">相册</div>
 			</menu-item>
 			<menu-item class="item" ref="community" path="/categories" :show-in-drawer="true">
@@ -11,7 +11,7 @@
 			</menu-item>
 			<menu-item class="item" ref="news" :path="'/blog/index/' + rootCategoryId">
 				<ri-apps-fill class="icon"/>
-				<div class="text">文章</div>
+				<div class="text">首页</div>
 			</menu-item>
 			<menu-item class="item" ref="mine" path="/home/mine" :show-in-drawer="true">
 				<img class="ava" :class="{'def-ava': !me.user.raw_avatar}" :src="myAvatarUrl"/>
@@ -32,7 +32,7 @@
 <script>
 import MenuItem from './MenuItem';
 import {
-	RiHome3Fill, RiAppsFill, RiDashboardFill, RiCloseFill
+	RiLandscapeLine, RiAppsFill, RiDashboardFill, RiCloseFill
 } from '@/assets/icons/remix-icon';
 import global from '@/lib/js/global';
 import {toRef} from 'vue';
@@ -42,7 +42,7 @@ export default {
 	name: 'FloatMenu',
 	components: {
 		MenuItem,
-		RiHome3Fill,
+		RiLandscapeLine,
 		RiAppsFill,
 		RiDashboardFill,
 		RiCloseFill

@@ -25,10 +25,16 @@
 					</van-grid-item>
 				</van-grid>
 			</van-popup>
-			<category-path style="margin-left: 1rem;" :path-list="baseCategory.path_list"/>
+			<category-path style="margin-left: 1rem;font-size: 1rem" :path-list="baseCategory.path_list"/>
 			<van-grid style="margin-top: 1rem;" :column-num="3" :border="false">
 				<van-grid-item v-for="category in categoryList" :key="category.id">
-					<category-grid-item :category-id="category.id" @click.capture.stop="showCategory(category)"/>
+					<category-grid-item :category-id="category.id"
+					                    style="font-size: 0.85rem"
+					                    size="4.5rem"
+					                    :is-link-name="true"
+					                    link-title="点击访问该目录"
+					                    :click-img="() => showSubCategory(category)"
+										:click-name="() => showCategory(category)"/>
 				</van-grid-item>
 			</van-grid>
 		</div>
@@ -112,13 +118,11 @@ export default {
 			this.initRecentVisitList();
 		},
 		initCategoryList() {
-			lpt.categoryServ.get({
-				consumer: this.lptConsumer,
-				param: {
-					id: this.baseCategoryId
-				},
+			global.states.categoryManager.get({
+				itemId: this.baseCategoryId,
+				filter: res => res.sub_list,
 				success: (result) => {
-					this.baseCategory = global.states.categoryManager.add(result.object);
+					this.baseCategory = result;
 					this.categoryList = this.baseCategory.sub_list;
 				},
 				fail(result) {
@@ -143,11 +147,15 @@ export default {
 				}
 			});
 		},
-		showCategory(category) {
+		showSubCategory(category) {
 			if (!category.is_leaf) {
 				this.baseCategoryId = category.id;
 				this.initCategoryList();
+			} else {
+				this.showCategory(category);
 			}
+		},
+		showCategory(category) {
 			this.$router.push({
 				path: '/blog/index/' + category.id
 			});

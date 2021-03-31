@@ -48,6 +48,7 @@ import PromptDialog from '@/components/global/PromptDialog';
 import {noCacheList} from '@/modules/lpt/router';
 import global from '@/lib/js/global';
 import {toRef} from 'vue';
+import description from './description';
 
 export default {
 	name: 'App',
@@ -64,7 +65,7 @@ export default {
 	},
 	data() {
 		return {
-			coverUrl: global.vars.blog.desc.cover.url,
+			coverUrl: description.cover.url,
 			mainViewOffsetBottom: global.vars.blog.style.mainViewOffsetBottom,
 			showDrawer: toRef(global.states.blog, 'showDrawer'),
 			locale: zhCN,
@@ -139,7 +140,11 @@ body::-webkit-scrollbar {
 }
 
 .post-list {
-	background-color: transparent !important;
+	background: none !important;
+}
+
+#main-view {
+	background-color: rgba(255, 255, 255, 0.5);
 }
 
 div:not(.with-scroll-bar)::-webkit-scrollbar {
@@ -162,5 +167,14 @@ div:not(.with-scroll-bar)::-webkit-scrollbar {
 	border-radius: 10px;
 	-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
 	background-color: #555;
+}
+
+.van-pull-refresh {
+	user-select: inherit !important;
+}
+
+.van-swipe {
+	cursor: inherit !important;
+	user-select: inherit !important;
 }
 </style>

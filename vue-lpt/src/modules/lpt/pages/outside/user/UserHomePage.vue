@@ -1,44 +1,47 @@
 <template>
-	<div class="main-area" :style="{height: scrollHeight, position: 'relative'}">
-		<div ref="infoBar">
-			<a-row style="padding-top: 0.5rem;">
-				<a-col span="5" offset="2">
-					<img class="ava" :src="myAvatarUrl"/>
-				</a-col>
-				<a-col span="9" offset="1">
-					<p class="name" style="margin-bottom: 0; margin-top: 0.5rem">{{ user.nick_name }}</p>
-					<p>ID:{{ user.id }}</p>
-				</a-col>
-				<a-col span="3">
-					<a-button class="follow-btn" :type="user.followed_by_viewer ? 'default' : 'primary'"
-					          v-check-sign="{click: changeFollow}">
-						{{user.followed_by_viewer ? '取消关注' : '关注'}}
-					</a-button>
-				</a-col>
-			</a-row>
-			<a-row justify="center">
-				<a-col class="cnt-bar-item" span="7" @click="showFollowingList">
-					关注:{{ user.following_cnt }}
-				</a-col>
-				<a-col class="cnt-bar-item" span="8" @click="showFollowersList">
-					粉丝:{{ user.followers_cnt }}
-				</a-col>
-				<a-col class="cnt-bar-item" span="7">
-					发帖:{{ user.post_cnt }}
-				</a-col>
-			</a-row>
-			<a-row>
-				<a-col offset="2">
-					<ellipsis style="margin: 0.5rem 1rem" v-if="user.intro" :content="user.intro" :rows="2"/>
-				</a-col>
-			</a-row>
-			<van-divider style="margin: 5px 0"/>
-			<div style="height: 5px; width: 100%; background-color: #ECECEC"/>
+	<template v-if="forceReloadFlag">
+		<div class="main-area" :style="{height: scrollHeight, position: 'relative'}">
+			<div ref="infoBar">
+				<a-row style="padding-top: 0.5rem;">
+					<a-col span="5" offset="2">
+						<img class="ava" :src="myAvatarUrl"/>
+					</a-col>
+					<a-col span="9" offset="1">
+						<p class="name" style="margin-bottom: 0; margin-top: 0.5rem">{{ user.nick_name }}</p>
+						<p>ID:{{ user.id }}</p>
+					</a-col>
+					<a-col span="3">
+						<a-button class="follow-btn" :type="user.followed_by_viewer ? 'default' : 'primary'"
+						          v-check-sign="{click: changeFollow}">
+							{{ user.followed_by_viewer ? '取消关注' : '关注' }}
+						</a-button>
+					</a-col>
+				</a-row>
+				<a-row justify="center">
+					<a-col class="cnt-bar-item" span="7" @click="showFollowingList">
+						关注:{{ user.following_cnt }}
+					</a-col>
+					<a-col class="cnt-bar-item" span="8" @click="showFollowersList">
+						粉丝:{{ user.followers_cnt }}
+					</a-col>
+					<a-col class="cnt-bar-item" span="7">
+						发帖:{{ user.post_cnt }}
+					</a-col>
+				</a-row>
+				<a-row>
+					<a-col offset="2">
+						<ellipsis style="margin: 0.5rem 1rem" v-if="user.intro" :content="user.intro" :rows="2"/>
+					</a-col>
+				</a-row>
+				<van-divider style="margin: 5px 0"/>
+				<div style="height: 5px; width: 100%; background-color: #ECECEC"/>
+			</div>
+			<a-back-top v-show="showDrawer" style="bottom: 25px;" :style="{left: clientWidth - 60 + 'px'}"
+			            :target="getElement"/>
+			<post-list ref="postList" :post-of="'creator'" :creator-id="parseInt(userId)"
+			           :top-post-id="user.top_post_id" keep-scroll-top/>
 		</div>
-		<a-back-top v-show="showDrawer" style="bottom: 25px;" :style="{left: clientWidth - 60 + 'px'}" :target="getElement"/>
-		<post-list ref="postList" :post-of="'creator'" :creator-id="parseInt(userId)"
-		           :top-post-id="user.top_post_id" keep-scroll-top/>
-	</div>
+	</template>
 </template>
 
 <script>
@@ -58,9 +61,18 @@ export default {
 	props: {
 		userId: String
 	},
+	watch: {
+		userId() {
+			this.user = global.states.userManager.get({
+				itemId: this.userId
+			});
+			this.init();
+			this.forceReload();
+		}
+	},
 	data() {
 		const user = global.states.userManager.get({
-			itemId: parseInt(this.userId)
+			itemId: this.userId
 		});
 		return {
 			user,
@@ -81,20 +93,23 @@ export default {
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
-		lpt.userServ.getInfo({
-			consumer: this.lptConsumer,
-			param: {
-				userId: this.user.id
-			},
-			success(result) {
-				global.states.userManager.add(result.object);
-			},
-			fail(result) {
-				Toast.fail(result.message);
-			}
-		})
+		this.init();
 	},
 	methods: {
+		init() {
+			lpt.userServ.getInfo({
+				consumer: this.lptConsumer,
+				param: {
+					userId: this.user.id
+				},
+				success(result) {
+					global.states.userManager.add(result.object);
+				},
+				fail(result) {
+					Toast.fail(result.message);
+				}
+			});
+		},
 		showFollowersList() {
 			this.$router.push({
 				path: '/followers_list/' + this.userId

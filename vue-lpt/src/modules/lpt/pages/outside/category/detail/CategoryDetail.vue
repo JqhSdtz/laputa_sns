@@ -7,7 +7,12 @@
 				<div style="margin-top: -2rem">
 					<img :src="iconImgUrl" id="icon-img"/>
 					<span style="margin-left: 1rem; display: inline-block">
-						<p style="font-size: 1.5rem; font-weight: bold;margin-bottom: 0">{{ category.name }}</p>
+						<p style="font-size: 1.5rem; font-weight: bold;margin-bottom: 0"
+						   :class="{'link-name': lptContainer === 'blogDrawer'}"
+						   :title="lptContainer === 'blogDrawer' ? '点击访问该目录' : ''"
+						   @click="onCategoryNameClick">
+							{{ category.name }}
+						</p>
 						<p>帖数:{{ category.post_cnt }}</p>
 					</span>
 					<!-- action-bar使用float布局会影响tabs组件的正常加载。。。未找到原因 -->
@@ -173,6 +178,14 @@ export default {
 		onPostListLoaded() {
 			this.postListLoaded = true;
 		},
+		onCategoryNameClick() {
+			if (this.lptContainer === 'blogDrawer') {
+				this.$router.push({
+					path: '/blog/index/' + this.category.id
+				});
+				global.states.blog.showDrawer = false;
+			}
+		},
 		getElement() {
 			return this.$el;
 		}
@@ -183,6 +196,14 @@ export default {
 <style scoped>
 :global(.van-tab__pane) {
 	height: 100%;
+}
+
+.link-name {
+	cursor: pointer;
+}
+
+.link-name:hover {
+	text-decoration: underline;
 }
 
 #category-area {

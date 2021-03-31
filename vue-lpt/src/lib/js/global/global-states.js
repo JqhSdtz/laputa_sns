@@ -109,27 +109,30 @@ const categoryManager = initItemManager({
             // 没有返回权限信息，则根据permission_map手动判断
             const permissionMap = states.curOperator.permission_map;
             rights = {};
-            rights.this_level = permissionMap[newItem.id];
-            let tmpItem = newItem;
-            while (typeof tmpItem.parent_id !== 'undefined') {
-                rights.parent_level = permissionMap[tmpItem.parent_id];
-                if (typeof rights.parent_level !== 'undefined')
-                    break;
-                tmpItem = categoryManager.get({
-                    itemId: tmpItem.parent_id,
-                    justLocal: true
-                });
-                // 如果本地没有已经获取的父目录，则直接退出，不请求服务器
-                if (tmpItem.isDefault)
-                    break;
+            if (permissionMap) {
+                rights.this_level = permissionMap[newItem.id];
+                let tmpItem = newItem;
+                while (typeof tmpItem.parent_id !== 'undefined') {
+                    rights.parent_level = permissionMap[tmpItem.parent_id];
+                    if (typeof rights.parent_level !== 'undefined')
+                        break;
+                    tmpItem = categoryManager.get({
+                        itemId: tmpItem.parent_id,
+                        justLocal: true
+                    });
+                    // 如果本地没有已经获取的父目录，则直接退出，不请求服务器
+                    if (tmpItem.isDefault)
+                        break;
+                }
+                if (typeof rights.this_level === 'undefined'
+                    && typeof rights.parent_level !== 'undefined')
+                    rights.this_level = rights.parent_level;
+                newItem.rights = rights;
+                lpt.categoryServ.setAdminRights(newItem);
             }
-            if (typeof rights.this_level === 'undefined'
-                && typeof rights.parent_level !== 'undefined')
-                rights.this_level = rights.parent_level;
-            newItem.rights = rights;
-            lpt.categoryServ.setAdminRights(newItem);
         } else {
             rights = {};
+            newItem.rights = rights;
         }
         let hasRights = rights.this_level && rights.this_level > 0;
         hasRights = hasRights || (rights.parent_level && rights.parent_level > 0);

@@ -14,10 +14,15 @@
 			收起全文
 		</p>
 		<div v-if="imgList.length > 0">
-			<a v-for="(img, idx) in imgList" :key="img" @click="showImgPreview(idx)"
-			   style="display: inline; margin-left: 1em">
-				<van-image :src="img" width="50" height="50"/>
-			</a>
+			<div v-if="env === 'lpt'">
+				<a v-for="(img, idx) in imgList" :key="img" @click="showImgPreview(idx)"
+				   style="display: inline; margin-left: 1rem">
+					<van-image :src="img" width="50" height="50"/>
+				</a>
+			</div>
+			<div v-if="env === 'blog'" class="image-box-list">
+				<image-box :images="imageBoxList"/>
+			</div>
 		</div>
 		<a-row tyle="flex" justify="end">
 			<a-col pull="1">
@@ -33,9 +38,11 @@
 
 <script>
 import lpt from '@/lib/js/laputa/laputa';
+import global from '@/lib/js/global';
 import CategoryPath from '@/components/category/CategoryPath';
 import {ImagePreview} from 'vant';
 import AdminOpsRecord from '@/components/post/item/parts/AdminOpsRecord';
+import ImageBox from 'vue3-image-box';
 
 const typeReg = /tp:([a-zA-Z]*)#/;
 
@@ -46,7 +53,8 @@ export default {
 	},
 	components: {
 		AdminOpsRecord,
-		CategoryPath
+		CategoryPath,
+		ImageBox
 	},
 	inject: {
 		lptContainer: {
@@ -55,8 +63,10 @@ export default {
 	},
 	data() {
 		return {
+			env: global.vars.env,
 			fullUrlList: [],
 			imgList: [],
+			imageBoxList: [],
 			postContent: this.post.content,
 			payload: '',
 			postType: 'normal',
@@ -83,10 +93,14 @@ export default {
 				const rawImg = this.post.raw_img || '';
 				const imgListStr = rawImg.split('#');
 				imgListStr.forEach(img => {
-					if (img) {
-						this.imgList.push(lpt.getPostThumbUrl(img));
-						this.fullUrlList.push(lpt.getFullImgUrl(img));
-					}
+					if (!img) return;
+					const fullImgUrl = lpt.getFullImgUrl(img, Math.floor(this.clientWidth));
+					this.imgList.push(lpt.getPostThumbUrl(img));
+					this.fullUrlList.push(fullImgUrl);
+					this.imageBoxList.push({
+						thumb: lpt.getPostThumbUrl(img),
+						src: fullImgUrl
+					});
 				});
 			}
 		}
@@ -97,9 +111,22 @@ export default {
 				return '';
 			}
 			return lpt.categoryServ.getPathStr(this.post.category_path);
+		},
+		clientWidth() {
+			// 巨坑，深扒van-tabs组件发现是在swipe组件中获取了一个tabs的宽度
+			// 但是如果tabs组件不占满屏幕，又没有固定的px值，则返回0
+			// tabs组件错乱
+			if (global.vars.env === 'blog' && this.lptContainer === 'blogDrawer') {
+				return global.states.style.drawerWidth;
+			} else {
+				return document.body.clientWidth;
+			}
 		}
 	},
 	methods: {
+		getContainer() {
+			return window.document.body;
+		},
 		showPostDetail() {
 			if (this.lptContainer === 'blogMain') {
 				this.$router.push({
@@ -187,5 +214,19 @@ export default {
 	cursor: pointer;
 	color: #007bff;
 	margin-left: 1rem;
+}
+
+:global(.image-box-list img) {
+	display: inline;
+	margin-left: 1rem;
+}
+
+:global(.image-box-list>div>div) {
+	display: inline-block;
+}
+
+:global(.vue-lb-info) {
+	/*bottom: -20px !important;*/
+	display: none;
 }
 </style>

@@ -12,7 +12,7 @@
     "@kangc/v-md-editor": "^2.2.2",
     "@vant/use": "^1.0.5",
     "@vue/cli": "^4.5.12",
-    "ant-design-vue": "^2.1.0",
+    "ant-design-vue": "^2.1.2",
     "axios": "^0.21.1",
     "clamp-js": "^0.7.0",
     "clipboard": "^2.0.7",
@@ -24,6 +24,7 @@
     "vant": "^3.0.8",
     "vue": "^3.0.8",
     "vue-router": "^4.0.5",
+    "vue3-image-box": "^1.1.0",
     "vue3-json-viewer": "^1.0.4"
   },
   "devDependencies": {

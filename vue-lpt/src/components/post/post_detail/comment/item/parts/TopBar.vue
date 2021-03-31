@@ -1,24 +1,25 @@
 <template>
-	<a-row class="top-bar">
-		<a-col span="4" class="ava-div">
-			<img class="ava" :class="{'def-ava': !comment.creator.raw_avatar}" :src="avatarUrl" @click="showUserHomePage"/>
-		</a-col>
-		<a-col class="time-and-name">
-			<div>
-				<p class="name" @click="showUserHomePage" style="display: inline-block">{{ comment.creator.nick_name }}</p>
-				<van-tag v-if="comment.creator.id === posterId" type="primary"
-				         style="display: inline-block; margin-left: 0.5rem">
-					贴主
-				</van-tag>
-			</div>
+	<div class="top-bar">
+		<div class="ava-div" style="display: inline-block; float: left">
+			<img class="ava" :class="{'def-ava': !comment.creator.raw_avatar}" :src="avatarUrl"
+			     @click="showUserHomePage"/>
+		</div>
+		<div class="time-and-name" style="display: inline-block; float: left">
+			<p class="name" @click="showUserHomePage" style="display: inline-block">{{ comment.creator.nick_name }}</p>
 			<p v-if="typeof comment.create_time !== 'undefined'" class="time">{{ beforeTime }}</p>
-		</a-col>
-		<a-col v-if="comment.is_topped" class="topped-tag">
+		</div>
+		<div v-if="comment.creator.id === posterId" class="poster-tag"
+		     style="display: inline-block; float: left; margin-left: 0.5rem">
+			<van-tag type="primary">
+				贴主
+			</van-tag>
+		</div>
+		<div v-if="comment.is_topped" class="topped-tag" style="display: inline-block; float: left">
 			<van-tag type="primary">
 				置顶
 			</van-tag>
-		</a-col>
-	</a-row>
+		</div>
+	</div>
 </template>
 
 <script>
@@ -72,7 +73,7 @@ export default {
 	height: 2.5rem;
 }
 
-.top-bar .time-and-name, .top-bar .topped-tag {
+.top-bar .time-and-name, .top-bar .topped-tag, .top-bar .poster-tag {
 	margin-top: 0;
 }
 
@@ -97,6 +98,7 @@ export default {
 .top-bar .name {
 	font-weight: bold;
 	font-size: 0.85rem;
+	line-height: 0.85rem;
 }
 
 .top-bar .time {
