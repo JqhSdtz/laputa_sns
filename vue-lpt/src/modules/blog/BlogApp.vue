@@ -177,4 +177,8 @@ div:not(.with-scroll-bar)::-webkit-scrollbar {
 	cursor: inherit !important;
 	user-select: inherit !important;
 }
+
+.ant-modal-wrap, .ant-modal-mask {
+	z-index: 3000;
+}
 </style>

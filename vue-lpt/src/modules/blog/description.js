@@ -2,5 +2,7 @@ export default {
   cover: {
     url: '/static/blog/cover.jpg'
   },
-  rootCategoryId: 0
+  title: '博客',
+  rootCategoryId: 0,
+  galleryCategoryId: 110
 }

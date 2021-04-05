@@ -160,8 +160,9 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
             if (!param.disablePatchFromDB && param.entityList.size() < queryNum) {
                 Integer oriFrom = queryParam.getFrom();
                 // 暂时改变原有参数，以便数据库查询
+                Integer dbQueryNum = queryNum - param.entityList.size();
                 queryParam.setFrom(queryParam.getFrom() + param.entityList.size())
-                        .setQueryNum(queryNum - param.entityList.size());
+                        .setQueryNum(dbQueryNum);
                 Integer oriStartId = queryParam.getStartId();
                 String oriStartValue = queryParam.getStartValue();
                 if (param.newStartValue != null)
@@ -170,13 +171,21 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
                     queryParam.setStartId(param.newStartId);
                 } else if (param.newStartValue == null && param.entityList.size() != 0)
                     queryParam.setStartId(param.entityList.get(param.entityList.size() - 1).getId());
-                if (param.childNumOfParent != null && queryParam.getFrom() < param.childNumOfParent) {
-                    List<T> dbList = callBacks.getDBListCallBack.getDBList(this).getObject();
-                    if (dbList != null) {
-                        for (int i = 0; i < dbList.size(); ++i)
-                            param.entityList.add(dbList.get(i));
-                        if (dbList.size() != 0 && callBacks.multiSetRedisIndexCallBack != null)//Redis中没有，则放入Redis
-                            callBacks.multiSetRedisIndexCallBack.multiSetRedisIndex(dbList, this);
+                if (param.childNumOfParent != null) {
+                    if (queryParam.getFrom() < param.childNumOfParent) {
+                        List<T> dbList = callBacks.getDBListCallBack.getDBList(this).getObject();
+                        if (dbList != null) {
+                            if (dbList.size() < dbQueryNum) {
+                                // 数据库查出来的数量比limit的数量少，说明已经到头了
+                                param.queryEntity.getQueryParam().setEndOfQuery(true);
+                            }
+                            for (int i = 0; i < dbList.size(); ++i)
+                                param.entityList.add(dbList.get(i));
+                            if (dbList.size() != 0 && callBacks.multiSetRedisIndexCallBack != null)//Redis中没有，则放入Redis
+                                callBacks.multiSetRedisIndexCallBack.multiSetRedisIndex(dbList, this);
+                        }
+                    } else {
+                        param.queryEntity.getQueryParam().setEndOfQuery(true);
                     }
                 }
                 // 恢复原有参数

@@ -179,6 +179,7 @@ const postManager = initItemManager({
     getRequest(id) {
         return lpt.postServ.get({
             objectOnly: true,
+            throwError: true,
             param: {
                 postId: id
             }
@@ -231,7 +232,9 @@ const states = {
     }),
     style: wrap({
         default: {
-            drawerWidth: document.body.clientWidth
+            drawerWidth: document.body.clientWidth,
+            bodyHeight: document.body.clientHeight,
+            bodyWidth: document.body.clientWidth
         }
     }),
     blog: wrap({
@@ -254,6 +257,11 @@ const states = {
         }
     }
 }
+
+window.addEventListener('resize', () => {
+    states.style.bodyHeight = document.body.clientHeight;
+    states.style.bodyWidth = document.body.clientWidth;
+});
 
 export default states;
 

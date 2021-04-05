@@ -99,6 +99,8 @@ export default {
 						validator(value) {
 							if (!value) {
 								return true;
+							} else if (value.length < 10) {
+								return '摘要不能少于10个字符';
 							} else if (value.length > 256) {
 								return '摘要不能超过256个字符';
 							} else {
@@ -157,7 +159,8 @@ export default {
 	activated() {
 		if (!this.preHref)
 			return;
-		if (!this.form.title && !this.form.content && this.fileList.length !== 0) {
+		const f = this.form;
+		if (!f.title && !f.content && !f.abstract && this.fileList.length === 0) {
 			// 当前无内容，则直接解析参数
 			this.parseQueryParam();
 		} else if (this.$route.fullPath !== this.preHref) {
@@ -182,7 +185,6 @@ export default {
 	methods: {
 		parseCreatePostParam() {
 			const query = this.$route.query;
-			this.preHref = this.$route.fullPath;
 			this.form.isPublic = query.type === 'public';
 			if (query.isCategoryLeaf && query.categoryId) {
 				const categoryId = query.categoryId;
@@ -298,6 +300,7 @@ export default {
 		},
 		parseQueryParam() {
 			const query = this.$route.query;
+			this.preHref = this.$route.fullPath;
 			query.opType = query.opType || 'create';
 			this.opType = query.opType;
 			if (query.opType === 'edit') {

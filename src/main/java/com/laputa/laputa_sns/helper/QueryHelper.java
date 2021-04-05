@@ -108,7 +108,7 @@ public class QueryHelper<T extends AbstractBaseEntity> {
         for (int i = 0; i < entityList.size(); ++i)
             if (entityList.get(i) == null)
                 dbIdList.add(idList.get(i));
-        if (dbIdList.size() == 0)//从Redis中获取的对象都不为空
+        if (dbIdList.size() == 0) // 从Redis中获取的对象都不为空
             return new Result(SUCCESS).setObject(entityList);
         if (isFull && queryEntity != null)
             queryEntity.setQueryParam(new QueryParam().setQueryType(QueryParam.FULL));

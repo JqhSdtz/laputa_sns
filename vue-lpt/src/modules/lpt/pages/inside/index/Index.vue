@@ -40,8 +40,14 @@ export default {
 		}
 	},
 	data() {
+		global.methods.setTitle({
+			pageDesc: '首页'
+		});
 		const category = global.states.categoryManager.get({
 			itemId: parseInt(this.categoryId),
+			success: (result) => {
+				this.setTitle(result);
+			},
 			fail(result) {
 				Toast.fail(result.message);
 			}
@@ -59,6 +65,9 @@ export default {
 		categoryId() {
 			this.category = global.states.categoryManager.get({
 				itemId: parseInt(this.categoryId),
+				success: (result) => {
+					this.setTitle(result);
+				},
 				fail(result) {
 					Toast.fail(result.message);
 				}
@@ -68,7 +77,7 @@ export default {
 	},
 	computed: {
 		scrollHeight() {
-			const mainViewHeight = document.body.clientHeight;
+			const mainViewHeight = global.states.style.bodyHeight;
 			// 底部高度加0.5的padding
 			let barHeight = this.mainBarHeight;
 			if (global.vars.env === 'blog') {
@@ -77,10 +86,15 @@ export default {
 			return mainViewHeight - barHeight + 'px';
 		}
 	},
-	created() {
-		this.lptConsumer = lpt.createConsumer();
-	},
 	methods: {
+		setTitle(category) {
+			if (category.id !== lpt.categoryServ.rootCategoryId) {
+				global.methods.setTitle({
+					contentDesc: category.name,
+					pageDesc: '主页'
+				});
+			}
+		},
 		onSearch() {
 			this.$router.push({
 				path: '/search_index',

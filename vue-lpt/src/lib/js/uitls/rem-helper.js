@@ -7,16 +7,24 @@ const option = {
     // 移动端设计宽度
     mobWidth: 414,
     // 移动端的最大宽度，超过此宽度视为PC
-    maxMobWidth: 1000,
+    maxMobWidth: 700,
+    pcOnly: false,
+    mobOnly: false,
     responsive: false
+}
+
+function getDesignWidth(oriWidth) {
+    if (option.pcOnly) return option.pcWidth;
+    if (option.mobOnly) return option.mobWidth;
+    return oriWidth > option.maxMobWidth ? option.pcWidth : option.mobWidth;
 }
 
 function initRem(param) {
     Object.assign(option, param);
     const html = document.getElementsByTagName('html')[0];
     const oriWidth = document.body.clientWidth || document.documentElement.clientWidth;
-    const width = oriWidth > option.maxMobWidth ? option.pcWidth : option.mobWidth;
-    html.style.fontSize = oriWidth / width * pRem + 'px';
+    const designWidth = getDesignWidth(oriWidth);
+    html.style.fontSize = oriWidth / designWidth * pRem + 'px';
     if (!initialed) {
         initialed = true;
         if (option.responsive) {

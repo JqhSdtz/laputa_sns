@@ -108,6 +108,7 @@ export default {
 				}
 			}
 			actions.push({
+				id: 'report',
 				text: '举报'
 			});
 			return actions;
@@ -173,6 +174,10 @@ export default {
 			} else if (action.id === 'updateCategory') {
 				this.postListEvents.emit(action.id, {
 					post: this.post
+				});
+			} else if (action.id === 'report') {
+				this.$router.push({
+					path: '/report'
 				});
 			}
 		},

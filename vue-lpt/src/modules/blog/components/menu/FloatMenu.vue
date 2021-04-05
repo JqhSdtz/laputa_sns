@@ -1,15 +1,15 @@
 <template>
 	<div ref="menuMain">
 		<div v-show="isMenuShown" @click="closeMenu">
-			<menu-item class="item" ref="index" path="">
+			<menu-item class="item" ref="gallery" path="/blog/gallery">
 				<ri-landscape-line class="icon"/>
 				<div class="text">相册</div>
 			</menu-item>
-			<menu-item class="item" ref="community" path="/categories" :show-in-drawer="true">
+			<menu-item class="item" ref="category" path="/categories" :show-in-drawer="true">
 				<ri-dashboard-fill class="icon"/>
 				<div class="text">目录</div>
 			</menu-item>
-			<menu-item class="item" ref="news" :path="'/blog/index/' + rootCategoryId">
+			<menu-item class="item" ref="index" :path="'/blog/index/' + rootCategoryId">
 				<ri-apps-fill class="icon"/>
 				<div class="text">首页</div>
 			</menu-item>
@@ -86,7 +86,7 @@ export default {
 		showMenu() {
 			// 这一句不能放到最后
 			this.isMenuShown = true;
-			const refNames = ['index', 'community', 'news', 'mine'];
+			const refNames = ['gallery', 'category', 'index', 'mine'];
 			const floatBallElem = this.$refs.floatBall;
 			const ballOuterElem = this.$refs.ballOuter;
 			const ballX = floatBallElem.offsetLeft + ballOuterElem.offsetWidth / 2;

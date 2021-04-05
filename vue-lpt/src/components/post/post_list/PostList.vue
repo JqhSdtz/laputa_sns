@@ -5,8 +5,11 @@
 		                  success-text="刷新成功">
 			<van-list ref="list" class="post-list" @load="loadMore" :offset="listOffset"
 			          :fill-parent="$el" v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
-				<post-item class="post-item" v-for="post in list" :post-id="post.id" :post-of="postOf"
-				           :key="post.id" :is-top-post="post.id === topPostId" :class="{post, 'last-post': post.last}"/>
+				<slot :post-list="list" :top-post-id="topPostId" :post-of="postOf">
+					<post-item class="post-item" v-for="post in list" :post-id="post.id" :post-of="postOf"
+					           :key="post.id" :is-top-post="post.id === topPostId"
+					           :class="{post, 'last-post': post.last}"/>
+				</slot>
 			</van-list>
 		</van-pull-refresh>
 		<teleport to="body">
@@ -49,7 +52,9 @@ export default {
 		},
 		topPostId: Number,
 		userId: String,
-		onLoaded: Function
+		onLoaded: Function,
+		customLoadProcess: Function,
+		onBatchProcessed: Function
 	},
 	emits: ['refresh'],
 	provide() {
@@ -92,7 +97,20 @@ export default {
 			this.$nextTick(() => {
 				// 这里单独建一个isBusy属性是为了防止
 				// 全局的isBusy变动触发无限下滑组件检测状态导致错误请求
-				ref.isBusy = isBusy;
+				if (isBusy) {
+					// 变为繁忙状态，直接改变
+					ref.isBusy = isBusy;
+				} else {
+					// 结束繁忙状态，要判断是否有自定义处理过程
+					// 如果有，则要判断自定义处理过程是否执行完毕
+					if (ref.curLoadPromise) {
+						ref.curLoadPromise.finally(() => {
+							ref.isBusy = isBusy;
+						});
+					} else {
+						ref.isBusy = isBusy;
+					}
+				}
 			});
 		});
 		if (ref.postOf === 'category') {
@@ -187,7 +205,7 @@ export default {
 				},
 				success() {
 					Toast.success('删除成功');
-					ref.list.splice(ref.list.indexOf(post), 1);
+					ref.list.splice(ref.list.findIndex(_post => _post.id === post.id), 1);
 				},
 				fail(result) {
 					Toast.fail(result.message);
@@ -251,7 +269,6 @@ export default {
 			this.hasEverLoad = false;
 		},
 		loadMore(isRefresh) {
-			const ref = this;
 			if (!this.querior.hasReachedBottom) {
 				let fun;
 				if (this.postOf === 'category') {
@@ -263,36 +280,41 @@ export default {
 				}
 				fun({
 					...this.defaultQueryOption,
-					success(result) {
-						if (ref.postOf === 'news') {
+					success: (result) => {
+						if (this.postOf === 'news') {
 							result.object = result.object.filter(obj => obj.content)
 								.map(obj => obj.content);
 						}
+						if (this.customLoadProcess) {
+							const promiseList = [];
+							result.object.forEach((post) => {
+								promiseList.push(this.customLoadProcess(post));
+							});
+							this.curLoadPromise = Promise.all(promiseList)
+								.then(() => this.onBatchProcessed && this.onBatchProcessed(result.object, this.list));
+						}
 						global.states.postManager.addList(result.object);
-						if (!ref.hasEverLoad) {
-							ref.list = result.object;
-							ref.isEmpty = ref.list.length === 0;
-							ref.hasEverLoad = true;
+						if (!this.hasEverLoad) {
+							this.list = result.object;
+							this.isEmpty = this.list.length === 0;
+							this.hasEverLoad = true;
 						} else {
-							ref.list = ref.list.concat(result.object);
+							this.list = this.list.concat(result.object);
 						}
 						if (isRefresh) {
-							ref.$emit('refresh');
-							ref.postListEvents.emit('refreshList');
+							this.$emit('refresh');
+							this.postListEvents.emit('refreshList');
 						}
 					},
 					fail(result) {
-						if (result.error_code !== 1010140204) {
-							// 屏蔽掉刷新频繁的错误提示
-							Toast.fail(result.message);
-						}
+						Toast.fail(result.message);
 					},
-					complete() {
-						if (!ref.hasReallyLoaded) {
-							ref.$emit('loaded');
-							ref.hasReallyLoaded = true;
+					complete: () => {
+						if (!this.hasReallyLoaded) {
+							this.$emit('loaded');
+							this.hasReallyLoaded = true;
 						}
-						ref.isRefreshing = false;
+						this.isRefreshing = false;
 					}
 				});
 			}
@@ -303,7 +325,7 @@ export default {
 
 <style scoped>
 .post-list {
-	height: 100%;
+	height: 100% !important;
 	overflow-y: visible;
 	background-color: #ECECEC;
 }

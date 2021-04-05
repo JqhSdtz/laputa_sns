@@ -12,9 +12,9 @@ import {
     Popup, Switch, Search, Checkbox, Grid, GridItem, DatetimePicker
 } from 'vant';
 import remHelper from '@/lib/js/uitls/rem-helper';
+import global from '@/lib/js/global';
 import globalMixins from '@/lib/js/global/global-mixins';
 import globalDirectives from '@/lib/js/global/global-directives';
-import globalVariables from '@/lib/js/global/global-vars';
 import lpt from '@/lib/js/laputa/laputa';
 import JsonViewer from 'vue3-json-viewer';
 import VMdPreview from '@kangc/v-md-editor/lib/preview';
@@ -24,11 +24,11 @@ import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
 // 设置rem单位的相对大小
 remHelper.initRem({
     pcWidth: 1024,
-    mobWidth: 414,
+    pcOnly: true,
     responsive: true
 });
 
-globalVariables.env = 'blog';
+global.vars.env = 'blog';
 lpt.categoryServ.rootCategoryId = description.rootCategoryId;
 
 const app = createApp(BlogApp);
@@ -59,6 +59,10 @@ globalDirectives.forEach(item => {
 // 添加全局混入选项
 globalMixins.forEach(mixin => {
     app.mixin(mixin);
+});
+
+global.methods.setOption({
+    moduleTitle: description.title
 });
 
 app.mount('#app');

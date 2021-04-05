@@ -85,7 +85,7 @@ export default {
 	},
 	computed: {
 		scrollHeight() {
-			return document.body.clientHeight + 'px';
+			return global.states.style.bodyHeight + 'px';
 		},
 		myAvatarUrl() {
 			return lpt.getUserAvatarUrl(this.user);

@@ -36,6 +36,9 @@ public class QueryParam {
     private int useStartIdAtSql;
 
     @JsonIgnore
+    private boolean endOfQuery = false;
+
+    @JsonIgnore
     private String orderBy;
 
     @JsonIgnore

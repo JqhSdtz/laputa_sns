@@ -47,8 +47,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
 
     public static final Integer GROUND_ID = 0;
 
-    private Map<Integer, Category> categoryMap = new ConcurrentHashMap();
-    private Set<Category> leafCategorySet = Collections.newSetFromMap(new ConcurrentHashMap());
+    private Map<Integer, Category> categoryMap;
+    private Set<Category> leafCategorySet;
     private Category groundCategory;
 
     private final PostService postService;
@@ -80,14 +80,28 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     @Override
     /**加载目录树*/
     public void run(ApplicationArguments args) {
+        loadCategoryFromDB(false);
+    }
+
+    private void loadCategoryFromDB(boolean fromReload) {
         List<Category> categoryList = dao.selectList(new Category());
+        Map<Integer, Category> newCategoryMap  = new ConcurrentHashMap<>();
         for (int i = 0; i < categoryList.size(); ++i) {
             Category category = categoryList.get(i);
-            category.setPopularPostList(new IndexList(10));
-            category.setLatestPostList(new IndexList(10));
+            if (fromReload && categoryMap != null) {
+                Category oriCategory = categoryMap.get(category.getId());
+                if (oriCategory != null) {
+                    category.setPopularPostList(oriCategory.getPopularPostList());
+                    category.setLatestPostList(oriCategory.getLatestPostList());
+                }
+            } else {
+                category.setPopularPostList(new IndexList(10));
+                category.setLatestPostList(new IndexList(10));
+            }
             category.setAllowUserPost(category.getId() != adminOpsRecordCategoryId);
-            categoryMap.put(category.getId(), category);
+            newCategoryMap.put(category.getId(), category);
         }
+        categoryMap = newCategoryMap;
         groundCategory = categoryMap.get(GROUND_ID);
         if (groundCategory == null) {
             log.warn("数据库无基础目录，将添加缺省基础目录");
@@ -100,6 +114,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
                 log.info("缺省基础目录添加成功");
             return;
         }
+        leafCategorySet = Collections.newSetFromMap(new ConcurrentHashMap());
         for (int i = 0; i < categoryList.size(); ++i) {
             Category category = categoryList.get(i);
             if (category.getParent() != null)//groundCategory的parent为null
@@ -721,6 +736,15 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         category.setDefSubId(param.getDefSubId());
         int type = isCancel ? AdminOpsRecord.TYPE_CANCEL_CATEGORY_DEF_SUB : AdminOpsRecord.TYPE_SET_CATEGORY_DEF_SUB;
         return writeToAdminOpsRecord((Category) new Category(param.getId()).setDefSubId(param.getDefSubId()).setOpComment(param.getOpComment()), type, operator);
+    }
+
+    /**
+     * 重新加载数据库目录信息，超级管理员操作
+     */
+    public synchronized Result reloadCategory(Operator operator) {
+        if (!operator.isSuperAdmin()) return Result.EMPTY_FAIL;
+        loadCategoryFromDB(true);
+        return Result.EMPTY_SUCCESS;
     }
 
     /**

@@ -87,7 +87,7 @@ export default {
 			if (this.lptContainer === 'blogDrawer') {
 				return global.states.style.drawerWidth;
 			} else {
-				return document.body.clientWidth;
+				return global.states.style.bodyWidth;
 			}
 		}
 	},

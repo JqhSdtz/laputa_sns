@@ -35,7 +35,8 @@
 			<van-cell v-if="me.isAdmin" title="管理权限" is-link :to="'/permission_list/' + me.user.id"/>
 			<van-cell v-if="isSuperAdmin" title="查看数据库统计信息" is-link to="/druid_stat"/>
 			<van-cell v-if="isSuperAdmin" title="校正数据" is-link @click="correctData"/>
-			<van-cell v-if="env === 'blog'" title="完整功能请访问社区" is-link @click="openLptPage"/>
+			<van-cell v-if="isSuperAdmin" title="重载目录" is-link @click="reloadCategory"/>
+			<van-cell v-if="env === 'blog'" title="完整功能请访问社区" is-link to="/lpt_qr_code"/>
 			<van-cell title="注销" is-link @click="signOut"/>
 		</div>
 		<div v-if="!hasSigned" style="width: 90%; margin-left: 5%">
@@ -223,9 +224,6 @@ export default {
 			}
 			window.location.href = url;
 		},
-		openLptPage() {
-			window.open('https://lpt.jqh.zone');
-		},
 		correctData() {
 			const prompt = global.methods.prompt;
 			prompt({
@@ -245,6 +243,22 @@ export default {
 						}
 					});
 				}
+			});
+		},
+		reloadCategory() {
+			Dialog.confirm({
+				title: '确认',
+				message: '是否从数据库中重载所有目录？'
+			}).then(() => {
+				lpt.categoryServ.reload({
+					success: () => {
+						Toast.success('重载成功');
+					},
+					fail: () => {
+						Toast.fail('重载失败');
+					}
+				});
+			}).catch(() => {
 			});
 		}
 	}

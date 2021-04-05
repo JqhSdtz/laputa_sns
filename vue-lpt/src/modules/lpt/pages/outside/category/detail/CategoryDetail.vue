@@ -132,14 +132,14 @@ export default {
 			return lpt.getCategoryCoverUrl(this.category);
 		},
 		scrollHeight() {
-			const mainViewHeight = document.body.clientHeight;
+			const mainViewHeight = global.states.style.bodyHeight;
 			return mainViewHeight + 'px';
 		},
 		clientWidth() {
 			if (global.vars.env === 'blog') {
 				return global.states.style.drawerWidth;
 			} else {
-				return document.body.clientWidth;
+				return global.states.style.bodyWidth;
 			}
 		},
 		hasPublishRight() {

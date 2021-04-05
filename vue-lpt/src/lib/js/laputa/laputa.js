@@ -873,6 +873,10 @@ function _initLaputa(option) {
                 param.url = lpt.baseApiUrl + '/category/';
                 return lpt.delete(param);
             }),
+            reload: wrap(function (param) {
+                param.url = lpt.baseApiUrl + '/category/reload';
+                return lpt.post(param);
+            }),
             getRoots: wrap(function (param) {
                 param.url = lpt.baseApiUrl + '/category/roots';
                 param.appendSuccess(result => processList(result.object), true);

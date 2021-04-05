@@ -7,7 +7,7 @@
 			<v-md-preview v-if="postType === 'md'" :text="fullText"></v-md-preview>
 		</pre>
 		<pre class="content" v-else @click="showPostDetail">{{ postContent }}</pre>
-		<p v-if="post.full_text_id && !isShowFullText" class="full-text-btn" @click.stop="showFullText">
+		<p v-if="post.full_text_id && !post.noFullText && !isShowFullText" class="full-text-btn" @click.stop="showFullText">
 			查看全文
 		</p>
 		<p v-if="isShowFullText" class="full-text-btn" @click.stop="hideFullText">
@@ -42,7 +42,7 @@ import global from '@/lib/js/global';
 import CategoryPath from '@/components/category/CategoryPath';
 import {ImagePreview} from 'vant';
 import AdminOpsRecord from '@/components/post/item/parts/AdminOpsRecord';
-import ImageBox from 'vue3-image-box';
+import ImageBox from '@/components/global/ImageBox';
 
 const typeReg = /tp:([a-zA-Z]*)#/;
 
@@ -67,7 +67,7 @@ export default {
 			fullUrlList: [],
 			imgList: [],
 			imageBoxList: [],
-			postContent: this.post.content,
+			postContent: this.post.customContent || this.post.content,
 			payload: '',
 			postType: 'normal',
 			fullText: '',
@@ -83,7 +83,8 @@ export default {
 			handler() {
 				if (typeReg.test(this.post.content)) {
 					this.postType = this.post.content.match(typeReg)[1];
-					this.postContent = this.post.content.replace(typeReg, '');
+					const content = this.post.customContent || this.post.content;
+					this.postContent = content.replace(typeReg, '');
 				}
 			}
 		},
@@ -119,7 +120,7 @@ export default {
 			if (global.vars.env === 'blog' && this.lptContainer === 'blogDrawer') {
 				return global.states.style.drawerWidth;
 			} else {
-				return document.body.clientWidth;
+				return global.states.style.bodyWidth;
 			}
 		}
 	},

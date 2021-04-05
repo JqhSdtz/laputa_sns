@@ -1,5 +1,6 @@
 // TODO 按照官方实例未能实现样式的按需引入
 
+import description from './description';
 import {createApp} from 'vue';
 import LptApp from './LptApp.vue';
 import router from './router';
@@ -16,6 +17,7 @@ import JsonViewer from 'vue3-json-viewer';
 import VMdPreview from '@kangc/v-md-editor/lib/preview';
 import '@kangc/v-md-editor/lib/style/preview.css';
 import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
+import global from "@/lib/js/global";
 
 // 设置rem单位的相对大小
 remHelper.initRem({
@@ -23,6 +25,7 @@ remHelper.initRem({
     mobWidth: 414
 });
 
+globalVariables.env = 'lpt';
 const app = createApp(LptApp);
 
 app.use(router);
@@ -53,6 +56,8 @@ globalMixins.forEach(mixin => {
     app.mixin(mixin);
 });
 
-globalVariables.env = 'lpt';
+global.methods.setOption({
+    moduleTitle: description.title
+});
 
 app.mount('#app');

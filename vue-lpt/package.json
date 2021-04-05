@@ -24,7 +24,6 @@
     "vant": "^3.0.8",
     "vue": "^3.0.8",
     "vue-router": "^4.0.5",
-    "vue3-image-box": "^1.1.0",
     "vue3-json-viewer": "^1.0.4"
   },
   "devDependencies": {

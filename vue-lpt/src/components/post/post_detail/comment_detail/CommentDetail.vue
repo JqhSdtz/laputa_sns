@@ -49,7 +49,7 @@ export default {
 	},
 	computed: {
 		scrollHeight() {
-			const mainViewHeight = document.body.clientHeight;
+			const mainViewHeight = global.states.style.bodyHeight;
 			// 底部高度加0.5的padding
 			const barHeight = this.mainBarHeight + 10;
 			return mainViewHeight - barHeight + 'px';

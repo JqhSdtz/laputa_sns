@@ -76,6 +76,8 @@ const scrollView = {
                     }
                     hasScrolledTop = true;
                     event.preventDefault();
+                } else {
+                    hasScrolledTop = window.scrollY === 0;
                 }
             };
             window.addEventListener('wheel', (event) => {

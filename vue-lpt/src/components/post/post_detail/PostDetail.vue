@@ -1,7 +1,7 @@
 <template>
 	<template v-if="forceReloadFlag">
 		<div v-show="showDrawer">
-			<div class="post-area" :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
+			<div v-show="showPostArea" class="post-area" :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
 			        :style="{height: scrollHeight, position: 'relative'}" v-scroll-view>
 				<post-item style="padding: 0 0.5rem" :post-id="post.id" :show-bottom="false"/>
 				<div v-show="!showCommentDetail" ref="middleBar" id="middle-bar"
@@ -80,15 +80,14 @@ export default {
 			showDrawer: this.lptContainer === 'blogDrawer' ? toRef(global.states.blog, 'showDrawer') : true,
 			curTabKey: 'comment',
 			showCommentDetail: false,
+			showPostArea: true,
 			curCommentDetailId: -1
 		}
 	},
 	watch: {
-		postId(newValue) {
-			this.post = global.states.postManager.get({
-				itemId: newValue
-			});
+		postId() {
 			this.init();
+			this.parseCommand();
 			this.forceReload();
 		}
 	},
@@ -110,7 +109,7 @@ export default {
 	},
 	computed: {
 		scrollHeight() {
-			const mainViewHeight = document.body.clientHeight;
+			const mainViewHeight = global.states.style.bodyHeight;
 			// 底部高度加0.5的padding
 			const barHeight = this.mainBarHeight + 10;
 			if (this.showCommentDetail) {
@@ -123,16 +122,23 @@ export default {
 			// 巨坑，深扒van-tabs组件发现是在swipe组件中获取了一个tabs的宽度
 			// 但是如果tabs组件不占满屏幕，又没有固定的px值，则返回0
 			// tabs组件错乱
-			if (global.vars.env === 'blog' && this.lptContainer === 'blogDrawer') {
+			if (this.lptContainer === 'blogDrawer') {
 				return global.states.style.drawerWidth;
 			} else if (this.lptContainer === 'blogMain') {
 				return global.states.style.blogMainWidth;
 			} else {
-				return document.body.clientWidth;
+				return global.states.style.bodyWidth;
 			}
 		}
 	},
 	methods: {
+		setTitle(post) {
+			if (this.lptContainer === 'blogDrawer') return;
+			global.methods.setTitle({
+				contentDesc: post.title || post.customContent || post.content,
+				pageDesc: '帖子'
+			});
+		},
 		parseCommand() {
 			const query = this.$route.query;
 			const command = query.command;
@@ -150,15 +156,10 @@ export default {
 			this.init();
 		},
 		init() {
-			lpt.postServ.get({
-				consumer: this.lptConsumer,
-				param: {
-					postId: this.postId
-				},
-				success(result) {
-					// 注意！注释掉的写法是不对的，会失去响应性
-					// ref.post = global.states.postManager.add(result.object);
-					global.states.postManager.add(result.object);
+			this.post = global.states.postManager.get({
+				itemId: this.postId,
+				success: (post) => {
+					this.setTitle(post);
 				},
 				fail(result) {
 					Toast.fail(result.message);

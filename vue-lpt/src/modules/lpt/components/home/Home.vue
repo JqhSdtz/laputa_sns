@@ -23,7 +23,7 @@ export default {
 	data() {
 		const currentUser = lpt.operatorServ.getCurrent();
 		// 底部固定4rem，mainView现算一个px值
-		const mainViewHeight = (document.body.clientHeight - global.vars.style.tabBarHeight) + 'px';
+		const mainViewHeight = (global.states.style.bodyHeight - global.vars.style.tabBarHeight) + 'px';
 		const mainBarHeight = global.vars.style.tabBarHeight + 'px';
 		return {
 			mainViewHeight: mainViewHeight,

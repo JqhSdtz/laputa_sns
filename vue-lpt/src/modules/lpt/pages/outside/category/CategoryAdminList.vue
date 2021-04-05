@@ -47,7 +47,7 @@ export default {
 	},
 	computed: {
 		scrollHeight() {
-			const mainViewHeight = document.body.clientHeight;
+			const mainViewHeight = global.states.style.bodyHeight;
 			return mainViewHeight + 'px';
 		}
 	},

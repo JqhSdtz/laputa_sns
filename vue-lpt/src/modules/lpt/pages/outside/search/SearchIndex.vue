@@ -45,7 +45,7 @@ export default {
 			if (global.vars.env === 'blog') {
 				return global.states.style.drawerWidth;
 			} else {
-				return document.body.clientWidth;
+				return global.states.style.bodyWidth;
 			}
 		},
 	},

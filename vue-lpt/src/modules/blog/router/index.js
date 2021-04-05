@@ -21,7 +21,10 @@ import DruidStat from "@/modules/lpt/pages/outside/DruidStat";
 import Index from "@/modules/lpt/pages/inside/index/Index";
 import global from "@/lib/js/global";
 import pathToRegexp from 'path-to-regexp';
-import Categories from "@/modules/blog/pages/category/Categories";
+import Categories from "@/modules/blog/pages/drawer/category/Categories";
+import LptQrCode from "@/modules/lpt/pages/inside/mine/LptQrCode";
+import Report from "@/modules/lpt/pages/outside/report/Report";
+import Gallery from "@/modules/blog/pages/main/gallery/Gallery";
 
 function initRouter() {
     const drawerRouters = [
@@ -162,6 +165,16 @@ function initRouter() {
             component: DruidStat
         },
         {
+            path: '/lpt_qr_code',
+            name: 'lptQrCode',
+            component: LptQrCode
+        },
+        {
+            path: '/report',
+            name: 'report',
+            component: Report
+        },
+        {
             path: '/categories',
             name: 'categories',
             component: Categories
@@ -176,6 +189,7 @@ function initRouter() {
         },
         {
             path: '/blog/index/:blogCategoryId',
+            name: 'index',
             component: Index,
             props: route => ({
                 categoryId: route.params.blogCategoryId
@@ -183,6 +197,11 @@ function initRouter() {
             meta: {
                 mainPathPropNum: 1
             }
+        },
+        {
+            path: '/blog/gallery',
+            name: 'gallery',
+            component: Gallery
         },
         {
             path: '/blog/post_detail/:blogPostId',

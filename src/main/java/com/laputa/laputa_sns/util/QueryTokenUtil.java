@@ -19,7 +19,8 @@ public class QueryTokenUtil {
     @NotNull
     /**newStartId为空则自动从resList中获取*/
     public static <T extends AbstractBaseEntity> String generateQueryToken(@NotNull T param, @NotNull List<T> resList, @NotNull QueryParam queryParam, int indexType, String hmacKey) {
-        boolean abandon = resList.size() == 0;//刷到底了，该token弃用
+        boolean endOfQuery = queryParam == null ? false : queryParam.isEndOfQuery();
+        boolean abandon = endOfQuery || resList.size() == 0;//刷到底了，该token弃用
         Integer newStartId = queryParam == null ? null : queryParam.getStartId();
         if (newStartId == null)
             newStartId = (abandon || resList.get(resList.size() - 1) == null) ? null : resList.get(resList.size() - 1).getId();

@@ -10,6 +10,7 @@
 import {EditFilled} from '@ant-design/icons-vue';
 import remHelper from '@/lib/js/uitls/rem-helper';
 import lpt from '@/lib/js/laputa/laputa';
+import global from '@/lib/js/global';
 
 export default {
 	name: 'FloatPublishButton',
@@ -38,7 +39,7 @@ export default {
 	},
 	computed: {
 		topOffset() {
-			const mainViewHeight = document.body.clientHeight;
+			const mainViewHeight = global.states.style.bodyHeight;
 			let offset;
 			if (this.offset.indexOf('rem') > 0) {
 				offset = remHelper.remToPx(parseInt(this.offset));

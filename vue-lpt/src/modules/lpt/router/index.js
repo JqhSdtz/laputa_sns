@@ -22,6 +22,8 @@ import PermissionList from '@/modules/lpt/pages/outside/user/PermissionList';
 import CategoryAdminList from '@/modules/lpt/pages/outside/category/CategoryAdminList';
 import DruidStat from '@/modules/lpt/pages/outside/DruidStat';
 import {processRouters} from '@/lib/js/router/util';
+import LptQrCode from "@/modules/lpt/pages/inside/mine/LptQrCode";
+import Report from "@/modules/lpt/pages/outside/report/Report";
 
 const routers = [
     {
@@ -184,6 +186,16 @@ const routers = [
         path: '/druid_stat',
         name: 'druidStat',
         component: DruidStat
+    },
+    {
+        path: '/lpt_qr_code',
+        name: 'lptQrCode',
+        component: LptQrCode
+    },
+    {
+        path: '/report',
+        name: 'report',
+        component: Report
     }
 ];
 

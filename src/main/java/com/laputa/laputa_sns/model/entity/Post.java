@@ -338,7 +338,7 @@ public class Post extends AbstractContent<Post> {
 
     @JsonIgnore
     public boolean isValidUpdateContentParam() {
-        return id != null && (rawImg != null || content != null);
+        return id != null && validatePostContent();
     }
 
     @JsonIgnore

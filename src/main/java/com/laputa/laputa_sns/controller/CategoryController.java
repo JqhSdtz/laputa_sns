@@ -102,6 +102,11 @@ public class CategoryController {
         return categoryService.deleteCategory(category, operator, false).setOperator(operator);
     }
 
+    @RequestMapping(value = "/reload", method = RequestMethod.POST)
+    public Result reloadCategory(@RequestAttribute Operator operator) {
+        return categoryService.reloadCategory(operator).setOperator(operator);
+    }
+
     @RequestMapping(value = "/roots", method = RequestMethod.GET)
     public Result<List<Category>> readRootCategoryList(@RequestAttribute Operator operator) {
         return categoryService.readRootCategoryList().setOperator(operator);
