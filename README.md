@@ -1,9 +1,9 @@
 # laputa_sns
 一个移动端的社区网站以及一个PC端的博客网站。[社区网站实例](https://lpt.jqh.zone) [博客网站实例](https://jqh.zone)
 
-后端使用Spring Boot，数据库使用MySQL，使用Redis构建缓存以及支持分布式（朝这个目标做的，但还没完全实现分布式）
+后端使用Spring Boot，数据库使用MySQL，使用Redis构建缓存以及支持分布式（朝这个目标做的，但还没完全实现分布式）。
 
-前端基于Vue3.0，混合了Ant-Design-Vue和Vant两套框架
+前端基于Vue3.0，混合了Ant-Design-Vue和Vant两套框架。
 
 ## 社区网站
 支持发帖、评论、回复、转发、关注等功能。
