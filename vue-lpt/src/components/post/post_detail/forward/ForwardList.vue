@@ -72,6 +72,7 @@ export default {
 			this.hasEverLoad = false;
 		},
 		pushForward(forward) {
+			if (this.isEmpty) this.isEmpty = false;
 			this.list.unshift(forward);
 		},
 		loadMore() {

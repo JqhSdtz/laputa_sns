@@ -1,7 +1,7 @@
 <template>
 	<div class="main-area" style="height: 100%; padding-top: 1rem; background-color: rgb(245, 245, 245)">
 		<van-cell class="cell" title="目录ID" :value="categoryId"/>
-		<van-cell class="cell" title="查看管理员列表" is-link :to="'/category_admin_list/' + category.id"/>
+		<van-cell v-if="me.isAdmin" class="cell" title="查看管理员列表" is-link :to="'/category_admin_list/' + category.id"/>
 		<van-cell v-if="category.rights.update_info" class="cell" title="修改信息" is-link
 		          :to="'/mod_category_info/' + category.id"/>
 		<van-cell v-if="category.rights.update_disp_seq" class="cell" title="查看/修改排序号" is-link @click="changeDispSeq"/>
@@ -12,17 +12,17 @@
 		<van-cell v-if="category.rights.update_parent" class="cell" title="迁移父目录" is-link @click="changeParent"/>
 		<van-cell v-if="category.rights.create" class="cell" title="创建子目录" is-link @click="showCreatePage"/>
 		<van-cell v-if="category.rights.delete" class="cell" title="删除目录" is-link @click="deleteCategory"/>
+		<prompt-dialog ref="prompt">
+			<template v-if="showSelectedUser" v-slot:tip>
+				<user-item :show-id="true" :user="curSelectedUser"/>
+			</template>
+		</prompt-dialog>
+		<prompt-dialog ref="categoryPrompt">
+			<template v-if="showSelectedCategory" v-slot:tip>
+				<category-grid-item :category-id="curSelectedCategory.id"/>
+			</template>
+		</prompt-dialog>
 	</div>
-	<prompt-dialog ref="prompt">
-		<template v-if="showSelectedUser" v-slot:tip>
-			<user-item :show-id="true" :user="curSelectedUser"/>
-		</template>
-	</prompt-dialog>
-	<prompt-dialog ref="categoryPrompt">
-		<template v-if="showSelectedCategory" v-slot:tip>
-			<category-grid-item :category-id="curSelectedCategory.id"/>
-		</template>
-	</prompt-dialog>
 </template>
 
 <script>
@@ -51,6 +51,7 @@ export default {
 			}
 		});
 		return {
+			me: global.states.curOperator,
 			showSelectedUser: false,
 			showSelectedCategory: false,
 			curSelectedCategory: lpt.categoryServ.getDefaultCategory(-1),

@@ -137,22 +137,46 @@ public class NoticeService {
                 cml2Map.put(id, null);
         }
         if (postMap.size() != 0) {
-            List<Post> postList = (List<Post>) postService.multiReadPostWithContentAndCounter(new ArrayList(postMap.keySet()), operator).getObject();
-            if (postList != null)
-                for (int i = 0; i < postList.size(); ++i)
-                    postMap.put(postList.get(i).getId(), postList.get(i));
+            List<Integer> postIdList = new ArrayList(postMap.keySet());
+            List<Post> postList = postService.multiReadPostWithContentAndCounter(postIdList, operator).getObject();
+            if (postList != null) {
+                for (int i = 0; i < postList.size(); ++i) {
+                    Post post = postList.get(i);
+                    if (post == null) {
+                        post = new Post(postIdList.get(i)).setContent("该帖已被删除").setCreator(new User(-1));
+                        post.setDeleted(true);
+                    }
+                    postMap.put(post.getId(), post);
+                }
+            }
         }
         if (cml1Map.size() != 0) {
-            List<CommentL1> cml1List = (List<CommentL1>) commentL1Service.multiReadCommentWithContentAndCounter(new ArrayList(cml1Map.keySet())).getObject();
-            if (cml1List != null)
-                for (int i = 0; i < cml1List.size(); ++i)
-                    cml1Map.put(cml1List.get(i).getId(), cml1List.get(i));
+            List<Integer> cml1IdList = new ArrayList(cml1Map.keySet());
+            List<CommentL1> cml1List = commentL1Service.multiReadCommentWithContentAndCounter(cml1IdList).getObject();
+            if (cml1List != null) {
+                for (int i = 0; i < cml1List.size(); ++i) {
+                    CommentL1 cml1 = cml1List.get(i);
+                    if (cml1 == null) {
+                        cml1 = new CommentL1(cml1IdList.get(i)).setContent("该评论已被删除").setCreator(new User(-1));
+                        cml1.setDeleted(true);
+                    }
+                    cml1Map.put(cml1.getId(), cml1);
+                }
+            }
         }
         if (cml2Map.size() != 0) {
-            List<CommentL2> cml2List = (List<CommentL2>) commentL2Service.multiReadCommentWithContentAndCounter(new ArrayList(cml2Map.keySet())).getObject();
-            if (cml2List != null)
-                for (int i = 0; i < cml2List.size(); ++i)
-                    cml2Map.put(cml2List.get(i).getId(), cml2List.get(i));
+            List<Integer> cml2IdList = new ArrayList(cml2Map.keySet());
+            List<CommentL2> cml2List = commentL2Service.multiReadCommentWithContentAndCounter(cml2IdList).getObject();
+            if (cml2List != null) {
+                for (int i = 0; i < cml2List.size(); ++i) {
+                    CommentL2 cml2 = cml2List.get(i);
+                    if (cml2 == null) {
+                        cml2 = new CommentL2(cml2IdList.get(i)).setContent("该回复已被删除").setCreator(new User(-1));
+                        cml2.setDeleted(true);
+                    }
+                    cml2Map.put(cml2.getId(), cml2);
+                }
+            }
         }
         for (int i = 0; i < noticeList.size(); ++i) {
             Notice notice = noticeList.get(i);

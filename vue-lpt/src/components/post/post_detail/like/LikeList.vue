@@ -82,6 +82,7 @@ export default {
 			this.hasEverLoad = false;
 		},
 		pushLike(like) {
+			if (this.isEmpty) this.isEmpty = false;
 			this.list.unshift(like);
 		},
 		shiftLike() {

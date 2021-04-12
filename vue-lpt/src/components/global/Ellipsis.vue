@@ -1,6 +1,5 @@
 <template>
 	<div class="mm-ellipsis-container">
-		<p>{{debugText}}</p>
 		<div class="shadow">
 			<textarea :rows="rows" readonly></textarea>
 			<div class="shadow-box" ref="box">
@@ -62,7 +61,6 @@ export default {
 	},
 	data() {
 		return {
-			debugText: '',
 			showFullText: false,
 			textLength: 0,
 			beforeRefresh: null,
@@ -128,7 +126,7 @@ export default {
 .mm-ellipsis-container {
 	text-align: left;
 	position: relative;
-	line-height: 1.5rem;
+	/*line-height: 1.5rem;*/
 }
 
 .mm-ellipsis-container .shadow {

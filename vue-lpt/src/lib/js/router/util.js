@@ -20,41 +20,17 @@ export function processRouters(param) {
         });
     }
     doProcess(param.routers);
-    let curHomeInsidePath = param.homeIndexPath;
-    const homePath = param.homePath;
-    if (homePath && curHomeInsidePath) {
-        const resolvedSet = new Set();
-        router.beforeEach((to, from, next) => {
-            if (to.meta && to.meta.checkSign && !global.methods.checkSign()) {
-                return;
-            }
-            if (resolvedSet.has(from)) {
-                resolvedSet.delete(from);
-                next();
-                return;
-            }
-            if (from.path === '/') {
-                next();
-                return;
-            }
-            const fromIdxOfHome = from.path.indexOf(homePath);
-            const fromHome = fromIdxOfHome > -1 && fromIdxOfHome < 2;
-            const toIdxOfHome = to.path.indexOf(homePath);
-            const toHome = toIdxOfHome > -1 && toIdxOfHome < 2;
-            if (fromHome && !toHome) {
-                // 从home里出来时记录home中的路径
-                curHomeInsidePath = from.path;
-            } else if (!fromHome && toHome) {
-                // 从home外回来时直接跳转到对应的路径
-                resolvedSet.add(from);
-                next({path: curHomeInsidePath});
-                return;
-            }
-            next();
-        });
+
+    const titleMap = new Map();
+    const titleKeeper = (to, from, next) => {
+        titleMap.set(from.fullPath, document.title);
+        const nextPath = to.fullPath;
+        if (titleMap.has(nextPath)) document.title = titleMap.get(nextPath);
+        next();
     }
     return {
         router,
-        noCacheList
+        noCacheList,
+        titleKeeper
     }
 }

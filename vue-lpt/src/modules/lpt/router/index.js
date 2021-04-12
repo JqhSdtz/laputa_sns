@@ -24,6 +24,7 @@ import DruidStat from '@/modules/lpt/pages/outside/DruidStat';
 import {processRouters} from '@/lib/js/router/util';
 import LptQrCode from "@/modules/lpt/pages/inside/mine/LptQrCode";
 import Report from "@/modules/lpt/pages/outside/report/Report";
+import global from "@/lib/js/global";
 
 const routers = [
     {
@@ -156,7 +157,7 @@ const routers = [
         }
     },
     {
-        path: '/mod_category_info/:categoryId',
+        path: '/mod_category_info/:categoryId?',
         name: 'modCategoryInfo',
         component: ModCategoryInfo,
         props: true,
@@ -199,11 +200,44 @@ const routers = [
     }
 ];
 
-const {router, noCacheList} = processRouters({
-    routers,
-    homePath: 'home',
-    homeIndexPath: '/home/index'
+const {router, noCacheList, titleKeeper} = processRouters({
+    routers
 });
+
+let curHomeInsidePath = 'index';
+const homePath = '/home/index';
+
+const resolvedSet = new Set();
+router.beforeEach((to, from, next) => {
+    if (to.meta && to.meta.checkSign && !global.methods.checkSign()) {
+        return;
+    }
+    if (resolvedSet.has(from)) {
+        resolvedSet.delete(from);
+        next();
+        return;
+    }
+    if (from.path === '/') {
+        next();
+        return;
+    }
+    const fromIdxOfHome = from.path.indexOf(homePath);
+    const fromHome = fromIdxOfHome > -1 && fromIdxOfHome < 2;
+    const toIdxOfHome = to.path.indexOf(homePath);
+    const toHome = toIdxOfHome > -1 && toIdxOfHome < 2;
+    if (fromHome && !toHome) {
+        // 从home里出来时记录home中的路径
+        curHomeInsidePath = from.path;
+    } else if (!fromHome && toHome) {
+        // 从home外回来时直接跳转到对应的路径
+        resolvedSet.add(from);
+        next({path: curHomeInsidePath});
+        return;
+    }
+    next();
+});
+
+router.beforeEach(titleKeeper);
 
 export {
     router as default,

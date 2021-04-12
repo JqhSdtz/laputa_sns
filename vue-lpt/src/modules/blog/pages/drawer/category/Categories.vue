@@ -16,7 +16,8 @@
 					</div>
 				</van-cell>
 			</div>
-			<van-popup v-model:show="showRecentVisitPopup" round :closeable="true" style="width: 80%; padding: 1.5rem">
+			<van-popup v-model:show="showRecentVisitPopup" round :closeable="true"
+			           teleport="#app" style="width: 80%; padding: 1.5rem">
 				<van-grid :column-num="4" :border="false">
 					<van-grid-item v-for="obj in recentVisitList" :key="obj.category.id">
 						<category-grid-item :category-id="obj.category.id" size="2.5rem" @click.capture.stop="showCategory(obj.category)">
@@ -157,7 +158,7 @@ export default {
 		},
 		showCategory(category) {
 			this.$router.push({
-				path: '/blog/index/' + category.id
+				path: '/blog/category_detail/' + category.id
 			});
 			global.states.blog.showDrawer = false;
 		}

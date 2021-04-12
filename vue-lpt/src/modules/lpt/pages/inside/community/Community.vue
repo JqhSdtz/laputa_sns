@@ -58,18 +58,27 @@ export default {
 			showRecentVisitPopup: false
 		}
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	watch: {
 		$route() {
 			this.showRecentVisitPopup = false;
 		}
 	},
 	created() {
-		const ref = this;
 		this.lptConsumer = lpt.createConsumer();
 		global.events.on(['signIn', 'signOut'], () => {
-			ref.init();
+			this.init();
 		});
 		this.init();
+		if (this.lptConsumer !== 'blogDrawer') {
+			global.methods.setTitle({
+				pageDesc: '社区'
+			});
+		}
 	},
 	activated() {
 		if (!this.hasActived) {

@@ -51,8 +51,9 @@ export default {
 	data() {
 		this.querior = lpt.createQuerior();
 		this.commentListEvents = createEventBus();
+		const sortType = localStorage.getItem('sortTypeCommentList' + this.postId) || 'popular';
 		return {
-			sortType: 'popular',
+			sortType: sortType,
 			finished: toRef(this.querior, 'hasReachedBottom'),
 			isEmpty: false,
 			hasEverLoad: false,
@@ -60,6 +61,11 @@ export default {
 			listOffset: global.vars.style.postDetailBarHeight + 10,
 			isRefreshing: false,
 			isBusy: false
+		}
+	},
+	watch: {
+		sortType(value) {
+			localStorage.setItem('sortTypeCommentList' + this.postId, value);
 		}
 	},
 	created() {
@@ -150,6 +156,7 @@ export default {
 			this.hasEverLoad = false;
 		},
 		pushComment(comment) {
+			if (this.isEmpty) this.isEmpty = false;
 			this.list.unshift(comment);
 		},
 		loadMore(isRefresh) {

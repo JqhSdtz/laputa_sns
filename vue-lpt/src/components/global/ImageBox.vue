@@ -1,7 +1,7 @@
 <template>
 	<div v-if="showImageList" :class="imagesListClass">
 		<div v-for="(img, i) in images" :key="i">
-			<img :src="img.thumb" @click="selected(i, img.src, img.caption)"/>
+			<img :src="img.thumb" @click="selected(i, img.src, img.caption)" ondragstart="return false"/>
 		</div>
 	</div>
 	<div ref="fullScreenContainer">
@@ -15,6 +15,7 @@
 			     object-fit: contain;
 			     transform: translate(-50%, -50%)"
 			     :src="state.selectedImgPath" @touchstart="touchStart" @touchend="touchEnd"
+			     ondragstart="return false"
 			     @click="toggleFullScreen"/>
 			<transition name="van-fade">
 				<div v-show="state.showPageButton">
@@ -55,7 +56,8 @@
 			</div>
 			<div class="vue-lb-figure">
 				<img class="vue-lb-modal-image" :src="state.selectedImgPath" @touchstart="touchStart"
-				     @touchend="touchEnd" @click="toggleFullScreen"/>
+				     @touchend="touchEnd" @click="toggleFullScreen"
+				     ondragstart="return false"/>
 				<div class="vue-lb-info" v-html="state.selectedCaption"></div>
 				<div class="vue-lb-footer">
 					<div class="vue-lb-footer-info"></div>
@@ -277,7 +279,7 @@ export default defineComponent({
 	position: fixed;
 	top: 0;
 	width: 100%;
-	z-index: 2000;
+	z-index: 2500;
 	-webkit-align-items: center;
 	-moz-box-sizing: border-box;
 	-webkit-justify-content: center;

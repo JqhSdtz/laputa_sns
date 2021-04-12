@@ -63,7 +63,6 @@ export default {
 			});
 		},
 		changeLike() {
-			const ref = this;
 			const isCancel = this.post.liked_by_viewer;
 			const fun = isCancel ? lpt.likeServ.unlike : lpt.likeServ.like;
 			fun({
@@ -75,10 +74,10 @@ export default {
 				data: {
 					target_id: this.post.id
 				},
-				success() {
-					ref.post.liked_by_viewer = !isCancel;
-					ref.post.like_cnt += isCancel ? -1 : 1;
-					const refs = ref.$parent.$refs;
+				success: () => {
+					this.post.liked_by_viewer = !isCancel;
+					this.post.like_cnt += isCancel ? -1 : 1;
+					const refs = this.$parent.$refs;
 					if (refs.likeList) {
 						if (isCancel) {
 							refs.likeList.shiftLike();

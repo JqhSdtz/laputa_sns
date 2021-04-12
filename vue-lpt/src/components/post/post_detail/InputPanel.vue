@@ -1,6 +1,7 @@
 <template>
 	<div>
-		<van-action-sheet v-model:show="showCommentPanel" title="发表评论">
+		<van-action-sheet v-model:show="showCommentPanel" title="发表评论"
+		                  :overlay="overlay" :style="panelStyle">
 			<div ref="commentPanel" class="ant-input-group-wrapper panels">
 				<div class="ant-input-wrapper ant-input-group comment-input-wrapper"
 				     style="width: 95%; margin-left: 2.5%;">
@@ -13,7 +14,8 @@
 				</div>
 			</div>
 		</van-action-sheet>
-		<van-action-sheet v-model:show="showForwardPanel" title="转发帖子">
+		<van-action-sheet v-model:show="showForwardPanel" title="转发帖子"
+		                  :overlay="overlay" :style="panelStyle">
 			<div ref="forwardPanel" class="panels forward-panel">
 				<div class="ant-input-wrapper ant-input-group forward-input-wrapper"
 				     style="width: 95%; margin-left: 2.5%;">
@@ -38,7 +40,12 @@ import global from "@/lib/js/global";
 export default {
 	name: 'InputPanel',
 	props: {
-		postId: Number
+		postId: Number,
+		panelStyle: Object,
+		overlay: {
+			type: Boolean,
+			default: true
+		}
 	},
 	inject: {
 		postDetailEvents: {
@@ -63,21 +70,19 @@ export default {
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
-		const ref = this;
 		this.postDetailEvents.on('openForwardPanel', () => {
-			ref.openForwardPanel();
+			this.openForwardPanel();
 		});
 		this.postDetailEvents.on('openCommentPanel', (param) => {
-			ref.openCommentPanel(param);
+			this.openCommentPanel(param);
 		});
 	},
 	methods: {
 		openForwardPanel() {
-			const ref = this;
 			this.showForwardPanel = true;
 			this.$nextTick(() => {
-				if (ref.$refs.forwardTextArea)
-					ref.$refs.forwardTextArea.$el.focus();
+				if (this.$refs.forwardTextArea)
+					this.$refs.forwardTextArea.$el.focus();
 			});
 		},
 		openCommentPanel(param) {
@@ -92,15 +97,13 @@ export default {
 			}
 			this.commentInputMap.set(preCommentTargetKey, this.commentInput);
 			this.commentInput = this.commentInputMap.get(this.curCommentTargetKey);
-			const ref = this;
 			this.showCommentPanel = true;
 			this.$nextTick(() => {
-				if (ref.$refs.commentTextArea)
-					ref.$refs.commentTextArea.$el.focus();
+				if (this.$refs.commentTextArea)
+					this.$refs.commentTextArea.$el.focus();
 			});
 		},
 		sendForward() {
-			const ref = this;
 			if (this.forwardInput.length === 0) {
 				Toast.fail('请输入评论');
 				return;
@@ -111,16 +114,17 @@ export default {
 					sup_id: this.postId,
 					content: this.forwardInput
 				},
-				success() {
-					ref.showForwardPanel = false;
+				success: () => {
+					this.showForwardPanel = false;
 					Toast.success('转发成功');
-					const refs = ref.$parent.$refs;
+					const refs = this.$parent.$refs;
 					if (refs.forwardList) {
 						refs.forwardList.pushForward({
 							creator: global.states.curOperator.user,
 							create_time: new Date().getTime()
 						});
 					}
+					++this.post.forward_cnt;
 				},
 				fail(result) {
 					Toast.fail(result.message);
@@ -128,14 +132,13 @@ export default {
 			});
 		},
 		sendComment() {
-			const ref = this;
 			if (this.commentInput.length === 0) {
 				Toast.fail('请输入评论');
 				return
 			}
 			const strPart = this.curCommentTargetKey.split('#');
 			const type = strPart[0];
-			const parentId = strPart[1];
+			const parentId = parseInt(strPart[1]);
 			lpt.commentServ.create({
 				consumer: this.lptConsumer,
 				param: {
@@ -145,33 +148,37 @@ export default {
 					parent_id: parentId,
 					content: this.commentInput
 				},
-				success(result) {
-					ref.showCommentPanel = false;
+				success: (result) => {
+					this.showCommentPanel = false;
 					Toast.success('评论成功');
-					const refs = ref.$parent.$refs;
-					if (refs.commentList) {
+					const commentList = this.$parent.$refs.commentList;
+					const comment = {
+						id: result.object,
+						creator: global.states.curOperator.user,
+						content: this.commentInput,
+						create_time: new Date().getTime()
+					};
+					if (commentList) {
 						if (type === lpt.commentServ.level1) {
 							// 当前打开了评论列表，且发出的评论是一级评论
 							// 则在评论列表中添加一条
-							const comment = {
-								id: result.object,
-								creator: global.states.curOperator.user,
-								content: ref.commentInput,
-								create_time: new Date().getTime()
-							};
+							comment.post_id = parentId;
 							global.states.commentL1Manager.add(comment);
-							refs.commentList.pushComment(comment);
+							++this.post.comment_cnt;
+							commentList.pushComment(comment);
 						} else if (type === lpt.commentServ.level2) {
 							// 当前打开了评论列表，且发出的是二级评论
 							// 增加该评论所属一级评论的二级评论数量
-							const comment = global.states.commentL1Manager.get({
+							comment.l1_id = parentId;
+							const l1Comment = global.states.commentL1Manager.get({
 								itemId: parentId
 							});
-							++comment.l2_cnt;
-							if (global.states.curOperator.user.id === ref.post.creator.id) {
+							++l1Comment.l2_cnt;
+							if (global.states.curOperator.user.id === this.post.creator.id) {
 								// 当前用户是帖子创建者，则增加帖子创建者回复数量
-								++comment.poster_rep_cnt;
+								++l1Comment.poster_rep_cnt;
 							}
+							this.postDetailEvents.emit('publishCommentL2', comment);
 						}
 					}
 				},

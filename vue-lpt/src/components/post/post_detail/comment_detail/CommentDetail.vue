@@ -33,6 +33,9 @@ export default {
 	inject: {
 		postDetailEvents: {
 			type: Object
+		},
+		lptContainer: {
+			type: String
 		}
 	},
 	data() {
@@ -49,6 +52,9 @@ export default {
 	},
 	computed: {
 		scrollHeight() {
+			if (this.lptContainer === 'blogMain') {
+				return global.states.style.mainHeight + 'px';
+			}
 			const mainViewHeight = global.states.style.bodyHeight;
 			// 底部高度加0.5的padding
 			const barHeight = this.mainBarHeight + 10;

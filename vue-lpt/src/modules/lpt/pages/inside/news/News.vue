@@ -19,12 +19,24 @@ export default {
 			mainBarHeight: global.vars.style.tabBarHeight
 		}
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	computed: {
 		scrollHeight() {
 			const mainViewHeight = global.states.style.bodyHeight;
 			// 底部高度加0.5的padding
 			const barHeight = this.mainBarHeight;
 			return mainViewHeight - barHeight + 'px';
+		}
+	},
+	created() {
+		if (this.lptConsumer !== 'blogDrawer') {
+			global.methods.setTitle({
+				pageDesc: '动态'
+			});
 		}
 	},
 	methods: {

@@ -80,13 +80,8 @@ public class OperatorService {
         redisHelper.setEntity(operator, false);
     }
 
-    private void setToken(@NotNull Operator operator, @NotNull HttpServletRequest request, @NotNull HttpServletResponse response) {
-        String token = CryptUtil.randUrlSafeStr(32, true);
-        operator.setToken(token);
-        if (operator.getUser() != null)
-            operator.getUser().setToken(token);
-        String cookieToken = operator.getUserId() + "@" + token;
-        Cookie cookie = new Cookie("token", cookieToken);
+    private void setCookie(HttpServletRequest request, HttpServletResponse response, String name, String value) {
+        Cookie cookie = new Cookie(name, value);
         cookie.setPath("/");
         // cookie.setHttpOnly(true);
         // 设置子域名共享cookie
@@ -100,6 +95,15 @@ public class OperatorService {
         cookie.setMaxAge(2592000);
         //cookie.setSecure(true);
         response.addCookie(cookie);
+    }
+
+    private void setToken(@NotNull Operator operator, @NotNull HttpServletRequest request, @NotNull HttpServletResponse response) {
+        String token = CryptUtil.randUrlSafeStr(32, true);
+        operator.setToken(token);
+        if (operator.getUser() != null)
+            operator.getUser().setToken(token);
+        String cookieToken = operator.getUserId() + "@" + token;
+        setCookie(request, response, "token", cookieToken);
         if (passTokenThroughHeader) {
             response.addHeader("X-LPT-USER-TOKEN", cookieToken);
         }
@@ -172,12 +176,9 @@ public class OperatorService {
         return new Result(SUCCESS).setObject(operator);
     }
 
-    public Result logout(@NotNull Operator operator, @NotNull HttpServletResponse response) {
+    public Result logout(@NotNull Operator operator, HttpServletRequest request, HttpServletResponse response) {
         redisHelper.removeEntity(operator.getUserId());
-        Cookie delCookie = new Cookie("token", "");
-        delCookie.setPath("/");
-        delCookie.setHttpOnly(true);
-        response.addCookie(delCookie);
+        setCookie(request, response, "token", "");
         if (passTokenThroughHeader) {
             response.addHeader("X-LPT-USER-TOKEN", "");
         }

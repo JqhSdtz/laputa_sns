@@ -35,6 +35,7 @@
 			<van-cell v-if="me.isAdmin" title="管理权限" is-link :to="'/permission_list/' + me.user.id"/>
 			<van-cell v-if="isSuperAdmin" title="查看数据库统计信息" is-link to="/druid_stat"/>
 			<van-cell v-if="isSuperAdmin" title="校正数据" is-link @click="correctData"/>
+			<van-cell v-if="isSuperAdmin" title="刷新缓存数据" is-link @click="flushData"/>
 			<van-cell v-if="isSuperAdmin" title="重载目录" is-link @click="reloadCategory"/>
 			<van-cell v-if="env === 'blog'" title="完整功能请访问社区" is-link to="/lpt_qr_code"/>
 			<van-cell title="注销" is-link @click="signOut"/>
@@ -74,6 +75,11 @@ export default {
 			me: global.states.curOperator
 		}
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 		const token = lpt.util.getCookie('token');
@@ -98,6 +104,11 @@ export default {
 			});
 		}
 		this.checkQQLogin();
+		if (this.lptContainer !== 'blogDrawer') {
+			global.methods.setTitle({
+				pageDesc: '我的'
+			});
+		}
 	},
 	computed: {
 		isSuperAdmin() {
@@ -243,6 +254,22 @@ export default {
 						}
 					});
 				}
+			});
+		},
+		flushData() {
+			Dialog.confirm({
+				title: '确认',
+				message: '是否刷新所有缓存数据到数据库？'
+			}).then(() => {
+				lpt.correctServ.flush({
+					success: (result) => {
+						Toast.success(result);
+					},
+					error: (error) => {
+						console.error(error);
+					}
+				});
+			}).catch(() => {
 			});
 		},
 		reloadCategory() {

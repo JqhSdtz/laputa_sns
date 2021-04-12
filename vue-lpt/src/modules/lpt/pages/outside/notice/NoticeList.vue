@@ -34,6 +34,11 @@ export default {
 			isBusy: false
 		}
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	watch: {
 		curNoticeCount(newValue, oldValue) {
 			if (newValue !== oldValue) {
@@ -50,6 +55,11 @@ export default {
 			});
 		});
 		this.loadMore();
+		if (this.lptConsumer !== 'blogDrawer') {
+			global.methods.setTitle({
+				pageDesc: '通知'
+			});
+		}
 	},
 	unmounted() {
 		this.querior.reset();

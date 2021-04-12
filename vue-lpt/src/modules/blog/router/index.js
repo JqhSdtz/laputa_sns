@@ -133,7 +133,7 @@ function initRouter() {
             }
         },
         {
-            path: '/mod_category_info/:categoryId',
+            path: '/mod_category_info/:categoryId?',
             name: 'modCategoryInfo',
             component: ModCategoryInfo,
             props: true,
@@ -195,6 +195,18 @@ function initRouter() {
                 categoryId: route.params.blogCategoryId
             }),
             meta: {
+                mainPathPropNum: 1
+            }
+        },
+        {
+            path: '/blog/category_detail/:blogCategoryId',
+            name: 'blogCategoryDetail',
+            component: CategoryDetail,
+            props: route => ({
+                categoryId: route.params.blogCategoryId
+            }),
+            meta: {
+                noCache: true,
                 mainPathPropNum: 1
             }
         },
@@ -321,6 +333,7 @@ function initRouter() {
             global.states.blog.showDrawer = true;
         }
     });
+    router.beforeEach(res.titleKeeper);
     return;
 }
 

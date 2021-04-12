@@ -1,8 +1,8 @@
 export default {
-  cover: {
-    url: '/static/blog/cover.jpg'
-  },
-  title: '博客',
-  rootCategoryId: 0,
-  galleryCategoryId: 110
+  title: 'J\'s Zone',
+  rootCategoryId: 109,
+  galleryCategoryId: 110,
+  // backgroundImage: `url('/static/blog/cover.jpg')`,
+  // backgroundImage: `linear-gradient(rgba(184, 160, 156), rgb(212, 192, 185), rgb(204, 187, 177)),
+  backgroundImage: `linear-gradient(rgb(86, 126, 178), rgb(204, 187, 177))`
 }

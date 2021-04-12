@@ -56,17 +56,22 @@ function initItemManager(param) {
         let res = itemMap.get(id);
         const doRequest = () => {
             if (param.getRequest) {
-                return param.getRequest(id).then((item) => {
+                const promise = param.getRequest(id).then((item) => {
                     const itemRes = itemManager.add(item);
                     getParam.success && getParam.success(itemRes);
+                    promise.settled = true;
                     return Promise.resolve(itemRes);
                 }).catch((error) => {
                     getParam.fail && getParam.fail(error);
+                    promise.settled = true;
                     if (getParam.getPromise) return Promise.reject(error);
                 });
+                return promise;
             } else {
                 getParam.success && getParam.success(res)
-                return Promise.resolve(res);
+                const promise = Promise.resolve(res);
+                promise.settled = true;
+                return promise;
             }
         };
         let promise;
@@ -74,9 +79,16 @@ function initItemManager(param) {
             const temp = param.getDefault(id);
             temp.isDefault = true;
             res = itemManager.add(temp);
-            promise = doRequest();
+            if (getParam.justLocal) {
+                promise = Promise.resolve(res);
+            } else {
+                promise = doRequest();
+                temp.promise = promise;
+            }
         } else {
-            if (getParam.filter && !getParam.filter(res) && !getParam.justLocal) {
+            if (res.promise && !res.promise.settled) {
+                promise = res.promise;
+            } else if (getParam.filter && !getParam.filter(res)) {
                 promise = doRequest();
             } else {
                 getParam.success && getParam.success(res)
@@ -97,10 +109,12 @@ const userManager = initItemManager({
 const categoryManager = initItemManager({
     processItem(item) {
         let newItem = item;
-        if (item.root)
+        if (item.root) {
             newItem = item.root;
-        else
+            newItem.isFull = true;
+        } else {
             newItem.isFull = false;
+        }
         let rights;
         if (item.rights) {
             rights = item.rights;
@@ -152,6 +166,7 @@ const categoryManager = initItemManager({
         return lpt.categoryServ.get({
             objectOnly: true,
             throwError: true,
+            throwObject: true,
             param: {
                 id: id
             }
@@ -180,6 +195,7 @@ const postManager = initItemManager({
         return lpt.postServ.get({
             objectOnly: true,
             throwError: true,
+            throwObject: true,
             param: {
                 postId: id
             }
@@ -233,8 +249,11 @@ const states = {
     style: wrap({
         default: {
             drawerWidth: document.body.clientWidth,
+            bodyWidth: document.body.clientWidth,
+            mainHeight: document.body.clientHeight,
             bodyHeight: document.body.clientHeight,
-            bodyWidth: document.body.clientWidth
+            blogMainWidth: document.body.clientWidth,
+            blogMainLeft: document.body.clientWidth * 0.1
         }
     }),
     blog: wrap({
@@ -253,6 +272,11 @@ const states = {
         index: {
             sortType: wrap({
                 default: 'popular'
+            })
+        },
+        gallery: {
+            sortType: wrap({
+                default: 'latest'
             })
         }
     }

@@ -34,6 +34,11 @@ export default {
 			default: false
 		}
 	},
+	inject: {
+		postDetailEvents: {
+			type: Object
+		}
+	},
 	components: {
 		TopBar,
 		ContentArea,
@@ -55,6 +60,13 @@ export default {
 			comment
 		};
 	},
+	created() {
+		this.postDetailEvents.on('publishCommentL2', (l2Comment) => {
+			if (l2Comment.l1_id !== this.comment.id) return;
+			if (!this.comment.preview_l2_list) this.comment.preview_l2_list = [];
+			this.comment.preview_l2_list.push(l2Comment);
+		});
+	}
 }
 </script>
 

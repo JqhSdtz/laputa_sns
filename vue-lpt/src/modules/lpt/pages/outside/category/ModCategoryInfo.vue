@@ -15,8 +15,8 @@
 				点击修改封面
 			</p>
 		</div>
-		<div style="text-align: center" @click="uploadIconImg">
-			<div style="display: inline-block">
+		<div style="text-align: center">
+			<div style="display: inline-block" @click="uploadIconImg">
 				<img style="width: 5rem; height: 5rem" :src="iconImgUrl"/>
 				<p style="color: rgb(150,150,150)">
 					点击修改图标
@@ -72,7 +72,10 @@ export default {
 			category.parent_id = this.$route.query.parentId;
 		} else {
 			category = global.states.categoryManager.get({
-				itemId: this.categoryId
+				itemId: this.categoryId,
+				fail(result) {
+					Toast.fail(result.message);
+				}
 			});
 		}
 		category.isPublic = true;
@@ -106,18 +109,6 @@ export default {
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
-		lpt.categoryServ.get({
-			consumer: this.lptConsumer,
-			param: {
-				id: this.categoryId
-			},
-			success(result) {
-				global.states.categoryManager.add(result.object);
-			},
-			fail(result) {
-				Toast.fail(result.message);
-			}
-		});
 	},
 	computed: {
 		iconImgUrl() {
@@ -159,7 +150,7 @@ export default {
 					}
 				} else {
 					Toast.fail('上传失败');
-					console.log(info);
+					console.warn(info);
 				}
 			} else if (info.file.status === 'error') {
 				this.isUploading = false;
@@ -205,6 +196,12 @@ export default {
 								if (isCreate) {
 									this.category.id = result.object;
 									this.opType = 'update';
+									const parent = global.states.categoryManager.get({
+										itemId: this.category.parent_id
+									});
+									if (parent && parent.sub_list) {
+										parent.sub_list = parent.sub_list.push(this.category);
+									}
 								}
 								Object.assign(this.form, this.category);
 							},

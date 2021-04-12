@@ -1,21 +1,21 @@
 <template>
 	<div ref="menuMain">
 		<div v-show="isMenuShown" @click="closeMenu">
-			<menu-item class="item" ref="gallery" path="/blog/gallery">
+			<menu-item class="item" :with-background="true" ref="gallery" path="/blog/gallery">
 				<ri-landscape-line class="icon"/>
-				<div class="text">相册</div>
+				<p class="text">相册</p>
 			</menu-item>
-			<menu-item class="item" ref="category" path="/categories" :show-in-drawer="true">
+			<menu-item class="item" :with-background="true" ref="category" path="/categories" :show-in-drawer="true">
 				<ri-dashboard-fill class="icon"/>
-				<div class="text">目录</div>
+				<p class="text">目录</p>
 			</menu-item>
-			<menu-item class="item" ref="index" :path="'/blog/index/' + rootCategoryId">
+			<menu-item class="item" :with-background="true" ref="index" :path="'/blog/index/' + rootCategoryId">
 				<ri-apps-fill class="icon"/>
-				<div class="text">首页</div>
+				<p class="text">首页</p>
 			</menu-item>
 			<menu-item class="item" ref="mine" path="/home/mine" :show-in-drawer="true">
 				<img class="ava" :class="{'def-ava': !me.user.raw_avatar}" :src="myAvatarUrl"/>
-				<div class="text">{{ me.user.nick_name || '未登录' }}</div>
+				<p class="text user-name">{{ me.user.nick_name || '未登录' }}</p>
 			</menu-item>
 		</div>
 		<div id="round-menu" ref="floatBall" v-draggable="dragOption">
@@ -73,6 +73,7 @@ export default {
 	},
 	created() {
 		window.addEventListener('click', (event) => {
+			if (!this.$refs.menuMain) return;
 			if (!this.$refs.menuMain.contains(event.target)) {
 				this.closeMenu();
 			}
@@ -167,24 +168,40 @@ export default {
 }
 
 .icon {
-	margin-top: 0.25rem;
+	position: absolute;
+	left: 50%;
+	top: 0.35rem;
+	margin-left: 0.03rem;
+	transform: translateX(-50%);
 	font-size: 1.75rem;
 }
 
 .text {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	margin: 0.25rem 0;
+	text-align: center;
 	font-size: 0.9rem;
 }
 
 .ava {
 	border-radius: 100%;
-	margin: 0.5rem 1rem;
-	width: 2rem;
-	height: 2rem;
+	margin: 0.75rem 1.5rem;
+	width: 3rem;
+	height: 3rem;
+	box-shadow: 0 0 10px 6px rgba(0, 0, 0, 0.25);
 }
 
+.user-name {
+	position: relative;
+	margin-top: 0;
+	background-color: white;
+	box-shadow: 0 0 10px 6px rgba(0, 0, 0, 0.25);
+}
 .def-ava {
-	margin: 0.3rem 0.6rem;
-	width: 2.2rem;
-	height: 2.2rem;
+	margin: 0.4rem 0.8rem;
+	width: 3.2rem;
+	height: 3.2rem;
 }
 </style>

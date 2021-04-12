@@ -207,6 +207,9 @@ export default {
 						data: {
 							nick_name: ref.form.nick_name
 						},
+						success: () => {
+							ref.oriUserName = ref.form.nick_name;
+						},
 						fail(result) {
 							Toast.fail('用户名修改失败，失败原因:' + result.message);
 						}
@@ -222,7 +225,7 @@ export default {
 						Toast.fail(result.message);
 					}
 				});
-			});
+			}).catch(() => {});
 		}
 	}
 }

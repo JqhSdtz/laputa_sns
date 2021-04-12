@@ -36,6 +36,11 @@ export default {
 			commentListEvents: this.commentListEvents
 		}
 	},
+	inject: {
+		postDetailEvents: {
+			type: Object
+		}
+	},
 	data() {
 		this.querior = lpt.createQuerior();
 		this.commentListEvents = createEventBus();
@@ -90,6 +95,10 @@ export default {
 				}
 			});
 		});
+		this.postDetailEvents.on('publishCommentL2', (l2Comment) => {
+			if (l2Comment.l1_id !== this.parentId) return;
+			this.pushComment(l2Comment);
+		});
 	},
 	unmounted() {
 		this.querior.reset();
@@ -105,32 +114,31 @@ export default {
 			this.hasEverLoad = false;
 		},
 		pushComment(comment) {
+			if (this.isEmpty) this.isEmpty = false;
 			this.list.unshift(comment);
 		},
 		loadMore(isRefresh) {
-			console.log('load subComment list!');
-			const ref = this;
 			if (!this.querior.hasReachedBottom) {
 				lpt.commentServ.query({
 					...this.defaultQueryOption,
-					success(result) {
+					success: (result) => {
 						global.states.commentL2Manager.addList(result.object);
-						if (!ref.hasEverLoad) {
-							ref.list = result.object;
-							ref.isEmpty = ref.list.length === 0;
-							ref.hasEverLoad = true;
+						if (!this.hasEverLoad) {
+							this.list = result.object;
+							this.isEmpty = this.list.length === 0;
+							this.hasEverLoad = true;
 						} else {
-							ref.list = ref.list.concat(result.object);
+							this.list = this.list.concat(result.object);
 						}
 						if (isRefresh) {
-							ref.commentListEvents.emit('refreshList');
+							this.commentListEvents.emit('refreshList');
 						}
 					},
 					fail(result) {
 						Toast.fail(result.message);
 					},
 					complete() {
-						ref.isRefreshing = false;
+						this.isRefreshing = false;
 					}
 				});
 			}

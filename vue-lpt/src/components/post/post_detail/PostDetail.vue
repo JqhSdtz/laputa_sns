@@ -1,30 +1,31 @@
 <template>
 	<template v-if="forceReloadFlag">
 		<div v-show="showDrawer">
-			<div v-show="showPostArea" class="post-area" :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
+			<div v-show="showPostArea" class="post-area"
+			        :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
 			        :style="{height: scrollHeight, position: 'relative'}" v-scroll-view>
 				<post-item style="padding: 0 0.5rem" :post-id="post.id" :show-bottom="false"/>
 				<div v-show="!showCommentDetail" ref="middleBar" id="middle-bar"
 				     :style="{width: clientWidth + 'px'}">
-					<van-tabs v-model:active="curTabKey" swipeable sticky lazy-render>
-						<van-tab name="forward" :title="'转发 ' + post.forward_cnt">
+					<van-tabs ref="tabs" v-model:active="curTabKey" swipeable sticky lazy-render>
+						<van-tab ref="forwardTab" name="forward" :title="'转发 ' + post.forward_cnt">
 							<forward-list v-if="curTabKey === 'forward'" ref="forwardList" :post-id="postId"
-							              @refresh="onRefresh" class="list-area" :fill-parent="$refs.middleBar"/>
+							              @refresh="init" class="list-area" :fill-parent="$refs.middleBar"/>
 						</van-tab>
-						<van-tab name="comment" :title="'评论 ' + post.comment_cnt">
+						<van-tab ref="commentTab" name="comment" :title="'评论 ' + post.comment_cnt">
 							<comment-list v-if="curTabKey === 'comment'" ref="commentList" :post-id="postId"
-							              sort-type="popular" @refresh="onRefresh" class="list-area"
+							              sort-type="popular" @refresh="init" class="list-area"
 							              :fill-parent="$refs.middleBar"/>
 						</van-tab>
-						<van-tab name="like" :title="'赞 ' + post.like_cnt">
+						<van-tab ref="likeTab" name="like" :title="'赞 ' + post.like_cnt">
 							<like-list v-if="curTabKey === 'like'" ref="likeList" :target-id="parseInt(postId)"
-							           @refresh="onRefresh" class="list-area" :fill-parent="$refs.middleBar"/>
+							           @refresh="init" class="list-area" :fill-parent="$refs.middleBar"/>
 						</van-tab>
 					</van-tabs>
 				</div>
 				<comment-detail v-if="showCommentDetail" :comment-id="curCommentDetailId"/>
 			</div>
-			<input-panel :post-id="post.id"/>
+			<input-panel :post-id="post.id" :panel-style="panelStyle" :overlay="lptContainer !== 'blogMain'"/>
 			<bottom-bar v-show="!showCommentDetail" style="position: absolute; bottom: 0; left: 0"
 			            :style="{height: mainBarHeight + 'px'}"
 			            :post-id="post.id"/>
@@ -74,9 +75,8 @@ export default {
 		this.postDetailEvents = createEventBus();
 		return {
 			mainBarHeight: global.vars.style.postDetailBarHeight,
-			post: global.states.postManager.get({
-				itemId: this.postId
-			}),
+			panelStyle: {},
+			post: this.init(),
 			showDrawer: this.lptContainer === 'blogDrawer' ? toRef(global.states.blog, 'showDrawer') : true,
 			curTabKey: 'comment',
 			showCommentDetail: false,
@@ -86,29 +86,43 @@ export default {
 	},
 	watch: {
 		postId() {
-			this.init();
+			this.post = this.init();
 			this.parseCommand();
 			this.forceReload();
+		},
+		clientWidth(width) {
+			this.panelStyle.width = width;
 		}
 	},
 	created() {
 		this.parseCommand();
-		const ref = this;
 		this.lptConsumer = lpt.createConsumer();
-		this.init();
 		global.events.on('signIn', () => {
-			ref.init();
+			this.post = this.init();
 		});
 		this.postDetailEvents.on('openCommentDetail', (param) => {
-			ref.curCommentDetailId = param.id;
-			ref.showCommentDetail = true;
+			this.curCommentDetailId = param.id;
+			this.showCommentDetail = true;
 		});
 		this.postDetailEvents.on('closeCommentDetail', () => {
-			ref.showCommentDetail = false;
+			this.showCommentDetail = false;
 		});
+	},
+	mounted() {
+		this.panelStyle = {
+			width: this.clientWidth + 'px',
+			left: this.lptContainer === 'blogMain' ? (global.states.style.blogMainLeft + 'px') : '0'
+		};
+		if (this.lptContainer === 'blogMain') {
+			this.panelStyle.boxShadow = '0 0 10px 6px rgba(0, 0, 0, 0.25)';
+			this.panelStyle.paddingBottom = '1.5rem';
+		}
 	},
 	computed: {
 		scrollHeight() {
+			if (this.lptContainer === 'blogMain') {
+				return global.states.style.mainHeight + 'px';
+			}
 			const mainViewHeight = global.states.style.bodyHeight;
 			// 底部高度加0.5的padding
 			const barHeight = this.mainBarHeight + 10;
@@ -122,6 +136,11 @@ export default {
 			// 巨坑，深扒van-tabs组件发现是在swipe组件中获取了一个tabs的宽度
 			// 但是如果tabs组件不占满屏幕，又没有固定的px值，则返回0
 			// tabs组件错乱
+			const curTab = this.$refs[this.curTabKey + 'Tab'];
+			if (curTab) {
+				this.$nextTick(() => curTab.$parent.resize());
+				this.$refs.tabs.resize();
+			}
 			if (this.lptContainer === 'blogDrawer') {
 				return global.states.style.drawerWidth;
 			} else if (this.lptContainer === 'blogMain') {
@@ -152,11 +171,8 @@ export default {
 				this.curCommentDetailId = query.commentId;
 			}
 		},
-		onRefresh() {
-			this.init();
-		},
 		init() {
-			this.post = global.states.postManager.get({
+			return global.states.postManager.get({
 				itemId: this.postId,
 				success: (post) => {
 					this.setTitle(post);
@@ -179,6 +195,7 @@ export default {
 	padding-top: 1rem;
 	background-color: white;
 	overflow-y: scroll;
+	overflow-x: hidden;
 }
 
 .content-area {

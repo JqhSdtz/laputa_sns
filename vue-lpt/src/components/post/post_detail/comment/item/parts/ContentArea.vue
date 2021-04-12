@@ -24,6 +24,7 @@ export default {
 	text-align: left;
 	word-break: break-word;
 	padding: 0 1rem;
+	font-size: 0.9rem;
 	white-space: pre-wrap;
 }
 

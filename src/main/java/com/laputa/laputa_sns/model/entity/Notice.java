@@ -68,7 +68,7 @@ public class Notice extends AbstractBaseEntity {
 
     @JsonProperty("type_str")
     public String getTypeStr() {
-        return typeStr[type];
+        return type == null ? "unknown" : typeStr[type];
     }
 
     @JsonIgnore

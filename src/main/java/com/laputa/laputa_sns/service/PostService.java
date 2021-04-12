@@ -629,6 +629,7 @@ public class PostService extends BaseService<PostDao, Post> {
         Result checkCategoryResult = checkCategoryOfPost(resPost, operator);
         if (checkCategoryResult.getState() == FAIL)
             return checkCategoryResult;
+        Category newCategory = resPost.getCategory();
         // 需要检查是否有在目标目录创建帖子的权限
         if (!postValidator.checkCreatePermission(resPost, operator))
             return new Result(FAIL).setErrorCode(1010050230).setMessage("操作失败，权限错误");
@@ -640,13 +641,14 @@ public class PostService extends BaseService<PostDao, Post> {
         categoryService.cascadeUpdatePostCnt(oriCategoryId, -1L);
         //修改目标目录的帖子数
         categoryService.cascadeUpdatePostCnt(param.getCategoryId(), 1L);
-        // 加入目标目录的索引
-        postIndexService.addPostIndex(Arrays.asList(resPost), resPost.getCategory(), POPULAR);
-        postIndexService.addPostIndex(Arrays.asList(resPost), resPost.getCategory(), LATEST);
         // 从原目录的索引中删除，需要注意，这里把帖子的目录改回了原目录
         resPost.setCategory(new Category(oriCategoryId));
         postIndexService.deletePostIndex(resPost, LATEST);
         postIndexService.deletePostIndex(resPost, POPULAR);
+        // 加入目标目录的索引，这里把帖子的目录又改成了新目录
+        resPost.setCategory(newCategory);
+        postIndexService.addPostIndex(Arrays.asList(resPost), resPost.getCategory(), POPULAR);
+        postIndexService.addPostIndex(Arrays.asList(resPost), resPost.getCategory(), LATEST);
         return Result.EMPTY_SUCCESS;
     }
 

@@ -1,5 +1,6 @@
 <template>
-	<div class="item" @click="itemClick">
+	<div class="item" :class="{'with-background': withBackground}"
+	     @click="itemClick">
 		<slot></slot>
 	</div>
 </template>
@@ -12,7 +13,8 @@ export default {
 	props: {
 		path: String,
 		alias: String,
-		showInDrawer: Boolean
+		showInDrawer: Boolean,
+		withBackground: Boolean
 	},
 	data() {
 		return {}
@@ -44,5 +46,13 @@ export default {
 	display: inline-block;
 	text-align: center;
 	font-size: 14px;
+}
+
+.with-background {
+	background-color: white;
+	height: 3.5rem;
+	width: 3.5rem;
+	box-shadow: 0 0 10px 6px rgba(0, 0, 0, 0.25);
+	border-radius: 100%;
 }
 </style>

@@ -52,28 +52,41 @@ export default {
 				Toast.fail(result.message);
 			}
 		});
+		const sortType = localStorage.getItem('sortTypeGallery') || 'latest';
 		return {
 			category,
 			enableBoolMode: false,
 			searchValue: '',
 			mainBarHeight: global.vars.style.tabBarHeight,
-			sortType: global.states.pages.index.sortType,
+			sortType: sortType,
 			postListLoaded: false
+		}
+	},
+	watch: {
+		sortType(value) {
+			this.curListArrange && this.curListArrange();
+			localStorage.setItem('sortTypeGallery', value);
 		}
 	},
 	computed: {
 		scrollHeight() {
+			if (this.lptContainer === 'blogMain') {
+				return global.states.style.mainHeight + 'px';
+			}
 			const mainViewHeight = global.states.style.bodyHeight;
 			// 底部高度加0.5的padding
 			let barHeight = this.mainBarHeight;
-			if (global.vars.env === 'blog') {
-				barHeight = global.vars.blog.style.mainViewOffsetBottom;
-			}
 			return mainViewHeight - barHeight + 'px';
 		}
 	},
 	created() {
 		this.imgLoadResolveMap = new Map();
+		global.methods.setTitle({
+			pageDesc: '相册'
+		});
+		window.addEventListener('resize', () => {
+			this.curListArrange && this.curListArrange();
+		});
 	},
 	methods: {
 		getElement() {
@@ -94,9 +107,12 @@ export default {
 		onBatchProcessed(newList, fullList) {
 			const imgList = [];
 			for (let i = 0; i < fullList.length; ++i) {
-				const post = fullList[i];
+				let post = fullList[i];
 				const photo = this.$refs['photo' + post.id];
 				const img = photo.$refs.img;
+				post = global.states.postManager.get({
+					itemId: post.id
+				});
 				imgList.push({
 					el: img,
 					width: img.width,
@@ -104,7 +120,8 @@ export default {
 					post: post
 				});
 			}
-			this.arrangeList(this.$el.clientWidth, imgList, 12);
+			this.curListArrange = () => this.arrangeList(this.$el.clientWidth, imgList, 12);
+			this.curListArrange();
 		},
 		getRatio(width, height) {
 			let ratio = width / height;

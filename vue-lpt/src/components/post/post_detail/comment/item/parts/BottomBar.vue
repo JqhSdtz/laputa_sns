@@ -2,7 +2,7 @@
 	<a-row class="bottom-bar" justify="space-between">
 		<template v-if="comment.entity_type === 'CML1'">
 			<a-col class="icon-col" span="6" offset="11">
-				<comment-outlined class="icon"  v-check-sign="{click: openCommentPanel}"/>
+				<comment-outlined class="icon" v-check-sign="{click: openCommentPanel}"/>
 				<span class="cnt">{{ comment.l2_cnt }}</span>
 			</a-col>
 			<a-col class="icon-col" span="6">
@@ -36,7 +36,7 @@
 import {CommentOutlined, LikeFilled, LikeOutlined, EllipsisOutlined} from '@ant-design/icons-vue';
 import global from '@/lib/js/global';
 import lpt from '@/lib/js/laputa/laputa';
-import {Toast} from "vant";
+import {Dialog, Toast} from "vant";
 
 export default {
 	name: 'BottomBar',
@@ -125,8 +125,14 @@ export default {
 			} else if (action.id === 'delete') {
 				if (this.comment.creator.id === curUserId) {
 					// 删自己的，不需要理由
-					this.commentListEvents.emit(action.id, {
-						comment: this.comment
+					Dialog.confirm({
+						title: '删评论',
+						message: '确认删除该评论？'
+					}).then(() => {
+						this.commentListEvents.emit(action.id, {
+							comment: this.comment
+						});
+					}).catch(() => {
 					});
 				} else {
 					// 否则需要输入理由

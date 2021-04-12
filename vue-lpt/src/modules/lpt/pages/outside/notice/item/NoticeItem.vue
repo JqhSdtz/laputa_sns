@@ -97,6 +97,10 @@ export default {
 					Toast.fail(result.message);
 				}
 			});
+			if (this.notice.content.deleted) {
+				Toast.fail('该内容已被删除');
+				return;
+			}
 			let path = '';
 			const query = {};
 			const typeStr = this.notice.type_str;

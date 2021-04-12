@@ -2,9 +2,10 @@
 	<template v-if="forceReloadFlag">
 		<div class="main-area" :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
 		     :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top v-scroll-view>
-			<van-search v-model="searchValue" @search="onSearch" placeholder="请输入搜索关键词">
+			<van-search v-model="searchValue" @search="onSearch" placeholder="请输入搜索关键词"
+			            style="height: 3.5rem">
 				<template v-slot:right-icon>
-					<van-checkbox v-model="enableBoolMode">多关键字</van-checkbox>
+					<van-checkbox v-model="enableBoolMode" style="font-size: 0.9rem">多关键字</van-checkbox>
 				</template>
 			</van-search>
 			<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType"/>
@@ -40,9 +41,6 @@ export default {
 		}
 	},
 	data() {
-		global.methods.setTitle({
-			pageDesc: '首页'
-		});
 		const category = global.states.categoryManager.get({
 			itemId: parseInt(this.categoryId),
 			success: (result) => {
@@ -52,12 +50,13 @@ export default {
 				Toast.fail(result.message);
 			}
 		});
+		const sortType = localStorage.getItem('sortTypeIndex' + this.categoryId) || 'popular';
 		return {
 			category,
 			enableBoolMode: false,
 			searchValue: '',
 			mainBarHeight: global.vars.style.tabBarHeight,
-			sortType: global.states.pages.index.sortType,
+			sortType: sortType,
 			postListLoaded: false
 		}
 	},
@@ -73,16 +72,19 @@ export default {
 				}
 			});
 			this.forceReload();
+		},
+		sortType(value) {
+			localStorage.setItem('sortTypeIndex' + this.categoryId, value);
 		}
 	},
 	computed: {
 		scrollHeight() {
+			if (this.lptContainer === 'blogMain') {
+				return global.states.style.mainHeight + 'px';
+			}
 			const mainViewHeight = global.states.style.bodyHeight;
 			// 底部高度加0.5的padding
 			let barHeight = this.mainBarHeight;
-			if (global.vars.env === 'blog') {
-				barHeight = global.vars.blog.style.mainViewOffsetBottom;
-			}
 			return mainViewHeight - barHeight + 'px';
 		}
 	},
@@ -92,6 +94,10 @@ export default {
 				global.methods.setTitle({
 					contentDesc: category.name,
 					pageDesc: '主页'
+				});
+			} else {
+				global.methods.setTitle({
+					pageDesc: '首页'
 				});
 			}
 		},
@@ -117,5 +123,9 @@ export default {
 <style scoped>
 .main-area {
 	overflow-y: scroll;
+}
+
+:global(.van-field__control) {
+	font-size: 0.9rem;
 }
 </style>

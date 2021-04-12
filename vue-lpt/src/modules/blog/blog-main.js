@@ -6,11 +6,9 @@ import {createApp} from 'vue';
 import BlogApp from './BlogApp.vue';
 import router, {initRouter} from './router';
 import {ConfigProvider, Button, Row, Col, Spin, Form, Input, Badge, BackTop, Drawer, Popover} from 'ant-design-vue';
-import {
-    Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
-    Popover as VPopOver, Dialog, Image as VanImage, Button as VanButton,
-    Popup, Switch, Search, Checkbox, Grid, GridItem, DatetimePicker
-} from 'vant';
+import {Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
+    Popover as VPopOver, Dialog, Image as VanImage, Uploader, Form as VanForm, Field, Cascader,
+    Button as VanButton, Popup, Switch, Search, Checkbox, Grid, GridItem, DatetimePicker} from 'vant';
 import remHelper from '@/lib/js/uitls/rem-helper';
 import global from '@/lib/js/global';
 import globalMixins from '@/lib/js/global/global-mixins';
@@ -23,7 +21,8 @@ import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
 
 // 设置rem单位的相对大小
 remHelper.initRem({
-    pcWidth: 1024,
+    pcWidth: 1280,
+    maxFontSize: 18,
     pcOnly: true,
     responsive: true
 });
@@ -45,7 +44,7 @@ antdUseList.forEach(item => {
 });
 
 const vantUseList = [Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
-    VPopOver, Dialog, VanImage, VanButton, Popup, Switch, Search,
+    VPopOver, Dialog, VanImage, Uploader, VanForm, Field, Cascader, VanButton, Popup, Switch, Search,
     Checkbox, Grid, GridItem, DatetimePicker];
 vantUseList.forEach(item => {
     app.use(item);

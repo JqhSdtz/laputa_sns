@@ -1,3 +1,3 @@
 export default {
-    title: '社区'
+    title: '未命名'
 }

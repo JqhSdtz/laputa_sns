@@ -1,7 +1,7 @@
 <template>
-	<div class="photo-item" @mouseenter="showBottomBar = true" @mouseleave="showBottomBar = false">
+	<div class="photo-item" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
 		<img ref="img" :src="coverUrl" v-show="post.settled" @click="showPreview" :onload="onImgLoaded"
-		     :onerror="onImgLoaded"/>
+		     :onerror="onImgLoaded" ondragstart="return false"/>
 		<image-box ref="imageBox" :images="images" :show-image-list="false"
 		           :containerStyle="{width: '67%', marginLeft: '33%'}"/>
 		<bottom-bar class="bottom-bar" v-show="showBottomBar"
@@ -26,7 +26,7 @@ import {RiStackLine} from "@/assets/icons/remix-icon";
 import {watch} from "vue";
 import lpt from "@/lib/js/laputa/laputa";
 
-const contentReg = /描述：(.*)\n封面：(.*)\n张数：(.*)/;
+const contentReg = /描述：([\s\S]*)\n封面：([\s\S]*)\n张数：([\s\S]*)/;
 export default {
 	name: 'PhotoItem',
 	props: {
@@ -55,7 +55,6 @@ export default {
 					this.coverUrl = res[2];
 					this.photoNum = parseInt(res[3]);
 					this.post.customContent = this.desc;
-					this.post.noFullText = true;
 				});
 			}
 		});
@@ -77,11 +76,20 @@ export default {
 					path: '/post_detail/' + this.post.id
 				});
 				global.states.blog.showDrawer = true;
+				// drawer缩回去，不然只会显示一半
+				global.methods.setDrawerWidth('33%');
 			}
 		});
 	},
 	methods: {
+		onMouseEnter() {
+			if (!global.states.blog.showDrawer) this.showBottomBar = true;
+		},
+		onMouseLeave() {
+			if (!global.states.blog.showDrawer) this.showBottomBar = false;
+		},
 		showPreview() {
+			if (typeof this.post.full_text_id === 'undefined') return;
 			this.showBottomBar = false;
 			if (!this.hasLoadedFullText) {
 				const promise = lpt.postServ.getFullText({
@@ -92,7 +100,16 @@ export default {
 					success: (result) => {
 						this.hasLoadedFullText = true;
 						const fullText = result.object;
-						const list = fullText.split('\n');
+						const parts = fullText.split(/\-+分割线\-+/);
+						let imgListStr = '';
+						if (parts.length > 1) {
+							imgListStr = parts[parts.length - 1].trim();
+							this.post.customFullText = parts[0];
+						} else {
+							imgListStr = fullText;
+							this.post.noFullText = true;
+						}
+						const list = imgListStr.split('\n');
 						list.forEach((img) => {
 							const parts = img.split(';');
 							if (parts.length === 0) return;
@@ -145,6 +162,6 @@ img {
 .photo-num .num {
 	margin: 0;
 	margin-left: 0.25rem;
-	font-size: 0.75rem;
+	font-size: 0.85rem;
 }
 </style>

@@ -66,6 +66,7 @@ export default {
 <style lang="less">
 #app {
 	height: 100%;
+	font-size: 1rem;
 }
 
 body, html {

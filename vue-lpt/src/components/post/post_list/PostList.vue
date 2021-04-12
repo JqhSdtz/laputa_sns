@@ -285,8 +285,8 @@ export default {
 							result.object = result.object.filter(obj => obj.content)
 								.map(obj => obj.content);
 						}
+						const promiseList = [];
 						if (this.customLoadProcess) {
-							const promiseList = [];
 							result.object.forEach((post) => {
 								promiseList.push(this.customLoadProcess(post));
 							});

@@ -1,4 +1,13 @@
+//const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+const webpack = require('webpack');
+
 module.exports = {
+    configureWebpack: {
+        plugins: [
+            //new BundleAnalyzerPlugin(),
+            new webpack.ContextReplacementPlugin(/moment[/\\]locale$/, /zh-cn/) //减小moment语言包体积
+        ]
+    },
     css: {
         loaderOptions: {
             less: {
@@ -30,12 +39,10 @@ module.exports = {
         lpt: {
             entry: './src/modules/lpt/lpt-main.js',
             template: 'public/lpt.html',
-            title: 'laputa'
         },
         blog: {
             entry: './src/modules/blog/blog-main.js',
             template: 'public/blog.html',
-            title: 'laputa-blog'
         }
     }
 }

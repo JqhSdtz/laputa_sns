@@ -287,7 +287,7 @@ function _initLaputa(option) {
             // 要等到第一个ajax请求执行完后再执行后续请求
             // 防止需要更换token时，同时发出去多个ajax请求，导致token混乱
             if (firstAjax && !firstAjax.settled) {
-                firstAjax = firstAjax.then(() => lpt._ajax(param));
+                firstAjax = firstAjax.then(() => lpt._ajax(param)).catch(() => {});
                 return firstAjax;
             } else {
                 const ajaxPromise = lpt._ajax(param);
@@ -380,7 +380,7 @@ function _initLaputa(option) {
                     if (param.throwError) {
                         onComplete(param, result);
                         // 如果有throwObject选项，则抛出整个result对象，否则抛出错误信息
-                        return Promise.reject(new Error(param.throwObject ? result : result.message));
+                        return Promise.reject(param.throwObject ? result : result.message);
                     }
                 }
                 if (typeof param.finish === 'function')
@@ -674,7 +674,8 @@ function _initLaputa(option) {
                     like_cnt: 0,
                     type_str: undefined,
                     full_text_id: undefined,
-                    category_path: []
+                    category_path: [],
+                    settled: false
                 };
             },
             queryForCategory: wrap(function (param) {
@@ -728,12 +729,15 @@ function _initLaputa(option) {
                 return {
                     id: id,
                     ...defaultComment,
-                    comment_cnt: 0
+                    poster_rep_cnt: undefined,
+                    post_id: undefined,
+                    l2_cnt: 0
                 };
             },
             getDefaultCommentL2: function (id) {
                 return {
                     id: id,
+                    l1_id: undefined,
                     ...defaultComment
                 };
             },
@@ -811,7 +815,7 @@ function _initLaputa(option) {
                     id: id,
                     name: '',
                     top_post_id: -1,
-                    sub_list: [],
+                    sub_list: undefined,
                     cover_img: '',
                     icon_img: '',
                     allow_post_level: undefined,
@@ -831,7 +835,7 @@ function _initLaputa(option) {
                     is_leaf: true
                 }
             },
-            rootCategoryId: 0,
+            rootCategoryId: 1,
             setInfo: wrap(function (param) {
                 param.url = lpt.baseApiUrl + '/category/info';
                 return lpt.patch(param);
@@ -1020,6 +1024,12 @@ function _initLaputa(option) {
         const serv = {
             correct: wrap(function (param) {
                 param.url = lpt.baseApiUrl + '/correct_data/' + param.param.type;
+                param.responseType = 'text';
+                param.useResultFormat = false;
+                return lpt.post(param);
+            }),
+            flush: wrap(function (param) {
+                param.url = lpt.baseApiUrl + '/correct_data/flush';
                 param.responseType = 'text';
                 param.useResultFormat = false;
                 return lpt.post(param);

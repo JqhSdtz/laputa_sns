@@ -1,12 +1,15 @@
 <template>
 	<div class="content-area">
 		<p class="title" @click="showPostDetail">{{ post.title }}</p>
-		<pre class="content" v-if="isShowFullText" @click="showPostDetail">
-			<p v-if="postType === 'normal'">{{ fullText }}</p>
+		<div class="content" v-if="isShowFullText" @click="showPostDetail">
+			<p v-if="postType === 'normal'" style="margin-bottom: 0;">{{ fullText }}</p>
 			<admin-ops-record v-if="postType === 'amOps' && payload" :payload="payload"/>
-			<v-md-preview v-if="postType === 'md'" :text="fullText"></v-md-preview>
-		</pre>
-		<pre class="content" v-else @click="showPostDetail">{{ postContent }}</pre>
+			<v-md-preview v-if="postType === 'md'" :text="fullText"/>
+		</div>
+		<div class="content" v-if="!isShowFullText" @click="showPostDetail">
+			<v-md-preview v-if="postType === 'md' && !post.full_text_id" :text="postContent"/>
+			<ellipsis v-else :content="postContent" :rows="5"/>
+		</div>
 		<p v-if="post.full_text_id && !post.noFullText && !isShowFullText" class="full-text-btn" @click.stop="showFullText">
 			查看全文
 		</p>
@@ -43,6 +46,7 @@ import CategoryPath from '@/components/category/CategoryPath';
 import {ImagePreview} from 'vant';
 import AdminOpsRecord from '@/components/post/item/parts/AdminOpsRecord';
 import ImageBox from '@/components/global/ImageBox';
+import Ellipsis from '@/components/global/Ellipsis';
 
 const typeReg = /tp:([a-zA-Z]*)#/;
 
@@ -54,7 +58,8 @@ export default {
 	components: {
 		AdminOpsRecord,
 		CategoryPath,
-		ImageBox
+		ImageBox,
+		Ellipsis
 	},
 	inject: {
 		lptContainer: {
@@ -131,10 +136,7 @@ export default {
 		showPostDetail() {
 			if (this.lptContainer === 'blogMain') {
 				this.$router.push({
-					name: 'blogPostDetail',
-					params: {
-						postId: this.post.id
-					}
+					path: '/blog/post_detail/' + this.post.id
 				});
 			} else {
 				this.$router.push({
@@ -157,8 +159,13 @@ export default {
 			}
 		},
 		showFullText() {
-			const ref = this;
 			if (this.fullText) {
+				this.isShowFullText = true;
+			} else if (this.post.customFullText) {
+				this.fullText = this.post.customFullText;
+				this.isShowFullText = true;
+			} else if(this.post.full_text) {
+				this.fullText = this.post.full_text;
 				this.isShowFullText = true;
 			} else {
 				lpt.postServ.getFullText({
@@ -166,12 +173,16 @@ export default {
 					param: {
 						fullTextId: this.post.full_text_id
 					},
-					success(result) {
-						ref.isShowFullText = true;
-						if (ref.postType === 'amOps') {
-							ref.processAmOps(result.object);
+					success: (result) => {
+						this.isShowFullText = true;
+						global.states.postManager.add({
+							...this.post,
+							full_text: result.object
+						});
+						if (this.postType === 'amOps') {
+							this.processAmOps(result.object);
 						} else {
-							ref.fullText = result.object;
+							this.fullText = result.object;
 						}
 					}
 				});
@@ -189,7 +200,9 @@ export default {
 	text-align: left;
 	word-break: break-all;
 	padding: 0 1rem;
+	font-size: 0.9rem;
 	white-space: pre-wrap;
+	margin-bottom: 0.5rem;
 }
 
 .title {
@@ -202,18 +215,19 @@ export default {
 .editable-label {
 	color: #6c757d;
 	margin-left: 1rem;
-	font-size: 0.75rem;
+	font-size: 0.85rem;
 }
 
 .category-path {
 	color: #6c757d;
 	margin-right: 1rem;
-	font-size: 0.75rem;
+	font-size: 0.85rem;
 }
 
 .full-text-btn {
 	cursor: pointer;
 	color: #007bff;
+	font-size: 0.9rem;
 	margin-left: 1rem;
 }
 

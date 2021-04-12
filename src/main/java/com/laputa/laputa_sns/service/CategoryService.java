@@ -45,7 +45,7 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
 @Order(0)
 public class CategoryService extends BaseService<CategoryDao, Category> implements ApplicationRunner {
 
-    public static final Integer GROUND_ID = 0;
+    public static final Integer GROUND_ID = 1;
 
     private Map<Integer, Category> categoryMap;
     private Set<Category> leafCategorySet;
@@ -162,9 +162,9 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         if (root.getIsLeaf() == null || root.getIsLeaf())
             return;
         List<Category> subList = root.getSubCategoryList();
+        Integer rootLevel = root.getAllowPostLevel();
         for (int i = 0; i < subList.size(); ++i) {
             Category sub = subList.get(i);
-            Integer rootLevel = root.getAllowPostLevel();
             Integer subOriLevel = sub.getOriAllowPostLevel();
             if (rootLevel == null) {
                 // 父目录等级为空，则设为该目录的原始等级
@@ -175,6 +175,16 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             }
             cascadeSetAllowPostLevel(sub);
         }
+    }
+
+    /**
+     * 级联获取允许发帖等级
+     */
+    private Integer cascadeGetAllowPostLevel(Category category) {
+        if (GROUND_ID.equals(category.getId())) return category.getAllowPostLevel();
+        Integer level = category.getAllowPostLevel();
+        if (level != null) return level;
+        return cascadeGetAllowPostLevel(category.getParent());
     }
 
     /**
@@ -258,7 +268,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             return null;
         parent.getSubCategoryList().add(category);
         category.setParent(parent);
-        if (parent.getIsLeaf() == null || parent.getIsLeaf())//若父目录之前是叶目录，则添加节点后不再是叶目录
+        //若父目录之前是叶目录，则添加节点后不再是叶目录
+        if (parent.getIsLeaf() == null || parent.getIsLeaf())
             setLeaf(parent, false);
         return parent;
     }
@@ -339,7 +350,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         return new Result(SUCCESS).setObject(result.getObject().getSubCategoryList());
     }
 
-    public void cascadeUpdatePostCnt(Integer categoryId, Long delta) {//并不操作Category对象，不用同步
+    public void cascadeUpdatePostCnt(Integer categoryId, Long delta) {
+        //并不操作Category对象，不用同步
         Category category = categoryMap.get(categoryId);
         List<Integer> idList = new ArrayList();
         while (category != null) {
@@ -492,7 +504,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             return new Result(FAIL).setErrorCode(1010010207).setMessage("操作失败，参数不合法");
         if (!categoryValidator.checkCreatePermission(category, operator))
             return new Result(FAIL).setErrorCode(1010010208).setMessage("操作失败，权限错误");
-        Result checkResult = checkCategoryStructure(category, CREATE);//检查目录结构是否合法
+        //检查目录结构是否合法
+        Result checkResult = checkCategoryStructure(category, CREATE);
         if (checkResult.getState() == FAIL)
             return checkResult;
         //设置创建者及预缓存数量初始值
@@ -507,6 +520,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         setLeaf(category, true);
         category.setPopularPostList(new IndexList(10));
         category.setLatestPostList(new IndexList(10));
+        category.setAllowPostLevel(cascadeGetAllowPostLevel(category.getParent()));
         //添加到内存
         categoryMap.put(category.getId(), category);
         //设置路径

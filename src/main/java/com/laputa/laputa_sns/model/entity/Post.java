@@ -31,17 +31,17 @@ public class Post extends AbstractContent<Post> {
     /**
      * 公开的帖子，会出现在所发表的目录，个人主页以及粉丝的动态中
      */
-    public static final int TYPE_PUBLIC = 0;
+    public static final Integer TYPE_PUBLIC = 0;
 
     /**
      * 转发的帖子，会出现在个人主页以及粉丝的动态中
      */
-    public static final int TYPE_FORWARD = 1;
+    public static final Integer TYPE_FORWARD = 1;
 
     /**
      * 非公开的帖子，会出现在个人主页以及粉丝的动态中
      */
-    public static final int TYPE_PRIVATE = 2;
+    public static final Integer TYPE_PRIVATE = 2;
 
     /**
      * 该帖子对象从属于一个目录，即处于查询某个目录的帖子的请求中
@@ -207,11 +207,11 @@ public class Post extends AbstractContent<Post> {
 
     @JsonProperty("type_str")
     public String getTypeStr() {
-        if (type.equals(Post.TYPE_PUBLIC))
+        if (Post.TYPE_PUBLIC.equals(type))
             return "public";
-        if (type.equals(Post.TYPE_FORWARD))
+        if (Post.TYPE_FORWARD.equals(type))
             return "forward";
-        if (type.equals(Post.TYPE_PRIVATE))
+        if (Post.TYPE_PRIVATE.equals(type))
             return "private";
         return "unknown";
     }

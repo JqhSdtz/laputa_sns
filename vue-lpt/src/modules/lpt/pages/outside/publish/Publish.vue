@@ -23,13 +23,14 @@
 			</van-cell>
 			<van-cell v-if="selectedCategory.rights.create_editable_post" center title="是否使用MarkDown">
 				<template #right-icon>
-					<van-switch v-model="form.useMarkDown" :disabled="opType !== 'create'" size="24" @change="onUseMarkDownChange"/>
+					<van-switch v-model="form.useMarkDown" size="24" @change="onUseMarkDownChange"/>
 				</template>
 			</van-cell>
 			<van-field v-if="form.isPublic" :disabled="opType !== 'create'" :rules="rules.category"
 			           v-model="selectedCategoryPath" is-link readonly label="目录"
 			           placeholder="选择发布目录（必填）" @click="showPopover = true" style="margin-top: 1rem"/>
-			<van-popup v-if="opType === 'create'" v-model:show="showPopover" round position="bottom">
+			<van-popup v-if="opType === 'create'" v-model:show="showPopover" round
+			           position="bottom" :style="{width: clientWidth + 'px'}">
 				<van-cascader v-model="form.categoryId" title="选择发布目录" :options="categoryOptions"
 				              @change="onCategorySelect" @finish="onCategorySelectFinish"
 				              @close="showPopover = false"/>
@@ -138,11 +139,19 @@ export default {
 			}
 		}
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	watch: {
 		showPopover(isShow) {
 			if (!isShow && this.curOption && !this.curOption.isLeaf) {
 				this.form.categoryId = '';
 			}
+		},
+		$route() {
+			this.onActivated();
 		},
 		'form.abstract'() {
 			this.checkInputContent();
@@ -151,38 +160,49 @@ export default {
 			this.checkInputContent();
 		}
 	},
+	computed: {
+		clientWidth() {
+			if (this.lptContainer === 'blogDrawer') {
+				return global.states.style.drawerWidth;
+			} else if (this.lptContainer === 'blogMain') {
+				return global.states.style.blogMainWidth;
+			} else {
+				return global.states.style.bodyWidth;
+			}
+		},
+	},
 	created() {
-		this.parseQueryParam();
 		this.lptConsumer = lpt.createConsumer();
 		this.imgUrlMap = new Map();
 	},
 	activated() {
-		if (!this.preHref)
-			return;
-		const f = this.form;
-		if (!f.title && !f.content && !f.abstract && this.fileList.length === 0) {
-			// 当前无内容，则直接解析参数
-			this.parseQueryParam();
-		} else if (this.$route.fullPath !== this.preHref) {
-			// 当前有内容，并且参数有变化
-			Dialog.confirm({
-				title: '是否清空',
-				message: '当前有未提交内容，是否清空内容？'
-			}).then(() => {
-				this.preHref = this.$route.fullPath;
-				this.form.title = '';
-				this.form.content = '';
-				this.form.abstract = '';
-				this.fileList = [];
-				this.form.categoryId = '';
-				this.selectedCategoryPath = '';
-				this.selectedCategory = lpt.categoryServ.getDefaultCategory(-1);
-				this.parseQueryParam();
-			}).catch(() => {
-			});
-		}
+		this.onActivated();
 	},
 	methods: {
+		onActivated() {
+			const f = this.form;
+			if (!f.title && !f.content && !f.abstract && this.fileList.length === 0) {
+				// 当前无内容，则直接解析参数
+				this.$nextTick(() => this.parseQueryParam());
+			} else if (this.$route.fullPath !== this.preHref) {
+				// 当前有内容，并且参数有变化
+				Dialog.confirm({
+					title: '是否清空',
+					message: '当前有未提交内容，是否清空内容？'
+				}).then(() => {
+					this.preHref = this.$route.fullPath;
+					this.form.title = '';
+					this.form.content = '';
+					this.form.abstract = '';
+					this.fileList = [];
+					this.form.categoryId = '';
+					this.selectedCategoryPath = '';
+					this.selectedCategory = lpt.categoryServ.getDefaultCategory(-1);
+					this.parseQueryParam();
+				}).catch(() => {
+				});
+			}
+		},
 		parseCreatePostParam() {
 			const query = this.$route.query;
 			this.form.isPublic = query.type === 'public';
@@ -195,6 +215,7 @@ export default {
 						const pathList = category.path_list;
 						if (pathList.length == 0)
 							return;
+						this.categoryOptions = [];
 						let option = this.categoryOptions;
 						let lastOption = {};
 						pathList.forEach(category => {
@@ -222,6 +243,7 @@ export default {
 							lastOption[0].isLeaf = true;
 							delete lastOption[0].children;
 						}
+						console.log(this.categoryOptions);
 						this.form.categoryId = parseInt(categoryId);
 						this.showPopover = true;
 					}
@@ -252,7 +274,7 @@ export default {
 			if (!category.allow_user_post) {
 				return false;
 			} else if (typeof category.allow_post_level !== 'undefined') {
-				const this_level = category.rights.this_level;
+				const this_level = category.rights && category.rights.this_level;
 				return this_level && this_level >= category.allow_post_level;
 			} else {
 				return true;

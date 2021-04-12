@@ -1,8 +1,8 @@
 <template>
-	<div style="font-size: 0.75rem">
+	<div>
 		<a-popover trigger="click" placement="bottomLeft" v-model:visible="showPopover">
 			<template v-slot:content>
-				<div style="width: 4rem">
+				<div style="font-size: 0.9rem">
 					<a-button class="pop-btn" :type="getPopBtnType('popular')"
 					          @click="changeSortType('popular')">
 						热门
@@ -14,7 +14,9 @@
 				</div>
 			</template>
 			<transition name="van-fade">
-				<a-button id="sortTypeBtn" v-show="showSortTypeSelector" :style="{top: offset, right: offsetRight, ...buttonStyle}">
+				<a-button class="sort-type-btn" v-show="showSortTypeSelector"
+				          :style="{top: offset, right: offsetRight, ...buttonStyle}"
+				          style="font-size: 0.9rem">
 					<ordered-list-outlined/>
 					<span style="margin-left: 0.5rem">
 						<span v-if="sortType === 'popular'">热门</span>
@@ -105,7 +107,7 @@ export default {
 	border-bottom: none;
 }
 
-#sortTypeBtn {
+.sort-type-btn {
 	position: fixed;
 	background-color: white;
 	z-index: 2;
