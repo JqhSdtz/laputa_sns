@@ -49,7 +49,6 @@ export default {
 	},
 	methods: {
 		changePin() {
-			const ref = this;
 			const isCancel = this.category.pinned;
 			const fun = isCancel ? lpt.userServ.unpinRecentVisit
 				: lpt.userServ.pinRecentVisit;
@@ -57,8 +56,8 @@ export default {
 				param: {
 					categoryId: this.categoryId
 				},
-				success() {
-					ref.category.pinned = !isCancel;
+				success: () => {
+					this.category.pinned = !isCancel;
 					Toast.success(isCancel ? '取消固定成功' : '固定到最近访问成功');
 				},
 				fail(result) {

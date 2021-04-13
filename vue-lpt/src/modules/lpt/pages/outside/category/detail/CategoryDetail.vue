@@ -208,6 +208,7 @@ export default {
 				filter: (res) => res.isFull,
 				success: (category) => {
 					this.setTitle(category);
+					global.events.emit('visitCategory', category);
 				},
 				fail(result) {
 					Toast.fail(result.message);

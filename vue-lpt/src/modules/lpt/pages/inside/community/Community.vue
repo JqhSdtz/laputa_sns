@@ -9,7 +9,7 @@
 					<div style="white-space: nowrap;">
 						<div v-for="obj in recentVisitList" :key="obj.category.id" style="display: inline-block; position: relative; width: 4.5rem; vertical-align:top;">
 							<category-grid-item :category-id="obj.category.id" style="width: 4rem" size="2.5rem">
-								<pushpin-filled v-if="obj.pinned" class="pin-icon" :rotate="-45"/>
+								<pushpin-filled v-if="obj.category.pinned" class="pin-icon" :rotate="-45"/>
 							</category-grid-item>
 						</div>
 					</div>
@@ -20,7 +20,7 @@
 				<van-grid :column-num="4" :border="false">
 					<van-grid-item v-for="obj in recentVisitList" :key="obj.category.id">
 						<category-grid-item :category-id="obj.category.id" size="2.5rem">
-							<pushpin-filled v-if="obj.pinned" class="pin-icon popup-pin-icon" :rotate="-45"/>
+							<pushpin-filled v-if="obj.category.pinned" class="pin-icon popup-pin-icon" :rotate="-45"/>
 						</category-grid-item>
 					</van-grid-item>
 				</van-grid>
@@ -73,8 +73,26 @@ export default {
 		global.events.on(['signIn', 'signOut'], () => {
 			this.init();
 		});
+		global.events.on('visitCategory', (category) => {
+			if (category.pinned) return;
+			const list = this.recentVisitList;
+			const newList = [];
+			let noPinFlag = false;
+			list.forEach((item) => {
+				if (!item.category.pinned && !noPinFlag) {
+					noPinFlag = true;
+					category.pinned = false;
+					newList.push({
+						category: category
+					});
+				}
+				if (item.category.id === category.id) return;
+				newList.push(item);
+			});
+			this.recentVisitList = newList;
+		});
 		this.init();
-		if (this.lptConsumer !== 'blogDrawer') {
+		if (this.lptContainer !== 'blogDrawer') {
 			global.methods.setTitle({
 				pageDesc: '社区'
 			});
@@ -99,15 +117,12 @@ export default {
 			this.initRecentVisitList();
 		},
 		initCategoryList() {
-			const ref = this;
-			lpt.categoryServ.get({
-				consumer: this.lptConsumer,
-				param: {
-					id: this.rootCategoryId
-				},
-				success(result) {
-					const category = global.states.categoryManager.add(result.object);
-					ref.categoryList = category.sub_list;
+			global.states.categoryManager.get({
+				itemId: this.baseCategoryId,
+				filter: res => res.sub_list,
+				success: (result) => {
+					this.baseCategory = result;
+					this.categoryList = this.baseCategory.sub_list;
 				},
 				fail(result) {
 					Toast.fail(result.message);
@@ -115,13 +130,11 @@ export default {
 			});
 		},
 		initRecentVisitList() {
-			const ref = this;
 			lpt.userServ.getRecentVisit({
-				success(result) {
-					ref.recentVisitList = result.object;
+				success: (result) => {
+					this.recentVisitList = result.object;
 					result.object.forEach(obj => {
 						const pinned = obj.score > 9000000000000;
-						obj.pinned = pinned;
 						obj.category.pinned = pinned;
 						obj.category = global.states.categoryManager.add(obj.category);
 					});

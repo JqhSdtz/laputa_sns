@@ -90,7 +90,6 @@ export default {
 		}
 	},
 	created() {
-		const ref = this;
 		this.lptConsumer = lpt.createConsumer();
 		this.hasReallyLoaded = false;
 		this.querior.onBusyChange(isBusy => {
@@ -99,21 +98,21 @@ export default {
 				// 全局的isBusy变动触发无限下滑组件检测状态导致错误请求
 				if (isBusy) {
 					// 变为繁忙状态，直接改变
-					ref.isBusy = isBusy;
+					this.isBusy = isBusy;
 				} else {
 					// 结束繁忙状态，要判断是否有自定义处理过程
 					// 如果有，则要判断自定义处理过程是否执行完毕
-					if (ref.curLoadPromise) {
-						ref.curLoadPromise.finally(() => {
-							ref.isBusy = isBusy;
+					if (this.curLoadPromise) {
+						this.curLoadPromise.finally(() => {
+							this.isBusy = isBusy;
 						});
 					} else {
-						ref.isBusy = isBusy;
+						this.isBusy = isBusy;
 					}
 				}
 			});
 		});
-		if (ref.postOf === 'category') {
+		if (this.postOf === 'category') {
 			this.defaultQueryOption = {
 				querior: this.querior,
 				param: {
@@ -123,14 +122,14 @@ export default {
 					category_id: this.categoryId
 				}
 			};
-		} else if (ref.postOf === 'creator') {
+		} else if (this.postOf === 'creator') {
 			this.defaultQueryOption = {
 				querior: this.querior,
 				data: {
 					creator_id: this.creatorId
 				}
 			};
-		} else if (ref.postOf === 'news') {
+		} else if (this.postOf === 'news') {
 			this.defaultQueryOption = {
 				querior: this.querior
 			};
@@ -138,15 +137,15 @@ export default {
 		this.loadMore(false);
 		global.events.on(['signIn', 'signOut', 'forceRefresh'], (obj, name) => {
 			if (name === 'forceRefresh')
-				ref.isRefreshing = true;
-			ref.onRefresh();
+				this.isRefreshing = true;
+			this.onRefresh();
 		});
 		this.postListEvents.on(['top', 'unTop'], (param, name) => {
 			const isCancel = name === 'unTop';
 			const post = param.post;
 			let fun;
 			let data;
-			if (ref.postOf === 'category') {
+			if (this.postOf === 'category') {
 				fun = lpt.categoryServ.setTopPost;
 				data = {
 					id: this.categoryId,
@@ -154,7 +153,7 @@ export default {
 					op_comment: param.comment
 				};
 			}
-			if (ref.postOf === 'creator') {
+			if (this.postOf === 'creator') {
 				fun = lpt.userServ.setTopPost;
 				data = {
 					top_post_id: post.id
@@ -166,19 +165,19 @@ export default {
 					isCancel: isCancel
 				},
 				data: data,
-				success() {
+				success: () => {
 					Toast.success(isCancel ? '取消成功' : '置顶成功');
 					post.is_topped = !isCancel;
-					if (ref.postOf === 'category') {
+					if (this.postOf === 'category') {
 						const category = global.states.categoryManager.get({
-							itemId: ref.categoryId
+							itemId: this.categoryId
 						});
 						if (category) {
 							category.top_post_id = isCancel ? -1 : post.id;
 						}
-					} else if (ref.postOf === 'creator') {
+					} else if (this.postOf === 'creator') {
 						const user = global.states.userManager.get({
-							itemId: ref.creatorId
+							itemId: this.creatorId
 						});
 						if (user) {
 							user.top_post_id = isCancel ? -1 : post.id;
@@ -193,7 +192,6 @@ export default {
 		});
 		this.postListEvents.on('delete', (param) => {
 			const post = param.post;
-			const ref = this;
 			lpt.contentServ.delete({
 				consumer: this.lptConsumer,
 				param: {
@@ -203,9 +201,9 @@ export default {
 					id: post.id,
 					op_comment: param.comment
 				},
-				success() {
+				success: () => {
 					Toast.success('删除成功');
-					ref.list.splice(ref.list.findIndex(_post => _post.id === post.id), 1);
+					this.list.splice(this.list.findIndex(_post => _post.id === post.id), 1);
 				},
 				fail(result) {
 					Toast.fail(result.message);

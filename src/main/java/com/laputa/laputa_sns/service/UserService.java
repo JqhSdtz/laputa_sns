@@ -406,7 +406,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         paramUser.setWithPwdInfo(true).setFromLogin(true).setId(userId);
         User resUser = selectOne(paramUser);
         if (resUser == null || resUser.getPassword() == null || resUser.getPwdSalt() == null)
-            return new Result(FAIL).setErrorCode(1010020208).setMessage("数据库操作失败");
+            return new Result(FAIL).setErrorCode(1010020208).setMessage("未设置密码，请使用其他方式登录");
         String testPwd = CryptUtil.md5(paramUser.getPassword() + resUser.getPwdSalt());
         if (!testPwd.equals(resUser.getPassword()))
             return new Result(FAIL).setErrorCode(1010130209).setMessage("密码错误");
