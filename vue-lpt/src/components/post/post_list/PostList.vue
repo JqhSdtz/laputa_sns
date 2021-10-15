@@ -135,9 +135,10 @@ export default {
 			};
 		}
 		this.loadMore(false);
-		global.events.on(['signIn', 'signOut', 'forceRefresh'], (obj, name) => {
+		global.events.on(['signIn', 'signOut', 'forceRefresh', 'addFollow'], (obj, name) => {
 			if (name === 'forceRefresh')
 				this.isRefreshing = true;
+			if (name === 'addFollow' && this.postOf !== 'news') return;
 			this.onRefresh();
 		});
 		this.postListEvents.on(['top', 'unTop'], (param, name) => {
@@ -253,6 +254,15 @@ export default {
 				}
 			});
 		});
+		global.events.on('createPost', (post) => {
+			if ((post.type_str === 'public' && this.postOf === 'category'
+				&& this.categoryId === post.category_id)
+				|| (post.type_str === 'private' && this.postOf === 'creator'
+				&& this.creatorId === post.creator_id)) {
+				this.isEmpty = false;
+				this.list.unshift(post);
+			}
+		});
 	},
 	unmounted() {
 		this.querior.reset();
@@ -294,7 +304,7 @@ export default {
 						global.states.postManager.addList(result.object);
 						if (!this.hasEverLoad) {
 							this.list = result.object;
-							this.isEmpty = this.list.length === 0;
+							this.isEmpty = this.list.length === 0 && this.querior.hasReachedBottom;
 							this.hasEverLoad = true;
 						} else {
 							this.list = this.list.concat(result.object);

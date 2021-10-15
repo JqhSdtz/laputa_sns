@@ -97,24 +97,23 @@ export default {
 			}
 		},
 		loadMore() {
-			const ref = this;
 			if (!this.querior.hasReachedBottom) {
 				lpt.likeServ.query({
 					...this.defaultQueryOption,
-					success(result) {
-						if (!ref.hasEverLoad) {
-							ref.list = result.object;
-							ref.isEmpty = ref.list.length === 0;
-							ref.hasEverLoad = true;
+					success: (result) => {
+						if (!this.hasEverLoad) {
+							this.list = result.object;
+							this.isEmpty = this.list.length === 0 && this.querior.hasReachedBottom;
+							this.hasEverLoad = true;
 						} else {
-							ref.list = ref.list.concat(result.object);
+							this.list = this.list.concat(result.object);
 						}
 					},
 					fail(result) {
 						Toast.fail(result.message);
 					},
-					complete() {
-						ref.isRefreshing = false;
+					complete: () => {
+						this.isRefreshing = false;
 					}
 				});
 			}

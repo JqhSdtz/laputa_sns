@@ -6,7 +6,11 @@ import {getSlot} from 'ant-design-vue/lib/_util/props-util';
 export default {
 	name: 'AUploadM',
 	props: {
-		...Upload.props
+		...Upload.props,
+		width: {
+			type: String,
+			default: '100%'
+		}
 	},
 	data() {
 		return {
@@ -63,6 +67,12 @@ export default {
 					name: '相册'
 				}
 			],
+			style: {
+				width: this.width
+			},
+			class: {
+				'width-transition': true
+			},
 			cancelText: "取消",
 			description: '请选择上传方式',
 			closeOnClickAction: true,

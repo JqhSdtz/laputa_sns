@@ -204,7 +204,7 @@ const {router, noCacheList, titleKeeper} = processRouters({
     routers
 });
 
-let curHomeInsidePath = 'index';
+let curHomeInsidePath = '/home/index';
 const homePath = '/home/index';
 
 const resolvedSet = new Set();

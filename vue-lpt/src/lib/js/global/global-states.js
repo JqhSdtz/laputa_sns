@@ -108,6 +108,7 @@ const userManager = initItemManager({
 
 const categoryManager = initItemManager({
     processItem(item) {
+        if (!item) return item;
         let newItem = item;
         if (item.root) {
             newItem = item.root;
@@ -176,6 +177,7 @@ const categoryManager = initItemManager({
 
 const postManager = initItemManager({
     processItem(item) {
+        if (!item) return item;
         if (!item.rights)
             item.rights = {};
         if (item.creator) {
@@ -205,6 +207,7 @@ const postManager = initItemManager({
 
 const commentL1Manager = initItemManager({
     processItem(item) {
+        if (!item) return item;
         if (!item.rights)
             item.rights = {};
         if (item.creator) {
@@ -218,6 +221,7 @@ const commentL1Manager = initItemManager({
 
 const commentL2Manager = initItemManager({
     processItem(item) {
+        if (!item) return item;
         if (!item.rights)
             item.rights = {};
         if (item.creator) {
@@ -232,6 +236,7 @@ const commentL2Manager = initItemManager({
 const noticeManager = initItemManager({
     notIntegerId: true,
     processItem(item) {
+        if (!item) return item;
         item.id = item.type + ':' + item.content_id;
     },
     getDefault(id) {
@@ -261,7 +266,9 @@ const states = {
             showDrawer: false
         }
     }),
-    hasSigned: computed(() => states.curOperator.user.id !== -1),
+    hasSigned: wrap({
+        default: false
+    }),
     postManager,
     commentL1Manager,
     commentL2Manager,

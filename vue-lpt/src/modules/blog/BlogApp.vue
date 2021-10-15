@@ -13,7 +13,7 @@
 			<p style="text-align: center; font-size: 0.85rem">鲁ICP备19009966号</p>
 			<p style="text-align: center; font-size: 0.85rem">jqhsdtz@foxmail.com</p>
 		</div>
-		<loading-area id="loading-area"></loading-area>
+		<loading-area id="loading-area" :size="showDrawer ? 'default' : 'large'"></loading-area>
 		<drawer-container>
 			<a-drawer :visible="showDrawer" placement="left" :closable="false"
 			          @close="showDrawer = false" :width="drawerWidth">
@@ -196,8 +196,8 @@ body::-webkit-scrollbar {
 
 #loading-area {
 	position: fixed;
-	left: 5%;
-	bottom: 11%;
+	left: 3%;
+	bottom: 7%;
 }
 
 .ant-drawer-body {
@@ -224,6 +224,10 @@ body::-webkit-scrollbar {
 
 .with-transition {
 	transition: left 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
+}
+
+.width-transition {
+	transition: width 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
 }
 
 div:not(.with-scroll-bar)::-webkit-scrollbar {

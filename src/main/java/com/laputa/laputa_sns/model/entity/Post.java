@@ -293,7 +293,7 @@ public class Post extends AbstractContent<Post> {
 
     @JsonIgnore
     public boolean validatePostContent() {
-        if (title != null && title.length() > 20)
+        if (title != null && title.length() > 40)
             return false;
         if (content == null || content.length() < 10 || content.length() > 100000)
             return false;

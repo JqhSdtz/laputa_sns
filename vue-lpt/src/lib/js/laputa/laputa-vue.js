@@ -7,10 +7,11 @@ import {notification} from 'ant-design-vue';
 lpt.event.on('onCurOperatorChange', operator => {
     // 不能直接替换operator对象，否则会失去响应性
     Object.assign(global.states.curOperator, operator);
+    global.states.hasSigned.value = operator.user.id !== -1;
 });
-lpt.event.on('pushGlobalBusy', isBusy => {
+lpt.event.on('pushGlobalBusy', param => {
     // 注册全局繁忙状态响应式属性
-    global.events.emit('pushGlobalBusy', isBusy);
+    global.events.emit('pushGlobalBusy', param);
 });
 
 global.events.on('signUp', (msg) => {

@@ -1,16 +1,16 @@
 <template>
 	<div class="content-area">
 		<p class="title" @click="showPostDetail">{{ post.title }}</p>
-		<div class="content" v-if="isShowFullText" @click="showPostDetail">
-			<p v-if="postType === 'normal'" style="margin-bottom: 0;">{{ fullText }}</p>
-			<admin-ops-record v-if="postType === 'amOps' && payload" :payload="payload"/>
-			<v-md-preview v-if="postType === 'md'" :text="fullText"/>
+		<div v-if="isShowFullText" class="content" :class="{'md-content': fullTextType === 'md'}">
+			<p v-if="fullTextType === 'normal'" style="margin-bottom: 0;">{{ fullText }}</p>
+			<admin-ops-record v-if="fullTextType === 'amOps' && payload" :payload="payload"/>
+			<v-md-preview v-if="fullTextType === 'md'" :text="fullText"/>
 		</div>
-		<div class="content" v-if="!isShowFullText" @click="showPostDetail">
-			<v-md-preview v-if="postType === 'md' && !post.full_text_id" :text="postContent"/>
+		<div v-if="!isShowFullText" class="content" :class="{'md-content': contentType === 'md'}">
+			<v-md-preview v-if="contentType === 'md'" :text="postContent"/>
 			<ellipsis v-else :content="postContent" :rows="5"/>
 		</div>
-		<p v-if="post.full_text_id && !post.noFullText && !isShowFullText" class="full-text-btn" @click.stop="showFullText">
+		<p v-if="hasFullText && !isShowFullText" class="full-text-btn" @click.stop="showFullTextFun">
 			查看全文
 		</p>
 		<p v-if="isShowFullText" class="full-text-btn" @click.stop="hideFullText">
@@ -19,7 +19,7 @@
 		<div v-if="imgList.length > 0">
 			<div v-if="env === 'lpt'">
 				<a v-for="(img, idx) in imgList" :key="img" @click="showImgPreview(idx)"
-				   style="display: inline; margin-left: 1rem">
+				   style="display: inline; margin-right: 1rem;">
 					<van-image :src="img" width="50" height="50"/>
 				</a>
 			</div>
@@ -53,7 +53,8 @@ const typeReg = /tp:([a-zA-Z]*)#/;
 export default {
 	name: 'ContentArea',
 	props: {
-		post: Object
+		post: Object,
+		showFullText: Boolean
 	},
 	components: {
 		AdminOpsRecord,
@@ -74,7 +75,8 @@ export default {
 			imageBoxList: [],
 			postContent: this.post.customContent || this.post.content,
 			payload: '',
-			postType: 'normal',
+			contentType: 'normal',
+			fullTextType: 'normal',
 			fullText: '',
 			isShowFullText: false
 		}
@@ -86,11 +88,13 @@ export default {
 		'post.content': {
 			immediate: true,
 			handler() {
-				if (typeReg.test(this.post.content)) {
-					this.postType = this.post.content.match(typeReg)[1];
-					const content = this.post.customContent || this.post.content;
-					this.postContent = content.replace(typeReg, '');
-				}
+				this.resolveContentChange();
+			}
+		},
+		'post.customContent': {
+			immediate: true,
+			handler() {
+				this.resolveContentChange();
 			}
 		},
 		'post.raw_img': {
@@ -117,6 +121,9 @@ export default {
 				return '';
 			}
 			return lpt.categoryServ.getPathStr(this.post.category_path);
+		},
+		hasFullText() {
+			return (this.post.full_text_id || this.post.full_text) && !this.post.noFullText;
 		},
 		clientWidth() {
 			// 巨坑，深扒van-tabs组件发现是在swipe组件中获取了一个tabs的宽度
@@ -158,15 +165,41 @@ export default {
 				return '';
 			}
 		},
-		showFullText() {
+		resolveContentChange() {
+			if (this.showFullText && this.hasFullText) this.showFullTextFun();
+			if (typeReg.test(this.post.content)) {
+				this.contentType = this.post.content.match(typeReg)[1];
+				const content = this.post.customContent || this.post.content;
+				this.postContent = content.replace(typeReg, '');
+			} else {
+				this.postContent = this.post.customContent || this.post.content;
+			}
+		},
+		processFullText(fullText) {
+			global.states.postManager.add({
+				...this.post,
+				full_text: fullText
+			});
+			if (typeReg.test(fullText)) {
+				this.fullTextType = fullText.match(typeReg)[1];
+				this.fullText = fullText.replace(typeReg, '');
+			} else {
+				this.fullTextType = this.contentType;
+				this.fullText = fullText;
+			}
+			if (this.fullTextType === 'amOps') {
+				this.processAmOps(fullText);
+			}
+		},
+		showFullTextFun() {
 			if (this.fullText) {
 				this.isShowFullText = true;
 			} else if (this.post.customFullText) {
 				this.fullText = this.post.customFullText;
 				this.isShowFullText = true;
-			} else if(this.post.full_text) {
-				this.fullText = this.post.full_text;
+			} else if (this.post.full_text) {
 				this.isShowFullText = true;
+				this.processFullText(this.post.full_text);
 			} else {
 				lpt.postServ.getFullText({
 					consumer: this.lptConsumer,
@@ -175,15 +208,7 @@ export default {
 					},
 					success: (result) => {
 						this.isShowFullText = true;
-						global.states.postManager.add({
-							...this.post,
-							full_text: result.object
-						});
-						if (this.postType === 'amOps') {
-							this.processAmOps(result.object);
-						} else {
-							this.fullText = result.object;
-						}
+						this.processFullText(result.object);
 					}
 				});
 			}
@@ -196,13 +221,24 @@ export default {
 </script>
 
 <style scoped>
+.content-area {
+	padding: 0 2rem;
+}
+
 .content {
 	text-align: left;
 	word-break: break-all;
-	padding: 0 1rem;
 	font-size: 0.9rem;
 	white-space: pre-wrap;
-	margin-bottom: 0.5rem;
+	margin-bottom: 1rem;
+}
+
+.md-content {
+	white-space: normal;
+}
+
+:global(.v-md-editor-preview) {
+	padding: 0 !important;
 }
 
 .title {
@@ -228,12 +264,11 @@ export default {
 	cursor: pointer;
 	color: #007bff;
 	font-size: 0.9rem;
-	margin-left: 1rem;
 }
 
 :global(.image-box-list img) {
 	display: inline;
-	margin-left: 1rem;
+	margin-right: 1rem;
 }
 
 :global(.image-box-list>div>div) {

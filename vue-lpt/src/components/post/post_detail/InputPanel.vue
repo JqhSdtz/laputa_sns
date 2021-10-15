@@ -156,19 +156,24 @@ export default {
 						id: result.object,
 						creator: global.states.curOperator.user,
 						content: this.commentInput,
-						create_time: new Date().getTime()
+						create_time: new Date().getTime(),
+						rights: {
+							delete: true
+						}
 					};
 					if (commentList) {
 						if (type === lpt.commentServ.level1) {
 							// 当前打开了评论列表，且发出的评论是一级评论
 							// 则在评论列表中添加一条
 							comment.post_id = parentId;
+							comment.entity_type = 'CML1';
 							global.states.commentL1Manager.add(comment);
 							++this.post.comment_cnt;
 							commentList.pushComment(comment);
 						} else if (type === lpt.commentServ.level2) {
 							// 当前打开了评论列表，且发出的是二级评论
 							// 增加该评论所属一级评论的二级评论数量
+							comment.entity_type = 'CML2';
 							comment.l1_id = parentId;
 							const l1Comment = global.states.commentL1Manager.get({
 								itemId: parentId

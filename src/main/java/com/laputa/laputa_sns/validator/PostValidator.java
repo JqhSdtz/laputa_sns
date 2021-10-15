@@ -30,7 +30,7 @@ public class PostValidator {
         if (operator.getUserId().equals(-1))
             return;
         if (post.getCreatorId().equals(operator.getUserId())) {
-            post.getRights().setTopComment(true);
+            post.getRights().setTopComment(true).setDelete(true);
             if (post.getEditable() != null && post.getEditable()) {
                 post.getRights().setEdit(true);
             }

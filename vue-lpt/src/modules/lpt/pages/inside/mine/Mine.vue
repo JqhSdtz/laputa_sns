@@ -40,7 +40,7 @@
 			<van-cell v-if="env === 'blog'" title="完整功能请访问社区" is-link to="/lpt_qr_code"/>
 			<van-cell title="注销" is-link @click="signOut"/>
 		</div>
-		<div v-if="!hasSigned" style="width: 90%; margin-left: 5%">
+		<div v-if="!hasSigned && !isLogging" style="width: 90%; margin-left: 5%">
 			<img style="display: block; height: 18rem; margin: 2rem auto;" :src="qqSymbolImg" @click="openQQLogin"/>
 			<!--			<img style="margin-top: 1rem; width: 100%;" :src="qqButtonImg" @click="openQQLogin"/>-->
 			<a-button type="primary" style="margin-top: 1rem; width: 100%; height: 3.5rem; font-size: 1.7rem"
@@ -51,6 +51,9 @@
 			          @click="signIn">
 				其他方式登录
 			</a-button>
+		</div>
+		<div v-if="isLogging" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%)">
+			<a-spin size="large" tip="正在登陆……"/>
 		</div>
 	</div>
 </template>
@@ -72,6 +75,7 @@ export default {
 			qqSymbolImg,
 			qqLoginUrl: '',
 			showQQLogin: false,
+			isLogging: false,
 			me: global.states.curOperator
 		}
 	},
@@ -113,7 +117,7 @@ export default {
 	computed: {
 		isSuperAdmin() {
 			const permissionMap = this.me.permission_map;
-			return permissionMap && permissionMap[0] == 99;
+			return permissionMap && permissionMap[lpt.categoryServ.groundCategoryId] == 99;
 		},
 		hasSigned() {
 			return global.states.hasSigned.value;
@@ -204,6 +208,7 @@ export default {
 			const state = localStorage.getItem('curQQLoginState');
 			if (!state || query.state !== state)
 				return;
+			this.isLogging = true;
 			lpt.qqServ.login({
 				param: {
 					code: query.code
@@ -219,6 +224,9 @@ export default {
 				},
 				fail(result) {
 					Toast.fail(result.message);
+				},
+				complete: () => {
+					this.isLogging = false;
 				}
 			});
 		},

@@ -124,7 +124,6 @@ export default {
 			});
 		},
 		changeFollow() {
-			const ref = this;
 			const isCancel = this.user.followed_by_viewer;
 			const fun = isCancel ? lpt.followServ.unFollow : lpt.followServ.follow;
 			fun({
@@ -132,10 +131,12 @@ export default {
 					type: 0,
 					target_id: this.userId
 				},
-				success() {
+				success: () => {
 					Toast.success(isCancel ? '取关成功' : '关注成功');
-					ref.user.followers_cnt += isCancel ? -1 : 1;
-					ref.user.followed_by_viewer = !isCancel;
+					this.user.followers_cnt += isCancel ? -1 : 1;
+					this.user.followed_by_viewer = !isCancel;
+					global.states.curOperator.user.following_cnt += isCancel ? -1 : 1;
+					global.events.emit('addFollow', this.user);
 				},
 				fail(result) {
 					Toast.fail(result.message);

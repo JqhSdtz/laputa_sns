@@ -106,7 +106,8 @@ public class PostIndexService implements ApplicationRunner {
         for (int i = 0; i < subCategoryList.size(); ++i) {
             Category category = subCategoryList.get(i);
             IndexList subList = loadSubPostIndexList(category, type);
-            if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE))//私有目录，不向上展示，但也需要加载
+            //私有目录，不向上展示，但也需要加载
+            if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE))
                 continue;
             for (Iterator<Index> iter = subList.iterator(); iter.hasNext(); )
                 totalList.add(iter.next());
@@ -276,20 +277,16 @@ public class PostIndexService implements ApplicationRunner {
     }
 
     @Scheduled(cron = "0 50 3 * * ?")
-    public void dailyFlushPostIndex() {//把目录的索引列表长度减到默认缓存长度
+    public void dailyFlushPostIndex() {
+        //把目录的索引列表长度减到默认缓存长度
         List<TmpEntry> remainedPopEntryList = new ArrayList();
         List<TmpEntry> remainedLatEntryList = new ArrayList();
         Set<Category> leafSet = categoryService.readLeafCategorySet().getObject();
-        Map<Integer, Integer> newCacheNumMap = new HashMap<>();
         for (Category category : leafSet) {
-            int cacheNum = category.getCacheNum();
-            int newLength = Math.max(category.getPopularCacheNum(), category.getLatestCacheNum());
-            if (newLength < postIndexMaxCacheNum) {
-                // 新的预缓存值取最热列表和最新列表的最大值，且不超过最大缓存允许值
-                newCacheNumMap.put(category.getId(), newLength);
-            }
-            List<Index> remainedPopList = category.getPopularPostList().trim(cacheNum, true);
-            List<Index> remainedLatList = category.getLatestPostList().trim(cacheNum, true);
+            // 每次刷新时把所有叶目录的缓存长度改成10，可以一定程度上削弱顶端优势
+            // 此种设计仍有待验证
+            List<Index> remainedPopList = category.getPopularPostList().trim(10, true);
+            List<Index> remainedLatList = category.getLatestPostList().trim(10, true);
             for (int i = 0; i < remainedPopList.size(); ++i)
                 remainedPopEntryList.add(new TmpEntry(remainedPopList.get(i).getId(), 1));
             for (int i = 0; i < remainedLatList.size(); ++i)
@@ -309,11 +306,11 @@ public class PostIndexService implements ApplicationRunner {
         loadSubPostIndexList(groundCategory, LATEST);
         loadSubPostIndexList(groundCategory, POPULAR);
         log.info("目录索引列表以缩减到默认缓存长度");
-        List<TmpEntry> entryList = new ArrayList(newCacheNumMap.size());
-        for (Map.Entry<Integer, Integer> entry : newCacheNumMap.entrySet()) {
-            Integer categoryId = entry.getKey();
-            Integer cacheNum = entry.getValue();
-            entryList.add(new TmpEntry(categoryId, cacheNum));
+        List<TmpEntry> entryList = new ArrayList(categoryMap.size());
+        for (Category category : categoryMap.values()) {
+            int cacheNum = Math.max(category.getPopularCacheNum(), category.getLatestCacheNum());
+            cacheNum = Math.max(cacheNum, postIndexMaxCacheNum);
+            entryList.add(new TmpEntry(category.getId(), cacheNum));
         }
         commonService.batchUpdate("lpt_category", "category_id", "category_cache_num", CommonService.OPS_COPY, entryList);
         log.info("目录索引列表预缓存值更新成功" + entryList.size() + "条");

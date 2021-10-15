@@ -57,6 +57,19 @@ const draggable = {
         // 所以要监听全局的移动事件
         window.document.addEventListener('mousemove', dragging, true);
         window.document.addEventListener('touchmove', dragging, {passive: false});
+        let preWinWidth = document.body.clientWidth;
+        let preWinHeight = document.body.clientHeight;
+        window.addEventListener('resize', () => {
+            // 保证窗口大小改变的时候，元素的相对位置不变，不会跑到可视范围外
+            const preX = parseFloat(el.style.left);
+            const preY = parseFloat(el.style.top);
+            const curWinWidth = document.body.clientWidth;
+            const curWinHeight = document.body.clientHeight;
+            el.style.left = curWinWidth / preWinWidth * preX + 'px';
+            el.style.top = curWinHeight / preWinHeight * preY + 'px';
+            preWinWidth = curWinWidth;
+            preWinHeight = curWinHeight;
+        });
     }
 }
 
@@ -76,7 +89,7 @@ const scrollView = {
                     }
                     hasScrolledTop = true;
                     event.preventDefault();
-                } else {
+                } else if (event.deltaY > 0) {
                     hasScrolledTop = window.scrollY === 0;
                 }
             };

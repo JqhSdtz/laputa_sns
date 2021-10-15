@@ -160,28 +160,27 @@ export default {
 			this.list.unshift(comment);
 		},
 		loadMore(isRefresh) {
-			const ref = this;
 			if (!this.querior.hasReachedBottom) {
 				lpt.commentServ.query({
 					...this.defaultQueryOption,
-					success(result) {
+					success: (result) => {
 						global.states.commentL1Manager.addList(result.object);
-						if (!ref.hasEverLoad) {
-							ref.list = result.object;
-							ref.isEmpty = ref.list.length === 0;
-							ref.hasEverLoad = true;
+						if (!this.hasEverLoad) {
+							this.list = result.object;
+							this.isEmpty = this.list.length === 0 && this.querior.hasReachedBottom;
+							this.hasEverLoad = true;
 						} else {
-							ref.list = ref.list.concat(result.object);
+							this.list = this.list.concat(result.object);
 						}
 						if (isRefresh) {
-							ref.commentListEvents.emit('refreshList');
+							this.commentListEvents.emit('refreshList');
 						}
 					},
 					fail(result) {
 						Toast.fail(result.message);
 					},
-					complete() {
-						ref.isRefreshing = false;
+					complete: () => {
+						this.isRefreshing = false;
 					}
 				});
 			}

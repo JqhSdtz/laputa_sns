@@ -4,7 +4,7 @@
 			<div v-show="showPostArea" class="post-area"
 			        :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
 			        :style="{height: scrollHeight, position: 'relative'}" v-scroll-view>
-				<post-item style="padding: 0 0.5rem" :post-id="post.id" :show-bottom="false"/>
+				<post-item style="padding: 0 0.5rem" :post-id="post.id" :show-bottom="false" :show-full-text="true"/>
 				<div v-show="!showCommentDetail" ref="middleBar" id="middle-bar"
 				     :style="{width: clientWidth + 'px'}">
 					<van-tabs ref="tabs" v-model:active="curTabKey" swipeable sticky lazy-render>

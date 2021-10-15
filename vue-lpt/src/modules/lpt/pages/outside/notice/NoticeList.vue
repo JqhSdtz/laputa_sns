@@ -74,25 +74,24 @@ export default {
 			this.hasEverLoad = false;
 		},
 		loadMore() {
-			const ref = this;
 			if (!this.querior.hasReachedBottom) {
 				lpt.noticeServ.query({
 					querior: this.querior,
-					success(result) {
+					success: (result) => {
 						global.states.noticeManager.addList(result.object);
-						if (!ref.hasEverLoad) {
-							ref.list = result.object;
-							ref.isEmpty = ref.list.length === 0;
-							ref.hasEverLoad = true;
+						if (!this.hasEverLoad) {
+							this.list = result.object;
+							this.isEmpty = this.list.length === 0 && this.querior.hasReachedBottom;
+							this.hasEverLoad = true;
 						} else {
-							ref.list = ref.list.concat(result.object);
+							this.list = this.list.concat(result.object);
 						}
 					},
 					fail(result) {
 						Toast.fail(result.message);
 					},
-					complete() {
-						ref.isRefreshing = false;
+					complete: () => {
+						this.isRefreshing = false;
 					}
 				});
 			}

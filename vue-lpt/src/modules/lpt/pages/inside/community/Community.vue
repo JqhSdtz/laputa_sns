@@ -118,11 +118,10 @@ export default {
 		},
 		initCategoryList() {
 			global.states.categoryManager.get({
-				itemId: this.baseCategoryId,
+				itemId: this.rootCategoryId,
 				filter: res => res.sub_list,
 				success: (result) => {
-					this.baseCategory = result;
-					this.categoryList = this.baseCategory.sub_list;
+					this.categoryList = result.sub_list;
 				},
 				fail(result) {
 					Toast.fail(result.message);

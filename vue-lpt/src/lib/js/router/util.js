@@ -1,9 +1,8 @@
-import {createRouter, createWebHashHistory} from 'vue-router';
-import global from '@/lib/js/global';
+import {createRouter, createWebHistory} from 'vue-router';
 
 export function processRouters(param) {
     const router = createRouter({
-        history: createWebHashHistory(),
+        history: createWebHistory(),
         routes: param.routers
     });
     const noCacheList = [];

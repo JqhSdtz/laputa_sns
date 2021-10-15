@@ -5,7 +5,7 @@ import description from './description';
 import {createApp} from 'vue';
 import BlogApp from './BlogApp.vue';
 import router, {initRouter} from './router';
-import {ConfigProvider, Button, Row, Col, Spin, Form, Input, Badge, BackTop, Drawer, Popover} from 'ant-design-vue';
+import {ConfigProvider, Button, Row, Col, Spin, Form, Input, Badge, BackTop, Upload, Drawer, Popover} from 'ant-design-vue';
 import {Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
     Popover as VPopOver, Dialog, Image as VanImage, Uploader, Form as VanForm, Field, Cascader,
     Button as VanButton, Popup, Switch, Search, Checkbox, Grid, GridItem, DatetimePicker} from 'vant';
@@ -16,8 +16,9 @@ import globalDirectives from '@/lib/js/global/global-directives';
 import lpt from '@/lib/js/laputa/laputa';
 import JsonViewer from 'vue3-json-viewer';
 import VMdPreview from '@kangc/v-md-editor/lib/preview';
-import '@kangc/v-md-editor/lib/style/preview.css';
 import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
+import '@kangc/v-md-editor/lib/style/preview.css';
+import '@kangc/v-md-editor/lib/theme/style/github.css';
 
 // 设置rem单位的相对大小
 remHelper.initRem({
@@ -38,7 +39,7 @@ VMdPreview.use(githubTheme);
 app.use(VMdPreview);
 
 const antdUseList = [ConfigProvider, Button, Row, Col, Spin, Form, Input, Badge, BackTop,
-    Popover, Drawer];
+    Upload, Popover, Drawer];
 antdUseList.forEach(item => {
     app.use(item);
 });

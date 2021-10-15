@@ -84,14 +84,21 @@ export default {
 			this.isMenuShown = false;
 			this.dragOption.click = this.showMenu;
 		},
-		showMenu() {
-			// 这一句不能放到最后
-			this.isMenuShown = true;
-			const refNames = ['gallery', 'category', 'index', 'mine'];
+		getBallPos() {
 			const floatBallElem = this.$refs.floatBall;
 			const ballOuterElem = this.$refs.ballOuter;
 			const ballX = floatBallElem.offsetLeft + ballOuterElem.offsetWidth / 2;
 			const ballY = floatBallElem.offsetTop + ballOuterElem.offsetHeight / 2;
+			return {
+				x: ballX,
+				y: ballY
+			}
+		},
+		showMenu() {
+			// 这一句不能放到最后
+			this.isMenuShown = true;
+			const refNames = ['gallery', 'category', 'index', 'mine'];
+			const ballPos = this.getBallPos();
 			this.dragOption.click = this.closeMenu;
 			const radius = 200;
 			// 四个菜单项，180度被分成五份，第一个菜单角度为间隔角度
@@ -105,8 +112,8 @@ export default {
 					// 额外减去50，让菜单和悬浮球靠的更近些
 					offsetX += elem.offsetWidth / 2 - 50;
 					offsetY += elem.offsetHeight / 2;
-					elem.style.left = ballX - offsetX + 'px';
-					elem.style.top = ballY - offsetY + 'px';
+					elem.style.left = ballPos.x - offsetX + 'px';
+					elem.style.top = ballPos.y - offsetY + 'px';
 					curDegree += degreeDiff;
 				});
 			});

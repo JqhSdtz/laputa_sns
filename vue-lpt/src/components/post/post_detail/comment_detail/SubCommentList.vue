@@ -125,7 +125,7 @@ export default {
 						global.states.commentL2Manager.addList(result.object);
 						if (!this.hasEverLoad) {
 							this.list = result.object;
-							this.isEmpty = this.list.length === 0;
+							this.isEmpty = this.list.length === 0 && this.querior.hasReachedBottom;
 							this.hasEverLoad = true;
 						} else {
 							this.list = this.list.concat(result.object);

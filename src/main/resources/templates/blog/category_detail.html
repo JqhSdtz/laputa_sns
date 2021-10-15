@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	  th:with="category = ${categoryService.readCategory(categoryId, false, operator).object}">
+	<th:block th:if="${category} != null">
+		<head>
+			<meta charset="UTF-8">
+			<meta name="Description" th:attr="Content=${category.intro}">
+			<th:block th:with="keywords = ${new java.lang.StringBuilder()}">
+				<th:block th:each="sub: ${category.subCategoryList}" th:with="tmp = ${subStat.first ? keywords.append(sub.name) : keywords.append(',').append(sub.name)}">
+					<meta th:if="${subStat.last}" name="keywords" th:attr="Content=${keywords}">
+				</th:block>
+			</th:block>
+			<title th:utext="|${category.name}-J's Zone|"></title>
+		</head>
+		<body th:with="queryPost = ${new com.laputa.laputa_sns.model.entity.Post()},
+                    popular = ${T(com.laputa.laputa_sns.service.PostIndexService).POPULAR},
+                    latest = ${T(com.laputa.laputa_sns.service.PostIndexService).LATEST},
+                    tmp = ${queryPost.setQueryParam(new com.laputa.laputa_sns.common.QueryParam())},
+                    tmp = ${queryPost.queryParam.setQueryNum(10)},
+                    tmp = ${queryPost.setCategoryId(category.id)}">
+			<li>
+				<ul th:each="sub: ${category.subCategoryList}">
+					<a th:text="${sub.name}" th:href="@{'/blog/category_detail/' + ${sub.id}}"></a>
+				</ul>
+			</li>
+			<li th:with="popularList = ${postService.readIndexPostList(queryPost, popular, operator).object}">
+				<ul th:each="post: ${popularList}">
+					<a th:href="@{'/blog/post_detail/' + ${post.id}}">
+						<h2 th:text="${post.title}"></h2>
+					</a>
+					<p th:text="${post.content}"></p>
+				</ul>
+			</li>
+			<li th:with="latestList = ${postService.readIndexPostList(queryPost, latest, operator).object}">
+				<ul th:each="post: ${latestList}">
+					<a th:href="@{'/blog/post_detail/' + ${post.id}}">
+						<h2 th:text="${post.title}"></h2>
+					</a>
+					<p th:text="${post.content}"></p>
+				</ul>
+			</li>
+		</body>
+	</th:block>
+</html>

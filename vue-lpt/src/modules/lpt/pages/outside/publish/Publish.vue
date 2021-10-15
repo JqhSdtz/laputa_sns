@@ -27,7 +27,7 @@
 				</template>
 			</van-cell>
 			<van-field v-if="form.isPublic" :disabled="opType !== 'create'" :rules="rules.category"
-			           v-model="selectedCategoryPath" is-link readonly label="目录"
+			           v-model="selectedCategoryPathText" is-link readonly label="目录"
 			           placeholder="选择发布目录（必填）" @click="showPopover = true" style="margin-top: 1rem"/>
 			<van-popup v-if="opType === 'create'" v-model:show="showPopover" round
 			           position="bottom" :style="{width: clientWidth + 'px'}">
@@ -69,7 +69,8 @@ export default {
 			showPopover: false,
 			categoryOptions: [],
 			selectedCategory: lpt.categoryServ.getDefaultCategory(-1),
-			selectedCategoryPath: '',
+			selectedCategoryPath: [],
+			selectedCategoryPathText: '',
 			form: {
 				title: '',
 				abstract: '',
@@ -86,8 +87,8 @@ export default {
 						validator(value) {
 							if (!value) {
 								return true;
-							} else if (value.length > 20) {
-								return '标题不能超过20个字符';
+							} else if (value.length > 40) {
+								return '标题不能超过40个字符';
 							} else {
 								return true;
 							}
@@ -150,8 +151,8 @@ export default {
 				this.form.categoryId = '';
 			}
 		},
-		$route() {
-			this.onActivated();
+		$route(route) {
+			if (route.name === 'publish') this.onActivated();
 		},
 		'form.abstract'() {
 			this.checkInputContent();
@@ -174,8 +175,6 @@ export default {
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 		this.imgUrlMap = new Map();
-	},
-	activated() {
 		this.onActivated();
 	},
 	methods: {
@@ -196,7 +195,7 @@ export default {
 					this.form.abstract = '';
 					this.fileList = [];
 					this.form.categoryId = '';
-					this.selectedCategoryPath = '';
+					this.selectedCategoryPathText = '';
 					this.selectedCategory = lpt.categoryServ.getDefaultCategory(-1);
 					this.parseQueryParam();
 				}).catch(() => {
@@ -243,14 +242,14 @@ export default {
 							lastOption[0].isLeaf = true;
 							delete lastOption[0].children;
 						}
-						console.log(this.categoryOptions);
 						this.form.categoryId = parseInt(categoryId);
 						this.showPopover = true;
 					}
 				});
 			} else {
 				this.form.categoryId = query.categoryId || '';
-				this.selectedCategoryPath = query.categoryPath || '';
+				this.selectedCategoryPathText = query.categoryPath || '';
+				this.categoryOptions = [];
 				global.states.categoryManager.get({
 					itemId: lpt.categoryServ.rootCategoryId,
 					success: (item) => {
@@ -288,7 +287,7 @@ export default {
 				itemId: postId,
 				success: (post) => {
 					this.form.isPublic = post.type_str === 'public';
-					this.selectedCategoryPath = lpt.categoryServ.getPathStr(post.category_path);
+					this.selectedCategoryPathText = lpt.categoryServ.getPathStr(post.category_path);
 					this.selectedCategory = global.states.categoryManager.get({
 						itemId: post.category_id
 					});
@@ -322,6 +321,9 @@ export default {
 		},
 		parseQueryParam() {
 			const query = this.$route.query;
+			const isQueryEmpty = Object.keys(query).length === 0;
+			if (isQueryEmpty && this.hasInited) return;
+			this.hasInited = true;
 			this.preHref = this.$route.fullPath;
 			query.opType = query.opType || 'create';
 			this.opType = query.opType;
@@ -373,7 +375,6 @@ export default {
 			}
 		},
 		onSubmit() {
-			const ref = this;
 			this.$refs.form.validate().then(() => {
 				let fun = () => {
 				};
@@ -383,38 +384,50 @@ export default {
 					fun = lpt.postServ.updateContent;
 				}
 				const data = {
-					category_id: ref.form.categoryId,
-					title: ref.form.title,
-					content: ref.form.content,
-					editable: ref.form.editable,
-					raw_img: ref.getFullRawUrl()
+					category_id: this.form.categoryId,
+					title: this.form.title,
+					content: this.form.content,
+					editable: this.form.editable,
+					raw_img: this.getFullRawUrl()
 				};
-				if (ref.form.abstract) {
+				if (this.form.abstract) {
 					// 有设置摘要
-					data.content = ref.form.abstract;
-					data.full_text = ref.form.content;
+					data.content = this.form.abstract;
+					data.full_text = this.form.content;
 				}
-				if (ref.opType === 'edit') {
-					data.id = ref.postId;
+				if (this.opType === 'edit') {
+					data.id = this.postId;
 				}
+				data.type_str = this.form.isPublic ? 'public' : 'private';
+				data.creator = global.states.curOperator.user;
+				data.creator_id = global.states.curOperator.user.id;
+				data.entity_type = 'POST';
 				fun({
-					consumer: ref.lptConsumer,
+					consumer: this.lptConsumer,
 					param: {
-						type: ref.form.isPublic ? 'public' : 'private'
+						type: data.type_str
 					},
 					data: data,
-					success: function () {
-						ref.form.title = '';
-						ref.form.content = '';
-						ref.form.abstract = '';
-						ref.fileList = [];
-						if (ref.opType === 'create') {
+					success: (result) => {
+						this.form.title = '';
+						this.form.content = '';
+						this.form.abstract = '';
+						this.fileList = [];
+						if (this.opType === 'create') {
 							Toast.success('发布成功');
-						} else if (ref.opType === 'edit') {
+							data.category_path = this.selectedCategoryPath.reverse();
+							data.rights = {
+								delete: true,
+								edit: this.form.editable
+							};
+							data.id = result.object;
+							const post = global.states.postManager.add(data);
+							global.events.emit('createPost', post);
+						} else if (this.opType === 'edit') {
 							Toast.success('编辑成功');
 						}
 					},
-					fail: function (result) {
+					fail(result) {
 						Toast.fail(result.message);
 					}
 				});
@@ -449,7 +462,13 @@ export default {
 			this.curOption = selectedOptions[selectedOptions.length - 1];
 			if (this.curOption.isLeaf) {
 				this.showPopover = false;
-				this.selectedCategoryPath = selectedOptions.map((option) => option.text).join('/');
+				this.selectedCategoryPath = selectedOptions.map((option) => {
+					return {
+						id: option.value,
+						name: option.text
+					}
+				});
+				this.selectedCategoryPathText = selectedOptions.map((option) => option.text).join('/');
 				global.states.categoryManager.get({
 					itemId: this.curOption.value,
 					success: category => {

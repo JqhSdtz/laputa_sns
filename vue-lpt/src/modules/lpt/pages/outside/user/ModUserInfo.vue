@@ -7,6 +7,7 @@
 			:before-upload="beforeUpload"
 			:showUploadList="false"
 			:headers="uploadHeader"
+			:width="clientWidth + 'px'"
 			@change="handleChange">
 		</a-upload-m>
 		<div style="text-align: center" @click="selectUpload">
@@ -66,6 +67,11 @@ export default {
 	name: 'ModUserInfo',
 	components: {
 		AUploadM
+	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
 	},
 	created() {
 		const ref = this;
@@ -151,7 +157,16 @@ export default {
 	computed: {
 		myAvatarUrl() {
 			return lpt.getUserAvatarUrl(this.me.user);
-		}
+		},
+		clientWidth() {
+			if (this.lptContainer === 'blogDrawer') {
+				return global.states.style.drawerWidth;
+			} else if (this.lptContainer === 'blogMain') {
+				return global.states.style.blogMainWidth;
+			} else {
+				return global.states.style.bodyWidth;
+			}
+		},
 	},
 	methods: {
 		selectUpload() {
@@ -173,9 +188,10 @@ export default {
 				if (typeof resultUrl === 'string'
 						&& resultUrl.indexOf('ava') >= 0) {
 					this.me.user.raw_avatar = info.file.response.object;
+					this.form.raw_avatar = this.me.user.raw_avatar;
 				} else {
 					Toast.fail('上传失败');
-					console.log(info);
+					console.error(info);
 				}
 			} else if (info.file.status === 'error') {
 				this.isUploading = false;
@@ -183,7 +199,7 @@ export default {
 					isBusy: false
 				});
 				Toast.fail('上传失败');
-				console.log(info);
+				console.error(info);
 			}
 		},
 		beforeUpload(file) {
@@ -198,17 +214,16 @@ export default {
 			this.uploadHeader["x-lpt-user-token"] = lpt.getCurUserToken();
 		},
 		saveUserInfo() {
-			const ref = this;
 			this.$refs.form.validate().then(() => {
-				if (ref.form.nick_name !== ref.oriUserName) {
+				if (this.form.nick_name !== this.oriUserName) {
 					// 修改用户名
 					lpt.userServ.updateUserName({
 						consumer: lpt.createConsumer(),
 						data: {
-							nick_name: ref.form.nick_name
+							nick_name: this.form.nick_name
 						},
 						success: () => {
-							ref.oriUserName = ref.form.nick_name;
+							this.oriUserName = this.form.nick_name;
 						},
 						fail(result) {
 							Toast.fail('用户名修改失败，失败原因:' + result.message);
@@ -216,10 +231,11 @@ export default {
 					});
 				}
 				return lpt.userServ.setInfo({
-					consumer: ref.lptConsumer,
-					data: ref.form,
-					success() {
+					consumer: this.lptConsumer,
+					data: this.form,
+					success: () => {
 						Toast.success('修改成功');
+						global.states.userManager.add(this.me.user);
 					},
 					fail(result) {
 						Toast.fail(result.message);

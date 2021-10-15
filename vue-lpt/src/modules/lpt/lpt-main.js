@@ -15,8 +15,9 @@ import globalDirectives from '@/lib/js/global/global-directives';
 import globalVariables from '@/lib/js/global/global-vars';
 import JsonViewer from 'vue3-json-viewer';
 import VMdPreview from '@kangc/v-md-editor/lib/preview';
-import '@kangc/v-md-editor/lib/style/preview.css';
 import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
+import '@kangc/v-md-editor/lib/style/preview.css';
+import '@kangc/v-md-editor/lib/theme/style/github.css';
 import global from "@/lib/js/global";
 
 // 设置rem单位的相对大小

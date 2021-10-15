@@ -3,6 +3,7 @@ package com.laputa.laputa_sns.right;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 /**
  * 帖子操作权限
@@ -12,6 +13,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@Accessors(chain = true)
 public class PostRight {
     /**
      * 是否有置顶评论的权限

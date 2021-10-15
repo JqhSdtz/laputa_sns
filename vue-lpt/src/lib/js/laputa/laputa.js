@@ -835,6 +835,7 @@ function _initLaputa(option) {
                     is_leaf: true
                 }
             },
+            groundCategoryId: 1,
             rootCategoryId: 1,
             setInfo: wrap(function (param) {
                 param.url = lpt.baseApiUrl + '/category/info';

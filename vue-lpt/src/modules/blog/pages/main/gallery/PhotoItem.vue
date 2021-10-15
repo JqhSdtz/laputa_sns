@@ -91,6 +91,7 @@ export default {
 		showPreview() {
 			if (typeof this.post.full_text_id === 'undefined') return;
 			this.showBottomBar = false;
+			this.post.noFullText = true;
 			if (!this.hasLoadedFullText) {
 				const promise = lpt.postServ.getFullText({
 					consumer: this.lptConsumer,
@@ -105,9 +106,9 @@ export default {
 						if (parts.length > 1) {
 							imgListStr = parts[parts.length - 1].trim();
 							this.post.customFullText = parts[0];
+							this.post.noFullText = false;
 						} else {
 							imgListStr = fullText;
-							this.post.noFullText = true;
 						}
 						const list = imgListStr.split('\n');
 						list.forEach((img) => {
