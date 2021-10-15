@@ -287,8 +287,7 @@ function _initLaputa(option) {
             // 要等到第一个ajax请求执行完后再执行后续请求
             // 防止需要更换token时，同时发出去多个ajax请求，导致token混乱
             if (firstAjax && !firstAjax.settled) {
-                firstAjax = firstAjax.then(() => lpt._ajax(param)).catch(() => {});
-                return firstAjax;
+                return firstAjax.then(() => lpt._ajax(param));
             } else {
                 const ajaxPromise = lpt._ajax(param);
                 if (!firstAjax) {

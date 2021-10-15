@@ -7,7 +7,8 @@
 		<post-list ref="postList" :category-id="category.id" :top-post-id="category.top_post_id"
 		           :sort-type="sortType" @loaded="onPostListLoaded"
 		           :custom-load-process="processImgLoad"
-		           :on-batch-processed="onBatchProcessed">
+		           :on-batch-processed="onBatchProcessed"
+				   style="padding-top: 0.35rem">
 			<template v-slot:default="sProps">
 				<a-row id="photo-container" type="flex" justify="space-around">
 					<a-col v-for="post in sProps.postList" :key="post.id">

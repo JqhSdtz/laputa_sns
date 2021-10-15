@@ -91,6 +91,7 @@ export default {
 								return Promise.reject('请输入用户名');
 							return lpt.userServ.checkName({
 								consumer: ref.lptConsumer,
+								throwError: true,
 								param: {
 									userName: value
 								}

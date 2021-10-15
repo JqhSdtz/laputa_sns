@@ -24,17 +24,17 @@
 		</li>
 		<li th:with="popularList = ${postService.readIndexPostList(queryPost, popular, operator).object}">
 			<ul th:each="post: ${popularList}">
-				<a th:href="@{'/blog/post_detail/' + ${post.id}}">
-					<h2 th:text="${post.title}"></h2>
-				</a>
+				<h2>
+					<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
+				</h2>
 				<p th:text="${post.content}"></p>
 			</ul>
 		</li>
 		<li th:with="latestList = ${postService.readIndexPostList(queryPost, latest, operator).object}">
 			<ul th:each="post: ${latestList}">
-				<a th:href="@{'/blog/post_detail/' + ${post.id}}">
-					<h2 th:text="${post.title}"></h2>
-				</a>
+				<h2>
+					<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
+				</h2>
 				<p th:text="${post.content}"></p>
 			</ul>
 		</li>

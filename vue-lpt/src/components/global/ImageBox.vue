@@ -267,7 +267,7 @@ export default defineComponent({
 
 .vue-lb-container {
 	align-items: center;
-	background-color: rgba(0, 0, 0, 0.75);
+	background-color: rgba(0, 0, 0, 0.5);
 	backdrop-filter: blur(20px);
 	box-sizing: border-box;
 	display: -ms-flexbox;
