@@ -108,6 +108,8 @@ export default {
 			});
 		}
 		this.checkQQLogin();
+	},
+	activated() {
 		if (this.lptContainer !== 'blogDrawer') {
 			global.methods.setTitle({
 				pageDesc: '我的'

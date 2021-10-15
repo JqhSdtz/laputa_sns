@@ -86,6 +86,8 @@ export default {
 		sortType(newValue) {
 			this.reset();
 			this.defaultQueryOption.param.queryType = newValue;
+			// 切换排序方式时先清空列表，防止原本就存在的元素位置异常
+			this.list.splice(0);
 			this.loadMore(true);
 		}
 	},

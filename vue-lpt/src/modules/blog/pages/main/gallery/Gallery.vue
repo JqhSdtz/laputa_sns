@@ -64,7 +64,6 @@ export default {
 	},
 	watch: {
 		sortType(value) {
-			this.curListArrange && this.curListArrange();
 			localStorage.setItem('sortTypeGallery', value);
 		}
 	},
@@ -81,11 +80,13 @@ export default {
 	},
 	created() {
 		this.imgLoadResolveMap = new Map();
-		global.methods.setTitle({
-			pageDesc: '相册'
-		});
 		window.addEventListener('resize', () => {
 			this.curListArrange && this.curListArrange();
+		});
+	},
+	activated() {
+		global.methods.setTitle({
+			pageDesc: '相册'
 		});
 	},
 	methods: {
@@ -96,6 +97,7 @@ export default {
 			this.postListLoaded = true;
 		},
 		processImgLoad(post) {
+			post.settled = false;
 			return new Promise(resolve => {
 				this.imgLoadResolveMap.set(post.id, resolve);
 			});
@@ -172,7 +174,7 @@ export default {
 					}
 					this.setRow(curRow, curActualHeight);
 				}
-			})
+			});
 		}
 	}
 }

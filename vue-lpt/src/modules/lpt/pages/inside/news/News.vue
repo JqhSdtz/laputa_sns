@@ -32,7 +32,7 @@ export default {
 			return mainViewHeight - barHeight + 'px';
 		}
 	},
-	created() {
+	activated() {
 		if (this.lptConsumer !== 'blogDrawer') {
 			global.methods.setTitle({
 				pageDesc: '动态'

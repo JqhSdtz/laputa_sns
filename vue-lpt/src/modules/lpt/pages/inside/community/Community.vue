@@ -92,17 +92,17 @@ export default {
 			this.recentVisitList = newList;
 		});
 		this.init();
-		if (this.lptContainer !== 'blogDrawer') {
-			global.methods.setTitle({
-				pageDesc: '社区'
-			});
-		}
 	},
 	activated() {
 		if (!this.hasActived) {
 			this.hasActived = true;
 		} else {
 			this.initRecentVisitList();
+		}
+		if (this.lptContainer !== 'blogDrawer') {
+			global.methods.setTitle({
+				pageDesc: '社区'
+			});
 		}
 	},
 	methods: {

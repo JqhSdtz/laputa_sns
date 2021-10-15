@@ -55,6 +55,8 @@ export default {
 			});
 		});
 		this.loadMore();
+	},
+	activated() {
 		if (this.lptConsumer !== 'blogDrawer') {
 			global.methods.setTitle({
 				pageDesc: '通知'
