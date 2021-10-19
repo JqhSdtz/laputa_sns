@@ -4,10 +4,10 @@
 		<div v-if="isShowFullText" class="content" :class="{'md-content': fullTextType === 'md'}">
 			<p v-if="fullTextType === 'normal'" style="margin-bottom: 0;">{{ fullText }}</p>
 			<admin-ops-record v-if="fullTextType === 'amOps' && payload" :payload="payload"/>
-			<v-md-preview v-if="fullTextType === 'md'" :text="fullText"/>
+			<v-md-preview ref="fullTextMd" v-if="fullTextType === 'md'" :text="fullText"/>
 		</div>
 		<div v-if="!isShowFullText" class="content" :class="{'md-content': contentType === 'md'}">
-			<v-md-preview v-if="contentType === 'md'" :text="postContent"/>
+			<v-md-preview ref="contentMd" v-if="contentType === 'md'" :text="postContent"/>
 			<ellipsis v-else :content="postContent" :rows="5"/>
 		</div>
 		<p v-if="hasFullText && !isShowFullText" class="full-text-btn" @click.stop="showFullTextFun">
@@ -42,6 +42,7 @@
 <script>
 import lpt from '@/lib/js/laputa/laputa';
 import global from '@/lib/js/global';
+import {translateMd} from '@/lib/js/markdown/md-translator';
 import CategoryPath from '@/components/category/CategoryPath';
 import {ImagePreview} from 'vant';
 import AdminOpsRecord from '@/components/post/item/parts/AdminOpsRecord';
@@ -174,6 +175,25 @@ export default {
 			} else {
 				this.postContent = this.post.customContent || this.post.content;
 			}
+			this.$nextTick(() => {
+				if (this.isShowFullText) {
+					if (this.fullTextType === 'md') {
+						const fullTextMd = this.$refs.fullTextMd;
+						translateMd({
+							el: fullTextMd.$el,
+							router: this.$router
+						});
+					}
+				} else {
+					if (this.contentType === 'md') {
+						const contentMd = this.$refs.contentMd;
+						translateMd({
+							el: contentMd.$el,
+							router: this.$router
+						});
+					}
+				}
+			});
 		},
 		processFullText(fullText) {
 			global.states.postManager.add({
@@ -278,5 +298,16 @@ export default {
 :global(.vue-lb-info) {
 	/*bottom: -20px !important;*/
 	display: none;
+}
+
+:global(.v-md-editor-preview .nav-b) {
+	display: flex;
+	justify-content: space-around;
+	width: 100%;
+}
+
+:global(.v-md-editor-preview .nav-i) {
+	font-size: 1.5rem;
+	font-weight: bold
 }
 </style>

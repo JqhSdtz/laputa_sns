@@ -81,7 +81,9 @@ export default {
 			});
 		},
 		closeCommentDetail() {
-			this.postDetailEvents.emit('closeCommentDetail');
+			if (this.postDetailEvents) {
+				this.postDetailEvents.emit('closeCommentDetail');
+			}
 		}
 	}
 }

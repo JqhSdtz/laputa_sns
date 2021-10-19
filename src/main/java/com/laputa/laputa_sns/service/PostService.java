@@ -159,6 +159,10 @@ public class PostService extends BaseService<PostDao, Post> {
                 return -1;
             post.setFullTextId(fullText.getId());
             post.setContent(post.getContent().substring(0, briefPostLengthLimit));
+        } else {
+            // 没有手动设置全文并且内容没超过长度限制，则没有全文，全文id设为空
+            // 主要是防止修改帖子内容的情况下内容改短后未解除原本的全文数据关系
+            post.setFullTextId(null);
         }
         return row;
     }

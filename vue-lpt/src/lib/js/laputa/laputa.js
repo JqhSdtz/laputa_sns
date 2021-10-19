@@ -728,7 +728,7 @@ function _initLaputa(option) {
                 return {
                     id: id,
                     ...defaultComment,
-                    poster_rep_cnt: undefined,
+                    poster_rep_cnt: 0,
                     post_id: undefined,
                     l2_cnt: 0
                 };

@@ -48,9 +48,11 @@ export default {
 	},
 	methods: {
 		openCommentDetail() {
-			this.postDetailEvents.emit('openCommentDetail', {
-				id: this.comment.id
-			});
+			if (this.postDetailEvents) {
+				this.postDetailEvents.emit('openCommentDetail', {
+					id: this.comment.id
+				});
+			}
 		}
 	}
 }

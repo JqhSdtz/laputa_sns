@@ -157,6 +157,7 @@ export default {
 						creator: global.states.curOperator.user,
 						content: this.commentInput,
 						create_time: new Date().getTime(),
+						like_cnt: 0,
 						rights: {
 							delete: true
 						}
@@ -166,6 +167,8 @@ export default {
 							// 当前打开了评论列表，且发出的评论是一级评论
 							// 则在评论列表中添加一条
 							comment.post_id = parentId;
+							comment.l2_cnt = 0;
+							comment.poster_rep_cnt = 0;
 							comment.entity_type = 'CML1';
 							global.states.commentL1Manager.add(comment);
 							++this.post.comment_cnt;

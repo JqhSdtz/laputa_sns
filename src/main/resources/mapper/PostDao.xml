@@ -168,11 +168,11 @@
 	<update id="updateContent" parameterType="com.laputa.laputa_sns.model.entity.Post">
 		update lpt_post
 		<set>
-			<if test="length != null">post_length = #{length},</if>
-			<if test="title != null">post_title = #{title},</if>
-			<if test="content != null">post_content = #{content},</if>
-			<if test="fullTextId != null">post_full_text_id = #{fullTextId},</if>
-			<if test="rawImg != null">post_raw_img = #{rawImg},</if>
+			post_length = #{length},
+			post_title = #{title},
+			post_content = #{content},
+			post_full_text_id = #{fullTextId},
+			post_raw_img = #{rawImg}
 		</set>
 		where post_id = #{id}
 	</update>

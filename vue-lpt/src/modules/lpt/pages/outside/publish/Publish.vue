@@ -4,7 +4,7 @@
 		                  cancel-text="取消" description="请选择上传方式"/>
 		<van-form ref="form" style="margin-top: 1.5rem">
 			<van-field :rules="rules.title" v-model="form.title" placeholder="输入标题（可选，最多20字符）"/>
-			<van-field  v-if="selectedCategory.rights.create_editable_post" :rules="rules.abstract"
+			<van-field :rules="rules.abstract"
 			            v-model="form.abstract" type="textarea" placeholder="输入摘要（可选，最多256字符）"
 			            :autosize="{minHeight: 100}"/>
 			<van-field :rules="rules.content" v-model="form.content" type="textarea" placeholder="输入内容（必填，最多100000字符）"
@@ -21,7 +21,7 @@
 					<van-switch v-model="form.editable" :disabled="opType !== 'create'" size="24"/>
 				</template>
 			</van-cell>
-			<van-cell v-if="selectedCategory.rights.create_editable_post" center title="是否使用MarkDown">
+			<van-cell center title="是否使用MarkDown">
 				<template #right-icon>
 					<van-switch v-model="form.useMarkDown" size="24" @change="onUseMarkDownChange"/>
 				</template>
@@ -175,7 +175,17 @@ export default {
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 		this.imgUrlMap = new Map();
-		this.onActivated();
+		if (this.lptContainer !== 'blogDrawer') {
+			this.onActivated();
+		}
+		global.events.on('showDrawer', () => {
+			// blog环境下，从外部打开drawer中的publish页面，不会触发$route的监听
+			// 所以采用全局事件系统解决该问题
+			const routeName = this.$route.name;
+			if (routeName === 'publish' || routeName.indexOf('_publish') > 0) {
+				this.onActivated();
+			}
+		});
 	},
 	methods: {
 		onActivated() {
@@ -288,8 +298,12 @@ export default {
 				success: (post) => {
 					this.form.isPublic = post.type_str === 'public';
 					this.selectedCategoryPathText = lpt.categoryServ.getPathStr(post.category_path);
-					this.selectedCategory = global.states.categoryManager.get({
-						itemId: post.category_id
+					global.states.categoryManager.get({
+						itemId: post.category_id,
+						filter: res => res.rights && typeof res.rights.this_level !== 'undefined',
+						success: (category) => {
+							this.selectedCategory = category;
+						}
 					});
 					this.form.editable = post.editable;
 					this.form.title = post.title;
@@ -421,6 +435,9 @@ export default {
 								edit: this.form.editable
 							};
 							data.id = result.object;
+							data.like_cnt = 0;
+							data.comment_cnt = 0;
+							data.forward_cnt = 0;
 							const post = global.states.postManager.add(data);
 							global.events.emit('createPost', post);
 						} else if (this.opType === 'edit') {

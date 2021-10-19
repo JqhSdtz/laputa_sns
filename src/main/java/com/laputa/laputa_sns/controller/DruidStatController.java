@@ -3,6 +3,8 @@ package com.laputa.laputa_sns.controller;
 import com.alibaba.druid.stat.DruidStatManagerFacade;
 import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.model.entity.Operator;
+import com.laputa.laputa_sns.service.CategoryService;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +25,7 @@ public class DruidStatController {
     @GetMapping("/stat")
     public Result druidStat(@RequestAttribute Operator operator){
         Map permissionMap = operator.getPermissionMap();
-        Integer rootPermLevel  = permissionMap == null ? null : (Integer) permissionMap.get(0);
+        Integer rootPermLevel  = permissionMap == null ? null : (Integer) permissionMap.get(CategoryService.GROUND_ID);
         if (rootPermLevel == null || rootPermLevel != 99)
             return Result.EMPTY_FAIL;
         // DruidStatManagerFacade#getDataSourceStatDataList 该方法可以获取所有数据源的监控数据，

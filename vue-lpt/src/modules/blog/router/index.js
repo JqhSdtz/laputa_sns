@@ -1,4 +1,5 @@
 import {processRouters} from '@/lib/js/router/util';
+import {nextTick} from 'vue';
 import lpt from '@/lib/js/laputa/laputa';
 import SignIn from '@/modules/lpt/pages/outside/sign/SignIn';
 import SignUp from '@/modules/lpt/pages/outside/sign/SignUp';
@@ -334,6 +335,12 @@ function initRouter() {
         }
     });
     router.beforeEach(res.titleKeeper);
+    router.afterEach((to, from) => {
+        if (global.states.blog.showDrawer) {
+            // drawer弹出并且路由已经改变完成后，触发全局的showDrawer事件
+            nextTick(() => global.events.emit('showDrawer'));
+        }
+    });
     return;
 }
 
