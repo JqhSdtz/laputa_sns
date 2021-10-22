@@ -183,7 +183,8 @@ const postManager = initItemManager({
         if (item.creator) {
             userManager.add(item.creator);
         }
-        if (item.category_path) {
+        const path = item.category_path;
+        if (path && path.length > 0 && parseInt(path[0].id) == parseInt(item.category_id) ) {
             item.category_path.reverse();
         }
         if (typeof item.ori_post === 'object') {

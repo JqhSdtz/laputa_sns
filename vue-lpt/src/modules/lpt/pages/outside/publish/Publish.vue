@@ -363,29 +363,19 @@ export default {
 			return str && str.length >= 6 && str.substring(0, 6) === 'tp:md#';
 		},
 		checkInputContent() {
-			if (this.form.abstract) {
-				this.form.useMarkDown = this.checkIsTpMd(this.form.abstract);
-			} else {
-				this.form.useMarkDown = this.checkIsTpMd(this.form.content);
-			}
+			this.form.useMarkDown = this.checkIsTpMd(this.form.abstract) || this.checkIsTpMd(this.form.content);
 		},
 		onUseMarkDownChange(value) {
-			if (this.form.abstract) {
-				if (value) {
-					if (!this.checkIsTpMd(this.form.abstract))
-						this.form.abstract = 'tp:md#' + this.form.abstract;
-				} else {
-					if (this.checkIsTpMd(this.form.abstract))
-						this.form.abstract = this.form.abstract.substring(6);
-				}
+			if (value) {
+				if (this.form.abstract && !this.checkIsTpMd(this.form.abstract))
+					this.form.abstract = 'tp:md#' + this.form.abstract;
+				if (this.form.content && !this.checkIsTpMd(this.form.content))
+					this.form.content = 'tp:md#' + this.form.content;
 			} else {
-				if (value) {
-					if (!this.checkIsTpMd(this.form.content))
-						this.form.content = 'tp:md#' + this.form.content;
-				} else {
-					if (this.checkIsTpMd(this.form.content))
-						this.form.content = this.form.content.substring(6);
-				}
+				if (this.checkIsTpMd(this.form.abstract))
+					this.form.abstract = this.form.abstract.substring(6);
+				if (this.checkIsTpMd(this.form.content))
+					this.form.content = this.form.content.substring(6);
 			}
 		},
 		onSubmit() {

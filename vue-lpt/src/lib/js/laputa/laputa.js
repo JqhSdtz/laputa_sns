@@ -40,6 +40,8 @@ function _initLaputa(option) {
     // 配置vue的proxy时需要使用相对地址，部署后也使用相对地址即可
     lpt.remoteUrl = '';
     lpt.imgBaseUrl = 'https://img.jqh.zone/';
+    // token过期时间是30分钟，单位毫秒
+    lpt.tokenTimeout = 30 * 60 * 1000;
 
     lpt.loadOption = function (_option) {
         Object.assign(lpt, _option);
@@ -282,7 +284,7 @@ function _initLaputa(option) {
             }
         }
 
-        let firstAjax;
+        let firstAjax, lastAjaxTimestamp;
         lpt.ajax = function (param) {
             // 要等到第一个ajax请求执行完后再执行后续请求
             // 防止需要更换token时，同时发出去多个ajax请求，导致token混乱
@@ -290,7 +292,9 @@ function _initLaputa(option) {
                 return firstAjax.then(() => lpt._ajax(param));
             } else {
                 const ajaxPromise = lpt._ajax(param);
-                if (!firstAjax) {
+                const curTimestamp = new Date().getTime();
+                if (!firstAjax || curTimestamp - lastAjaxTimestamp > lpt.tokenTimeout) {
+                    // 页面加载后第一个请求，或者距上一个请求时间大于token过期时间，也视为第一个请求
                     firstAjax = ajaxPromise;
                 }
                 return ajaxPromise;
@@ -349,6 +353,7 @@ function _initLaputa(option) {
                     param.complete(result);
                 changeBusy(param, false);
                 consumer.setLastData(dataStr);
+                lastAjaxTimestamp = new Date().getTime();
             }
 
             const promise = axios({

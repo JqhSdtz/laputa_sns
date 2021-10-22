@@ -102,7 +102,6 @@ export default {
 }
 
 .top-bar .time {
-	margin-left: 0.15rem;
 	font-size: 0.65rem;
 }
 

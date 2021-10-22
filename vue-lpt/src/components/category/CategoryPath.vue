@@ -2,7 +2,7 @@
 	<div style="word-wrap:break-word;">
 		<span v-for="(path, idx) in pathList" :key="path.id">
 			<span v-if="idx !== 0">/</span>
-			<span @click="showCategoryDetail(path)">{{ path.name }}</span>
+			<span class="path-item" @click="showCategoryDetail(path)">{{ path.name }}</span>
 		</span>
 	</div>
 </template>
@@ -29,5 +29,11 @@ export default {
 </script>
 
 <style scoped>
+.path-item {
+	cursor: pointer;
+}
 
+.path-item:hover {
+	text-decoration: underline
+}
 </style>
