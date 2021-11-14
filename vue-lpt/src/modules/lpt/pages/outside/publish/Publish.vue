@@ -154,10 +154,16 @@ export default {
 		$route(route) {
 			if (route.name === 'publish') this.onActivated();
 		},
-		'form.abstract'() {
+		'form.abstract'(newValue, oldValue) {
+			if (!oldValue && !this.checkIsTpMd(newValue) && this.form.useMarkDown) {
+				this.form.abstract = 'tp:md#' + this.form.abstract;
+			}
 			this.checkInputContent();
 		},
-		'form.content'() {
+		'form.content'(newValue, oldValue) {
+			if (!oldValue && !this.checkIsTpMd(newValue) && this.form.useMarkDown) {
+				this.form.content = 'tp:md#' + this.form.content;
+			}
 			this.checkInputContent();
 		}
 	},

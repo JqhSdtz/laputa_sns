@@ -2,6 +2,8 @@
 	<div>
 		<van-action-sheet v-model:show="showCommentPanel" title="发表评论"
 		                  :overlay="overlay" :style="panelStyle">
+			<div style="position: absolute;right: 3rem;font-size: 1rem;opacity: 0.5;top: 0;line-height: 48px;" 
+				 v-text="'可输入' + (250 - (commentInput ? commentInput.length : 0)) + '字'"></div>
 			<div ref="commentPanel" class="ant-input-group-wrapper panels">
 				<div class="ant-input-wrapper ant-input-group comment-input-wrapper"
 				     style="width: 95%; margin-left: 2.5%;">
@@ -16,6 +18,8 @@
 		</van-action-sheet>
 		<van-action-sheet v-model:show="showForwardPanel" title="转发帖子"
 		                  :overlay="overlay" :style="panelStyle">
+			<div style="position: absolute;right: 3rem;font-size: 1rem;opacity: 0.5;top: 0;line-height: 48px;" 
+				 v-text="'可输入' + (250 - (forwardInput ? forwardInput.length : 0)) + '字'"></div>
 			<div ref="forwardPanel" class="panels forward-panel">
 				<div class="ant-input-wrapper ant-input-group forward-input-wrapper"
 				     style="width: 95%; margin-left: 2.5%;">

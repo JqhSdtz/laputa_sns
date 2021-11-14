@@ -5,7 +5,8 @@
 		</div>
 		<div class="time-and-name" style="display: inline-block; float: left">
 			<p class="name" @click="showUserHomePage">{{ post.creator.nick_name }}</p>
-			<p v-if="typeof post.create_time !== 'undefined'" class="time">{{ beforeTime }}</p>
+			<p v-if="typeof post.create_time !== 'undefined'" class="time"
+				@click="onTimeClick">{{ beforeTime }}</p>
 		</div>
 		<div v-if="isTopPost" class="topped-tag" style="display: inline-block; float: left">
 			<van-tag  type="primary">
@@ -20,6 +21,7 @@ import lpt from '@/lib/js/laputa/laputa';
 import TimeAgo from 'javascript-time-ago';
 import zh from 'javascript-time-ago/locale/zh';
 import global from "@/lib/js/global";
+import moment from 'moment';
 
 TimeAgo.addLocale(zh);
 const timeAgo = new TimeAgo('zh-CN');
@@ -35,7 +37,8 @@ export default {
 			itemId: this.postId
 		});
 		return {
-			post: post
+			post: post,
+			showTimeAgo: global.states.showTimeAgo
 		}
 	},
 	computed: {
@@ -48,7 +51,11 @@ export default {
 		},
 		beforeTime() {
 			if (this.post.create_time) {
-				return timeAgo.format(this.post.create_time);
+				if (this.showTimeAgo) {
+					return timeAgo.format(this.post.create_time);
+				} else {
+					return moment(this.post.create_time).format('YYYY年MM月DD日 HH:mm:ss');
+				}
 			} else {
 				return '';
 			}
@@ -59,6 +66,9 @@ export default {
 			this.$router.push({
 				path: '/user_home_page/' + this.post.creator.id
 			});
+		},
+		onTimeClick() {
+			this.showTimeAgo = !this.showTimeAgo;
 		}
 	}
 }
@@ -97,6 +107,11 @@ export default {
 
 .top-bar .time {
 	font-size: 0.75rem;
+	cursor: pointer;
+}
+
+.top-bar .time:hover {
+	text-decoration: underline;
 }
 
 .topped-tag {

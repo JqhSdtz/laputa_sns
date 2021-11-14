@@ -289,6 +289,9 @@ function initRouter() {
         } else if (isRouterBack && !global.states.blog.showDrawer) {
             // 当前是主页面回退，要回到上一个主页面
             if (blogMainHistoryStack.length <= 1) {
+                if (blogMainHistoryStack.length > 0) {
+                    blogMainHistoryStack.pop();
+                }
                 next();
             } else {
                 blogMainHistoryStack.pop();

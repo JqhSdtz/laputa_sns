@@ -19,6 +19,8 @@ import VMdPreview from '@kangc/v-md-editor/lib/preview';
 import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
 import '@kangc/v-md-editor/lib/style/preview.css';
 import '@kangc/v-md-editor/lib/theme/style/github.css';
+import markdownItKatex from 'markdown-it-katex';
+import 'markdown-it-katex/node_modules/katex/dist/katex.min.css';
 
 // 设置rem单位的相对大小
 remHelper.initRem({
@@ -35,7 +37,11 @@ const app = createApp(BlogApp);
 initRouter();
 app.use(router);
 app.use(JsonViewer);
-VMdPreview.use(githubTheme);
+VMdPreview.use(githubTheme, {
+    extend(md) {
+        md.use(markdownItKatex);
+    }
+});
 app.use(VMdPreview);
 
 const antdUseList = [ConfigProvider, Button, Row, Col, Spin, Form, Input, Badge, BackTop,

@@ -6,7 +6,8 @@
 		</div>
 		<div class="time-and-name" style="display: inline-block; float: left">
 			<p class="name" @click="showUserHomePage" style="display: inline-block">{{ comment.creator.nick_name }}</p>
-			<p v-if="typeof comment.create_time !== 'undefined'" class="time">{{ beforeTime }}</p>
+			<p v-if="typeof comment.create_time !== 'undefined'" class="time"
+				@click="onTimeClick">{{ beforeTime }}</p>
 		</div>
 		<div v-if="comment.creator.id === posterId" class="poster-tag"
 		     style="display: inline-block; float: left; margin-left: 0.5rem">
@@ -27,6 +28,7 @@ import lpt from "@/lib/js/laputa/laputa";
 import TimeAgo from "javascript-time-ago";
 import zh from 'javascript-time-ago/locale/zh';
 import global from "@/lib/js/global";
+import moment from 'moment';
 
 TimeAgo.addLocale(zh);
 const timeAgo = new TimeAgo('zh-CN');
@@ -35,6 +37,11 @@ export default {
 	name: 'TopBar',
 	props: {
 		comment: Object
+	},
+	data() {
+		return {
+			showTimeAgo: global.states.showTimeAgo
+		}
 	},
 	computed: {
 		posterId() {
@@ -52,7 +59,11 @@ export default {
 		},
 		beforeTime() {
 			if (this.comment.create_time) {
-				return timeAgo.format(this.comment.create_time);
+				if (this.showTimeAgo) {
+					return timeAgo.format(this.comment.create_time);
+				} else {
+					return moment(this.comment.create_time).format('YYYY年MM月DD日 HH:mm:ss');
+				}
 			} else {
 				return '';
 			}
@@ -63,6 +74,9 @@ export default {
 			this.$router.push({
 				path: '/user_home_page/' + this.comment.creator.id
 			});
+		},
+		onTimeClick() {
+			this.showTimeAgo = !this.showTimeAgo;
 		}
 	}
 }
@@ -103,6 +117,11 @@ export default {
 
 .top-bar .time {
 	font-size: 0.65rem;
+	cursor: pointer;
+}
+
+.top-bar .time:hover {
+	text-decoration: underline;
 }
 
 .topped-tag {

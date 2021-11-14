@@ -1,5 +1,5 @@
 export default {
-  title: 'J\'s Zone',
+  title: '写博客的小姜',
   rootCategoryId: 109,
   galleryCategoryId: 110,
   // backgroundImage: `url('/static/blog/cover.jpg')`,

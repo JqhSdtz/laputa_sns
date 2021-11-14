@@ -10,6 +10,7 @@ import {Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell
     Popover as VPopOver, Dialog, Image as VanImage, Uploader, Form as VanForm, Field, Cascader,
     Button as VanButton, Popup, Switch, Search, Checkbox, Grid, GridItem, DatetimePicker} from 'vant';
 import remHelper from '@/lib/js/uitls/rem-helper';
+import global from "@/lib/js/global";
 import globalMixins from '@/lib/js/global/global-mixins';
 import globalDirectives from '@/lib/js/global/global-directives';
 import globalVariables from '@/lib/js/global/global-vars';
@@ -18,7 +19,8 @@ import VMdPreview from '@kangc/v-md-editor/lib/preview';
 import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
 import '@kangc/v-md-editor/lib/style/preview.css';
 import '@kangc/v-md-editor/lib/theme/style/github.css';
-import global from "@/lib/js/global";
+import markdownItKatex from 'markdown-it-katex';
+import 'markdown-it-katex/node_modules/katex/dist/katex.min.css';
 
 // 设置rem单位的相对大小
 remHelper.initRem({
@@ -31,7 +33,11 @@ const app = createApp(LptApp);
 
 app.use(router);
 app.use(JsonViewer);
-VMdPreview.use(githubTheme);
+VMdPreview.use(githubTheme, {
+    extend(md) {
+        md.use(markdownItKatex);
+    }
+});
 app.use(VMdPreview);
 
 const antdUseList = [Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload,

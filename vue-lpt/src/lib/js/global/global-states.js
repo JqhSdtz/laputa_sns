@@ -252,6 +252,9 @@ const states = {
     curOperator: wrap({
         default: lpt.operatorServ.getCurrent()
     }),
+    showTimeAgo: wrap({
+        default: true
+    }),
     style: wrap({
         default: {
             drawerWidth: document.body.clientWidth,

@@ -10,11 +10,11 @@
 					<meta th:if="${categoryStat.last}" name="keywords" th:attr="Content=${keywords}">
 				</th:block>
 			</th:block>
-			<title th:utext="|${post.title}-${post.categoryPath[0].name}-J's Zone|"></title>
+			<title th:utext="|${post.title}-${post.categoryPath[0].name}-写博客的小姜|"></title>
 		</head>
 		<body>
 			<h1 th:text="${post.title}"></h1>
-			<div th:text="${post.fullText}"></div>
+			<div th:text="${post.fullText == null ? post.content : post.fullText}"></div>
 		</body>
 	</th:block>
 </html>
