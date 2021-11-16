@@ -113,10 +113,10 @@ export default {
 					offsetX += elem.offsetWidth / 2 - 50;
 					offsetY += elem.offsetHeight / 2;
 					if (ballPos.x > document.body.clientWidth / 2) {
-						// 悬浮球在页面左边
+						// 悬浮球在页面右边
 						elem.style.left = ballPos.x - offsetX + 'px';
 					} else {
-						// 悬浮球在页面右边
+						// 悬浮球在页面左边
 						elem.style.left = ballPos.x + offsetX + 'px';
 					}
 					elem.style.top = ballPos.y - offsetY + 'px';
