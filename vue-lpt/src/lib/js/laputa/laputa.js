@@ -801,7 +801,14 @@ function _initLaputa(option) {
             create_editable_post: 1
         };
 
+        const type = {
+            common: 0,
+            private: 1,
+            defSub: 2
+        };
+
         const serv = {
+            type: type,
             setAdminRights: function (category) {
                 if (!category.rights)
                     return;

@@ -15,8 +15,10 @@
 			</template>
 			<transition name="van-fade">
 				<a-button class="sort-type-btn" v-show="showSortTypeSelector"
-				          :style="{top: offset, right: offsetRight, ...buttonStyle}"
-				          style="font-size: 0.9rem">
+				          :style="defButtonStyle"
+				          style="font-size: 0.9rem"
+						  @mouseenter="onSortTypeButtonMouseEnter"
+						  @mouseleave="onSortTypeButtonMouseLeave">
 					<ordered-list-outlined/>
 					<span style="margin-left: 0.5rem">
 						<span v-if="sortType === 'popular'">热门</span>
@@ -56,12 +58,28 @@ export default {
 			type: String,
 			default: '4.5rem'
 		},
+		position: {
+			type: String,
+			default: 'inside'
+		},
 		sortType: String
 	},
 	emits: ['update:sortType'],
 	data() {
+		const tmpButtonStyle = {};
+		if (this.position === 'left') {
+			tmpButtonStyle.left = '2%';
+			tmpButtonStyle.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+			tmpButtonStyle.border = 'none';
+		} else {
+			tmpButtonStyle.right = '1rem';
+		}
 		return {
-			offsetRight: this.lptContainer === 'blogMain' ? '11%' : '1rem',
+			defButtonStyle: {
+				top: this.offset,
+				...tmpButtonStyle,
+				...this.buttonStyle
+			},
 			showSortTypeSelector: true,
 			showPopover: false
 		}
@@ -90,6 +108,18 @@ export default {
 		},
 		getPopBtnType(sortType) {
 			return this.sortType === sortType ? 'primary' : 'default';
+		},
+		onSortTypeButtonMouseEnter(event) {
+			const elem = event.target;
+			if (this.lptContainer === 'blogMain') {
+				elem.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+			}
+		},
+		onSortTypeButtonMouseLeave(event) {
+			const elem = event.target;
+			if (this.lptContainer === 'blogMain') {
+				elem.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+			}
 		}
 	}
 }
@@ -108,8 +138,8 @@ export default {
 }
 
 .sort-type-btn {
+	font-size: 0.9rem;
 	position: fixed;
-	background-color: white;
 	z-index: 2;
 }
 </style>

@@ -1,8 +1,7 @@
 <template>
 	<div class="main-area" :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
 	     :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top v-scroll-view>
-		<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType"
-		                    :button-style="{right: '2%'}"/>
+		<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType" position="left"/>
 		<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px'}" :target="getElement"/>
 		<post-list ref="postList" :category-id="category.id" :top-post-id="category.top_post_id"
 		           :sort-type="sortType" @loaded="onPostListLoaded"

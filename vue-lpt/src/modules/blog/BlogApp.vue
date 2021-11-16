@@ -29,6 +29,7 @@
 		                style="position: fixed; bottom: 50%; left: 0; font-size: 2rem; z-index: 1001"
 		                @click="onDrawerSwitcherClick" @mouseenter="onDrawerSwitcherMouseEnter" @mouseleave="onDrawerSwitcherMouseLeave"/>
 		<float-menu id="main-bar"/>
+		<fixed-menu/>
 		<prompt-dialog ref="prompt"/>
 	</a-config-provider>
 </template>
@@ -40,7 +41,8 @@ import {Modal} from 'ant-design-vue';
 import {
 	RightOutlined
 } from '@ant-design/icons-vue';
-import FloatMenu from '@/modules/blog/components/menu/FloatMenu';
+import FloatMenu from '@/modules/blog/components/menu/float/FloatMenu';
+import FixedMenu from '@/modules/blog/components/menu/fixed/FixedMenu';
 import MainContainer from '@/modules/blog/components/container/MainContainer';
 import DrawerContainer from '@/modules/blog/components/container/DrawerContainer';
 import LoadingArea from '@/components/global/LoadingArea';
@@ -54,6 +56,7 @@ export default {
 	name: 'App',
 	components: {
 		FloatMenu,
+		FixedMenu,
 		LoadingArea,
 		PromptDialog,
 		MainContainer,

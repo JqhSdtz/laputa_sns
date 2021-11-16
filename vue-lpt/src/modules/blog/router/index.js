@@ -181,12 +181,22 @@ function initRouter() {
             component: Categories
         }
     ];
-    let curBlogPath = '/blog/index/' + lpt.categoryServ.rootCategoryId;
-    let curDrawerPath = '/home/mine';
+
+    let blogMainHistoryStack = ['/blog/index/' + lpt.categoryServ.rootCategoryId];
+    let blogDrawerHistoryStack = ['/home/mine'];
+
+    function getCurDrawerPath() {
+        return blogDrawerHistoryStack[blogDrawerHistoryStack.length - 1];
+    }
+
+    function getCurMainPath() {
+        return blogMainHistoryStack[blogMainHistoryStack.length - 1];
+    }
+
     const mainRouters = [
         {
             path: '/',
-            redirect: curBlogPath + curDrawerPath
+            redirect: getCurMainPath() + getCurDrawerPath()
         },
         {
             path: '/blog/index/:blogCategoryId',
@@ -282,46 +292,62 @@ function initRouter() {
         return oriFun.apply(router, arguments);
     }
 
-    let blogMainHistoryStack = [];
     router.beforeEach((to, from, next) => {
         if (to.meta.checkSign && !global.methods.checkSign()) {
             return;
-        } else if (isRouterBack && !global.states.blog.showDrawer) {
-            // 当前是主页面回退，要回到上一个主页面
-            if (blogMainHistoryStack.length <= 1) {
-                if (blogMainHistoryStack.length > 0) {
-                    blogMainHistoryStack.pop();
+        } else if (isRouterBack) {
+            if (global.states.blog.showDrawer) {
+                // 当前是drawer的回退，主页面保持不动
+                if (blogDrawerHistoryStack.length > 1) {
+                    blogDrawerHistoryStack.pop();
                 }
-                next();
-            } else {
-                blogMainHistoryStack.pop();
-                const preMainPath = blogMainHistoryStack[blogMainHistoryStack.length - 1];
                 const newTo = {
-                    path: preMainPath + curDrawerPath,
+                    path: getCurMainPath() + getCurDrawerPath(),
                     query: to.query,
                     params: to.params
                 }
                 next(newTo);
+            } else {
+                // 当前是主页面回退，要回到上一个主页面
+                if (blogMainHistoryStack.length <= 1) {
+                    next();
+                } else {
+                    blogMainHistoryStack.pop();
+                    const newTo = {
+                        path: getCurMainPath() + getCurDrawerPath(),
+                        query: to.query,
+                        params: to.params
+                    }
+                    next(newTo);
+                }
             }
             isRouterBack = false;
         } else if (to.meta.combined) {
             const execRes = to.meta.mainPathReg.exec(to.path);
             if (execRes.length > 1) {
-                curBlogPath = execRes[1];
-                // 主页面历史堆栈为空，则是直接从组合路径进入，此时要向主页面历史堆栈推入当前主页面路径
-                if (blogMainHistoryStack.length === 0) blogMainHistoryStack.push(curBlogPath);
+                const tmpMainPath = execRes[1];
+                if (getCurMainPath() !== tmpMainPath) {
+                    blogMainHistoryStack.push(tmpMainPath);
+                }
             }
             const mainPathPropNum = to.meta.mainPathPropNum || 0;
             const drawerPathPos = 2 + mainPathPropNum;
-            if (execRes.length > drawerPathPos) curDrawerPath = execRes[drawerPathPos];
+            if (execRes.length > drawerPathPos) {
+                const tmpDrawerPath = execRes[drawerPathPos];
+                if (getCurDrawerPath() !== tmpDrawerPath) {
+                    blogDrawerHistoryStack.push(tmpDrawerPath);
+                }
+            }
             next();
             isRouterBack = true;
         } else if (to.meta.isMain) {
-            curBlogPath = to.path;
-            blogMainHistoryStack.push(curBlogPath);
-            if (curDrawerPath) {
+            const tmpMainPath = to.path;
+            if (getCurMainPath() !== tmpMainPath) {
+                blogMainHistoryStack.push(tmpMainPath);
+            }
+            if (blogDrawerHistoryStack.length > 0) {
                 next({
-                    path: curBlogPath + curDrawerPath,
+                    path: getCurMainPath() + getCurDrawerPath(),
                     query: to.query,
                     params: to.params
                 });
@@ -330,7 +356,7 @@ function initRouter() {
             }
         } else if (to.meta.isDrawer) {
             next({
-                path: curBlogPath + to.path,
+                path: getCurMainPath() + to.path,
                 query: to.query,
                 params: to.params
             });

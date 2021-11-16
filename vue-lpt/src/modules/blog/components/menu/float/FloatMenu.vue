@@ -112,7 +112,13 @@ export default {
 					// 额外减去50，让菜单和悬浮球靠的更近些
 					offsetX += elem.offsetWidth / 2 - 50;
 					offsetY += elem.offsetHeight / 2;
-					elem.style.left = ballPos.x - offsetX + 'px';
+					if (ballPos.x > document.body.clientWidth / 2) {
+						// 悬浮球在页面左边
+						elem.style.left = ballPos.x - offsetX + 'px';
+					} else {
+						// 悬浮球在页面右边
+						elem.style.left = ballPos.x + offsetX + 'px';
+					}
 					elem.style.top = ballPos.y - offsetY + 'px';
 					curDegree += degreeDiff;
 				});
@@ -131,8 +137,8 @@ export default {
 	/* 不要使用translate实现悬浮球居中，
 		否则会导致悬浮球位置计算错误 */
 	position: fixed;
-	bottom: 50%;
-	right: 0;
+	bottom: 40%;
+	left: 5%;
 	height: 2.75rem;
 	width: 2.75rem;
 }

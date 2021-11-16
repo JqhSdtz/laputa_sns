@@ -87,7 +87,13 @@ function initItemManager(param) {
             }
         } else {
             if (res.promise && !res.promise.settled) {
-                promise = res.promise;
+                promise = res.promise.then((item) => {
+                    getParam.success && getParam.success(item);
+                    return Promise.resolve(item);
+                }).catch((error) => {
+                    getParam.fail && getParam.fail(error);
+                    if (getParam.getPromise) return Promise.reject(error);
+                });
             } else if (getParam.filter && !getParam.filter(res)) {
                 promise = doRequest();
             } else {

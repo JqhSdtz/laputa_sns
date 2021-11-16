@@ -8,7 +8,8 @@
 					<van-checkbox v-model="enableBoolMode" style="font-size: 0.9rem">多关键字</van-checkbox>
 				</template>
 			</van-search>
-			<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType"/>
+			<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType" 
+				:position="lptContainer === 'blogMain' ? 'left' : 'inside'"/>
 			<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px'}" :target="getElement"/>
 			<post-list ref="postList" :category-id="category.id" :top-post-id="category.top_post_id"
 			           :sort-type="sortType" @loaded="onPostListLoaded"/>
