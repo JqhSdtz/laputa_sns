@@ -66,7 +66,6 @@ export default {
         },
 		onCloseIconClick(index) {
 			this.tabItems.splice(index, 1);
-			console.log(this.tabItems)
 		}
 	},
 };
