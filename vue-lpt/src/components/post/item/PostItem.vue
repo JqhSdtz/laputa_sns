@@ -48,7 +48,12 @@ export default {
 	background-color: white;
 	margin-bottom: 1rem;
 }
+
 .content-area {
 	margin-top: 0.5rem;
+}
+
+.bottom-bar {
+	z-index: 2;
 }
 </style>

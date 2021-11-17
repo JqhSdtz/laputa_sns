@@ -112,7 +112,8 @@ export default {
 	activated() {
 		if (this.lptContainer !== 'blogDrawer') {
 			global.methods.setTitle({
-				pageDesc: '我的'
+				pageDesc: '我的',
+				route: this.$route
 			});
 		}
 	},

@@ -86,7 +86,8 @@ export default {
 	},
 	activated() {
 		global.methods.setTitle({
-			pageDesc: '相册'
+			pageDesc: '相册',
+			route: this.$route
 		});
 	},
 	methods: {

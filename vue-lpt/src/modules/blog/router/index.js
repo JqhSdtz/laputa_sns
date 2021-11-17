@@ -1,6 +1,8 @@
 import {processRouters} from '@/lib/js/router/util';
 import {nextTick} from 'vue';
 import lpt from '@/lib/js/laputa/laputa';
+import global from "@/lib/js/global";
+import pathToRegexp from 'path-to-regexp';
 import SignIn from '@/modules/lpt/pages/outside/sign/SignIn';
 import SignUp from '@/modules/lpt/pages/outside/sign/SignUp';
 import Mine from "@/modules/lpt/pages/inside/mine/Mine";
@@ -20,8 +22,6 @@ import PermissionList from "@/modules/lpt/pages/outside/user/PermissionList";
 import CategoryAdminList from "@/modules/lpt/pages/outside/category/CategoryAdminList";
 import DruidStat from "@/modules/lpt/pages/outside/DruidStat";
 import Index from "@/modules/lpt/pages/inside/index/Index";
-import global from "@/lib/js/global";
-import pathToRegexp from 'path-to-regexp';
 import Categories from "@/modules/blog/pages/drawer/category/Categories";
 import LptQrCode from "@/modules/lpt/pages/inside/mine/LptQrCode";
 import Report from "@/modules/lpt/pages/outside/report/Report";
@@ -329,6 +329,8 @@ function initRouter() {
                 if (getCurMainPath() !== tmpMainPath) {
                     blogMainHistoryStack.push(tmpMainPath);
                 }
+                to.meta.fullMainPath = tmpMainPath;
+                global.events.emit('blogMainRoute', tmpMainPath);
             }
             const mainPathPropNum = to.meta.mainPathPropNum || 0;
             const drawerPathPos = 2 + mainPathPropNum;

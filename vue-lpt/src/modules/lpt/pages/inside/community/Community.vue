@@ -101,7 +101,8 @@ export default {
 		}
 		if (this.lptContainer !== 'blogDrawer') {
 			global.methods.setTitle({
-				pageDesc: '社区'
+				pageDesc: '社区',
+				route: this.$route
 			});
 		}
 	},

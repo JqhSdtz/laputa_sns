@@ -1,15 +1,17 @@
 <template>
 	<div id="menu-container">
-		<div class="menu-item" v-for="menuItem in menuItems" 
-			:key="menuItem.type + (menuItem.id || '')"
-			@mouseenter="onMenuItemMouseEnter($event, menuItem)"
-			@mouseleave="onMenuItemMouseLeave($event, menuItem)"
-			@click="onMenuItemClick(menuItem)">
-			<p class="menu-title">
-				<span class="menu-name" v-text="menuItem.name"></span>
-			</p>
-			<div class="menu-bar"></div>
-			<div v-if="menuItem.separator" class="menu-separator"></div>
+		<div id="menu-container-inner">
+			<div class="menu-item" v-for="menuItem in menuItems" 
+				:key="menuItem.type + (menuItem.id || '')"
+				@mouseenter="onMenuItemMouseEnter($event, menuItem)"
+				@mouseleave="onMenuItemMouseLeave($event, menuItem)"
+				@click="onMenuItemClick(menuItem)">
+				<p class="menu-title">
+					<span class="menu-name" v-text="menuItem.name"></span>
+				</p>
+				<div class="menu-bar"></div>
+				<div v-if="menuItem.separator" class="menu-separator"></div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -17,11 +19,10 @@
 <script>
 import global from '@/lib/js/global';
 import remHelper from '@/lib/js/uitls/rem-helper';
-import { toRef } from 'vue';
 import lpt from '@/lib/js/laputa/laputa';
 
 export default {
-	name: 'FloatMenu',
+	name: 'FixedMenu',
 	components: {},
 	data() {
 		const menuItems = [{
@@ -130,11 +131,13 @@ export default {
 
 <style scoped>
 #menu-container {
-	position: fixed;
+	position: absolute;
 	right: 0;
-	top: 2rem;
+	top: 5%;
 	width: 9%;
-	padding: 0 0.5rem 1.5rem 0;
+	height: 95%;
+	padding-right: 0.5rem;
+	overflow-y: scroll;
 }
 
 .menu-item {

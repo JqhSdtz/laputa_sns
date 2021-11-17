@@ -14,7 +14,8 @@
 				</div>
 			</template>
 			<transition name="van-fade">
-				<a-button class="sort-type-btn" v-show="showSortTypeSelector"
+				<a-button class="sort-type-btn" ref="sortTypeButton" 
+						  v-show="showSortTypeSelector"
 				          :style="defButtonStyle"
 				          style="font-size: 0.9rem"
 						  @mouseenter="onSortTypeButtonMouseEnter"
@@ -100,6 +101,14 @@ export default {
 				this.showSortTypeSelector = true;
 			}
 		});
+		if (this.lptContainer === 'blogMain' && this.position !== 'inside') {
+			// 在blogMain环境下，按钮不在页面中，但position还是fixed，无法随页面整体移动
+			// 所以用监听页面scroll事件的方式保持按钮和页面一起移动
+			const elem = this.$refs.sortTypeButton.$el;
+			window.addEventListener('scroll', () => {
+				elem.style.top = global.methods.parsePxSize(this.offset) - window.scrollY + 'px';
+			});
+		}
 	},
 	methods: {
 		changeSortType(type) {
@@ -141,5 +150,6 @@ export default {
 	font-size: 0.9rem;
 	position: fixed;
 	z-index: 2;
+	transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1), top 0s;
 }
 </style>

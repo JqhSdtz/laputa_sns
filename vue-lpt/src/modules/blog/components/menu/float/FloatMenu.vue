@@ -35,6 +35,7 @@ import {
 	RiLandscapeLine, RiAppsFill, RiDashboardFill, RiCloseFill
 } from '@/assets/icons/remix-icon';
 import global from '@/lib/js/global';
+import remHelper from '@/lib/js/uitls/rem-helper';
 import {toRef} from 'vue';
 import lpt from "@/lib/js/laputa/laputa";
 
@@ -117,7 +118,17 @@ export default {
 						elem.style.left = ballPos.x - offsetX + 'px';
 					} else {
 						// 悬浮球在页面左边
-						elem.style.left = ballPos.x + offsetX + 'px';
+						if (name === 'mine') {
+							// 由于个人中心的图标大小和其他图标不同，所以修正一下位置
+							if (this.me.user.raw_avatar) {
+								offsetX -= remHelper.remToPx(2.3);
+								offsetY -= remHelper.remToPx(0.5);
+							} else {
+								offsetX -= remHelper.remToPx(1.25);
+								offsetY -= remHelper.remToPx(0.25);
+							}
+						}
+						elem.style.left = ballPos.x + offsetX - 50 + 'px';
 					}
 					elem.style.top = ballPos.y - offsetY + 'px';
 					curDegree += degreeDiff;
@@ -137,10 +148,11 @@ export default {
 	/* 不要使用translate实现悬浮球居中，
 		否则会导致悬浮球位置计算错误 */
 	position: fixed;
-	bottom: 40%;
-	left: 5%;
+	bottom: 30%;
+	right: 10%;
 	height: 2.75rem;
 	width: 2.75rem;
+	z-index: 1001;
 }
 
 #round-outer {

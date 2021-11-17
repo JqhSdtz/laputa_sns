@@ -24,12 +24,12 @@
 				</router-view>
 			</a-drawer>
 		</drawer-container>
-		<right-outlined ref="drawerSwitcher" class="with-transition"
+		<right-outlined id="drawer-switcher" class="with-transition" ref="drawerSwitcher"
 		                :rotate="drawerWidth === '75%' && showDrawer ? 180 : 0"
-		                style="position: fixed; bottom: 50%; left: 0; font-size: 2rem; z-index: 1001"
 		                @click="onDrawerSwitcherClick" @mouseenter="onDrawerSwitcherMouseEnter" @mouseleave="onDrawerSwitcherMouseLeave"/>
 		<float-menu id="main-bar"/>
 		<fixed-menu/>
+		<tab-strip/>
 		<prompt-dialog ref="prompt"/>
 	</a-config-provider>
 </template>
@@ -43,6 +43,7 @@ import {
 } from '@ant-design/icons-vue';
 import FloatMenu from '@/modules/blog/components/menu/float/FloatMenu';
 import FixedMenu from '@/modules/blog/components/menu/fixed/FixedMenu';
+import TabStrip from '@/modules/blog/components/tabs/TabStrip';
 import MainContainer from '@/modules/blog/components/container/MainContainer';
 import DrawerContainer from '@/modules/blog/components/container/DrawerContainer';
 import LoadingArea from '@/components/global/LoadingArea';
@@ -57,6 +58,7 @@ export default {
 	components: {
 		FloatMenu,
 		FixedMenu,
+		TabStrip,
 		LoadingArea,
 		PromptDialog,
 		MainContainer,
@@ -223,6 +225,19 @@ body::-webkit-scrollbar {
 	background-color: rgba(255, 255, 255, 0.5);
 	box-shadow: 0 0 10px 6px rgba(0, 0, 0, 0.25);
 	// backdrop-filter: blur(20px);会影响fixed元素布局
+}
+
+#drawer-switcher {
+	position: absolute;
+	bottom: 50%; 
+	left: 0; 
+	font-size: 2rem; 
+	z-index: 1001;
+	color: rgba(21, 23, 26, 0.25);
+}
+
+#drawer-switcher:hover {
+	color: rgba(21, 23, 26, 1);
 }
 
 .with-transition {

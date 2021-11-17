@@ -94,11 +94,13 @@ export default {
 			if (category.id !== lpt.categoryServ.rootCategoryId) {
 				global.methods.setTitle({
 					contentDesc: category.name,
-					pageDesc: '主页'
+					pageDesc: '主页',
+					route: this.$route
 				});
 			} else {
 				global.methods.setTitle({
-					pageDesc: '首页'
+					pageDesc: '首页',
+					route: this.$route
 				});
 			}
 		},

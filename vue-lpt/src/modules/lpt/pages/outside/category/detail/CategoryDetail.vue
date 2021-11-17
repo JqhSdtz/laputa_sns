@@ -193,7 +193,8 @@ export default {
 			if (this.lptContainer === 'blogDrawer') return;
 			global.methods.setTitle({
 				contentDesc: category.name,
-				pageDesc: '目录'
+				pageDesc: '目录',
+				route: this.$route
 			});
 		},
 		onScroll({scrollTop, isFixed}) {

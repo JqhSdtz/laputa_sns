@@ -59,7 +59,8 @@ export default {
 	activated() {
 		if (this.lptConsumer !== 'blogDrawer') {
 			global.methods.setTitle({
-				pageDesc: '通知'
+				pageDesc: '通知',
+				route: this.$route
 			});
 		}
 	},

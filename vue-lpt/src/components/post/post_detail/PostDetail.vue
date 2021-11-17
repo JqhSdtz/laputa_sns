@@ -26,7 +26,7 @@
 				<comment-detail v-if="showCommentDetail" :comment-id="curCommentDetailId"/>
 			</div>
 			<input-panel :post-id="post.id" :panel-style="panelStyle" :overlay="lptContainer !== 'blogMain'"/>
-			<bottom-bar v-show="!showCommentDetail" style="position: absolute; bottom: 0; left: 0"
+			<bottom-bar v-show="!showCommentDetail" id="bottom-bar"
 			            :style="{height: mainBarHeight + 'px'}"
 			            :post-id="post.id"/>
 		</div>
@@ -155,7 +155,8 @@ export default {
 			if (this.lptContainer === 'blogDrawer') return;
 			global.methods.setTitle({
 				contentDesc: post.title || post.customContent || post.content,
-				pageDesc: '帖子'
+				pageDesc: '帖子',
+				route: this.$route
 			});
 		},
 		parseCommand() {
@@ -209,5 +210,12 @@ export default {
 #middle-bar {
 	height: 100%;
 	background-color: white;
+}
+
+#bottom-bar {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	z-index: 2;
 }
 </style>
