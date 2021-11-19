@@ -1,7 +1,7 @@
 <template>
-	<div id="tab-container" :style="{height: scrollHeight}">
+	<div id="tab-container" :style="{height: outerHeight}">
 		<div id="tabs-separator"></div>
-		<div id="tab-container-inner">
+		<div id="tab-container-inner" :style="{height: scrollHeight}">
 			<div class="tab-item" v-for="(tabItem, index) in tabItems" 
 				:key="tabItem.path"
 				:class="{active: activePath === tabItem.path}"
@@ -11,6 +11,9 @@
 				<!-- 清除浮动 -->
 				<div style="clear: both;"></div>
 			</div>
+		</div>
+		<div style="position: absolute; text-align: center;width: 100%;bottom: 0">
+			<van-icon name="cross" id="close-all-icon" class="close-icon" @click="onCloseAllIconClick()"/>
 		</div>
 	</div>
 </template>
@@ -31,8 +34,12 @@ export default {
 		};
 	},
 	computed: {
+		outerHeight() {
+			return global.states.style.bodyHeight - remHelper.remToPx(5) + 'px';
+		},
 		scrollHeight() {
-			return global.states.style.bodyHeight - remHelper.remToPx(7) + 'px';
+			// 距顶部高度是5rem，这里留7是为了给底部留空间
+			return global.states.style.bodyHeight - remHelper.remToPx(7.5) + 'px';
 		}
 	},
 	created() {
@@ -66,6 +73,9 @@ export default {
         },
 		onCloseIconClick(index) {
 			this.tabItems.splice(index, 1);
+		},
+		onCloseAllIconClick() {
+			this.tabItems.splice(0, this.tabItems.length);
 		}
 	},
 };
@@ -75,15 +85,15 @@ export default {
 #tab-container {
 	position: absolute;
 	left: 0;
-	top: 7rem;
+	top: 5rem;
 	width: 10%;
-	overflow-y: scroll;
 }
 
 #tab-container-inner {
 	margin-top: 0.75rem;
 	width: 80%;
 	margin-left: 10%;
+	overflow-y: scroll;
 }
 
 #tabs-separator {
@@ -114,5 +124,16 @@ export default {
 
 .close-icon:hover {
 	font-size: 1.25rem;
+}
+
+#close-all-icon {
+	font-size: 1.25rem;
+	color: rgba(0, 0, 0, 0.5);
+	float: none;
+}
+
+#close-all-icon:hover {
+	font-size: 2rem;
+	color: rgba(0, 0, 0, 0.85);
 }
 </style>

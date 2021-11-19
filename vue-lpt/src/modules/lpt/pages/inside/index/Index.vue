@@ -9,7 +9,8 @@
 				</template>
 			</van-search>
 			<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType" 
-				:position="lptContainer === 'blogMain' ? 'left' : 'inside'"/>
+				:position="lptContainer === 'blogMain' ? 'left' : 'inside'"
+				:offset="lptContainer === 'blogMain' ? '2.5rem' : undefined"/>
 			<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px'}" :target="getElement"/>
 			<post-list ref="postList" :category-id="category.id" :top-post-id="category.top_post_id"
 			           :sort-type="sortType" @loaded="onPostListLoaded"/>

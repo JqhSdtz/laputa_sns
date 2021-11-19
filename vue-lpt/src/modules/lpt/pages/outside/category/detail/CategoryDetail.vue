@@ -210,6 +210,10 @@ export default {
 				success: (category) => {
 					this.setTitle(category);
 					global.events.emit('visitCategory', category);
+					if (!category.sub_list || category.sub_list.length === 0) {
+						// 没有子目录则自动跳转到帖子列表
+						this.curTabKey = 'postList';
+					}
 				},
 				fail(result) {
 					Toast.fail(result.message);

@@ -28,6 +28,11 @@ export default {
 		clickImg: Function,
 		clickName: Function
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	data() {
 		const category = global.states.categoryManager.get({
 			itemId: this.categoryId
@@ -43,9 +48,15 @@ export default {
 	},
 	methods: {
 		showCategoryDetail() {
-			this.$router.push({
-				path: '/category_detail/' + this.categoryId
-			});
+			if (this.lptContainer === 'blogMain') {
+				this.$router.push({
+					path: '/blog/category_detail/' + this.categoryId
+				});
+			} else {
+				this.$router.push({
+					path: '/category_detail/' + this.categoryId
+				});
+			}
 		}
 	}
 }

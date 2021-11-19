@@ -41,10 +41,6 @@ export default {
 			separator: true
 		}, {
 			type: 'post',
-			id: '402',
-			name: '网站介绍'
-		}, {
-			type: 'post',
 			id: '427',
 			name: '友情链接'
 		}];
@@ -58,7 +54,7 @@ export default {
 			filter: res => res.sub_list,
 			success: (result) => {
 				const categoryItems = result.sub_list
-					.filter(item => item.type !== lpt.categoryServ.type.private)
+					// .filter(item => item.type !== lpt.categoryServ.type.private)
 					.map((category) => {
 					return {
 						type: 'category',
@@ -79,13 +75,8 @@ export default {
 			const menuTitle = menuItemElem.getElementsByClassName('menu-title')[0];
 			const menuName = menuTitle.getElementsByClassName('menu-name')[0];
 			const offset = remHelper.remToPx(0.5);
-			const fontSizeLarge = 1.5;
-			// 因为有动画时间，所以有可能是鼠标移出再移入，并且动画未执行完，这时的fontSize不是初始值，而是动画过程中的一个值
-			const curFontSize = window.getComputedStyle(menuName, null).getPropertyValue('font-size');
-			const fontTransRate = remHelper.remToPx(fontSizeLarge) / parseFloat(curFontSize);
-			const menuNameWidth = menuName.getBoundingClientRect().width * fontTransRate;
+			const menuNameWidth = menuName.getBoundingClientRect().width;
 			menuName.style.color = 'rgba(255, 255, 255, 0.9)';
-			menuName.style.fontSize = fontSizeLarge + 'rem';
 			menuBar.style.width = menuNameWidth + offset * 2 + 'px';
 			if (menuItem.separator) {
 				const menuSeparator = menuItemElem.getElementsByClassName('menu-separator')[0];
@@ -97,10 +88,8 @@ export default {
 			const menuBar = menuItemElem.getElementsByClassName('menu-bar')[0];
 			const menuTitle = menuItemElem.getElementsByClassName('menu-title')[0];
 			const menuName = menuTitle.getElementsByClassName('menu-name')[0];
-			const fontSizeNormal = 1.25;
 			menuBar.style.width = '0';
 			menuName.style.color = 'rgba(255, 255, 255, 0.5)';
-			menuName.style.fontSize = fontSizeNormal + 'rem';
 			if (menuItem.separator) {
 				const menuSeparator = menuItemElem.getElementsByClassName('menu-separator')[0];
 				menuSeparator.style.display = 'block';
@@ -142,7 +131,6 @@ export default {
 
 .menu-item {
 	margin-top: 1.5rem;
-	height: 1.95rem;
 }
 
 .menu-item:first-child {
@@ -151,7 +139,6 @@ export default {
 
 .menu-title {
 	font-weight: bold;
-	color: rgba(255, 255, 255, 0.5);
 	text-align: right;
 	width: auto;
 	margin: 0;
@@ -159,8 +146,8 @@ export default {
 
 .menu-name {
 	font-size: 1.25rem;
-	transition: color 0.3s cubic-bezier(0.7, 0.3, 0.1, 1),
-		font-size 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
+	color: rgba(255, 255, 255, 0.5);
+	transition: color 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
 }
 
 .menu-bar {

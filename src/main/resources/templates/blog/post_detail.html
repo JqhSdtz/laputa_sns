@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
-	  th:with="post = ${postService.readPost(postId, false, false, true, true, true, false, 0, false, operator).object}">
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+	  th:with="post = ${postService.readPost(postId, true, false, true, true, true, false, 0, false, operator).object}">
 	<th:block th:if="${post} != null">
 		<head>
 			<meta charset="UTF-8">
@@ -13,8 +13,50 @@
 			<title th:utext="|${post.title}-${post.categoryPath[0].name}-写博客的小姜|"></title>
 		</head>
 		<body>
-			<h1 th:text="${post.title}"></h1>
-			<div th:text="${post.fullText == null ? post.content : post.fullText}"></div>
+			<div id="breadcrumb-navigation" th:if="${post.category} != null">
+				<span>当前位置：</span>
+				<span class="breadcrumb-item" th:each="i: ${#numbers.sequence(post.category.pathList.size() - 1, 0, -1)}">
+					<span th:with="path = ${post.category.pathList[i]}">
+						<a th:text="${path.name}" th:href="@{'/blog/category_detail/' + ${path.id}}"></a>
+						<span>/</span>
+					</span>
+				</span>
+			</div>
+			<div id="article">
+				<h1 id="title" class="title" th:text="${post.title}"></h1>
+				<p id="post-time">发布时间：<span th:text="${#dates.format(post.createTime,'yyyy年MM月dd日 HH:mm:ss')}"></span></p>
+				<p id="poster-name">发布人：<span th:text="${post.creator.nickName}"></span></p>
+				<div id="full-text" class="content post-content full-text" th:text="${post.fullText == null ? post.content : post.fullText}"></div>
+			</div>
+			<div id="comments" th:with="queryEntity = ${new com.laputa.laputa_sns.model.entity.CommentL1()},
+                    popular = ${T(com.laputa.laputa_sns.helper.CommentServiceHelper).POPULAR},
+                    latest = ${T(com.laputa.laputa_sns.helper.CommentServiceHelper).LATEST},
+                    tmp = ${queryEntity.setQueryParam(new com.laputa.laputa_sns.common.QueryParam())},
+                    tmp = ${queryEntity.queryParam.setQueryNum(10)},
+                    tmp = ${queryEntity.setPostId(post.id)}">
+				<div id="popular-comment-list">
+					<h1>热门评论：</h1>
+					<li class="list comment-list content-list" 
+						th:with="popularList = ${commentL1Service.readIndexCommentL1List(queryEntity, popular, false, operator).object}">
+						<ul class="commentl1" th:each="commentl1: ${popularList}">
+							<p id="comment-time">发布时间：<span th:text="${#dates.format(commentl1.createTime,'yyyy年MM月dd日 HH:mm:ss')}"></span></p>
+							<p id="comment-user-name">发布人：<span th:text="${commentl1.creator.nickName}"></span></p>
+							<p class="content comment-content">内容：<span th:text="${commentl1.content}"></span></p>
+						</ul>
+					</li>
+				</div>
+				<div id="latest-comment-list">
+					<h1>最新帖子：</h1>
+					<li class="list comment-list content-list" 
+						th:with="latestList = ${commentL1Service.readIndexCommentL1List(queryEntity, latest, false, operator).object}">
+						<ul class="commentl1" th:each="commentl1: ${latestList}">
+							<p id="comment-time">发布时间：<span th:text="${#dates.format(commentl1.createTime,'yyyy年MM月dd日 HH:mm:ss')}"></span></p>
+							<p id="comment-user-name">发布人：<span th:text="${commentl1.creator.nickName}"></span></p>
+							<p class="content comment-content">内容：<span th:text="${commentl1.content}"></span></p>
+						</ul>
+					</li>
+				</div>
+			</div>
 		</body>
 	</th:block>
 </html>

@@ -2,6 +2,8 @@ package com.laputa.laputa_sns.controller;
 
 import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.service.CategoryService;
+import com.laputa.laputa_sns.service.CommentL1Service;
+import com.laputa.laputa_sns.service.CommentL2Service;
 import com.laputa.laputa_sns.service.PostService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,10 +22,15 @@ public class SEOController {
 
     private final CategoryService categoryService;
     private final PostService postService;
+    private final CommentL1Service commentL1Service;
+    private final CommentL2Service commentL2Service;
 
-    public SEOController(CategoryService categoryService, PostService postService) {
+    public SEOController(CategoryService categoryService, PostService postService, 
+        CommentL1Service commentL1Service, CommentL2Service commentL2Service) {
         this.categoryService = categoryService;
         this.postService = postService;
+        this.commentL1Service = commentL1Service;
+        this.commentL2Service = commentL2Service;
     }
 
     private ModelAndView getModelAndView(Operator operator) {
@@ -31,6 +38,8 @@ public class SEOController {
         modelAndView.addObject("categoryService", categoryService);
         modelAndView.addObject("postService", postService);
         modelAndView.addObject("operator", operator);
+        modelAndView.addObject("commentL1Service", commentL1Service);
+        modelAndView.addObject("commentL2Service", commentL2Service);
         return modelAndView;
     }
 

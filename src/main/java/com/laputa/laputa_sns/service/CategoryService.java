@@ -159,21 +159,24 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      */
     private void cascadeSetAllowPostLevel(@NotNull Category root) {
         // 原则是子目录等级不能低于父目录，通过调用前判断以及递归操作保证
-        if (root.getIsLeaf() == null || root.getIsLeaf())
-            return;
+        Integer thisLevel = root.getOriAllowPostLevel();
+        Integer parentLevel = root.getParent() == null ? null : root.getParent().getAllowPostLevel();
+        // 因为是从根目录开始递归，所以若当前目录为空，则其所有父目录必为空，若不为空，则大于等于所有父目录等级
+        if (parentLevel == null) {
+            // 父目录等级为空，则设为该目录的原始等级
+            root.setAllowPostLevel(thisLevel);
+        } else if (thisLevel == null || thisLevel < parentLevel) {
+            // 当前等级为空或者当前等级小于父目录等级，则直接设为父目录等级，从而使子目录等级必大于等于父目录
+            root.setAllowPostLevel(parentLevel);
+        } else {
+            // 否则，设为当前原始等级
+            root.setAllowPostLevel(thisLevel);
+        }
         List<Category> subList = root.getSubCategoryList();
-        Integer rootLevel = root.getAllowPostLevel();
-        for (int i = 0; i < subList.size(); ++i) {
-            Category sub = subList.get(i);
-            Integer subOriLevel = sub.getOriAllowPostLevel();
-            if (rootLevel == null) {
-                // 父目录等级为空，则设为该目录的原始等级
-                sub.setAllowPostLevel(subOriLevel);
-            } else if (subOriLevel == null || subOriLevel < rootLevel) {
-                // 否则若原始等级为空或原始等级小于父目录等级，则设为父目录等级
-                sub.setAllowPostLevel(rootLevel);
+        if (subList != null) {
+            for (int i = 0; i < subList.size(); ++i) {
+                cascadeSetAllowPostLevel(subList.get(i));
             }
-            cascadeSetAllowPostLevel(sub);
         }
     }
 

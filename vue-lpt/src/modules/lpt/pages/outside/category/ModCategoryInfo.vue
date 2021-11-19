@@ -194,7 +194,7 @@ export default {
 							success: (result) => {
 								Toast.success(isCreate ? '创建成功' : '修改成功');
 								if (isCreate) {
-									this.category.id = result.object;
+									this.category.id = parseInt(result.object);
 									this.opType = 'update';
 									const parent = global.states.categoryManager.get({
 										itemId: this.category.parent_id

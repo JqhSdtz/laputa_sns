@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
 	  th:with="blogRoot = ${categoryService.readCategory(109, false, operator).object}">
 	<head>
 		<meta charset="UTF-8">
@@ -17,26 +17,37 @@
                     tmp = ${queryPost.setQueryParam(new com.laputa.laputa_sns.common.QueryParam())},
                     tmp = ${queryPost.queryParam.setQueryNum(10)},
                     tmp = ${queryPost.setCategoryId(blogRoot.id)}">
-		<li>
-			<ul th:each="sub: ${blogRoot.subCategoryList}">
-				<a th:text="${sub.name}" th:href="@{'/blog/category_detail/' + ${sub.id}}"></a>
-			</ul>
-		</li>
-		<li th:with="popularList = ${postService.readIndexPostList(queryPost, popular, operator).object}">
-			<ul th:each="post: ${popularList}">
-				<h2>
-					<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
-				</h2>
-				<p th:text="${post.content}"></p>
-			</ul>
-		</li>
-		<li th:with="latestList = ${postService.readIndexPostList(queryPost, latest, operator).object}">
-			<ul th:each="post: ${latestList}">
-				<h2>
-					<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
-				</h2>
-				<p th:text="${post.content}"></p>
-			</ul>
-		</li>
+        <div id="navigation-bar">
+        	<h1>网站导航：</h1>
+			<li class="nav header nav-bar">
+				<ul class="nav nav-item" th:each="sub: ${blogRoot.subCategoryList}">
+					<a th:text="${sub.name}" th:href="@{'/blog/category_detail/' + ${sub.id}}"></a>
+				</ul>
+			</li>
+        </div>
+        <div id="popular-post-list">
+        	<h1>热门帖子：</h1>
+			<li class="list post-list content-list" 
+				th:with="popularList = ${postService.readIndexPostList(queryPost, popular, operator).object}">
+				<ul class="post" th:each="post: ${popularList}">
+					<h2 class="title">
+						<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
+					</h2>
+					<p class="brief content" th:text="${post.content}"></p>
+				</ul>
+			</li>
+        </div>
+		<div id="latest-post-list">
+			<h1>最新帖子：</h1>
+			<li class="list post-list content-list" 
+				th:with="latestList = ${postService.readIndexPostList(queryPost, latest, operator).object}">
+				<ul class="post" th:each="post: ${latestList}">
+					<h2 class="title">
+						<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
+					</h2>
+					<p class="brief content" th:text="${post.content}"></p>
+				</ul>
+			</li>
+		</div>
 	</body>
 </html>
