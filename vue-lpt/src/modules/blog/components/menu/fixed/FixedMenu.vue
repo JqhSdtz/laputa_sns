@@ -124,7 +124,7 @@ export default {
 	right: 0;
 	top: 5%;
 	width: 9%;
-	height: 95%;
+	height: 92.5%;
 	padding-right: 0.5rem;
 	overflow-y: scroll;
 }
