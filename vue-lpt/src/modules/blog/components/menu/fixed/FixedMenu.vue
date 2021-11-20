@@ -130,11 +130,7 @@ export default {
 }
 
 .menu-item {
-	margin-top: 1.5rem;
-}
-
-.menu-item:first-child {
-	margin-top: 0.5rem;
+	margin-bottom: 1.5rem;
 }
 
 .menu-title {
