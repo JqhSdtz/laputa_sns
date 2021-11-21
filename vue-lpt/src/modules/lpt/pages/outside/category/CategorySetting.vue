@@ -8,6 +8,7 @@
 		<van-cell v-if="category.rights.parent_level > 1" class="cell" title="添加管理员" is-link @click="setAdmin"/>
 		<van-cell v-if="category.rights.update_allow_post_level" class="cell" title="设置允许发帖管理等级" is-link
 		          @click="setAllowPostLevel"/>
+		<!-- 设置/取消禁言仅在根目录的设置页中显示，因为在后端中限定了只有根目录才会有该权限 -->
 		<van-cell v-if="category.rights.talk_ban" class="cell" title="设置/取消禁言" is-link @click="setTalkBan"/>
 		<van-cell v-if="category.rights.update_parent" class="cell" title="迁移父目录" is-link @click="changeParent"/>
 		<van-cell v-if="category.rights.create" class="cell" title="创建子目录" is-link @click="showCreatePage"/>

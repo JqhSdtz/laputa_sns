@@ -286,4 +286,9 @@ div:not(.with-scroll-bar)::-webkit-scrollbar {
 .ant-drawer-left.ant-drawer-open .ant-drawer-content-wrapper {
 	box-shadow: 0 0 10px 12px rgb(0 0 0 / 25%) !important;
 }
+
+.van-picker-column {
+	// vant是移动端框架，靠滑动不靠滚动，在blog环境下开启滚动
+	overflow-y: scroll;
+}
 </style>

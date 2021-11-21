@@ -1,5 +1,5 @@
 <template>
-	<van-dialog v-model:show="showDialog" :title="curTitle" :before-close="beforeClose" show-cancel-button>
+	<van-dialog class="prompt-dialog" v-model:show="showDialog" :title="curTitle" :before-close="beforeClose" show-cancel-button>
 		<slot>
 			<p v-if="curTipMessage !== ''" style="text-align: center">{{ curTipMessage }}</p>
 			<slot name="tip"/>
@@ -189,5 +189,10 @@ export default {
 	border-left: none;
 	border-right: none;
 	margin-top: 1rem;
+}
+
+:global(.prompt-dialog .ant-col) {
+	/* 用于解决ant-row下宽度只有一半的BUG */
+	flex: 1;
 }
 </style>
