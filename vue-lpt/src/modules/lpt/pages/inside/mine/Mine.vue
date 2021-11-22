@@ -163,7 +163,7 @@ export default {
 			});
 		},
 		changePassword() {
-			const prompt = global.methods.prompt;
+			const prompt = global.methods.getPrompt(this.lptContainer);
 			prompt({
 				title: '修改密码',
 				focusTitle: '请输入密码',
@@ -247,7 +247,7 @@ export default {
 			window.location.href = url;
 		},
 		correctData() {
-			const prompt = global.methods.prompt;
+			const prompt = global.methods.getPrompt(this.lptContainer);
 			prompt({
 				title: '输入校正类型',
 				placeholder: '',

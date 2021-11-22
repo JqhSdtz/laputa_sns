@@ -1,5 +1,6 @@
 <template>
-	<van-dialog class="prompt-dialog" v-model:show="showDialog" :title="curTitle" :before-close="beforeClose" show-cancel-button>
+	<van-dialog class="prompt-dialog" v-model:show="showDialog" :title="curTitle" :before-close="beforeClose" 
+		:teleport="teleport" show-cancel-button>
 		<slot>
 			<p v-if="curTipMessage !== ''" style="text-align: center">{{ curTipMessage }}</p>
 			<slot name="tip"/>
@@ -19,7 +20,9 @@
 	</van-dialog>
 </template>
 <script>
+import global from '@/lib/js/global';
 import {clearError, makeError} from '@/lib/js/uitls/form-util';
+import {toRef} from 'vue';
 
 export default {
 	name: 'PromptDialog',
@@ -53,11 +56,22 @@ export default {
 		errorMessage: {
 			type: String,
 			default: '输入内容长度应在5-256个字之间'
+		},
+		teleport: {
+			type: String,
+			default: 'body'
+		}
+	},
+	inject: {
+		lptContainer: {
+			type: String
 		}
 	},
 	emits: ['confirm'],
 	data() {
 		return {
+			showDrawer: toRef(global.states.blog, 'showDrawer'),
+			hasTemporaryClosed: false,
 			curTitle: this.title,
 			curFocusTitle: this.focusTitle,
 			curTipMessage: this.tipMessage,
@@ -69,6 +83,20 @@ export default {
 			oriValue: '',
 			value: '',
 			minDate: new Date()
+		}
+	},
+	watch: {
+		showDrawer(isShow) {
+			if (this.lptContainer === 'blogDrawer') {
+				if (isShow && this.hasTemporaryClosed) {
+					this.showDialog = true;
+					this.hasTemporaryClosed = false;
+				}
+				if (!isShow && this.showDialog) {
+					this.showDialog = false;
+					this.hasTemporaryClosed = true;
+				}
+			}
 		}
 	},
 	created() {

@@ -15,13 +15,14 @@
 		</div>
 		<loading-area id="loading-area" :size="showDrawer ? 'default' : 'large'"></loading-area>
 		<drawer-container>
-			<a-drawer :visible="showDrawer" placement="left" :closable="false"
+			<a-drawer id="blog-drawer" :visible="showDrawer" placement="left" :closable="false"
 			          @close="showDrawer = false" :width="drawerWidth">
 				<router-view v-slot="{ Component }" name="leftDrawer">
 					<keep-alive :exclude="noCacheList">
 						<component :is="Component"/>
 					</keep-alive>
 				</router-view>
+				<prompt-dialog v-if="drawerMounted" ref="drawerPrompt" teleport="#blog-drawer .ant-drawer-content-wrapper"/>
 			</a-drawer>
 		</drawer-container>
 		<right-outlined id="drawer-switcher" class="with-transition" ref="drawerSwitcher"
@@ -73,6 +74,7 @@ export default {
 			drawerWidth: '33%',
 			backgroundImage: description.backgroundImage,
 			showDrawer: toRef(global.states.blog, 'showDrawer'),
+			drawerMounted: false,
 			locale: zhCN,
 			noCacheList
 		};
@@ -89,6 +91,7 @@ export default {
 					drawerSwitcher.style.left = this.drawerWidth;
 					// setTimeout(() => drawerSwitcher.style.left = this.drawerWidth, 300);
 				}
+				this.drawerMounted = true;
 			});
 		}
 	},
@@ -115,6 +118,13 @@ export default {
 	mounted() {
 		document.body.style.backgroundImage = this.backgroundImage;
 		global.methods.prompt = this.$refs.prompt.prompt;
+		global.methods.getPrompt = (container) => {
+			if (container === 'blogDrawer') {
+				return this.$refs.drawerPrompt.prompt;
+			} else {
+				return this.$refs.prompt.prompt;
+			}
+		};
 		global.methods.setDrawerWidth = this.setDrawerWidth;
 		window.addEventListener('resize', () => {
 			this.onResize();
@@ -290,5 +300,14 @@ div:not(.with-scroll-bar)::-webkit-scrollbar {
 .van-picker-column {
 	// vant是移动端框架，靠滑动不靠滚动，在blog环境下开启滚动
 	overflow-y: scroll;
+}
+
+#blog-drawer .van-overlay {
+	background-color: rgba(0, 0, 0, 0.45);
+	position: absolute;
+}
+
+#blog-drawer .van-popup {
+	position: absolute;
 }
 </style>

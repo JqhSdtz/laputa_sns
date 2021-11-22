@@ -117,10 +117,11 @@ export default {
 			if (!this.postListEvents)
 				return;
 			const ref = this;
+			const prompt = global.methods.getPrompt(this.lptContainer);
 			if (action.id === 'top' || action.id === 'unTop') {
 				if (ref.postOf === 'category') {
 					// 目录设置置顶贴需要输入理由
-					global.methods.prompt({
+					prompt({
 						onConfirm(value) {
 							ref.postListEvents.emit(action.id, {
 								post: ref.post,
@@ -154,7 +155,7 @@ export default {
 					});
 				} else {
 					// 否则需要输入理由
-					global.methods.prompt({
+					prompt({
 						onConfirm(value) {
 							ref.postListEvents.emit(action.id, {
 								post: ref.post,

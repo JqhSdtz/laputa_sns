@@ -12,13 +12,13 @@
 				</slot>
 			</van-list>
 		</van-pull-refresh>
-		<teleport to="body">
-			<prompt-dialog ref="categoryPrompt">
+		<template v-if="hasMounted">
+			<prompt-dialog ref="categoryPrompt" :teleport="teleport">
 				<template v-if="showSelectedCategory" v-slot:tip>
 					<category-grid-item :category-id="curSelectedCategory.id"/>
 				</template>
 			</prompt-dialog>
-		</teleport>
+		</template>
 	</div>
 </template>
 
@@ -62,6 +62,11 @@ export default {
 			postListEvents: this.postListEvents
 		}
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	components: {
 		PostItem,
 		PromptDialog,
@@ -79,7 +84,9 @@ export default {
 			list: [],
 			listOffset: global.vars.style.tabBarHeight + 10,
 			isRefreshing: false,
-			isBusy: false
+			isBusy: false,
+			hasMounted: false,
+			teleport: this.lptContainer === 'blogDrawer' ? '#blog-drawer .ant-drawer-content-wrapper' : undefined
 		}
 	},
 	watch: {
@@ -90,6 +97,9 @@ export default {
 			this.list.splice(0);
 			this.loadMore(true);
 		}
+	},
+	mounted() {
+		this.hasMounted = true;
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();

@@ -13,16 +13,18 @@
 		<van-cell v-if="category.rights.update_parent" class="cell" title="迁移父目录" is-link @click="changeParent"/>
 		<van-cell v-if="category.rights.create" class="cell" title="创建子目录" is-link @click="showCreatePage"/>
 		<van-cell v-if="category.rights.delete" class="cell" title="删除目录" is-link @click="deleteCategory"/>
-		<prompt-dialog ref="prompt">
-			<template v-if="showSelectedUser" v-slot:tip>
-				<user-item :show-id="true" :user="curSelectedUser"/>
-			</template>
-		</prompt-dialog>
-		<prompt-dialog ref="categoryPrompt">
-			<template v-if="showSelectedCategory" v-slot:tip>
-				<category-grid-item :category-id="curSelectedCategory.id"/>
-			</template>
-		</prompt-dialog>
+		<template v-if="hasMounted">
+			<prompt-dialog ref="userPrompt" :teleport="teleport">
+				<template v-if="showSelectedUser" v-slot:tip>
+					<user-item :show-id="true" :user="curSelectedUser"/>
+				</template>
+			</prompt-dialog>
+			<prompt-dialog ref="categoryPrompt" :teleport="teleport">
+				<template v-if="showSelectedCategory" v-slot:tip>
+					<category-grid-item :category-id="curSelectedCategory.id"/>
+				</template>
+			</prompt-dialog>
+		</template>
 	</div>
 </template>
 
@@ -44,6 +46,11 @@ export default {
 	props: {
 		categoryId: String
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	data() {
 		const category = global.states.categoryManager.get({
 			itemId: this.categoryId,
@@ -57,16 +64,21 @@ export default {
 			showSelectedCategory: false,
 			curSelectedCategory: lpt.categoryServ.getDefaultCategory(-1),
 			curSelectedUser: lpt.userServ.getDefaultUser(-1),
+			hasMounted: false,
+			teleport: this.lptContainer === 'blogDrawer' ? '#blog-drawer .ant-drawer-content-wrapper' : undefined,
 			category
 		}
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 	},
+	mounted() {
+		this.hasMounted = true;
+	},
 	methods: {
 		changeDispSeq() {
 			// 修改排序号是父目录权限，能修改该目录的排序号，必然也能修改同级其他目录的排序号
-			const prompt = global.methods.prompt;
+			const prompt = global.methods.getPrompt(this.lptContainer);
 			prompt({
 				title: '当前目录排序号',
 				focusTitle: '请输入0~99999的数字',
@@ -105,7 +117,7 @@ export default {
 			});
 		},
 		setAdmin() {
-			const prompt = this.$refs.prompt.prompt;
+			const prompt = this.$refs.userPrompt.prompt;
 			prompt({
 				title: '输入目标用户的用户名',
 				placeholder: ' ',
@@ -165,7 +177,7 @@ export default {
 			});
 		},
 		setAllowPostLevel() {
-			const prompt = global.methods.prompt;
+			const prompt = global.methods.getPrompt(this.lptContainer);
 			prompt({
 				title: '当前允许发帖管理等级',
 				focusTitle: '请输入0~99的数字',
@@ -248,7 +260,7 @@ export default {
 			});
 		},
 		setTalkBan() {
-			const prompt = this.$refs.prompt.prompt;
+			const prompt = this.$refs.userPrompt.prompt;
 			prompt({
 				title: '输入目标用户的用户名',
 				placeholder: ' ',
@@ -301,7 +313,7 @@ export default {
 			});
 		},
 		deleteCategory() {
-			const prompt = global.methods.prompt;
+			const prompt = global.methods.getPrompt(this.lptContainer);
 			prompt({
 				onConfirm: (opComment) => {
 					lpt.categoryServ.delete({

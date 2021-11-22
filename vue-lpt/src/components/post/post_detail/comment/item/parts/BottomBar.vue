@@ -51,6 +51,9 @@ export default {
 		},
 		commentListEvents: {
 			type: Object
+		},
+		lptContainer: {
+			type: String
 		}
 	},
 	components: {
@@ -136,7 +139,8 @@ export default {
 					});
 				} else {
 					// 否则需要输入理由
-					global.methods.prompt({
+					const prompt = global.methods.getPrompt(this.lptContainer);
+					prompt({
 						onConfirm(value) {
 							ref.commentListEvents.emit(action.id, {
 								comment: ref.comment,

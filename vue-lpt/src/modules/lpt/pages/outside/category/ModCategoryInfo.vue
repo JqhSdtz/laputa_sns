@@ -61,6 +61,11 @@ export default {
 	components: {
 		AUploadM
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	props: {
 		categoryId: String
 	},
@@ -175,7 +180,8 @@ export default {
 		saveCategoryInfo() {
 			// 目录设置置顶贴需要输入理由
 			this.$refs.form.validate().then(() => {
-				global.methods.prompt({
+				const prompt = global.methods.getPrompt(this.lptContainer);
+				prompt({
 					onConfirm: (value) => {
 						const isCreate = this.opType === 'create';
 						if (isCreate) {
