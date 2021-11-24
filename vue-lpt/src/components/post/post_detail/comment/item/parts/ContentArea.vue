@@ -8,6 +8,7 @@
 
 <script>
 import Ellipsis from '@/components/global/Ellipsis';
+
 export default {
 	name: 'ContentArea',
 	components: {

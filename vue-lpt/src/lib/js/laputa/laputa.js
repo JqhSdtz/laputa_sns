@@ -597,6 +597,10 @@ function _initLaputa(option) {
                 param.url = lpt.baseApiUrl + '/user/name/' + param.param.userName;
                 return lpt.get(param);
             }),
+            getByNamePattern: wrap(function (param) {
+                param.url = lpt.baseApiUrl + '/user/name_pattern/' + param.param.namePattern;
+                return lpt.get(param);
+            }),
             getInfo: wrap(function (param) {
                 param.url = lpt.baseApiUrl + '/user/info/' + param.param.userId;
                 return lpt.get(param);
@@ -660,6 +664,7 @@ function _initLaputa(option) {
 
     function initPostService() {
         const serv = {
+            type: 'post',
             getDefaultPost: function (id) {
                 return {
                     isDefault: true,

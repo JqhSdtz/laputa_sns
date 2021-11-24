@@ -57,7 +57,7 @@ export default {
 		this.loadMore();
 	},
 	activated() {
-		if (this.lptConsumer !== 'blogDrawer') {
+		if (this.lptContainer !== 'blogDrawer') {
 			global.methods.setTitle({
 				pageDesc: '通知',
 				route: this.$route

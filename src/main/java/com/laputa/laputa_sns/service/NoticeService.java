@@ -133,7 +133,7 @@ public class NoticeService {
                 postMap.put(id, null);
             else if (type == Notice.TYPE_LIKE_CML1 || type == Notice.TYPE_CML2_OF_CML1)
                 cml1Map.put(id, null);
-            else if (type == Notice.TYPE_LIKE_CML2)
+            else if (type == Notice.TYPE_LIKE_CML2 || type == Notice.TYPE_REPLY_OF_CML2)
                 cml2Map.put(id, null);
         }
         if (postMap.size() != 0) {
@@ -185,7 +185,7 @@ public class NoticeService {
                 notice.setContent(postMap.get(id));
             else if (type == Notice.TYPE_LIKE_CML1 || type == Notice.TYPE_CML2_OF_CML1)
                 notice.setContent(cml1Map.get(id));
-            else if (type == Notice.TYPE_LIKE_CML2)
+            else if (type == Notice.TYPE_LIKE_CML2 || type == Notice.TYPE_REPLY_OF_CML2)
                 notice.setContent(cml2Map.get(id));
         }
     }

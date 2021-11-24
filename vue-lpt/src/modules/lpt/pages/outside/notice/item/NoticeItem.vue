@@ -105,16 +105,26 @@ export default {
 			const query = {};
 			const typeStr = this.notice.type_str;
 			const typeIs = (str) => typeStr === str;
-			if (typeIs('like_post') || typeIs('fw_post') || typeIs('cml2_of_cml1')
-					|| typeIs('cml1_of_post')) {
+			// if (type == Notice.TYPE_LIKE_POST || type == Notice.TYPE_CML1_OF_POST || type == Notice.TYPE_FW_POST)
+            //     notice.setContent(postMap.get(id));
+            // else if (type == Notice.TYPE_LIKE_CML1 || type == Notice.TYPE_CML2_OF_CML1)
+            //     notice.setContent(cml1Map.get(id));
+            // else if (type == Notice.TYPE_LIKE_CML2 || type == Notice.TYPE_REPLY_OF_CML2)
+            //     notice.setContent(cml2Map.get(id));
+			if (typeIs('like_post') || typeIs('fw_post') || typeIs('cml1_of_post')) {
 				path = '/post_detail/' + this.notice.content_id;
 				if (typeIs('like_post')) {
 					query.command = 'showLikeList';
 				} else if(typeIs('fw_post')) {
 					query.command = 'showForwardList';
-				} else if (typeIs('cml2_of_cml1')) {
-					query.command = 'showCommentDetail';
-					query.commentId = this.notice.content.post_id;
+				}
+			}  else if (typeIs('cml2_of_cml1') || typeIs('reply_of_cml2')) {
+				path = '/post_detail/' + this.notice.content.post_id;
+				query.command = 'showCommentDetail';
+				if (typeIs('cml2_of_cml1')) {
+					query.commentId = this.notice.content_id;
+				} else if (typeIs('reply_of_cml2')) {
+					query.commentId = this.notice.content.l1_id;
 				}
 			} else if (typeIs('like_cml1') || typeIs('like_cml2')) {
 				const type = typeIs('like_cml1') ? lpt.commentServ.level1 : lpt.commentServ.level2;

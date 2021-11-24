@@ -260,9 +260,11 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
             return (Result) commentL1Result;
         CommentL1 commentL1 = commentL1Result.getObject();
         Result<Post> postResult = postService.readPostWithAllFalse(commentL1.getPostId(), operator);
-        if (postResult.getState() == FAIL)//帖子不存在
+        // 帖子不存在
+        if (postResult.getState() == FAIL)
             return (Result) postResult;
-        if (commentL2.getReplyToL2Id() != null) {//其他二级评论的回复
+        // 其他二级评论的回复
+        if (commentL2.getReplyToL2Id() != null) {
             Result<CommentL2> replyToTargetResult = readCommentWithAllFalse(commentL2.getReplyToL2Id(), operator);
             if (replyToTargetResult.getState() == FAIL)
                 return new Result(FAIL).setErrorCode(1010090210).setMessage("回复对象不存在");
@@ -281,13 +283,17 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
         if (commentL1.getL2Cnt() < previewCml2Num)
             serviceHelper.addNewToRedisIndex(commentL2, POPULAR);
         Long pcmCnt = null;
-        if (operator.getUserId().equals(postResult.getObject().getCreatorId())) //发帖人回复
+        // 发帖人回复
+        if (operator.getUserId().equals(postResult.getObject().getCreatorId()))
             pcmCnt = 1L;
         commentL1Service.updateCounters(commentL1.getId(), 1L, pcmCnt);
-        if (commentL2.getReplyToL2Id() != null && !commentL2.getReplyToUserId().equals(operator.getUserId()))
+        // 如果是回复的其他二级评论，则给被回复的二级评论创建者推送二级评论的回复通知
+        // 否则给对应的一级评论创建者推送回复通知
+        if (commentL2.getReplyToL2Id() != null && !commentL2.getReplyToUserId().equals(operator.getUserId())) {
             noticeService.pushNotice(commentL2.getReplyToL2Id(), Notice.TYPE_REPLY_OF_CML2, commentL2.getReplyToUserId());
-        if (!commentL1.getCreatorId().equals(operator.getUserId()))
+        } else if (!commentL1.getCreatorId().equals(operator.getUserId())) {
             noticeService.pushNotice(commentL1.getId(), Notice.TYPE_CML2_OF_CML1, commentL1.getCreatorId());
+        }
         return new Result(SUCCESS).setObject(commentL2.getId());
     }
 

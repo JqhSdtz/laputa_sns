@@ -25,7 +25,7 @@
 				</div>
 				<comment-detail v-if="showCommentDetail" :comment-id="curCommentDetailId"/>
 			</div>
-			<input-panel :post-id="post.id" :panel-style="panelStyle" :overlay="lptContainer !== 'blogMain'"/>
+			<input-panel :post-id="post.id" :overlay="lptContainer !== 'blogMain'"/>
 			<bottom-bar v-show="!showCommentDetail" id="bottom-bar"
 			            :style="{height: mainBarHeight + 'px'}"
 			            :post-id="post.id"/>
@@ -75,7 +75,6 @@ export default {
 		this.postDetailEvents = createEventBus();
 		return {
 			mainBarHeight: global.vars.style.postDetailBarHeight,
-			panelStyle: {},
 			post: this.init(),
 			showDrawer: this.lptContainer === 'blogDrawer' ? toRef(global.states.blog, 'showDrawer') : true,
 			curTabKey: 'comment',
@@ -89,9 +88,6 @@ export default {
 			this.post = this.init();
 			this.parseCommand();
 			this.forceReload();
-		},
-		clientWidth(width) {
-			this.panelStyle.width = width;
 		}
 	},
 	created() {
@@ -107,16 +103,6 @@ export default {
 		this.postDetailEvents.on('closeCommentDetail', () => {
 			this.showCommentDetail = false;
 		});
-	},
-	mounted() {
-		this.panelStyle = {
-			width: this.clientWidth + 'px',
-			left: this.lptContainer === 'blogMain' ? (global.states.style.blogMainLeft + 'px') : '0'
-		};
-		if (this.lptContainer === 'blogMain') {
-			this.panelStyle.boxShadow = '0 0 10px 6px rgba(0, 0, 0, 0.25)';
-			this.panelStyle.paddingBottom = '1.5rem';
-		}
 	},
 	computed: {
 		scrollHeight() {
@@ -169,7 +155,9 @@ export default {
 			} else if (command === 'showForwardList') {
 				this.curTabKey = 'forward';
 			} else if (command === 'showCommentDetail') {
-				this.curCommentDetailId = query.commentId;
+				this.curCommentDetailId = parseInt(query.commentId);
+				// 进入commentdetail之前需要先加载一下middleBar，否则关闭commentdetail时middleBar会异常
+				this.$nextTick(() => this.showCommentDetail = true);
 			}
 		},
 		init() {

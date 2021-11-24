@@ -15,11 +15,11 @@
 			</div>
 		</div>
 		<div v-if="showFullText" class="ellipsis-content">
-			{{ content }}
+			<span ref="content">{{ content }}</span>
 			<span class="ellipsis-btn" @click="toggle">收起</span>
 		</div>
 		<div v-else class="real-box">
-			{{ showContent }}
+			<span ref="content">{{ showContent }}</span>
 			<slot name="ellipsis" v-if="(textLength < content.length) || btnShow">
 				{{ ellipsisText }}
 				<span class="ellipsis-btn" @click="toggle">{{ btnText }}</span>
@@ -31,7 +31,8 @@
 <script>
 //https://github.com/Lushenggang/vue-overflow-ellipsis/blob/main/src/components/ellipsis.vue
 
-import resizeObserver from 'element-resize-detector'
+import resizeObserver from 'element-resize-detector';
+import global from '@/lib/js/global';
 
 const observer = resizeObserver();
 
@@ -70,6 +71,10 @@ export default {
 	},
 	computed: {
 		showContent() {
+			this.$nextTick(() => global.methods.parseContentElement({
+				el: this.$refs.content,
+				router: this.$router
+			}));
 			return this.content.substr(0, this.textLength);
 		},
 		watchData() {

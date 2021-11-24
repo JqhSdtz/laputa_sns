@@ -14,7 +14,10 @@
 			</a-col>
 		</template>
 		<template v-else>
-			<a-col class="icon-col" span="6" offset="17">
+			<a-col span="6" offset="11">
+				<span class="reply-text" v-check-sign="{click: replyCommentL2}">回复</span>
+			</a-col>
+			<a-col class="icon-col" span="6">
 				<span v-check-sign="{click: changeLike}">
 					<like-filled v-if="comment.liked_by_viewer" class="icon" style="color: red"/>
 					<like-outlined v-else class="icon"/>
@@ -158,8 +161,17 @@ export default {
 		openCommentPanel() {
 			if (this.postDetailEvents) {
 				this.postDetailEvents.emit('openCommentPanel', {
-					type: lpt.commentServ.level2,
+					type: lpt.commentServ.level1,
 					id: this.comment.id
+				});
+			}
+		},
+		replyCommentL2() {
+			if (this.postDetailEvents) {
+				this.postDetailEvents.emit('openCommentPanel', {
+					type: lpt.commentServ.level2,
+					id: this.comment.l1_id + '#' + this.comment.id + '#' + this.comment.creator.id,
+					presetText: `回复@${this.comment.creator.nick_name} ：`
 				});
 			}
 		},
@@ -206,5 +218,14 @@ export default {
 
 .icon {
 	font-size: 1rem;
+}
+
+.reply-text {
+	cursor: pointer;
+	color: #6c757d;
+}
+
+.reply-text:hover {
+	text-decoration: underline;
 }
 </style>

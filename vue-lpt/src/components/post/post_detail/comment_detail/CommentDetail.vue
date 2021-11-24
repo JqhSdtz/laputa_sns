@@ -20,7 +20,6 @@ import {Toast} from "vant";
 import CommentItem from '../comment/item/CommentItem';
 import SubCommentList from './SubCommentList';
 
-
 export default {
 	name: 'CommentDetail',
 	props: {

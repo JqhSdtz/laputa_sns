@@ -33,7 +33,7 @@ export default {
 		}
 	},
 	activated() {
-		if (this.lptConsumer !== 'blogDrawer') {
+		if (this.lptContainer !== 'blogDrawer') {
 			global.methods.setTitle({
 				pageDesc: '动态',
 				route: this.$route

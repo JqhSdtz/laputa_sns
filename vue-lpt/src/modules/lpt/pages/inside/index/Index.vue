@@ -92,6 +92,7 @@ export default {
 	},
 	methods: {
 		setTitle(category) {
+			if (this.lptContainer === 'blogDrawer') return;
 			if (category.id !== lpt.categoryServ.rootCategoryId) {
 				global.methods.setTitle({
 					contentDesc: category.name,

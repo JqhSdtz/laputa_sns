@@ -1,4 +1,6 @@
 import remHelper from '@/lib/js/uitls/rem-helper';
+import lpt from '@/lib/js/laputa/laputa';
+import {Toast} from 'vant';
 import events from './global-events';
 
 const option = {
@@ -6,6 +8,8 @@ const option = {
 };
 
 const state = {};
+
+const mentionParseReg = /(@\S+ )/g;
 
 function parseOption(opt) {
     if (opt.moduleTitle) {
@@ -17,6 +21,9 @@ export default {
     setOption(_option) {
         Object.assign(option, _option);
         parseOption(_option);
+    },
+    prompt() {
+        // 由BlogApp.vue和LptApp.vue中定义具体的prompt实现
     },
     setTitle(param) {
         let title = '';
@@ -51,5 +58,34 @@ export default {
         } else {
             return parseFloat(str);
         }
+    },
+    parseContentElement(opt) {
+        const html = opt.el.innerHTML;
+        opt.el.innerHTML = html.replaceAll(mentionParseReg, '<a class="m-link" href="#">$1</a>');
+        const mentionLinks = opt.el.getElementsByClassName('m-link');
+        mentionLinks.forEach((mElem) => {
+            let name = mElem.innerText;
+            name = name.substring(1, name.length - 1);
+            mElem.addEventListener('click', (event) => {
+                lpt.userServ.getByName({
+                    consumer: this.lptConsumer,
+                    throwError: true,
+                    param: {
+                        userName: name
+                    },
+                    success: (result) => {
+                        opt.router.push({
+                            path: '/user_home_page/' + result.object.id
+                        });
+                    },
+                    fail: (result) => {
+                        Toast.fail(result.message);
+                    }
+                }).catch(() => {
+                    Toast.fail('查无此人');
+                });
+                event.preventDefault();
+            });
+        });
     }
 }

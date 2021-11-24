@@ -2,7 +2,7 @@
 	<div class="content-area">
 		<p class="title" @click="showPostDetail">{{ post.title }}</p>
 		<div v-if="isShowFullText" class="content" :class="{'md-content': fullTextType === 'md'}">
-			<p v-if="fullTextType === 'normal'" style="margin-bottom: 0;">{{ fullText }}</p>
+			<p ref="normalFullText" v-if="fullTextType === 'normal'" style="margin-bottom: 0;">{{ fullText }}</p>
 			<admin-ops-record v-if="fullTextType === 'amOps' && payload" :payload="payload"/>
 			<v-md-preview ref="fullTextMd" v-if="fullTextType === 'md'" :text="fullText"/>
 		</div>
@@ -179,14 +179,28 @@ export default {
 				if (this.isShowFullText) {
 					if (this.fullTextType === 'md') {
 						const fullTextMd = this.$refs.fullTextMd;
+						global.methods.parseContentElement({
+							el: fullTextMd.$el,
+							router: this.$router
+						});
 						translateMd({
 							el: fullTextMd.$el,
+							router: this.$router
+						});
+					} else if (this.fullTextType === 'normal') {
+						const contentElem = this.$refs.normalFullText;
+						global.methods.parseContentElement({
+							el: contentElem,
 							router: this.$router
 						});
 					}
 				} else {
 					if (this.contentType === 'md') {
 						const contentMd = this.$refs.contentMd;
+						global.methods.parseContentElement({
+							el: contentMd.$el,
+							router: this.$router
+						});
 						translateMd({
 							el: contentMd.$el,
 							router: this.$router

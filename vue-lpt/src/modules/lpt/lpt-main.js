@@ -4,7 +4,7 @@ import description from './description';
 import {createApp} from 'vue';
 import LptApp from './LptApp.vue';
 import router from './router';
-import {Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload,
+import {Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Mentions, Input, Upload,
     Popover, Badge} from 'ant-design-vue';
 import {Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
     Popover as VPopOver, Dialog, Image as VanImage, Uploader, Form as VanForm, Field, Cascader,
@@ -40,7 +40,7 @@ VMdPreview.use(githubTheme, {
 });
 app.use(VMdPreview);
 
-const antdUseList = [Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Input, Upload,
+const antdUseList = [Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Mentions, Input, Upload,
     Popover, Badge];
 antdUseList.forEach(item => {
     app.use(item);

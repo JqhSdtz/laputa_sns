@@ -8,9 +8,7 @@
 				贴主
 			</van-tag>
 			<div style="display: inline-block; margin-left: 0.25rem">:</div>
-			<div style="display: inline-block; margin-left: 0.5rem" @click="openCommentDetail">
-				{{comment.content}}
-			</div>
+			<ellipsis style="display: inline-block; margin-left: 0.5rem" :content="comment.content" :rows="3" @click="openCommentDetail" />
 		</div>
 		<a-button type="link" v-if="previewL2Length < comment.l2_cnt" @click="openCommentDetail">
 			共{{comment.l2_cnt}}条回复
@@ -23,9 +21,13 @@
 
 <script>
 import global from '@/lib/js/global';
+import Ellipsis from '@/components/global/Ellipsis';
 
 export default {
 	name: 'SubCommentArea',
+	components: {
+		Ellipsis
+	},
 	props: {
 		comment: Object
 	},

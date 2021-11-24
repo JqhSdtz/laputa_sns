@@ -23,8 +23,10 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -32,6 +34,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -94,8 +97,13 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         this.recvSettingQueryHelper.selectOneCallBack = param -> dao.selectRecvSetting(param.getId());
     }
 
-    @Value("${user-recent-visit-category-num}")//记录用户最近访问的15个目录
+    // 记录用户最近访问的15个目录
+    @Value("${user-recent-visit-category-num}")
     private int userRecentVisitCategoryNum;
+
+    // 在@操作时根据用户名匹配到的用户数限制
+    @Value("${user-name-match-limit}")
+    private int userNameMatchLimit;
 
     private int updateTopPost(int userId, Integer postId) {
         return dao.updateTopPost(userId, postId);
@@ -133,7 +141,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
             userList = selectList(queryEntity);
             if (userList == null || userList.size() == 0)
                 break;
-            HashMap<String, String> map = new HashMap(userList.size());
+            HashMap<String, String> map = new HashMap<>(userList.size());
             for (int i = 0; i < userList.size(); ++i)
                 map.put(userList.get(i).getNickName(), String.valueOf(userList.get(i).getId()));
             redisTemplate.opsForHash().putAll(key, map);
@@ -154,6 +162,25 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
     public Integer getUserIdByName(String nickName) {
         String str = (String) redisTemplate.opsForHash().get(RedisPrefix.USER_NAME_IDX_HASH, nickName);
         return str == null ? null : Integer.valueOf(str);
+    }
+
+    public List<Map.Entry<Object, Object>> getUserIdByNamePattern(String pattern) {
+        ScanOptions opt = new ScanOptions.ScanOptionsBuilder().match(pattern).count(userNameMatchLimit).build();
+        List<Map.Entry<Object, Object>> resultList = new ArrayList<>();
+        try {
+            Cursor<Map.Entry<Object, Object>> cursor = redisTemplate.opsForHash().scan(RedisPrefix.USER_NAME_IDX_HASH, opt);
+            // hscan的count属性只是一个提示值，并不保证返回的就是count的数值
+            int cnt = 0;
+            while (cursor.hasNext() && cnt < userNameMatchLimit) {
+                resultList.add(cursor.next());
+                ++cnt;
+            }
+            cursor.close();
+        } catch (IOException e) {
+            log.warn("用户模糊查询失败，pattern:" + pattern);
+            e.printStackTrace();
+        }
+        return resultList;
     }
 
     private void addNickNameIdx(Integer id, String nickName) {
@@ -349,6 +376,22 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
             return new Result(FAIL).setErrorCode(1010020224).setMessage("该用户名不存在");
         }
         return readUser(userId, isFull, withCnt, withIsFollowedByViewer, operator);
+    }
+
+    /**
+     * 通过用户名模糊搜索用户
+     */
+    public Result<List<User>> readUserByNamePattern(String pattern, Operator operator) {
+        List<Map.Entry<Object, Object>> resultList = getUserIdByNamePattern(pattern);
+        if (resultList == null) {
+            return new Result(FAIL).setErrorCode(1010020224).setMessage("用户模糊查询失败");
+        }
+        List<Integer> idList = new ArrayList<>();
+        for (int i = 0; i < resultList.size(); ++i) {
+            idList.add(Integer.valueOf((String) resultList.get(i).getValue()));
+        }
+        Result<List<User>> usrList = multiReadUser(idList);
+        return usrList;
     }
 
     /**

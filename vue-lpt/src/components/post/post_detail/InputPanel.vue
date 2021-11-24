@@ -7,9 +7,16 @@
 			<div ref="commentPanel" class="ant-input-group-wrapper panels">
 				<div class="ant-input-wrapper ant-input-group comment-input-wrapper"
 				     style="width: 95%; margin-left: 2.5%;">
-					<a-textarea ref="commentTextArea" style="font-size: 1rem; background-color: rgb(250,250,250)"
-					            v-model:value="commentInput" :maxlength="250" auto-size
-					            autofocus placeholder="输入评论"/>
+					<a-mentions ref="commentTextArea" style="font-size: 1rem; background-color: rgb(250,250,250)"
+					            v-model:value="commentInput" :maxlength="250" auto-size autofocus
+					            :loading="isUserListLoading" @search="onSearchUser"
+								placeholder="输入评论">
+					    <a-mentions-option v-for="({ id, nick_name, avatar_url }) in userList" :key="id"
+							:value="nick_name">
+							<img :src="avatar_url" :alt="nick_name" style="width: 20px; margin-right: 8px;">
+							<span>{{ nick_name }}</span>
+						</a-mentions-option>
+					</a-mentions>
 					<span class="ant-input-group-addon" @click="sendComment">
 						<send-outlined style="font-size: 1.35rem;" :rotate="-45"/>
 					</span>
@@ -23,9 +30,16 @@
 			<div ref="forwardPanel" class="panels forward-panel">
 				<div class="ant-input-wrapper ant-input-group forward-input-wrapper"
 				     style="width: 95%; margin-left: 2.5%;">
-					<a-textarea ref="forwardTextArea" style="font-size: 1rem; background-color: rgb(250,250,250)"
-					            v-model:value="forwardInput" :maxlength="250" auto-size
-					            autofocus placeholder="输入评论"/>
+					<a-mentions ref="forwardTextArea" style="font-size: 1rem; background-color: rgb(250,250,250)"
+					            v-model:value="forwardInput" :maxlength="250" auto-size autofocus
+								:loading="isUserListLoading" @search="onSearchUser"
+					            placeholder="输入评论">
+						<a-mentions-option v-for="({ id, nick_name, avatar_url }) in userList" :key="id"
+							:value="nick_name">
+							<img :src="avatar_url" :alt="nick_name" style="width: 20px; margin-right: 8px;">
+							<span>{{ nick_name }}</span>
+						</a-mentions-option>
+					</a-mentions>
 					<span class="ant-input-group-addon" @click="sendForward">
 						<send-outlined style="font-size: 1.35rem;" :rotate="-45"/>
 					</span>
@@ -45,7 +59,6 @@ export default {
 	name: 'InputPanel',
 	props: {
 		postId: Number,
-		panelStyle: Object,
 		overlay: {
 			type: Boolean,
 			default: true
@@ -54,36 +67,91 @@ export default {
 	inject: {
 		postDetailEvents: {
 			type: Object
+		},
+		lptContainer: {
+			type: String
 		}
 	},
 	components: {
 		SendOutlined
 	},
 	data() {
-		this.curCommentTargetKey = lpt.commentServ.level1 + '#' + this.postId;
-		const post = global.states.postManager.get({
-			itemId: this.postId
-		});
+		let post;
+		if (typeof this.postId !== 'undefined') {
+			this.curCommentTargetKey = lpt.postServ.type + '#' + this.postId;
+			post = global.states.postManager.get({
+				itemId: this.postId
+			});
+		} else {
+			post = {};
+		}
 		return {
 			post: post,
 			showCommentPanel: false,
 			showForwardPanel: false,
 			commentInput: '',
-			forwardInput: ''
+			forwardInput: '',
+			isUserListLoading: false,
+			panelStyle: {},
+			userList: []
+		}
+	},
+	computed: {
+		clientWidth() {
+			if (this.lptContainer === 'blogDrawer') {
+				return global.states.style.drawerWidth;
+			} else if (this.lptContainer === 'blogMain') {
+				return global.states.style.blogMainWidth;
+			} else {
+				return global.states.style.bodyWidth;
+			}
 		}
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
-		this.postDetailEvents.on('openForwardPanel', () => {
-			this.openForwardPanel();
-		});
-		this.postDetailEvents.on('openCommentPanel', (param) => {
-			this.openCommentPanel(param);
-		});
+		if (this.postDetailEvents) {
+			this.postDetailEvents.on('openForwardPanel', () => {
+				this.openForwardPanel();
+			});
+			this.postDetailEvents.on('openCommentPanel', (param) => {
+				this.openCommentPanel(param);
+			});
+		}
+		if (this.commentDetailEvents) {
+			this.commentDetailEvents.on('openCommentPanel', (param) => {
+				this.openCommentPanel(param);
+			});
+		}
+	},
+	mounted() {
+		this.panelStyle = {
+			width: this.clientWidth + 'px',
+			left: this.lptContainer === 'blogMain' ? (global.states.style.blogMainLeft + 'px') : '0'
+		};
+		if (this.lptContainer === 'blogMain') {
+			this.panelStyle.boxShadow = '0 0 10px 6px rgba(0, 0, 0, 0.25)';
+			this.panelStyle.paddingBottom = '1.5rem';
+		}
+	},
+	watch: {
+		clientWidth(width) {
+			this.$nextTick(() => {
+				this.panelStyle.width = width;
+				const left = this.lptContainer === 'blogMain' ? (global.states.style.blogMainLeft + 'px') : '0';
+				this.panelStyle.left = left;
+				if (this.showCommentPanel) {
+					this.resetSheetWidth('commentPanel');
+				}
+				if (this.showForwardPanel) {
+					this.resetSheetWidth('forwardPanel');
+				}
+			});
+		}
 	},
 	methods: {
 		openForwardPanel() {
 			this.showForwardPanel = true;
+			this.resetSheetWidth('forwardPanel');
 			this.$nextTick(() => {
 				if (this.$refs.forwardTextArea)
 					this.$refs.forwardTextArea.$el.focus();
@@ -94,18 +162,50 @@ export default {
 			if (param) {
 				this.curCommentTargetKey = param.type + '#' + param.id;
 			} else {
-				this.curCommentTargetKey = lpt.commentServ.level1 + '#' + this.postId;
+				this.curCommentTargetKey = lpt.postServ.type + '#' + this.postId;
 			}
 			if (!this.commentInputMap) {
 				this.commentInputMap = new Map();
 			}
 			this.commentInputMap.set(preCommentTargetKey, this.commentInput);
 			this.commentInput = this.commentInputMap.get(this.curCommentTargetKey);
+			if (!this.commentInput) {
+				this.commentInput = param.presetText;
+			}
 			this.showCommentPanel = true;
+			this.resetSheetWidth('commentPanel');
 			this.$nextTick(() => {
 				if (this.$refs.commentTextArea)
 					this.$refs.commentTextArea.$el.focus();
 			});
+		},
+		resetSheetWidth(panelName) {
+			// 因为vant框架中action-sheet的宽度是一次性设置的，所以这里要手动修改一下
+			const panelElem = this.$refs[panelName];
+			if (panelElem) {
+				const sheetElem = panelElem.parentNode.parentNode;
+				sheetElem.style.width = this.panelStyle.width + 'px';
+				sheetElem.style.left = this.panelStyle.left;
+			}
+		},
+		onSearchUser(inputName) {
+			this.isUserListLoading = true;
+			lpt.userServ.getByNamePattern({
+				consumer: this.lptConsumer,
+				param: {
+					namePattern: inputName + '*'
+				},
+				success: (result) => {
+					this.userList = result.object.map((user) => {
+						return {
+							id: user.id,
+							nick_name: user.nick_name,
+							avatar_url: lpt.getUserAvatarUrl(user)
+						}
+					});
+					this.isUserListLoading = false;
+				}
+			})
 		},
 		sendForward() {
 			if (this.forwardInput.length === 0) {
@@ -142,22 +242,27 @@ export default {
 			}
 			const strPart = this.curCommentTargetKey.split('#');
 			const type = strPart[0];
-			const parentId = parseInt(strPart[1]);
+			const data = {
+				content: this.commentInput,
+				parent_id: parseInt(strPart[1])
+			};
+			if (type === lpt.commentServ.level2) {
+				// 二级评论的回复除了有上级ID外还有回复的对应二级评论的ID
+				data.reply_to_l2_id = parseInt(strPart[2]);
+				data.reply_to_user_id = parseInt(strPart[3]);
+			}
 			lpt.commentServ.create({
 				consumer: this.lptConsumer,
 				param: {
 					type: type
 				},
-				data: {
-					parent_id: parentId,
-					content: this.commentInput
-				},
+				data: data,
 				success: (result) => {
 					this.showCommentPanel = false;
 					Toast.success('评论成功');
 					const commentList = this.$parent.$refs.commentList;
 					const comment = {
-						id: result.object,
+						id: parseInt(result.object),
 						creator: global.states.curOperator.user,
 						content: this.commentInput,
 						create_time: new Date().getTime(),
@@ -167,29 +272,31 @@ export default {
 						}
 					};
 					if (commentList) {
-						if (type === lpt.commentServ.level1) {
-							// 当前打开了评论列表，且发出的评论是一级评论
+						if (type === lpt.postServ.type) {
+							// 当前打开了评论列表，且发出的评论是一级评论，即评论对象为帖子
 							// 则在评论列表中添加一条
-							comment.post_id = parentId;
+							comment.post_id = data.parent_id;
 							comment.l2_cnt = 0;
 							comment.poster_rep_cnt = 0;
 							comment.entity_type = 'CML1';
 							global.states.commentL1Manager.add(comment);
 							++this.post.comment_cnt;
 							commentList.pushComment(comment);
-						} else if (type === lpt.commentServ.level2) {
-							// 当前打开了评论列表，且发出的是二级评论
+						} else if (type === lpt.commentServ.level1 || type === lpt.commentServ.level2) {
+							// 当前打开了评论列表，且发出的是二级评论，即评论对象为一级评论
 							// 增加该评论所属一级评论的二级评论数量
 							comment.entity_type = 'CML2';
-							comment.l1_id = parentId;
+							comment.post_id = this.postId;
+							comment.l1_id = data.parent_id;
 							const l1Comment = global.states.commentL1Manager.get({
-								itemId: parentId
+								itemId: data.parent_id
 							});
 							++l1Comment.l2_cnt;
 							if (global.states.curOperator.user.id === this.post.creator.id) {
 								// 当前用户是帖子创建者，则增加帖子创建者回复数量
 								++l1Comment.poster_rep_cnt;
 							}
+							global.states.commentL2Manager.add(comment);
 							this.postDetailEvents.emit('publishCommentL2', comment);
 						}
 					}
@@ -211,5 +318,13 @@ export default {
 
 .comment-input-wrapper {
 	padding-bottom: 0.2rem;
+}
+
+:global(.van-popup) {
+	transition: width 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
+}
+
+:global(.ant-mentions-dropdown) {
+	z-index: 3000
 }
 </style>
