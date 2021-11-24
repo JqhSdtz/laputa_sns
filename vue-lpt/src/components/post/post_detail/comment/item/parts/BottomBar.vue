@@ -39,7 +39,8 @@
 import {CommentOutlined, LikeFilled, LikeOutlined, EllipsisOutlined} from '@ant-design/icons-vue';
 import global from '@/lib/js/global';
 import lpt from '@/lib/js/laputa/laputa';
-import {Dialog, Toast} from "vant";
+import {Dialog, Toast} from 'vant';
+import {toRef} from 'vue';
 
 export default {
 	name: 'BottomBar',
@@ -79,7 +80,15 @@ export default {
 		return {
 			comment: comment,
 			showPopover: false,
-			actions: this.initActions(comment)
+			actions: this.initActions(comment),
+			showDrawer: toRef(global.states.blog, 'showDrawer')
+		}
+	},
+	watch: {
+		showDrawer(isShow) {
+			if (this.lptContainer === 'blogDrawer' && !isShow) {
+				this.showPopover = false;
+			}
 		}
 	},
 	created() {

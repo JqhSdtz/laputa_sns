@@ -32,8 +32,9 @@ import {
 	EllipsisOutlined
 } from '@ant-design/icons-vue';
 import lpt from '@/lib/js/laputa/laputa';
-import global from "@/lib/js/global";
-import {Dialog, Toast} from "vant";
+import global from '@/lib/js/global';
+import {Dialog, Toast} from 'vant';
+import {toRef} from 'vue';
 
 export default {
 	name: 'BottomBar',
@@ -64,7 +65,8 @@ export default {
 		return {
 			post: post,
 			showPopover: false,
-			actions: this.initActions(post)
+			actions: this.initActions(post),
+			showDrawer: toRef(global.states.blog, 'showDrawer')
 		}
 	},
 	created() {
@@ -74,6 +76,13 @@ export default {
 			this.postListEvents.on('refreshList', () => {
 				ref.actions = ref.initActions(ref.post);
 			});
+		}
+	},
+	watch: {
+		showDrawer(isShow) {
+			if (this.lptContainer === 'blogDrawer' && !isShow) {
+				this.showPopover = false;
+			}
 		}
 	},
 	methods: {
