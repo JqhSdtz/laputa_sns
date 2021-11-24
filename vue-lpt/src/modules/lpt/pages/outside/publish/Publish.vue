@@ -437,6 +437,7 @@ export default {
 							const post = global.states.postManager.add(data);
 							global.events.emit('createPost', post);
 						} else if (this.opType === 'edit') {
+							global.states.postManager.add(data);
 							Toast.success('编辑成功');
 						}
 					},

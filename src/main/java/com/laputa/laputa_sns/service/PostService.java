@@ -138,14 +138,18 @@ public class PostService extends BaseService<PostDao, Post> {
         return res;
     }
 
-    private int setPostFullText(Post post) {
+    private int setPostFullText(Post post, Post oriPost) {
         int row = 0;
         if (post.getFullText() != null) {
             // 手动设置全文
             TmpEntry fullText = new TmpEntry(null, post.getFullText());
             row = dao.insertFullText(fullText);
-            if (row == -1)
+            if (row == 0)
                 return -1;
+            // 新的fulltext插入成功，如果之前有fulltext，则删掉
+            if (oriPost != null && oriPost.getFullTextId() != null) {
+                dao.deleteFullText(oriPost.getFullTextId());
+            }
             post.setFullTextId(fullText.getId());
             if (post.getContent().length() > briefPostLengthLimit) {
                 // 手动设置全文的情况下，内容大于长度限制直接截取
@@ -155,8 +159,12 @@ public class PostService extends BaseService<PostDao, Post> {
             // 自动设置全文
             TmpEntry fullText = new TmpEntry(null, post.getContent());
             row = dao.insertFullText(fullText);
-            if (row == -1)
+            if (row == 0)
                 return -1;
+            // 新的fulltext插入成功，如果之前有fulltext，则删掉
+            if (oriPost != null && oriPost.getFullTextId() != null) {
+                dao.deleteFullText(oriPost.getFullTextId());
+            }
             post.setFullTextId(fullText.getId());
             post.setContent(post.getContent().substring(0, briefPostLengthLimit));
         } else {
@@ -168,7 +176,7 @@ public class PostService extends BaseService<PostDao, Post> {
     }
 
     public int insertOne(@NotNull Post post) {
-        setPostFullText(post);
+        setPostFullText(post, null);
         int res = dao.insertOne(post);
         return res == 0 ? -1 : post.getId();
     }
@@ -704,7 +712,7 @@ public class PostService extends BaseService<PostDao, Post> {
         if (!postValidator.checkUpdateContentPermission(resPost, operator))
             return new Result(FAIL).setErrorCode(1010050226).setMessage("操作失败，权限错误");
         param.setLength(param.getContent().length());
-        setPostFullText(param);
+        setPostFullText(param, resPost);
         int res = updateContent(param);
         if (res == 0)
             return new Result(FAIL).setErrorCode(1010050127).setMessage("数据库操作失败");

@@ -22,6 +22,7 @@ public interface PostDao extends BaseDao<Post> {
     List<Post> selectList(@Param("post") Post post, @Param("category_list") List<Category> categoryList);
     int insertFullText(TmpEntry fullText);
     String selectFullText(int fullTextId);
+    int deleteFullText(int fullTextId);
     int correctCommentCnt();
     int correctForwardCnt();
     int correctLikeCnt();
