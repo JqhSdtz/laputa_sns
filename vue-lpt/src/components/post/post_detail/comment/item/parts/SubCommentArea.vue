@@ -1,7 +1,7 @@
 <template>
 	<div style="width: 100%; background-color: #ECECEC">
 		<div v-for="comment in comment.preview_l2_list" :key="comment.id">
-			<a-button type="link" style="padding-right: 0">
+			<a-button type="link" style="padding-right: 0" @click.stop="showCreator">
 				{{comment.creator.nick_name}}
 			</a-button>
 			<van-tag v-if="comment.creator.id === posterId" type="primary" style="margin-left: 0.25rem">
@@ -55,6 +55,11 @@ export default {
 					id: this.comment.id
 				});
 			}
+		},
+		showCreator() {
+			this.$router.push({
+				path: '/user_home_page/' + this.comment.creator.id
+			});
 		}
 	}
 }

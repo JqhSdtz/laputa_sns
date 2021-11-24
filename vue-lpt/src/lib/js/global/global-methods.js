@@ -63,29 +63,33 @@ export default {
         const html = opt.el.innerHTML;
         opt.el.innerHTML = html.replaceAll(mentionParseReg, '<a class="m-link" href="#">$1</a>');
         const mentionLinks = opt.el.getElementsByClassName('m-link');
-        mentionLinks.forEach((mElem) => {
-            let name = mElem.innerText;
-            name = name.substring(1, name.length - 1);
-            mElem.addEventListener('click', (event) => {
-                lpt.userServ.getByName({
-                    consumer: this.lptConsumer,
-                    throwError: true,
-                    param: {
-                        userName: name
-                    },
-                    success: (result) => {
-                        opt.router.push({
-                            path: '/user_home_page/' + result.object.id
-                        });
-                    },
-                    fail: (result) => {
-                        Toast.fail(result.message);
-                    }
-                }).catch(() => {
-                    Toast.fail('查无此人');
+        if (mentionLinks) {
+            for (let i = 0; i < mentionLinks.length; ++i) {
+                const mElem = mentionLinks[i];
+                let name = mElem.innerText;
+                name = name.substring(1, name.length - 1);
+                mElem.addEventListener('click', (event) => {
+                    lpt.userServ.getByName({
+                        consumer: this.lptConsumer,
+                        throwError: true,
+                        param: {
+                            userName: name
+                        },
+                        success: (result) => {
+                            opt.router.push({
+                                path: '/user_home_page/' + result.object.id
+                            });
+                        },
+                        fail: (result) => {
+                            Toast.fail(result.message);
+                        }
+                    }).catch(() => {
+                        Toast.fail('查无此人');
+                    });
+                    event.stopPropagation();
+                    event.preventDefault();
                 });
-                event.preventDefault();
-            });
-        });
+            }
+        }
     }
 }
