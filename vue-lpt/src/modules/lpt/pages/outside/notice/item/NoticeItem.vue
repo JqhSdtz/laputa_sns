@@ -2,9 +2,9 @@
 	<div style="margin-left: 2rem;" @click="showNoticeDetail">
 		<div style="height: 1.5rem; margin-top: 1rem;">
 			<a-badge v-if="unread" :dot="true" :offset="[6, 0]">
-				<p class="desc">{{getDescription()}}</p>
+				<notice-description class="notice-desc" :notice="notice"/> 
 			</a-badge>
-			<p v-else class="desc">{{getDescription()}}</p>
+			<notice-description v-else class="notice-desc" :notice="notice"/> 
 			<p class="time" style="margin-left: 1rem">{{updateTime}}</p>
 		</div>
 		<van-divider style="margin: 5px 0"/>
@@ -17,12 +17,16 @@ import zh from 'javascript-time-ago/locale/zh';
 import {Toast} from 'vant';
 import global from '@/lib/js/global';
 import lpt from '@/lib/js/laputa/laputa';
+import NoticeDescription from './NoticeDescription';
 
 TimeAgo.addLocale(zh);
 const timeAgo = new TimeAgo('zh-CN');
 
 export default {
 	name: 'NoticeItem',
+	components: {
+		NoticeDescription
+	},
 	props: {
 		noticeId: String
 	},
@@ -50,37 +54,6 @@ export default {
 		}
 	},
 	methods: {
-		getDescription() {
-			const notice = this.notice;
-			const typeStr = notice.type_str;
-			const title = (typeof notice.content === 'undefined' || notice.content == null) ? null : notice.content.title;
-			let desc = '';
-			if (typeof title !== 'undefined' && title !== null) {
-				desc = title;
-			} else if (notice.content != null) {
-				desc = notice.content.content;
-			}
-			if (desc.length > 10) {
-				desc = desc.substring(0, 9) + '...';
-			}
-			switch (typeStr) {
-				case 'like_post':
-					return '帖子"' + desc + '"收到' + notice.unread_cnt + '条赞';
-				case 'like_cml1':
-				case 'like_cml2':
-					return '评论"' + desc + '"收到' + notice.unread_cnt + '条赞';
-				case 'cml1_of_post':
-					return '帖子"' + desc + '"收到' + notice.unread_cnt + '条评论';
-				case 'cml2_of_cml1':
-					return '评论"' + desc + '"收到' + notice.unread_cnt + '条回复';
-				case 'fw_post':
-					return '帖子"' + desc + '"收到' + notice.unread_cnt + '条转发';
-				case 'follower':
-					return '新增' + notice.unread_cnt + '位粉丝';
-				case 'reply_of_cml2':
-					return '评论"' + desc + '"收到' + notice.unread_cnt + '条回复';
-			}
-		},
 		showNoticeDetail() {
 			const ref = this;
 			lpt.noticeServ.markAsRead({
@@ -105,12 +78,6 @@ export default {
 			const query = {};
 			const typeStr = this.notice.type_str;
 			const typeIs = (str) => typeStr === str;
-			// if (type == Notice.TYPE_LIKE_POST || type == Notice.TYPE_CML1_OF_POST || type == Notice.TYPE_FW_POST)
-            //     notice.setContent(postMap.get(id));
-            // else if (type == Notice.TYPE_LIKE_CML1 || type == Notice.TYPE_CML2_OF_CML1)
-            //     notice.setContent(cml1Map.get(id));
-            // else if (type == Notice.TYPE_LIKE_CML2 || type == Notice.TYPE_REPLY_OF_CML2)
-            //     notice.setContent(cml2Map.get(id));
 			if (typeIs('like_post') || typeIs('fw_post') || typeIs('cml1_of_post')) {
 				path = '/post_detail/' + this.notice.content_id;
 				if (typeIs('like_post')) {
@@ -147,5 +114,9 @@ p {
 	display: inline-block;
 	height: 1.5rem;
 	line-height: 1.5rem;
+}
+
+.notice-desc {
+	display: inline-block;
 }
 </style>

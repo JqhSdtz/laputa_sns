@@ -224,9 +224,6 @@ public class OperatorService {
                 return (Result) userResult.setMessage("ID错误");
             operator.setUser(userResult.getObject());
         }
-        pullNewsAndNoticeCnt(operator);
-        //加载成功，刷新Redis中的Operator
-        redisHelper.setEntity(operator, false);
         return new Result(SUCCESS).setObject(operator);
     }
 
@@ -234,10 +231,10 @@ public class OperatorService {
      * 获取操作者的动态和通知数量
      *
      */
-    private void pullNewsAndNoticeCnt(Operator operator) {
+    public void pullNewsAndNoticeCnt(Operator operator) {
         long curTime = new Date().getTime();
-        if (operator.getLastAccessTime() == null || curTime - operator.getLastAccessTime() > 1000) {
-            //距上一次访问大于1秒，重新读取未读动态数
+        if (operator.getLastAccessTime() == null || curTime - operator.getLastAccessTime() > 500) {
+            // 距上一次访问大于500毫秒秒，重新读取未读动态数
             Result<Integer> cntResult = postNewsService.readNewsCount(operator);
             if (cntResult.getState() == SUCCESS)
                 operator.setUnreadNewsCnt(cntResult.getObject());

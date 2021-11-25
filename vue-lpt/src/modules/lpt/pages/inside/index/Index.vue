@@ -90,6 +90,9 @@ export default {
 			return mainViewHeight - barHeight + 'px';
 		}
 	},
+	activated() {
+		this.setTitle(this.category);
+	},
 	methods: {
 		setTitle(category) {
 			if (this.lptContainer === 'blogDrawer') return;

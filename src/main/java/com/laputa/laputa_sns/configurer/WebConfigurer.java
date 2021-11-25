@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.laputa.laputa_sns.interceptor.ValidateInterceptor;
+
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -44,22 +45,4 @@ public class WebConfigurer implements WebMvcConfigurer {
 //                .allowedMethods("GET", "POST", "PATCH", "DELETE");
 //    }
 
-    @Override
-    public void extendMessageConverters(@NotNull List<HttpMessageConverter<?>> converters) {
-        for(HttpMessageConverter<?> converter: converters) {
-            if(converter instanceof MappingJackson2HttpMessageConverter) {
-                ObjectMapper mapper = ((MappingJackson2HttpMessageConverter)converter).getObjectMapper();
-                mapper.setFilterProvider(new SimpleFilterProvider()
-                        //序列化operator时去掉token，token通过httpOnly的cookie传输
-                        .addFilter("OperatorFilter", SimpleBeanPropertyFilter.serializeAllExcept("token"))
-                        .addFilter("UserFilter", SimpleBeanPropertyFilter.serializeAll())
-                        .addFilter("PostFilter", SimpleBeanPropertyFilter.serializeAll())
-                        .addFilter("CommentL1Filter", SimpleBeanPropertyFilter.serializeAll())
-                        .addFilter("CommentL2Filter", SimpleBeanPropertyFilter.serializeAll())
-                        .addFilter("PermissionFilter", SimpleBeanPropertyFilter.serializeAll()));
-                //true表示转json时时间转化为一个长整型数，false则转化为字符串
-                mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true);
-            }
-        }
-    }
 }

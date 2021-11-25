@@ -7,7 +7,13 @@
 				@mouseleave="onMenuItemMouseLeave($event, menuItem)"
 				@click="onMenuItemClick(menuItem)">
 				<p class="menu-title">
-					<span class="menu-name" v-text="menuItem.name"></span>
+					<a-badge v-if="menuItem.showDot" :dot="true" :offset="[0, -2]"
+						:numberStyle="{boxShadow: '0 0 0 1px #ff4d4f'}">
+						<span class="menu-name" v-text="menuItem.name"></span>
+					</a-badge>
+					<template v-else>
+						<span class="menu-name" v-text="menuItem.name"></span>
+					</template>
 				</p>
 				<div class="menu-bar"></div>
 				<div v-if="menuItem.separator" class="menu-separator"></div>
@@ -20,10 +26,10 @@
 import global from '@/lib/js/global';
 import remHelper from '@/lib/js/uitls/rem-helper';
 import lpt from '@/lib/js/laputa/laputa';
+import {toRef} from 'vue';
 
 export default {
 	name: 'FixedMenu',
-	components: {},
 	data() {
 		const menuItems = [{
 			type: 'index',
@@ -38,6 +44,7 @@ export default {
 		}, {
 			type: 'mine',
 			name: '个人中心',
+			showDot: toRef(global.states.curOperator, 'unread_notice_cnt'),
 			separator: true
 		}, {
 			type: 'post',
