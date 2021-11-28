@@ -25,29 +25,37 @@
 						<action-bar style="position: absolute; right: 0; margin-top: 2.5rem;" :category-id="category.id"/>
 					</div>
 					<category-path style="margin-left: 1rem;" :path-list="category.path_list"/>
-					<ellipsis style="margin: 0.5rem 1rem" :content="category.intro" :rows="2"/>
+					<ellipsis style="margin: 0.5rem 1rem" :content="categoryIntro" :rows="2"/>
 				</div>
 				<!-- 放到tab里面会改变viewport，影响position:fixed的效果，使其相对于tab页固定
 						所以添加两个selector，根据tab页是否黏住判断分别显示两个不同的selector -->
 				<sort-type-selector class="sort-type-selector" v-if="postListLoaded && isTabFixed"
 				                    v-show="curTabKey === 'postList'"
-				                    :button-style="{right: 'auto', left: sortTypeLeft + 'px'}" :auto-hide="isTabFixed" offset="4rem"
+				                    :button-style="{right: 'auto', left: sortTypeLeft + 'px'}" :auto-hide="isTabFixed" 
+									:offset="categoryDetailType === 'gallery' ? '5.75rem' : '4rem'"
 				                    :hide-offset-base="mainAreaHeight" v-model:sort-type="sortType"/>
 				<float-publish-button v-if="hasPublishRight && postListLoaded"
 				                      :style="{left: floatPublishLeft + 'px'}" :auto-hide="isTabFixed"
 				                      :category="category" :hide-offset-base="mainAreaHeight"/>
 				<a-back-top style="bottom: 2rem;" :style="{left: backTopLeft + 'px'}" :target="getElement"/>
-				<div ref="middleBar" id="middle-bar" :style="{width: clientWidth + 'px'}">
+				<div ref="middleBar" id="category-middle-bar" :style="{width: clientWidth + 'px'}">
 					<van-tabs ref="tabs" v-model:active="curTabKey" :width="clientWidth"
 					          swipeable sticky lazy-render @scroll="onScroll">
 						<van-tab ref="postListTab" name="postList" title="帖子" :width="clientWidth">
 							<sort-type-selector class="sort-type-selector" v-if="postListLoaded && !isTabFixed"
 							                    :button-style="{right: 'auto', left: insideSortTypeLeft  + 'px'}" :auto-hide="false"
-							                    offset="0.75rem"
+							                    :offset="categoryDetailType === 'gallery' ? '3rem' : '0.75rem'"
 							                    v-model:sort-type="sortType"/>
-							<post-list ref="postList" :category-id="category.id"
+							<post-list v-if="categoryDetailType === 'plain'" ref="postList" :category-id="category.id"
 							           :post-of="'category'" :top-post-id="category.top_post_id" :sort-type="sortType"
 							           @refresh="init" @loaded="onPostListLoaded" :fill-parent="$refs.middleBar"/>
+							<gallery-list v-if="categoryDetailType === 'gallery'" ref="postList" :category-id="category.id"
+							        :post-of="'category'" 
+									:top-post-id="category.top_post_id" 
+									:sort-type="sortType"
+							        @refresh="init"
+									@loaded="onPostListLoaded" 
+									:fill-parent="$refs.middleBar"/>
 						</van-tab>
 						<van-tab ref="subCategoryTab" name="subCategory" title="分区">
 							<div>
@@ -72,6 +80,7 @@ import global from '@/lib/js/global';
 import lpt from '@/lib/js/laputa/laputa';
 import {Toast} from 'vant';
 import PostList from '@/components/post/post_list/PostList';
+import GalleryList from '@/components/post/post_list/GalleryList';
 import CategoryGridItem from '@/components/category/item/CategoryGridItem';
 import SortTypeSelector from '@/components/post/post_list/SortTypeSelector';
 import FloatPublishButton from '@/components/post/post_list/FloatPublishButton';
@@ -79,6 +88,8 @@ import Ellipsis from '@/components/global/Ellipsis';
 import ActionBar from "@/modules/lpt/pages/outside/category/detail/parts/ActionBar";
 import CategoryPath from '@/components/category/CategoryPath';
 import {toRef} from "vue";
+
+const typeReg = /tp:([a-zA-Z]*)#/;
 
 export default {
 	name: 'CategoryDetail',
@@ -92,6 +103,7 @@ export default {
 		FloatPublishButton,
 		CategoryGridItem,
 		PostList,
+		GalleryList,
 		SortTypeSelector
 	},
 	inject: {
@@ -116,6 +128,8 @@ export default {
 			isTabFixed: false,
 			curTabKey: 'postList',
 			sortType: sortType,
+			categoryDetailType: 'plain',
+			categoryIntro: '',
 			postListLoaded: false
 		}
 	},
@@ -191,11 +205,25 @@ export default {
 	methods: {
 		setTitle(category) {
 			if (this.lptContainer === 'blogDrawer') return;
+			let pageDesc;
+			if (this.categoryDetailType === 'plain') {
+				pageDesc = '目录';
+			} else if (this.categoryDetailType === 'gallery') {
+				pageDesc = '相册';
+			}
 			global.methods.setTitle({
 				contentDesc: category.name,
-				pageDesc: '目录',
+				pageDesc: pageDesc,
 				route: this.$route
 			});
+		},
+		resolveIntroChange(category) {
+			if (!category.intro || !typeReg.test(category.intro)) {
+				this.categoryDetailType = 'plain';
+			} else {
+				this.categoryDetailType = category.intro.match(typeReg)[1];
+				this.categoryIntro = category.intro.replace(typeReg, '');
+			}
 		},
 		onScroll({scrollTop, isFixed}) {
 			if (this.$refs.categoryInfoArea) {
@@ -208,6 +236,7 @@ export default {
 				itemId: this.categoryId,
 				filter: (res) => res.isFull,
 				success: (category) => {
+					this.resolveIntroChange(category);
 					this.setTitle(category);
 					global.events.emit('visitCategory', category);
 					if (!category.sub_list || category.sub_list.length === 0) {
@@ -226,7 +255,7 @@ export default {
 		onCategoryNameClick() {
 			if (this.lptContainer === 'blogDrawer') {
 				this.$router.push({
-					path: '/blog/index/' + this.category.id
+					path: '/blog/category_detail/' + this.category.id
 				});
 				global.states.blog.showDrawer = false;
 			}
@@ -276,7 +305,7 @@ export default {
 	margin-top: -2.5rem;
 }
 
-#middle-bar {
+#category-middle-bar {
 	height: 100%;
 	background-color: white;
 }

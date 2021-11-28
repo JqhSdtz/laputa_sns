@@ -69,6 +69,16 @@ export default {
 			category
 		}
 	},
+	watch: {
+		categoryId(newCategoryId) {
+			this.category = global.states.categoryManager.get({
+				itemId: newCategoryId,
+				fail(result) {
+					Toast.fail(result.message);
+				}
+			});
+		}
+	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 	},

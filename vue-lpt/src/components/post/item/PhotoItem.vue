@@ -2,8 +2,10 @@
 	<div class="photo-item" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
 		<img ref="img" :src="coverUrl" v-show="post.settled" @click="showPreview" :onload="onImgLoaded"
 		     :onerror="onImgLoaded" ondragstart="return false"/>
-		<image-box ref="imageBox" :images="images" :show-image-list="false"
+		<teleport to="body">
+			<image-box ref="imageBox" :images="images" :show-image-list="false"
 		           :containerStyle="{width: '67%', marginLeft: '33%'}"/>
+		</teleport>
 		<bottom-bar class="bottom-bar" v-show="showBottomBar"
 		            :post-id="post.id" :post-of="postOf" :show-actions="true"
 		            @click.capture.stop="showPreview"/>
@@ -92,6 +94,9 @@ export default {
 			if (typeof this.post.full_text_id === 'undefined') return;
 			this.showBottomBar = false;
 			this.post.noFullText = true;
+			this.doShowPreview();
+		},
+		doShowPreview() {
 			if (!this.hasLoadedFullText) {
 				const promise = lpt.postServ.getFullText({
 					consumer: this.lptConsumer,

@@ -28,7 +28,7 @@
 		<right-outlined id="drawer-switcher" class="with-transition" ref="drawerSwitcher"
 		                :rotate="drawerWidth === '75%' && showDrawer ? 180 : 0"
 		                @click="onDrawerSwitcherClick" @mouseenter="onDrawerSwitcherMouseEnter" @mouseleave="onDrawerSwitcherMouseLeave"/>
-		<float-menu id="main-bar"/>
+		<!-- <float-menu/> -->
 		<fixed-menu/>
 		<tab-strip/>
 		<prompt-dialog ref="prompt"/>
@@ -42,7 +42,6 @@ import {Modal} from 'ant-design-vue';
 import {
 	RightOutlined
 } from '@ant-design/icons-vue';
-import FloatMenu from '@/modules/blog/components/menu/float/FloatMenu';
 import FixedMenu from '@/modules/blog/components/menu/fixed/FixedMenu';
 import TabStrip from '@/modules/blog/components/tabs/TabStrip';
 import MainContainer from '@/modules/blog/components/container/MainContainer';
@@ -57,7 +56,6 @@ import description from './description';
 export default {
 	name: 'App',
 	components: {
-		FloatMenu,
 		FixedMenu,
 		TabStrip,
 		LoadingArea,
@@ -110,7 +108,7 @@ export default {
 				// icon: createVNode(ExclamationCircleOutlined),
 				content: '登录打开新世界！',
 				onOk() {
-					ref.$router.push({path: '/sign_in'});
+					ref.$router.push({path: '/home/mine'});
 				}
 			});
 		});

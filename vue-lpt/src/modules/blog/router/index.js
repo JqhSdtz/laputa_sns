@@ -25,7 +25,6 @@ import Index from "@/modules/lpt/pages/inside/index/Index";
 import Categories from "@/modules/blog/pages/drawer/category/Categories";
 import LptQrCode from "@/modules/lpt/pages/inside/mine/LptQrCode";
 import Report from "@/modules/lpt/pages/outside/report/Report";
-import Gallery from "@/modules/blog/pages/main/gallery/Gallery";
 
 function initRouter() {
     const drawerRouters = [
@@ -220,11 +219,6 @@ function initRouter() {
                 noCache: true,
                 mainPathPropNum: 1
             }
-        },
-        {
-            path: '/blog/gallery',
-            name: 'gallery',
-            component: Gallery
         },
         {
             path: '/blog/post_detail/:blogPostId',

@@ -24,6 +24,7 @@
 
 <script>
 import global from '@/lib/js/global';
+import blogDescription from '@/modules/blog/description';
 import remHelper from '@/lib/js/uitls/rem-helper';
 import lpt from '@/lib/js/laputa/laputa';
 import {toRef} from 'vue';
@@ -35,9 +36,6 @@ export default {
 			type: 'index',
 			name: '首页',
 			separator: true
-		}, {
-			type: 'gallery',
-			name: '相册'
 		}, {
 			type: 'categories',
 			name: '目录'
@@ -107,7 +105,7 @@ export default {
 			if (menuItem.type === 'index') {
 				path = '/blog/index/' + lpt.categoryServ.rootCategoryId;
 			} else if (menuItem.type === 'gallery') {
-				path = '/blog/gallery';
+				path = '/blog/category_gallery_detail/' + blogDescription.galleryCategoryId;
 			} else if (menuItem.type === 'categories') {
 				path = '/categories';
 			} else if (menuItem.type === 'mine') {

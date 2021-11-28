@@ -380,16 +380,21 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             if (parentResult.getState() == FAIL)
                 return parentResult.setMessage("操作失败，父目录id错误");
             Category parent = parentResult.getObject();
-            if (type == UPDATE) {//更新父目录的情况，parent为要移向的父目录
-                if (parent.getId().equals(category.getId()))//parentId是要修改的父目录Id，category是完整的原目录
+            if (type == UPDATE) {
+                // 更新父目录的情况，parent为要移向的父目录
+                // parentId是要修改的父目录Id，category是完整的原目录
+                if (parent.getId().equals(category.getId()))
                     return new Result(FAIL).setErrorCode(1010010203).setMessage("操作失败，子目录不能和父目录相同");
-                if (parent.getId().equals(category.getParent().getId()))//更新父目录的情况，新的父目录和原目录的父目录相同
+                // 更新父目录的情况，新的父目录和原目录的父目录相同
+                if (parent.getId().equals(category.getParent().getId()))
                     return new Result(FAIL).setErrorCode(1010010204).setMessage("操作失败，新的父目录不能和原有的父目录相同");
-                if (category.isParentOf(parent))//新的父目录是原目录的子目录
+                // 新的父目录是原目录的子目录
+                if (category.isParentOf(parent))
                     return new Result(FAIL).setErrorCode(1010010205).setMessage("操作失败，新的父目录不能是原目录的子目录");
-                if (parent.getIsLeaf() && !parent.getPostCnt().equals(0L))//要移向的父目录是叶子节点且有内容
-                    return new Result(FAIL).setErrorCode(1010010206).setMessage("操作失败，新的父目录不能包含帖子");
             }
+            // 要移向或在此创建的父目录是叶子节点且有内容
+            if (parent.getIsLeaf() && !parent.getPostCnt().equals(0L))
+                return new Result(FAIL).setErrorCode(1010010206).setMessage("操作失败，新的父目录不能包含帖子");
         }
         return Result.EMPTY_SUCCESS;
     }

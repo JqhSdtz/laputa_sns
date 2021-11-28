@@ -1,7 +1,7 @@
 <template>
 	<div ref="menuMain">
 		<div v-show="isMenuShown" @click="closeMenu">
-			<menu-item class="item" :with-background="true" ref="gallery" path="/blog/gallery">
+			<menu-item class="item" :with-background="true" ref="gallery" :path="'/blog/category_detail/' + galleryCategoryId">
 				<ri-landscape-line class="icon"/>
 				<p class="text">相册</p>
 			</menu-item>
@@ -35,6 +35,7 @@ import {
 	RiLandscapeLine, RiAppsFill, RiDashboardFill, RiCloseFill
 } from '@/assets/icons/remix-icon';
 import global from '@/lib/js/global';
+import blogDescription from '@/modules/blog/description';
 import remHelper from '@/lib/js/uitls/rem-helper';
 import {toRef} from 'vue';
 import lpt from "@/lib/js/laputa/laputa";
@@ -51,6 +52,7 @@ export default {
 	data() {
 		return {
 			me: global.states.curOperator,
+			galleryCategoryId: blogDescription.galleryCategoryId,
 			rootCategoryId: lpt.categoryServ.rootCategoryId,
 			isMenuShown: false,
 			startDrag: false,

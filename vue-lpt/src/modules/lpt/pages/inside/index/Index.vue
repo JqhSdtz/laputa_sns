@@ -8,10 +8,10 @@
 					<van-checkbox v-model="enableBoolMode" style="font-size: 0.9rem">多关键字</van-checkbox>
 				</template>
 			</van-search>
-			<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType" 
-				:position="lptContainer === 'blogMain' ? 'left' : 'inside'"
-				:offset="lptContainer === 'blogMain' ? '2.5rem' : undefined"/>
-			<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px'}" :target="getElement"/>
+			<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType"
+				:button-style="{right: sortTypeRight + 'px'}"/>
+			<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px', left: backTopLeft + 'px'}" 
+				:target="getElement"/>
 			<post-list ref="postList" :category-id="category.id" :top-post-id="category.top_post_id"
 			           :sort-type="sortType" @loaded="onPostListLoaded"/>
 		</div>
@@ -24,6 +24,7 @@ import global from '@/lib/js/global';
 import lpt from '@/lib/js/laputa/laputa';
 import {Toast} from 'vant';
 import SortTypeSelector from '@/components/post/post_list/SortTypeSelector';
+import remHelper from '@/lib/js/uitls/rem-helper';
 
 export default {
 	name: 'Index',
@@ -88,6 +89,18 @@ export default {
 			// 底部高度加0.5的padding
 			let barHeight = this.mainBarHeight;
 			return mainViewHeight - barHeight + 'px';
+		},
+		sortTypeRight() {
+			let right = remHelper.remToPx(1);
+			if (this.lptContainer === 'blogMain')
+				right += global.states.style.blogMainLeft;
+			return right;
+		},
+		backTopLeft() {
+			let left = 30;
+			if (this.lptContainer === 'blogMain')
+				left += global.states.style.blogMainLeft;
+			return left;
 		}
 	},
 	activated() {

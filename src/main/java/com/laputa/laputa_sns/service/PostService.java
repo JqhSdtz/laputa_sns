@@ -637,6 +637,9 @@ public class PostService extends BaseService<PostDao, Post> {
         if (!postValidator.checkSetCategoryPermission(resPost, operator))
             return new Result(FAIL).setErrorCode(1010050229).setMessage("操作失败，权限错误");
         Integer oriCategoryId = resPost.getCategoryId();
+        if (param.getCategoryId().equals(oriCategoryId)) {
+            return new Result(FAIL).setErrorCode(1010050233).setMessage("操作失败，目标目录不能是原目录");
+        }
         resPost.setCategoryId(param.getCategoryId());
         Result checkCategoryResult = checkCategoryOfPost(resPost, operator);
         if (checkCategoryResult.getState() == FAIL)

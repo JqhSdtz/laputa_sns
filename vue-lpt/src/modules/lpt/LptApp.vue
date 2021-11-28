@@ -43,7 +43,7 @@ export default {
 				// icon: createVNode(ExclamationCircleOutlined),
 				content: '登录打开新世界！',
 				onOk() {
-					ref.$router.push({path: '/sign_in'});
+					ref.$router.push({path: '/home/mine'});
 				}
 			});
 		});

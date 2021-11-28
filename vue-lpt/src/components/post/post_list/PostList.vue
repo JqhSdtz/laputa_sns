@@ -217,6 +217,7 @@ export default {
 				success: () => {
 					Toast.success('删除成功');
 					this.list.splice(this.list.findIndex(_post => _post.id === post.id), 1);
+					this.increasePostCntOfCategory(this.categoryId, -1, true);
 				},
 				fail(result) {
 					Toast.fail(result.message);
@@ -255,7 +256,9 @@ export default {
 								},
 								success: () => {
 									Toast.success('迁移目录成功');
-									// ref.list.splice(ref.list.indexOf(param.post), 1);
+									this.list.splice(this.list.findIndex(_post => _post.id === param.post.id), 1);
+									this.increasePostCntOfCategory(this.categoryId, -1, true);
+									this.increasePostCntOfCategory(value, 1, true);
 								},
 								fail(result) {
 									Toast.fail(result.message);
@@ -273,6 +276,7 @@ export default {
 				&& this.creatorId === post.creator_id)) {
 				this.isEmpty = false;
 				this.list.unshift(post);
+				this.increasePostCntOfCategory(this.categoryId, 1, true);
 			}
 		});
 	},
@@ -287,6 +291,36 @@ export default {
 		reset() {
 			this.querior.reset();
 			this.hasEverLoad = false;
+		},
+		increasePostCntOfCategory(categoryId, delta, increaseParent) {
+			// 变更当前目录路径上的所有目录的贴数
+			global.states.categoryManager.get({
+				itemId: categoryId,
+				filter: (item) => item.path_list && item.path_list.length,
+				success: (category) => {
+					if (increaseParent) {
+						const pathList = category.path_list;
+						for (let i = 0; i < pathList.length; ++i) {
+							const itemId = pathList[i].id;
+							// justLocal是因为如果从远程获取，post_cnt就是最新的，不需要做改变
+							// 所以仅获取本地的，并且有post_cnt字段的
+							global.states.categoryManager.get({
+								itemId: itemId,
+								justLocal: true,
+								success: (pCategory) => {
+									if (typeof pCategory.post_cnt !== 'undefined') {
+										pCategory.post_cnt += delta;
+									}
+								}
+							});
+						}
+					} else {
+						if (typeof category.post_cnt !== 'undefined') {
+							category.post_cnt += delta;
+						}
+					}
+				}
+			});
 		},
 		loadMore(isRefresh) {
 			if (!this.querior.hasReachedBottom) {

@@ -1,8 +1,8 @@
 <template>
 	<div id="tab-container" :style="{height: outerHeight}">
-		<div id="tabs-separator"></div>
-		<div id="tab-container-inner" :style="{height: scrollHeight}">
-			<div class="tab-item" v-for="(tabItem, index) in tabItems" 
+		<div ref="tabContainerInner" id="tab-container-inner" :style="{height: scrollHeight}">
+			<div class="tab-item" v-for="(tabItem, index) in tabItems"
+				:ref="'item-' + tabItem.path" 
 				:key="tabItem.path"
 				:class="{active: activePath === tabItem.path}"
 				@click="onTabItemClick(tabItem)">
@@ -35,11 +35,11 @@ export default {
 	},
 	computed: {
 		outerHeight() {
-			return global.states.style.bodyHeight - remHelper.remToPx(5) + 'px';
+			return global.states.style.bodyHeight * 0.95 + 'px';
 		},
 		scrollHeight() {
-			// 距顶部高度是5rem，这里留7是为了给底部留空间
-			return global.states.style.bodyHeight - remHelper.remToPx(7.5) + 'px';
+			// 距顶部高度是5%，这里留2.5rem是为了给底部留空间
+			return global.states.style.bodyHeight * 0.95 - remHelper.remToPx(2.5) + 'px';
 		}
 	},
 	created() {
@@ -47,12 +47,24 @@ export default {
 			if (!this.tabItems.some(item => item.path === path)) {
 				// 不存在该路径的tab页再添加，防止死循环
 				const title = this.pathTitleMap.get(path) || path;
-				this.tabItems.push({
+				let pos = this.tabItems.findIndex(item => item.path === this.activePath) + 1;
+				this.tabItems.splice(pos, 0, {
 					path: path,
 					title: title,
 				});
 			}
 			this.activePath = path;
+			this.$nextTick(() => {
+				const container = this.$refs.tabContainerInner;
+				const elem = this.$refs['item-' + path];
+				if (container.scrollTop > elem.offsetTop) {
+					// 标签元素在可视范围上方，则向上滚动
+					container.scrollTop = elem.offsetTop;
+				} else if (elem.offsetTop > container.clientHeight) {
+					// 标签元素在可视范围下方，则向下滚动
+					container.scrollTop = elem.offsetTop;
+				}
+			});
 		});
 		global.events.on('onSetBlogTitle', (param) => {
 			const target = this.tabItems.find((item) => item.path === param.path);
@@ -85,21 +97,14 @@ export default {
 #tab-container {
 	position: absolute;
 	left: 0;
-	top: 5rem;
+	top: 5%;
 	width: 10%;
 }
 
 #tab-container-inner {
-	margin-top: 0.75rem;
 	width: 80%;
 	margin-left: 10%;
 	overflow-y: scroll;
-}
-
-#tabs-separator {
-	height: 0.1rem;
-	width: 100%;
-	background-color: rgba(255, 255, 255, 0.1);
 }
 
 .tab-item {
@@ -123,7 +128,8 @@ export default {
 }
 
 .close-icon:hover {
-	font-size: 1.25rem;
+	font-weight: bold;
+	color: rgba(0, 0, 0, 1);
 }
 
 #close-all-icon {

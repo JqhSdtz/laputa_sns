@@ -1,26 +1,24 @@
 <template>
-	<div class="main-area" :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
-	     :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top v-scroll-view>
-		<sort-type-selector v-if="postListLoaded" v-model:sort-type="sortType" position="left"
-			offset="2.5rem"/>
-		<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px'}" :target="getElement"/>
-		<post-list ref="postList" :category-id="category.id" :top-post-id="category.top_post_id"
-		           :sort-type="sortType" @loaded="onPostListLoaded"
+	<post-list ref="postList" :category-id="category.id" :top-post-id="category.top_post_id"
+					@refresh="$emit('refresh');"
+					@loaded="$emit('loaded');"
+		           :sort-type="sortType"
 		           :custom-load-process="processImgLoad"
 		           :on-batch-processed="onBatchProcessed"
-				   style="padding-top: 0.35rem">
+				   style="padding: 1rem 0.5rem 0 0.5rem">
 			<template v-slot:default="sProps">
 				<a-row id="photo-container" type="flex" justify="space-around">
 					<a-col v-for="post in sProps.postList" :key="post.id">
 						<photo-item class="photo-item" :post-id="post.id"
-						            :ref="'photo' + post.id"
-						            :is-top-post="post.id === sProps.topPostId"
-						            :on-img-loaded="() => onImgLoaded(post)"/>
+						        :ref="'photo' + post.id"
+								@beforeShowPreview="$emit('beforeShowPreview', post)"
+								@afterShowPreview="$emit('afterShowPreview', post)"
+						        :is-top-post="post.id === sProps.topPostId"
+						        :on-img-loaded="() => onImgLoaded(post)"/>
 					</a-col>
 				</a-row>
 			</template>
-		</post-list>
-	</div>
+	</post-list>
 </template>
 
 <script>
@@ -28,19 +26,29 @@
  * 说明：getRatio,setRow,arrangeList等与图片排版有关的代码借鉴自图虫网
  */
 import global from '@/lib/js/global';
-import blogDescription from '@/modules/blog/description';
+import remHelper from '@/lib/js/uitls/rem-helper';
 import {Toast} from 'vant';
-import SortTypeSelector from '@/components/post/post_list/SortTypeSelector';
-import PhotoItem from "@/modules/blog/pages/main/gallery/PhotoItem";
+import PhotoItem from "@/components/post/item/PhotoItem";
 import PostList from "@/components/post/post_list/PostList";
 
 export default {
-	name: 'Gallery',
+	name: 'GalleryList',
 	components: {
 		PostList,
-		PhotoItem,
-		SortTypeSelector
+		PhotoItem
 	},
+	props: {
+		categoryId: {
+			type: Number,
+			default: 0
+		},
+		sortType: {
+			type: String,
+			default: 'popular'
+		},
+		topPostId: Number,
+	},
+	emits: ['refresh', 'loaded'],
 	inject: {
 		lptContainer: {
 			type: String
@@ -48,35 +56,16 @@ export default {
 	},
 	data() {
 		const category = global.states.categoryManager.get({
-			itemId: blogDescription.galleryCategoryId,
+			itemId: this.categoryId,
 			fail(result) {
 				Toast.fail(result.message);
 			}
 		});
-		const sortType = localStorage.getItem('sortTypeGallery') || 'latest';
 		return {
 			category,
 			enableBoolMode: false,
 			searchValue: '',
-			mainBarHeight: global.vars.style.tabBarHeight,
-			sortType: sortType,
-			postListLoaded: false
-		}
-	},
-	watch: {
-		sortType(value) {
-			localStorage.setItem('sortTypeGallery', value);
-		}
-	},
-	computed: {
-		scrollHeight() {
-			if (this.lptContainer === 'blogMain') {
-				return global.states.style.mainHeight + 'px';
-			}
-			const mainViewHeight = global.states.style.bodyHeight;
-			// 底部高度加0.5的padding
-			let barHeight = this.mainBarHeight;
-			return mainViewHeight - barHeight + 'px';
+			mainBarHeight: global.vars.style.tabBarHeight
 		}
 	},
 	created() {
@@ -85,19 +74,7 @@ export default {
 			this.curListArrange && this.curListArrange();
 		});
 	},
-	activated() {
-		global.methods.setTitle({
-			pageDesc: '相册',
-			route: this.$route
-		});
-	},
 	methods: {
-		getElement() {
-			return this.$el;
-		},
-		onPostListLoaded() {
-			this.postListLoaded = true;
-		},
 		processImgLoad(post) {
 			post.settled = false;
 			return new Promise(resolve => {
@@ -124,7 +101,9 @@ export default {
 					post: post
 				});
 			}
-			this.curListArrange = () => this.arrangeList(this.$el.clientWidth, imgList, 12);
+			// 左右的padding加起来是1rem
+			const width = this.$el.clientWidth - remHelper.remToPx(1);
+			this.curListArrange = () => this.arrangeList(width, imgList, 12);
 			this.curListArrange();
 		},
 		getRatio(width, height) {
@@ -183,10 +162,6 @@ export default {
 </script>
 
 <style scoped>
-.main-area {
-	overflow-y: scroll;
-}
-
 #photo-container {
 	height: 100%;
 	overflow-y: visible;

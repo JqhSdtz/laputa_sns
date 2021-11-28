@@ -654,10 +654,13 @@ function _initLaputa(option) {
 
     function initQQService() {
         const serv = {
-            login: function (param) {
+            login: wrap(function (param) {
                 param.url = lpt.baseApiUrl + '/qq/login/' + param.param.code;
+                param.appendSuccess(result => {
+                    lpt.operatorServ.setCurrent(result.object);
+                });
                 return lpt.post(param);
-            }
+            })
         }
         lpt.qqServ = serv;
     }
