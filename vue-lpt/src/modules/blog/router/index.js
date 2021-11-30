@@ -118,10 +118,7 @@ function initRouter() {
             path: '/category_detail/:categoryId',
             name: 'categoryDetail',
             component: CategoryDetail,
-            props: true,
-            meta: {
-                noCache: true
-            }
+            props: true
         },
         {
             path: '/category_setting/:categoryId',
@@ -216,7 +213,6 @@ function initRouter() {
                 categoryId: route.params.blogCategoryId
             }),
             meta: {
-                noCache: true,
                 mainPathPropNum: 1
             }
         },

@@ -41,7 +41,8 @@ export default {
 	props: {
 		postId: Number,
 		postOf: String,
-		showActions: Boolean
+		showActions: Boolean,
+		onShowPostDetail: Function
 	},
 	inject: {
 		postListEvents: {
@@ -192,6 +193,10 @@ export default {
 			}
 		},
 		showPostDetail() {
+			const res = this.onShowPostDetail && this.onShowPostDetail();
+			if (res === false) {
+				return;
+			}
 			if (this.lptContainer === 'blogMain') {
 				this.$router.push({
 					path: '/blog/post_detail/' + this.post.id

@@ -1,5 +1,4 @@
 // 用于给元素添加事件时去重
-
 const distinctMap = new Map();
 
 function isDistinct(setKey, key) {
@@ -30,20 +29,21 @@ const forceReload = {
         }
     },
     methods: {
-        forceReload() {
+        forceReload(opt) {
             this.forceReloadFlag = false;
             this.$nextTick(() => {
                 this.forceReloadFlag = true;
+                this.$nextTick(() => {
+                    opt?.afterReload && opt.afterReload();
+                });
             });
         }
     }
 };
 
 // 用于切换页面时保持原页面的滚动条位置
+const scrollTopMap = new Map();
 const keepScrollTop = {
-    props: {
-        keepScrollTop: Boolean
-    },
     mounted() {
         // 因为deactivated钩子中scrollTop值已清零，所以要在每次变化时都记录下当前的scrollTop
         this.$nextTick(() => {
@@ -51,7 +51,7 @@ const keepScrollTop = {
                 && this.$el.hasAttribute('keep-scroll-top'))
                 && isDistinct('keep-scroll-top', this.$el)) {
                 this._keepScrollTop = true;
-                this.scrollListener = () => {
+                this._scrollListener = () => {
                     this.curScrollTop = this.$el.scrollTop;
                 };
                 this.$el.addEventListener('scroll', this.scrollListener);
@@ -60,13 +60,38 @@ const keepScrollTop = {
     },
     activated() {
         if (this._keepScrollTop) {
-            this.$el.scrollTop = this.curScrollTop || 0;
+            this.$el.scrollTop = this.curScrollTop;
+        } else if (this._keepScrollTopId) {
+            const scrollTop = scrollTopMap.get(this._keepScrollTopId);
+            scrollTop.el.scrollTop = scrollTop.offset || 0;
         }
     },
     beforeUnmount() {
         if (this._keepScrollTop) {
-            this.$el.removeEventListener('scroll', this.scrollListener);
+            this.$el.removeEventListener('scroll', this._scrollListener);
             removeDistinct('keep-scroll-top', this.$el);
+        } else if (this._keepScrollTopId) {
+            const scrollTop = scrollTopMap.get(this._keepScrollTopId);
+            scrollTop.el.removeEventListener('scroll', scrollTop.listener);
+            removeDistinct('keep-scroll-top', scrollTop.el);
+        }
+    },
+    methods: {
+        bindScrollTop(option) {
+            const el = option.el || this.$el;
+            const id = option.id || this.name;
+            const scrollTop = {
+                el,
+                id,
+                offset: 0
+            };
+            const listener = () => {
+                scrollTop.offset = el.scrollTop;
+            };
+            el.addEventListener('scroll', listener);
+            scrollTop.listener = listener;
+            scrollTopMap.set(id, scrollTop);
+            this._keepScrollTopId = id;
         }
     }
 };

@@ -2,10 +2,11 @@
 	<template v-if="forceReloadFlag">
 		<div v-show="showDrawer">
 			<div class="category-area"
-			     ref="categoryArea"
-			     style="background-color: white"
-			     :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
-			     :style="{height: scrollHeight, position: 'relative'}" v-scroll-view>
+			    ref="categoryArea"
+			    style="background-color: white"
+			    :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
+			    :style="{height: scrollHeight, position: 'relative'}" 
+				v-scroll-view>
 				<div ref="categoryInfoArea" class="main-area">
 					<div style="width: 100%; background-size: cover;"
 					     :style="{backgroundImage: `linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)), url(${coverImgUrl})`,
@@ -118,17 +119,18 @@ export default {
 	},
 	data() {
 		this.categoryDetailEvents = createEventBus();
-		const category = this.init();
 		const sortType = localStorage.getItem('sortTypeCategoryDetail' + this.categoryId) || 'popular';
 		return {
-			category,
+			category: global.states.categoryManager.get({
+				itemId: this.categoryId
+			}),
 			showDrawer: this.lptContainer === 'blogDrawer' ? toRef(global.states.blog, 'showDrawer') : true,
 			mainAreaHeight: 0,
 			coverHeight: this.lptContainer === 'blogMain' ? 400 : 200,
 			isTabFixed: false,
 			curTabKey: 'postList',
 			sortType: sortType,
-			categoryDetailType: 'plain',
+			categoryDetailType: '',
 			categoryIntro: '',
 			postListLoaded: false
 		}
@@ -142,7 +144,14 @@ export default {
 			this.isTabFixed = false;
 			this.postListLoaded = false;
 			// this.curTabKey = 'postList';
-			this.forceReload();
+			this.forceReload({
+				afterReload: () => {
+					this.bindScrollTop({
+						id: 'categoryDetail-' + this.categoryId,
+						el: this.$refs.categoryArea
+					});
+				}
+			});
 		}
 	},
 	computed: {
@@ -201,6 +210,15 @@ export default {
 				return true;
 			}
 		}
+	},
+	created() {
+		this.category = this.init();
+	},
+	mounted() {
+		this.bindScrollTop({
+			id: 'categoryDetail-' + this.categoryId,
+			el: this.$refs.categoryArea
+		});
 	},
 	methods: {
 		setTitle(category) {

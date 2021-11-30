@@ -1,20 +1,24 @@
 <template>
 	<div class="photo-item" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
-		<img ref="img" :src="coverUrl" v-show="post.settled" @click="showPreview" :onload="onImgLoaded"
-		     :onerror="onImgLoaded" ondragstart="return false"/>
-		<teleport to="body">
-			<image-box ref="imageBox" :images="images" :show-image-list="false"
-		           :containerStyle="{width: '67%', marginLeft: '33%'}"/>
-		</teleport>
+		<img ref="img" :src="coverUrl" v-show="post.settled" @click="showPreview" 
+			:onload="onImgLoaded" :onerror="onImgLoaded" ondragstart="return false"/>
+		<image-box v-if="lptContainer !== 'default'" ref="imageBox" :images="images" :show-image-list="false"
+		    :containerStyle="{width: '67%', marginLeft: '33%'}"/>
 		<bottom-bar class="bottom-bar" v-show="showBottomBar"
-		            :post-id="post.id" :post-of="postOf" :show-actions="true"
-		            @click.capture.stop="showPreview"/>
+		    :post-id="post.id" :post-of="postOf" :show-actions="true"
+			:on-show-post-detail="onShowPostDetail"
+		    @click.capture.self="showPreview"/>
 		<a-row class="photo-num" v-show="showBottomBar">
 			<a-col>
 				<ri-stack-line class="icon"/>
 			</a-col>
 			<a-col>
 				<p class="num">{{ photoNum }}张</p>
+			</a-col>
+			<a-col v-if="isTopPost" class="topped-tag">
+				<van-tag  type="primary">
+					置顶
+				</van-tag>
 			</a-col>
 		</a-row>
 	</div>
@@ -42,6 +46,11 @@ export default {
 		BottomBar,
 		RiStackLine
 	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	data() {
 		const post = global.states.postManager.get({
 			itemId: this.postId,
@@ -57,11 +66,14 @@ export default {
 					this.coverUrl = res[2];
 					this.photoNum = parseInt(res[3]);
 					this.post.customContent = this.desc;
+					this.post.parsedImages = [];
 				});
 			}
 		});
+		const imgStyle = {};
 		return {
 			post,
+			imgStyle,
 			coverUrl: '',
 			desc: '',
 			photoNum: 0,
@@ -70,18 +82,20 @@ export default {
 		};
 	},
 	mounted() {
-		watch(() => this.$refs.imageBox.state.show, (curShow) => {
-			if (!curShow) {
-				global.states.blog.showDrawer = false;
-			} else {
-				this.$router.push({
-					path: '/post_detail/' + this.post.id
-				});
-				global.states.blog.showDrawer = true;
-				// drawer缩回去，不然只会显示一半
-				global.methods.setDrawerWidth('33%');
-			}
-		});
+		if (this.lptContainer !== 'default') {
+			watch(() => this.$refs.imageBox.state.show, (curShow) => {
+				if (!curShow) {
+					global.states.blog.showDrawer = false;
+				} else {
+					this.$router.push({
+						path: '/post_detail/' + this.post.id
+					});
+					global.states.blog.showDrawer = true;
+					// drawer缩回去，不然只会显示一半
+					global.methods.setDrawerWidth('33%');
+				}
+			});
+		}
 	},
 	methods: {
 		onMouseEnter() {
@@ -89,6 +103,11 @@ export default {
 		},
 		onMouseLeave() {
 			if (!global.states.blog.showDrawer) this.showBottomBar = false;
+		},
+		onShowPostDetail() {
+			this.showPreview();
+			// 取消默认操作，即不跳转到详情页
+			return false;
 		},
 		showPreview() {
 			if (typeof this.post.full_text_id === 'undefined') return;
@@ -119,17 +138,35 @@ export default {
 						list.forEach((img) => {
 							const parts = img.split(';');
 							if (parts.length === 0) return;
-							this.images.push({
+							const imgItem = {
 								src: parts[0],
 								thumb: parts.length > 1 ? parts[1] : undefined
-							});
+							};
+							this.images.push(imgItem);
 						});
+						if (this.lptContainer === 'default') {
+							this.post.parsedImages = this.images;
+							global.states.postManager.add(this.post);
+						}
 					}
 				});
-				this.$refs.imageBox.preShow(promise);
+				if (this.lptContainer !== 'default') {
+					this.$refs.imageBox.preShow(promise);
+				} else {
+					this.showVantImagePreview();
+				}
 			} else {
-				this.$refs.imageBox.show();
+				if (this.lptContainer !== 'default') {
+					this.$refs.imageBox.show();
+				} else {
+					this.showVantImagePreview();
+				}
 			}
+		},
+		showVantImagePreview() {
+			this.$router.push({
+				path: '/post_detail/' + this.post.id
+			});
 		}
 	}
 }
@@ -169,5 +206,10 @@ img {
 	margin: 0;
 	margin-left: 0.25rem;
 	font-size: 0.85rem;
+}
+
+.topped-tag {
+	float: left;
+	margin-left: 1rem;
 }
 </style>

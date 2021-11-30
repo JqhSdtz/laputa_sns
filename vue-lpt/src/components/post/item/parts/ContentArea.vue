@@ -113,6 +113,20 @@ export default {
 						src: fullImgUrl
 					});
 				});
+				
+			}
+		},
+		'post.parsedImages': {
+			immediate: true,
+			handler() {
+				// 已经有解析过的图片列表，则将其加入帖子的图片列表中
+				// 此种情况是相册目录在移动端打开时先进入帖子详情，然后再打开图片列表
+				if (this.post.parsedImages) {
+					this.post.parsedImages.forEach(img => {
+						this.imgList.push(img.thumb);
+						this.fullUrlList.push(img.src);
+					});
+				}
 			}
 		}
 	},
@@ -155,7 +169,11 @@ export default {
 		showImgPreview(index) {
 			ImagePreview({
 				images: this.fullUrlList,
-				startPosition: index
+				startPosition: index,
+				overlayStyle: {
+					backgroundColor: 'rgba(0, 0, 0, 0.75)',
+					backdropFilter: 'blur(20px)'
+				}
 			});
 		},
 		processAmOps(oriText) {

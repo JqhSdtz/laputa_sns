@@ -364,11 +364,20 @@ export default {
 						Toast.fail(result.message);
 					},
 					complete: () => {
-						if (!this.hasReallyLoaded) {
-							this.$emit('loaded');
-							this.hasReallyLoaded = true;
+						const fun = () => {
+							if (!this.hasReallyLoaded) {
+								this.$emit('loaded');
+								this.hasReallyLoaded = true;
+							}
+							this.isRefreshing = false;
 						}
-						this.isRefreshing = false;
+						if (this.curLoadPromise) {
+							this.curLoadPromise.finally(() => {
+								fun();
+							});
+						} else {
+							fun();
+						}
 					}
 				});
 			}

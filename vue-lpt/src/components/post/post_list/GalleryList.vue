@@ -9,11 +9,12 @@
 			<template v-slot:default="sProps">
 				<a-row id="photo-container" type="flex" justify="space-around">
 					<a-col v-for="post in sProps.postList" :key="post.id">
-						<photo-item class="photo-item" :post-id="post.id"
-						        :ref="'photo' + post.id"
+						<photo-item class="photo-item" :ref="'photo' + post.id" 
+								:post-id="post.id"
+								:post-of="postOf"
+								:is-top-post="post.id === sProps.topPostId"
 								@beforeShowPreview="$emit('beforeShowPreview', post)"
 								@afterShowPreview="$emit('afterShowPreview', post)"
-						        :is-top-post="post.id === sProps.topPostId"
 						        :on-img-loaded="() => onImgLoaded(post)"/>
 					</a-col>
 				</a-row>
@@ -38,6 +39,10 @@ export default {
 		PhotoItem
 	},
 	props: {
+		postOf: {
+			type: String,
+			default: 'category'
+		},
 		categoryId: {
 			type: Number,
 			default: 0
@@ -76,10 +81,15 @@ export default {
 	},
 	methods: {
 		processImgLoad(post) {
-			post.settled = false;
-			return new Promise(resolve => {
-				this.imgLoadResolveMap.set(post.id, resolve);
-			});
+			const promise = this.imgLoadResolveMap.get(post.id);
+			if (promise) {
+				return promise;
+			} else {
+				post.settled = false;
+				return new Promise(resolve => {
+					this.imgLoadResolveMap.set(post.id, resolve);
+				});
+			}
 		},
 		onImgLoaded(post) {
 			const resolve = this.imgLoadResolveMap.get(post.id);
@@ -123,7 +133,8 @@ export default {
 			});
 		},
 		arrangeList(containerWidth, imgList, rangeMargin) {
-			const minHeight = 250;
+			// lptContainer为default表示为移动端界面，缩小最小高度
+			const minHeight = this.lptContainer === 'blogMain' ? 250 : 125;
 			const listLength = imgList.length;
 			let curRow = [];
 			let ratioSum = 0
@@ -165,6 +176,7 @@ export default {
 #photo-container {
 	height: 100%;
 	overflow-y: visible;
+	background-color: white;
 }
 
 .photo-item {

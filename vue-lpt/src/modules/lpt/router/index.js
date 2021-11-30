@@ -32,6 +32,10 @@ const routers = [
         redirect: '/home/index'
     },
     {
+        path: '/lpt',
+        redirect: '/home/index'
+    },
+    {
         path: '/home',
         name: 'home',
         component: Home,
@@ -142,10 +146,7 @@ const routers = [
         path: '/category_detail/:categoryId',
         name: 'categoryDetail',
         component: CategoryDetail,
-        props: true,
-        meta: {
-            noCache: true
-        }
+        props: true
     },
     {
         path: '/category_setting/:categoryId',
