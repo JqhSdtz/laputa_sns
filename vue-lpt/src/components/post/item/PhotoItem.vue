@@ -32,7 +32,6 @@ import {RiStackLine} from "@/assets/icons/remix-icon";
 import {watch} from "vue";
 import lpt from "@/lib/js/laputa/laputa";
 
-const contentReg = /描述：([\s\S]*)\n封面：([\s\S]*)\n张数：([\s\S]*)/;
 export default {
 	name: 'PhotoItem',
 	props: {
@@ -56,17 +55,11 @@ export default {
 			itemId: this.postId,
 			success: (post) => {
 				this.$nextTick(() => {
-					const res = contentReg.exec(post.content);
-					if (!res || res.length < 4) {
-						console.warn('图片贴解析错误，错误帖子对象如下：');
-						console.warn(post);
-						return;
-					}
-					this.desc = res[1];
-					this.coverUrl = res[2];
-					this.photoNum = parseInt(res[3]);
-					this.post.customContent = this.desc;
-					this.post.parsedImages = [];
+					const galleryItem = global.methods.parseGalleryItemContent(post);
+					if (!galleryItem) return;
+					this.desc = galleryItem.desc;
+					this.coverUrl = galleryItem.coverUrl;
+					this.photoNum = galleryItem.photoNum;
 				});
 			}
 		});
@@ -112,7 +105,6 @@ export default {
 		showPreview() {
 			if (typeof this.post.full_text_id === 'undefined') return;
 			this.showBottomBar = false;
-			this.post.noFullText = true;
 			this.doShowPreview();
 		},
 		doShowPreview() {
@@ -125,25 +117,7 @@ export default {
 					success: (result) => {
 						this.hasLoadedFullText = true;
 						const fullText = result.object;
-						const parts = fullText.split(/\-+分割线\-+/);
-						let imgListStr = '';
-						if (parts.length > 1) {
-							imgListStr = parts[parts.length - 1].trim();
-							this.post.customFullText = parts[0];
-							this.post.noFullText = false;
-						} else {
-							imgListStr = fullText;
-						}
-						const list = imgListStr.split('\n');
-						list.forEach((img) => {
-							const parts = img.split(';');
-							if (parts.length === 0) return;
-							const imgItem = {
-								src: parts[0],
-								thumb: parts.length > 1 ? parts[1] : undefined
-							};
-							this.images.push(imgItem);
-						});
+						this.images = global.methods.parseGalleryItemFullText(this.post, fullText);
 						if (this.lptContainer === 'default') {
 							this.post.parsedImages = this.images;
 							global.states.postManager.add(this.post);

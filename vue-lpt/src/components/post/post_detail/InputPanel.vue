@@ -220,6 +220,7 @@ export default {
 				},
 				success: () => {
 					this.showForwardPanel = false;
+					this.forwardInput = '';
 					Toast.success('转发成功');
 					const refs = this.$parent.$refs;
 					if (refs.forwardList) {
@@ -259,8 +260,8 @@ export default {
 				data: data,
 				success: (result) => {
 					this.showCommentPanel = false;
+					this.commentInput = '';
 					Toast.success('评论成功');
-					const commentList = this.$parent.$refs.commentList;
 					const comment = {
 						id: parseInt(result.object),
 						creator: global.states.curOperator.user,
@@ -271,34 +272,33 @@ export default {
 							delete: true
 						}
 					};
-					if (commentList) {
-						if (type === lpt.postServ.type) {
-							// 当前打开了评论列表，且发出的评论是一级评论，即评论对象为帖子
-							// 则在评论列表中添加一条
-							comment.post_id = data.parent_id;
-							comment.l2_cnt = 0;
-							comment.poster_rep_cnt = 0;
-							comment.entity_type = 'CML1';
-							global.states.commentL1Manager.add(comment);
-							++this.post.comment_cnt;
-							commentList.pushComment(comment);
-						} else if (type === lpt.commentServ.level1 || type === lpt.commentServ.level2) {
-							// 当前打开了评论列表，且发出的是二级评论，即评论对象为一级评论
-							// 增加该评论所属一级评论的二级评论数量
-							comment.entity_type = 'CML2';
-							comment.post_id = this.postId;
-							comment.l1_id = data.parent_id;
-							const l1Comment = global.states.commentL1Manager.get({
-								itemId: data.parent_id
-							});
-							++l1Comment.l2_cnt;
-							if (global.states.curOperator.user.id === this.post.creator.id) {
-								// 当前用户是帖子创建者，则增加帖子创建者回复数量
-								++l1Comment.poster_rep_cnt;
-							}
-							global.states.commentL2Manager.add(comment);
-							this.postDetailEvents.emit('publishCommentL2', comment);
+					if (type === lpt.commentServ.level1) {
+						// 当前打开了评论列表，且发出的评论是一级评论，即评论对象为帖子
+						// 则在评论列表中添加一条
+						comment.post_id = data.parent_id;
+						comment.l2_cnt = 0;
+						comment.poster_rep_cnt = 0;
+						comment.entity_type = 'CML1';
+						++this.post.comment_cnt;
+						global.states.commentL1Manager.add(comment);
+						global.states.postManager.add(this.post);
+						this.postDetailEvents.emit('publishCommentL1', comment);
+					} else if (type === lpt.commentServ.level2) {
+						// 当前打开了评论列表，且发出的是二级评论，即评论对象为一级评论
+						// 增加该评论所属一级评论的二级评论数量
+						comment.entity_type = 'CML2';
+						comment.post_id = this.postId;
+						comment.l1_id = data.parent_id;
+						const l1Comment = global.states.commentL1Manager.get({
+							itemId: data.parent_id
+						});
+						++l1Comment.l2_cnt;
+						if (global.states.curOperator.user.id === this.post.creator.id) {
+							// 当前用户是帖子创建者，则增加帖子创建者回复数量
+							++l1Comment.poster_rep_cnt;
 						}
+						global.states.commentL2Manager.add(comment);
+						this.postDetailEvents.emit('publishCommentL2', comment);
 					}
 				},
 				fail(result) {

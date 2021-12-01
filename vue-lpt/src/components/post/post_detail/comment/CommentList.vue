@@ -48,6 +48,11 @@ export default {
 			commentListEvents: this.commentListEvents
 		}
 	},
+	inject: {
+		postDetailEvents: {
+			type: Object
+		}
+	},
 	data() {
 		this.querior = lpt.createQuerior();
 		this.commentListEvents = createEventBus();
@@ -131,6 +136,15 @@ export default {
 				}
 			});
 		});
+		this.postDetailEvents.on('publishCommentL1', (comment) => {
+			if (comment.post_id !== parseInt(this.postId)) {
+				return;
+			}
+			if (this.isEmpty) {
+				this.isEmpty = false;
+			}
+			this.list.unshift(comment);
+		});
 	},
 	unmounted() {
 		this.querior.reset();
@@ -154,10 +168,6 @@ export default {
 		reset() {
 			this.querior.reset();
 			this.hasEverLoad = false;
-		},
-		pushComment(comment) {
-			if (this.isEmpty) this.isEmpty = false;
-			this.list.unshift(comment);
 		},
 		loadMore(isRefresh) {
 			if (!this.querior.hasReachedBottom) {

@@ -50,7 +50,7 @@ public class UserController {
 
     @RequestMapping(value = "/info/{userId}", method = RequestMethod.GET)
     public Result<User> readUserInfo(@PathVariable  Integer userId, @RequestAttribute Operator operator) {
-        return userService.readUser(userId, true, false, false, operator).setOperator(operator);
+        return userService.readUser(userId, true, true, false, operator).setOperator(operator);
     }
 
     @RequestMapping(value = "/info", method = RequestMethod.PATCH)

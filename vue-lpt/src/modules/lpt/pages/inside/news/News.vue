@@ -1,7 +1,7 @@
 <template>
 	<div class="main-area" :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top>
 		<a-back-top :style="{bottom: (mainBarHeight + 10) + 'px'}" :target="getElement"/>
-		<post-list ref="postList" :post-of="'news'"/>
+		<post-list ref="postList" :post-of="'news'" :item-style="postItemStyle"/>
 	</div>
 </template>
 
@@ -43,6 +43,13 @@ export default {
 	methods: {
 		getElement() {
 			return this.$el;
+		},
+		postItemStyle(post, index) {
+			const style = {};
+			if (index === 0) {
+				style.marginTop = '0.5rem';
+			}
+			return style;
 		}
 	}
 }
@@ -55,5 +62,9 @@ export default {
 
 .main-area::-webkit-scrollbar {
 	display: none;
+}
+
+:global(.van-pull-refresh__head) {
+	background-color: #ececec;
 }
 </style>

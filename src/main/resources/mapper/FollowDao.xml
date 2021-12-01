@@ -29,18 +29,19 @@
 		<include refid="followColumn"/>
 		from lpt_follow
 		<where>
-			<if test="followerId != null">follow_follower_id = #{followerId}</if>
-			<if test="targetId != null">and follow_target_id = #{targetId}</if>
 			<if test="type != null">and follow_type = #{type}</if>
-			<if test="targetId != null">
-				and follow_id
+			<if test="followerId != null and queryParam.customAddition == 'FOLLOWING'">
+				follow_follower_id = #{followerId}
+			</if>
+			<if test="targetId != null and queryParam.customAddition == 'FOLLOWER'">
+				and follow_target_id = #{targetId} and follow_id
 				<choose>
 					<when test="queryParam.useStartIdAtSql == 1">&lt; #{queryParam.startId}</when>
-					<otherwise>&lt;= (select follow_id from lpt_follow where follow_target_id = #{targetId} and follow_follower_id = #{followerId})</otherwise>
+					<otherwise>&lt; (select follow_id from lpt_follow where follow_target_id = #{targetId} and follow_follower_id = #{followerId})</otherwise>
 				</choose>
 			</if>
 		</where>
-		<if test="targetId != null">
+		<if test="targetId != null and queryParam.customAddition == 'FOLLOWER'">
 			order by follow_id desc
 			limit #{queryParam.queryNum}
 		</if>

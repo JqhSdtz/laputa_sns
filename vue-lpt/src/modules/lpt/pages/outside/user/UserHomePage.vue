@@ -117,10 +117,7 @@ export default {
 		},
 		showFollowingList() {
 			this.$router.push({
-				path: '/following_list',
-				params: {
-					userId: this.userId
-				}
+				path: '/following_list/' + this.userId
 			});
 		},
 		changeFollow() {

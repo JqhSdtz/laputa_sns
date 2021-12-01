@@ -1,7 +1,7 @@
 <template>
 	<div class="post-item">
 		<top-bar class="top-bar" :post-id="post.id" :is-top-post="isTopPost"/>
-		<content-area class="content-area" :post="post" :show-full-text="showFullText">
+		<content-area class="content-area" :post-id="post.id" :show-full-text="showFullText">
 			<div v-if="post.ori_post" style="box-shadow: 0 -1.5px 10px rgba(100, 100, 100, 0.2);">
 				<post-item :show-bottom="false" :post-id="post.ori_post.id"/>
 			</div>

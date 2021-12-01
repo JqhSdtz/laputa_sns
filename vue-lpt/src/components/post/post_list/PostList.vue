@@ -6,8 +6,9 @@
 			<van-list ref="list" class="post-list" @load="loadMore" :offset="listOffset"
 			          :fill-parent="$el" v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
 				<slot :post-list="list" :top-post-id="topPostId" :post-of="postOf">
-					<post-item class="post-item" v-for="post in list" :post-id="post.id" :post-of="postOf"
+					<post-item class="post-item" v-for="(post, index) in list" :post-id="post.id" :post-of="postOf"
 					           :key="post.id" :is-top-post="post.id === topPostId"
+							   :style="itemStyle && itemStyle(post, index)"
 					           :class="{post, 'last-post': post.last}"/>
 				</slot>
 			</van-list>
@@ -50,6 +51,7 @@ export default {
 			type: String,
 			default: 'popular'
 		},
+		itemStyle: Function,
 		topPostId: Number,
 		userId: String,
 		onLoaded: Function,

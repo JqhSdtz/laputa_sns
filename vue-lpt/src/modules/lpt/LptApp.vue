@@ -47,6 +47,9 @@ export default {
 				}
 			});
 		});
+		global.methods.getPrompt = () => {
+			return this.$refs.prompt.prompt;
+		};
 	},
 	mounted() {
 		global.methods.prompt = this.$refs.prompt.prompt;

@@ -1,30 +1,35 @@
 <template>
 	<div class="content-area">
 		<p class="title" @click="showPostDetail">{{ post.title }}</p>
+		<!-- gallery-item放到外面是为了防止img元素闪烁 -->
+		<gallery-item-content v-if="contentType === 'gallery'" :gallery-item="galleryItem"/>
 		<div v-if="isShowFullText" class="content" :class="{'md-content': fullTextType === 'md'}">
 			<p ref="normalFullText" v-if="fullTextType === 'normal'" style="margin-bottom: 0;">{{ fullText }}</p>
 			<admin-ops-record v-if="fullTextType === 'amOps' && payload" :payload="payload"/>
 			<v-md-preview ref="fullTextMd" v-if="fullTextType === 'md'" :text="fullText"/>
+			<!-- 解析gallery-item时会设置customContent -->
+			<p v-if="fullTextType === 'gallery' && post.customFullText" 
+				style="margin: 1rem 0 0 0;">{{ post.customFullText }}</p>
 		</div>
 		<div v-if="!isShowFullText" class="content" :class="{'md-content': contentType === 'md'}">
 			<v-md-preview ref="contentMd" v-if="contentType === 'md'" :text="postContent"/>
-			<ellipsis v-else :content="postContent" :rows="5"/>
+			<ellipsis v-if="contentType === 'normal'" :content="postContent" :rows="5"/>
 		</div>
 		<p v-if="hasFullText && !isShowFullText" class="full-text-btn" @click.stop="showFullTextFun">
 			查看全文
 		</p>
-		<p v-if="isShowFullText" class="full-text-btn" @click.stop="hideFullText">
+		<p v-if="hasFullText && isShowFullText" class="full-text-btn" @click.stop="hideFullText">
 			收起全文
 		</p>
 		<div v-if="imgList.length > 0">
 			<div v-if="env === 'lpt'">
 				<a v-for="(img, idx) in imgList" :key="img" @click="showImgPreview(idx)"
 				   style="display: inline; margin-right: 1rem;">
-					<van-image :src="img" width="50" height="50"/>
+					<van-image :src="img" fit="cover" width="50" height="50"/>
 				</a>
 			</div>
 			<div v-if="env === 'blog'" class="image-box-list">
-				<image-box :images="imageBoxList"/>
+				<image-box :images="imageBoxList" :thumbStyle="{height: '50px', width: '50px'}"/>
 			</div>
 		</div>
 		<a-row tyle="flex" justify="end">
@@ -46,6 +51,7 @@ import {translateMd} from '@/lib/js/markdown/md-translator';
 import CategoryPath from '@/components/category/CategoryPath';
 import {ImagePreview} from 'vant';
 import AdminOpsRecord from '@/components/post/item/parts/AdminOpsRecord';
+import GalleryItemContent from '@/components/post/item/parts/GalleryItemContent';
 import ImageBox from '@/components/global/ImageBox';
 import Ellipsis from '@/components/global/Ellipsis';
 
@@ -54,11 +60,12 @@ const typeReg = /tp:([a-zA-Z]*)#/;
 export default {
 	name: 'ContentArea',
 	props: {
-		post: Object,
+		postId: Number,
 		showFullText: Boolean
 	},
 	components: {
 		AdminOpsRecord,
+		GalleryItemContent,
 		CategoryPath,
 		ImageBox,
 		Ellipsis
@@ -69,17 +76,22 @@ export default {
 		}
 	},
 	data() {
+		const post = global.states.postManager.get({
+			itemId: this.postId
+		});
 		return {
+			post,
 			env: global.vars.env,
 			fullUrlList: [],
 			imgList: [],
 			imageBoxList: [],
-			postContent: this.post.customContent || this.post.content,
+			postContent: post.customContent || post.content,
 			payload: '',
 			contentType: 'normal',
 			fullTextType: 'normal',
 			fullText: '',
-			isShowFullText: false
+			isShowFullText: false,
+			galleryItem: {}
 		}
 	},
 	created() {
@@ -101,19 +113,7 @@ export default {
 		'post.raw_img': {
 			immediate: true,
 			handler() {
-				const rawImg = this.post.raw_img || '';
-				const imgListStr = rawImg.split('#');
-				imgListStr.forEach(img => {
-					if (!img) return;
-					const fullImgUrl = lpt.getFullImgUrl(img, Math.floor(this.clientWidth));
-					this.imgList.push(lpt.getPostThumbUrl(img));
-					this.fullUrlList.push(fullImgUrl);
-					this.imageBoxList.push({
-						thumb: lpt.getPostThumbUrl(img),
-						src: fullImgUrl
-					});
-				});
-				
+				this.parseRawImg();
 			}
 		},
 		'post.parsedImages': {
@@ -122,10 +122,31 @@ export default {
 				// 已经有解析过的图片列表，则将其加入帖子的图片列表中
 				// 此种情况是相册目录在移动端打开时先进入帖子详情，然后再打开图片列表
 				if (this.post.parsedImages) {
+					this.imgList = [];
+					this.fullUrlList = [];
+					this.imageBoxList = [];
+					this.parseRawImg();
 					this.post.parsedImages.forEach(img => {
 						this.imgList.push(img.thumb);
 						this.fullUrlList.push(img.src);
+						this.imageBoxList.push(img)
 					});
+				}
+			}
+		},
+		'isShowFullText' : {
+			immediate: true,
+			handler(isShow) {
+				if (this.contentType === 'gallery') {
+					this.fullTextType = 'gallery';
+					if (isShow) {
+						this.post.parsedImages = global.methods.parseGalleryItemFullText(this.post, this.post.full_text);
+						// if (this.env === 'blog' && !this.post.customFullText) {
+						// 	this.post.noFullText = true;
+						// }
+					} else {
+						this.post.parsedImages = [];
+					}
 				}
 			}
 		}
@@ -166,10 +187,33 @@ export default {
 				});
 			}
 		},
+		parseRawImg() {
+			const rawImg = this.post.raw_img || '';
+			const imgListStr = rawImg.split('#');
+			imgListStr.forEach(img => {
+				if (!img) return;
+				const fullImgUrl = lpt.getFullImgUrl(img, Math.floor(this.clientWidth));
+				this.imgList.push(lpt.getPostThumbUrl(img));
+				this.fullUrlList.push(fullImgUrl);
+				this.imageBoxList.push({
+					thumb: lpt.getPostThumbUrl(img),
+					src: fullImgUrl
+				});
+			});
+		},
 		showImgPreview(index) {
 			ImagePreview({
 				images: this.fullUrlList,
 				startPosition: index,
+				overlayStyle: {
+					backgroundColor: 'rgba(0, 0, 0, 0.75)',
+					backdropFilter: 'blur(20px)'
+				}
+			});
+		},
+		showSingleImg(url) {
+			ImagePreview({
+				images: [url],
 				overlayStyle: {
 					backgroundColor: 'rgba(0, 0, 0, 0.75)',
 					backdropFilter: 'blur(20px)'
@@ -191,6 +235,10 @@ export default {
 				const content = this.post.customContent || this.post.content;
 				this.postContent = content.replace(typeReg, '');
 			} else {
+				if (global.methods.checkPostIsGalleryItem(this.post)) {
+					this.contentType = 'gallery';
+					this.galleryItem = global.methods.parseGalleryItemContent(this.post);
+				}
 				this.postContent = this.post.customContent || this.post.content;
 			}
 			this.$nextTick(() => {
@@ -244,14 +292,11 @@ export default {
 			}
 		},
 		showFullTextFun() {
-			if (this.fullText) {
-				this.isShowFullText = true;
-			} else if (this.post.customFullText) {
-				this.fullText = this.post.customFullText;
+			if (this.fullText || this.post.customFullText) {
 				this.isShowFullText = true;
 			} else if (this.post.full_text) {
-				this.isShowFullText = true;
 				this.processFullText(this.post.full_text);
+				this.isShowFullText = true;
 			} else {
 				lpt.postServ.getFullText({
 					consumer: this.lptConsumer,
@@ -259,8 +304,8 @@ export default {
 						fullTextId: this.post.full_text_id
 					},
 					success: (result) => {
-						this.isShowFullText = true;
 						this.processFullText(result.object);
+						this.isShowFullText = true;
 					}
 				});
 			}

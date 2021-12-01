@@ -218,7 +218,9 @@ public class FollowService extends BaseService<FollowDao, Follow> {
             return new Result(SUCCESS).setObject(new ArrayList(0));
         List<Follow> followList = getRedisFollowingList(userId);
         if (followList == null) {//redis中没有
-            followList = selectList(new Follow().setFollowerId(userId));//获取following要设置follower的id
+            Follow queryEntity = new Follow().setFollowerId(userId);
+            queryEntity.setQueryParam(new QueryParam().setCustomAddition("FOLLOWING"));
+            followList = selectList(queryEntity);//获取following要设置follower的id
             if (followList == null)
                 return new Result(FAIL).setErrorCode(1010040101).setMessage("数据库操作失败");
             setRedisFollowingList(userId, followList, Follow.class);
@@ -313,7 +315,7 @@ public class FollowService extends BaseService<FollowDao, Follow> {
             List<Follow> followList = new ArrayList(userList.size());
             for (int i = 0; i < userList.size(); ++i) {
                 Date createTime = new Date(Math.round(((TypedTuple) param.indexSetList.get(i)).getScore()));
-                followList.add((Follow) new Follow().setFollower(userList.get(i)).setTarget(param.operator.getUser()).setCreateTime(createTime));
+                followList.add((Follow) new Follow().setFollower(userList.get(i)).setCreateTime(createTime));
             }
             return new Result(SUCCESS).setObject(followList);
         };
@@ -360,6 +362,7 @@ public class FollowService extends BaseService<FollowDao, Follow> {
         if (userResult.getState() == FAIL)
             return (Result<List<Follow>>) (Result) userResult;
         Follow queryEntity = (Follow) new Follow().setQueryParam(new QueryParam());
+        follow.getQueryParam().setCustomAddition("FOLLOWER");
         IndexExecutor indexExecutor = new IndexExecutor(follow, queryEntity, null, indexExecutorCallBacks, operator);
         indexExecutor.param.childNumOfParent = userResult.getObject().getFollowersCnt();
         indexExecutor.param.initStartId = Integer.MAX_VALUE;
