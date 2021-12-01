@@ -46,6 +46,10 @@ export default {
 			separator: true
 		}, {
 			type: 'post',
+			id: '402',
+			name: '关于本站'
+		}, {
+			type: 'post',
 			id: '427',
 			name: '友情链接'
 		}];

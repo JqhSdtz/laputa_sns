@@ -305,7 +305,7 @@ public class PostIndexService implements ApplicationRunner {
         Category groundCategory = categoryService.readGroundCategory().getObject();
         loadSubPostIndexList(groundCategory, LATEST);
         loadSubPostIndexList(groundCategory, POPULAR);
-        log.info("目录索引列表以缩减到默认缓存长度");
+        log.info("目录索引列表已缩减到默认缓存长度");
         List<TmpEntry> entryList = new ArrayList(categoryMap.size());
         for (Category category : categoryMap.values()) {
             int cacheNum = Math.max(category.getPopularCacheNum(), category.getLatestCacheNum());
