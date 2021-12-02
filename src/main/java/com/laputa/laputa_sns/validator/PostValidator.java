@@ -4,6 +4,7 @@ import com.laputa.laputa_sns.model.entity.Category;
 import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.model.entity.Post;
 import com.laputa.laputa_sns.right.PostRight;
+import com.laputa.laputa_sns.service.CategoryService;
 import com.laputa.laputa_sns.service.PermissionService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
@@ -117,13 +118,16 @@ public class PostValidator {
     }
 
     public boolean checkSetCategoryPermission(@NotNull Post oriPost, @NotNull Operator operator) {
-        // 需要是自己创建的，并且自己还要有该目录的管理等级，才可以更改目录
         if (operator .getId().equals(-1))
             return false;
-        if (!oriPost.getCreatorId().equals(operator.getUserId()))
-            return false;
-        Integer permissionLevel = permissionService.readPermissionLevel(oriPost.getCategoryId(), operator).getObject();
-        return permissionLevel != null && permissionLevel >= AdminLevel.UPDATE_POST_CATEGORY;
+        if (oriPost.getCreatorId().equals(operator.getUserId())) {
+            // 自己发的帖子，可以迁移
+            return true;
+        } else {
+            // 否则，检查是否有在该目录更新贴子父目录的权限
+            Integer permissionLevel = permissionService.readPermissionLevel(oriPost.getCategoryId(), operator).getObject();
+            return permissionLevel != null && permissionLevel >= AdminLevel.UPDATE_POST_CATEGORY;
+        }
     }
 
     public boolean checkUpdateContentPermission(@NotNull Post post, @NotNull Operator operator) {

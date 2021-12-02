@@ -571,7 +571,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         if (res == 0)//数据库操作失败
             return new Result(FAIL).setErrorCode(1010010112).setMessage("数据库操作失败");
         applyUpdateParentParam(categoryResult.getObject(), paramObject.getParentId());
-        postIndexService.refreshIndexAfterUpdateParent(categoryResult.getObject());
+        postIndexService.transferCategoryIndexList(categoryResult.getObject());
         return writeToAdminOpsRecord((Category) opParam.setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_PARENT, operator);
     }
 

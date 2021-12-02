@@ -9,6 +9,7 @@ import com.laputa.laputa_sns.util.ProgOperatorManager;
 import com.laputa.laputa_sns.vo.CategoryVo;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import static com.laputa.laputa_sns.validator.AdminLevel.*;
@@ -21,6 +22,9 @@ import static com.laputa.laputa_sns.validator.AdminLevel.*;
 @Slf4j
 @Component
 public class CategoryValidator {
+
+    @Value("${debug}")
+    private boolean isDebug;
 
     private final PermissionService permissionService;
 
@@ -138,6 +142,8 @@ public class CategoryValidator {
      * 检查更新目录父目录权限
      */
     public boolean checkUpdateParentPermission(Category category, Integer newParentId, @NotNull Operator operator) {//更新目录操作要求本目录权限
+        if (isDebug) 
+            return true;
         if (operator.getId().equals(-1))
             return false;
         Integer permissionLevel = permissionService.readPermissionLevel(category.getId(), operator).getObject();

@@ -427,7 +427,7 @@ public class PostService extends BaseService<PostDao, Post> {
     }
 
     public void multiSetIndexedFlag(@NotNull List<Post> postList, int type, Integer flag) {
-        List<TmpEntry> entryList = new ArrayList(postList.size());
+        List<TmpEntry> entryList = new ArrayList<>(postList.size());
         for (int i = 0; i < postList.size(); ++i)
             entryList.add(new TmpEntry(postList.get(i).getId(), flag));
         commonService.batchUpdate("lpt_post", "post_id", "post_" + (type == POPULAR ? "p" : "l") + "_indexed_flag", CommonService.OPS_COPY, entryList);
@@ -627,43 +627,36 @@ public class PostService extends BaseService<PostDao, Post> {
     public Result setCategory(@NotNull Post param,  Operator operator) {
         if (!param.isValidSetCategoryParam())
             return new Result(FAIL).setErrorCode(1010050228).setMessage("操作错误，参数不合法");
-        //设置帖子目录需要判断帖子的创建者
-        Result<Post> postResult = readPostWithAllFalse(param.getId(), operator);
+        // 设置帖子目录需要判断帖子的创建者，更新索引的时候需要点赞数
+        Result<Post> postResult = readPostWithCounter(param.getId(), operator);
         if (postResult.getState() == FAIL)
             return postResult;
         Post resPost = postResult.getObject();
         if (!resPost.getType().equals(Post.TYPE_PUBLIC))
             return new Result(FAIL).setErrorCode(1010050232).setMessage("操作失败，帖子类型错误");
-        if (!postValidator.checkSetCategoryPermission(resPost, operator))
-            return new Result(FAIL).setErrorCode(1010050229).setMessage("操作失败，权限错误");
         Integer oriCategoryId = resPost.getCategoryId();
-        if (param.getCategoryId().equals(oriCategoryId)) {
+        resPost.setCategoryId(param.getCategoryId());
+        // checkCategoryOfPost的过程中会设置post的category
+        Result checkCategoryResult = checkCategoryOfPost(resPost, operator);
+        if (checkCategoryResult.getState() == FAIL) {
+            return checkCategoryResult;
+        } else if (!postValidator.checkCreatePermission(resPost, operator)) {
+            return new Result(FAIL).setErrorCode(1010050230).setMessage("操作失败，没有在目标目录发布该帖子的权限");
+        } else if (!postValidator.checkSetCategoryPermission(resPost, operator)) {
+            return new Result(FAIL).setErrorCode(1010050229).setMessage("操作失败，权限错误");
+        } else if (param.getCategoryId().equals(oriCategoryId)) {
             return new Result(FAIL).setErrorCode(1010050233).setMessage("操作失败，目标目录不能是原目录");
         }
-        resPost.setCategoryId(param.getCategoryId());
-        Result checkCategoryResult = checkCategoryOfPost(resPost, operator);
-        if (checkCategoryResult.getState() == FAIL)
-            return checkCategoryResult;
-        Category newCategory = resPost.getCategory();
-        // 需要检查是否有在目标目录创建帖子的权限
-        if (!postValidator.checkCreatePermission(resPost, operator))
-            return new Result(FAIL).setErrorCode(1010050230).setMessage("操作失败，权限错误");
         int res = updateCategory(param.getId(), param.getCategoryId());
         if (res == 0)
             return new Result(FAIL).setErrorCode(1010050131).setMessage("数据库操作失败");
         redisHelper.removeEntity(param.getId());
-        //修改原目录的帖子数
+        // 修改原目录的帖子数
         categoryService.cascadeUpdatePostCnt(oriCategoryId, -1L);
-        //修改目标目录的帖子数
+        // 修改目标目录的帖子数
         categoryService.cascadeUpdatePostCnt(param.getCategoryId(), 1L);
-        // 从原目录的索引中删除，需要注意，这里把帖子的目录改回了原目录
-        resPost.setCategory(new Category(oriCategoryId));
-        postIndexService.deletePostIndex(resPost, LATEST);
-        postIndexService.deletePostIndex(resPost, POPULAR);
-        // 加入目标目录的索引，这里把帖子的目录又改成了新目录
-        resPost.setCategory(newCategory);
-        postIndexService.addPostIndex(Arrays.asList(resPost), resPost.getCategory(), POPULAR);
-        postIndexService.addPostIndex(Arrays.asList(resPost), resPost.getCategory(), LATEST);
+        // 转移帖子的索引到新目录
+        postIndexService.transferPostIndex(resPost, new Category(oriCategoryId), resPost.getCategory());
         return Result.EMPTY_SUCCESS;
     }
 
@@ -752,8 +745,7 @@ public class PostService extends BaseService<PostDao, Post> {
         if (post.getType().equals(Post.TYPE_PUBLIC)) {
             categoryService.cascadeUpdatePostCnt(category.getId(), -1L);//修改目录的帖子数
             //删除帖子不需要修改indexed_flag，删除的帖子不影响数据库查询结果，评论数据同理
-            postIndexService.deletePostIndex(post, LATEST);
-            postIndexService.deletePostIndex(post, POPULAR);
+            postIndexService.deletePostIndex(Arrays.asList(post));
         } else if (post.getType().equals(Post.TYPE_FORWARD)) {
             forwardService.removeFromForwardZSet(post.getSupId(), post.getId());
             updateForwardCnt(post.getSupId(), -1L);

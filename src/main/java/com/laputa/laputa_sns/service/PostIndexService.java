@@ -94,6 +94,12 @@ public class PostIndexService implements ApplicationRunner {
         log.info("帖子索引加载完成");
     }
 
+    /**
+     * 以递归的方式加载该目录以及其全部子目录的帖子索引
+     * @param root 目标目录
+     * @param type 索引类型（POPULAR, LATEST）
+     * @return
+     */
     private IndexList loadSubPostIndexList(@NotNull Category root, int type) {
         if (root.getIsLeaf() == null || root.getIsLeaf()) {
             if (type == LATEST)
@@ -102,7 +108,7 @@ public class PostIndexService implements ApplicationRunner {
                 return root.getPopularPostList();
         }
         List<Category> subCategoryList = root.getSubCategoryList();
-        List<Index> totalList = new ArrayList();
+        List<Index> totalList = new ArrayList<>();
         for (int i = 0; i < subCategoryList.size(); ++i) {
             Category category = subCategoryList.get(i);
             IndexList subList = loadSubPostIndexList(category, type);
@@ -138,8 +144,8 @@ public class PostIndexService implements ApplicationRunner {
         if (indexList == null)
             return null;
         if (indexList.size() == 0)
-            return new ArrayList(0);
-        List<Integer> postIdList = new ArrayList(num);
+            return new ArrayList<>(0);
+        List<Integer> postIdList = new ArrayList<>(num);
         Iterator<Index> iter = indexList.iterator(startId, from);
         for (int cnt = 0; iter.hasNext() && cnt < num; ++cnt)
             postIdList.add(iter.next().getId());
@@ -149,16 +155,19 @@ public class PostIndexService implements ApplicationRunner {
    /**
     * 向指定目录中添加帖子索引 
     * @param postList 待添加的帖子列表
-    * @param category 目标目录，需要是完整的Category对象
+    * @param category 目标目录
     * @param type 索引类型（POPULAR, LATEST）
     * @return 返回数组res[0]表示添加后索引列表的最后一个节点的ID，res[1]表示添加后索引列表的长度
     */
     public int[] addPostIndex(@NotNull List<Post> postList, Category category, int type) {
-        Map<Integer, TmpEntry> changeMap = new HashMap(postList.size());//用map是为了防止id重复，把有改动的记录到changeMap中
+        // 用map是为了防止id重复，把有改动的记录到changeMap中
+        Map<Integer, TmpEntry> changeMap = new HashMap<>(postList.size());
         for (int i = 0; i < postList.size(); ++i)
             addPostIndex(postList.get(i), type, false, changeMap);
-        postService.multiSetIndexedFlag(new ArrayList(changeMap.values()), type);
+        postService.multiSetIndexedFlag(new ArrayList<>(changeMap.values()), type);
         int[] res = new int[2];
+        // 确保category是完整的对象，以获取索引列表
+        category = categoryService.readCategory(category.getId(), false, progOperator).getObject();
         if (type == POPULAR) {
             res[1] = category.getPopularPostList().size();
             res[0] = res[1] == 0 ? 0 : category.getPopularPostList().getLast().getId();
@@ -167,21 +176,6 @@ public class PostIndexService implements ApplicationRunner {
             res[0] = res[1] == 0 ? 0 : category.getLatestPostList().getLast().getId();
         }
         return res;
-    }
-
-    /**
-     * 更新父目录后将本目录索引刷新到父目录中
-     */
-    public void refreshIndexAfterUpdateParent(Category category) {
-        if (category.getType().equals(Category.TYPE_PRIVATE))
-            return;
-        Category parent = categoryService.readCategory(category.getParentId(), false, progOperator).getObject();
-        IndexList popularList = category.getPopularPostList();
-        IndexList latestList = category.getLatestPostList();
-        for (Iterator<Index> iter = popularList.iterator(); iter.hasNext(); )
-            doUpdatePopularIndex(iter.next(), parent, true, false, new HashMap<>());
-        for (Iterator<Index> iter = latestList.iterator(); iter.hasNext(); )
-            doUpdateLatestIndex(iter.next(), parent, false, new HashMap<>());
     }
 
     /**
@@ -300,27 +294,108 @@ public class PostIndexService implements ApplicationRunner {
         return success;
     }
 
-    public void deletePostIndex(@NotNull Post post, int type) {
+    /**
+    * 在指定目录中删除帖子的索引 
+    * @param postList 待删除的帖子列表
+    * @param type 索引类型（POPULAR, LATEST）
+    */
+    public void deletePostIndex(@NotNull List<Post> postList) {
+        Map<Integer, TmpEntry> latestChangeMap = new HashMap<>(postList.size());
+        Map<Integer, TmpEntry> popularChangeMap = new HashMap<>(postList.size());
+        for (int i = 0; i < postList.size(); ++i)
+            deletePostIndex(postList.get(i), LATEST, latestChangeMap);
+        for (int i = 0; i < postList.size(); ++i)
+            deletePostIndex(postList.get(i), POPULAR, popularChangeMap);
+        postService.multiSetIndexedFlag(new ArrayList<>(latestChangeMap.values()), LATEST);
+        postService.multiSetIndexedFlag(new ArrayList<>(popularChangeMap.values()), POPULAR);
+    }
+
+    public void deletePostIndex(@NotNull Post post, int type, Map<Integer, TmpEntry> changeMap) {
         Category category = categoryService.readCategory(post.getCategoryId(), false, progOperator).getObject();
         while (category != null) {
+            Index removedIndex = null;
             if (type == LATEST)
-                category.getLatestPostList().remove(post.getId());
+                removedIndex = category.getLatestPostList().remove(post.getId());
             else if (type == POPULAR)
-                category.getPopularPostList().remove(post.getId());
+                removedIndex = category.getPopularPostList().remove(post.getId());
+            if (changeMap != null && removedIndex != null)
+                changeMap.put(post.getId(), new TmpEntry(post.getId(), 0));
+// 目录迁移的情况下，上级目录可能是空的，但再上级可能包含需要删除的索引，这里为了简便，一律找到最上层
 //            if (res == null)
-//                //子目录索引没有的，父目录索引必定没有，不用再往上找了
+//                // 子目录索引没有的，父目录索引必定没有，不用再往上找了
 //                break;
-            if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE))//私有目录，不向上展示
-                break;
+            // if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE)) {
+            //     // 私有目录，不向上展示
+            //     break;
+            // }
             category = category.getParent();
         }
+    }
+
+    /**
+     * 转移帖子的索引，从原目录转移到目标目录，需要保证帖子的点赞数和创建时间字段是正确的
+     * @param post 待转移的帖子
+     * @param original 帖子的原目录
+     * @param target 帖子的目标目录
+     */
+    public void transferPostIndex(Post post, Category original, Category target) {
+        Map<Integer, TmpEntry> latestChangeMap = new HashMap<>(1);
+        Map<Integer, TmpEntry> popularChangeMap = new HashMap<>(1);
+        // 删除索引是删除的原目录的索引
+        post.setCategory(original);
+        deletePostIndex(post, LATEST, latestChangeMap);
+        deletePostIndex(post, POPULAR, popularChangeMap);
+        // 添加索引时添加的目标目录的索引
+        post.setCategory(target);
+        addPostIndex(post, LATEST, false, latestChangeMap);
+        addPostIndex(post, POPULAR, false, popularChangeMap);
+        postService.multiSetIndexedFlag(new ArrayList<>(latestChangeMap.values()), LATEST);
+        postService.multiSetIndexedFlag(new ArrayList<>(popularChangeMap.values()), POPULAR);
+    }
+
+    /**
+     * 更新父目录后按照新的目录结构刷新本目录的索引列表
+     * @param category
+     */
+    public void transferCategoryIndexList(Category category) {
+        if (category.getType().equals(Category.TYPE_PRIVATE))
+            return;
+        IndexList latestList = category.getLatestPostList();
+        IndexList popularList = category.getPopularPostList();
+        Map<Integer, TmpEntry> latestChangeMap = new HashMap<>(latestList.size());
+        Map<Integer, TmpEntry> popularChangeMap = new HashMap<>(popularList.size());
+        List<Post> latestPostList = new ArrayList<>(popularList.size());
+        List<Post> popularPostList = new ArrayList<>(popularList.size());
+        // 先从索引列表中读取出来所有的数据，因为在删除的过程中索引列表会变化，所以不能遍历的同时删除
+        for (Iterator<Index> iter = latestList.iterator(); iter.hasNext();) {
+            Index index = iter.next();
+            latestPostList.add((Post) new Post(index.getId()).setCategory(category).setCreateTime(new Date(index.getValue())));
+        }
+        for (Iterator<Index> iter = popularList.iterator(); iter.hasNext();) {
+            Index index = iter.next();
+            popularPostList.add(new Post(index.getId()).setCategory(category).setLikeCnt(index.getValue()));
+        }
+        for (int i = 0; i < latestPostList.size(); ++i) {
+            deletePostIndex(latestPostList.get(i), LATEST, latestChangeMap);
+        }
+        for (int i = 0; i < popularPostList.size(); ++i) {
+            deletePostIndex(popularPostList.get(i), POPULAR, popularChangeMap);
+        }
+        for (int i = 0; i < latestPostList.size(); ++i) {
+            addPostIndex(latestPostList.get(i), LATEST, false, latestChangeMap);
+        }
+        for (int i = 0; i < popularPostList.size(); ++i) {
+            addPostIndex(popularPostList.get(i), POPULAR, false, popularChangeMap);
+        }
+        postService.multiSetIndexedFlag(new ArrayList<>(latestChangeMap.values()), LATEST);
+        postService.multiSetIndexedFlag(new ArrayList<>(popularChangeMap.values()), POPULAR);
     }
 
     @Scheduled(cron = "0 50 3 * * ?")
     public void dailyFlushPostIndex() {
         // 把目录的索引列表长度减到默认缓存长度
-        List<TmpEntry> remainedPopEntryList = new ArrayList();
-        List<TmpEntry> remainedLatEntryList = new ArrayList();
+        List<TmpEntry> remainedPopEntryList = new ArrayList<>();
+        List<TmpEntry> remainedLatEntryList = new ArrayList<>();
         Set<Category> leafSet = categoryService.readLeafCategorySet().getObject();
         for (Category category : leafSet) {
             // 每次刷新时把所有叶目录的缓存长度改成10，可以一定程度上削弱顶端优势
@@ -347,7 +422,7 @@ public class PostIndexService implements ApplicationRunner {
         loadSubPostIndexList(groundCategory, LATEST);
         loadSubPostIndexList(groundCategory, POPULAR);
         log.info("目录索引列表已缩减到默认缓存长度");
-        List<TmpEntry> entryList = new ArrayList(categoryMap.size());
+        List<TmpEntry> entryList = new ArrayList<>(categoryMap.size());
         for (Category category : categoryMap.values()) {
             int cacheNum = Math.max(category.getPopularCacheNum(), category.getLatestCacheNum());
             cacheNum = Math.max(cacheNum, postIndexMaxCacheNum);
