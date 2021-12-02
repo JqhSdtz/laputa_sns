@@ -1,6 +1,7 @@
 package com.laputa.laputa_sns.service;
 
 import com.laputa.laputa_sns.common.TmpEntry;
+import com.laputa.laputa_sns.common.TmpListEntry;
 import com.laputa.laputa_sns.dao.CommonDao;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,6 +74,28 @@ public class CommonService {
         else {
             for (int from = 0, to = insertNumLimit; from < list.size(); from += insertNumLimit, to += insertNumLimit)
                 cnt += dao.batchUpdate(list.subList(from, to > list.size() ? list.size() : to), tableName, idFieldName, valueFiledName, ops);
+        }
+        return cnt;
+    }
+
+     /**
+     * 根据ID列表批量更新表的多个字段，<b>该方法尚未测试</b>
+     * @param tableName
+     * @param idFieldName
+     * @param valueFiledNames
+     * @param ops
+     * @param list
+     * @return
+     */
+    public int batchUpdateMulti(String tableName, String idFieldName, List<String> valueFiledNames, int ops, @NotNull List<TmpListEntry> list) {
+        if (list.size() == 0)
+            return 0;
+        int cnt = 0;
+        if (list.size() < insertNumLimit)
+            cnt = dao.batchUpdateMulti(list, tableName, idFieldName, valueFiledNames, ops);
+        else {
+            for (int from = 0, to = insertNumLimit; from < list.size(); from += insertNumLimit, to += insertNumLimit)
+                cnt += dao.batchUpdateMulti(list.subList(from, to > list.size() ? list.size() : to), tableName, idFieldName, valueFiledNames, ops);
         }
         return cnt;
     }

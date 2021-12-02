@@ -26,4 +26,31 @@
 		</choose>
 	</update>
 
+	<update id="batchUpdateMulti">
+		insert into ${tableName}(${idFieldName}, 
+		<foreach item="fieldName" collection="valueFiledNames" separator=",">
+			${fieldName}
+		</foreach>
+		) values
+		<foreach item="item" collection="list" separator=",">
+			(#{item.id}, 
+			<foreach item="value" collection="item.values" separator=",">
+				#{value}
+			</foreach>
+			)
+		</foreach>
+		on duplicate key update 
+		<foreach item="fieldName" collection="valueFiledNames" separator=",">
+			${fieldName} =
+			<choose>
+				<when test="ops == 1">
+					values(${fieldName})
+				</when>
+				<otherwise>
+					${fieldName} + values(${fieldName})
+				</otherwise>
+			</choose>
+		</foreach>
+	</update>
+
 </mapper>
