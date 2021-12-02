@@ -61,12 +61,12 @@ public class PostIndexService implements ApplicationRunner {
         Category groundCategory = categoryService.readGroundCategory().getObject();
         Set<Category> leafCategorySet = categoryService.readLeafCategorySet().getObject();
         Post param = (Post) new Post().setQueryParam(new QueryParam().setStartId(0).setFrom(0)).setType(Post.TYPE_PUBLIC);
-        //加载索引前，先清除数据库的索引标记，若采用多个实例，当前的实例不包含全部的帖子时，要改一下代码，加上条件
+        // 加载索引前，先清除数据库的索引标记，若采用多个实例，当前的实例不包含全部的帖子时，要改一下代码，加上条件
         commonService.clearIndexedFlag("lpt_post", "post_id", "post_p_indexed_flag", "post_l_indexed_flag");
         for (Category category : leafCategorySet) {
             if (category.getCacheNum() == null || category.getCacheNum() == 0)
                 continue;
-            //加载新帖索引
+            // 加载新帖索引
             param.setCategory(category).getQueryParam().setQueryNum(category.getCacheNum());
             Result<List<Post>> latestPostListResult = postService.readDBPostList(param, LATEST, true, false, true, progOperator);
             if (latestPostListResult.getState() == FAIL)
@@ -77,7 +77,7 @@ public class PostIndexService implements ApplicationRunner {
                 Post post = latestPostList.get(i);
                 category.getLatestPostList().addLast(new Index(post.getId(), post.getCreateTime().getTime()), false);
             }
-            //加载热帖索引
+            // 加载热帖索引
             Result<List<Post>> popularPostListResult = postService.readDBPostList(param, POPULAR, true, false, true, progOperator);
             if (popularPostListResult.getState() == FAIL)
                 continue;
@@ -106,7 +106,7 @@ public class PostIndexService implements ApplicationRunner {
         for (int i = 0; i < subCategoryList.size(); ++i) {
             Category category = subCategoryList.get(i);
             IndexList subList = loadSubPostIndexList(category, type);
-            //私有目录，不向上展示，但也需要加载
+            // 私有目录，不向上展示，但也需要加载
             if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE))
                 continue;
             for (Iterator<Index> iter = subList.iterator(); iter.hasNext(); )
@@ -124,6 +124,15 @@ public class PostIndexService implements ApplicationRunner {
         return rootList;
     }
 
+    /**
+     * 获取帖子索引列表
+     * @param category 目标目录
+     * @param type 索引类型（POPULAR, LATEST）
+     * @param startId 查询参数中的起始ID
+     * @param from 查询参数中的起始位置
+     * @param num 查询参数中的查询数量
+     * @return 以帖子ID表示的索引列表
+     */
     public List<Integer> getPostIndexList(Category category, int type, Integer startId, Integer from, int num) {
         IndexList indexList = type == LATEST ? category.getLatestPostList() : category.getPopularPostList();
         if (indexList == null)
@@ -137,9 +146,13 @@ public class PostIndexService implements ApplicationRunner {
         return postIdList;
     }
 
-    /**
-     * category需要是完整对象, 返回数组res[0]表示添加后索引列表的最后一个节点的ID，res[1]表示添加后索引列表的长度
-     */
+   /**
+    * 向指定目录中添加帖子索引 
+    * @param postList 待添加的帖子列表
+    * @param category 目标目录，需要是完整的Category对象
+    * @param type 索引类型（POPULAR, LATEST）
+    * @return 返回数组res[0]表示添加后索引列表的最后一个节点的ID，res[1]表示添加后索引列表的长度
+    */
     public int[] addPostIndex(@NotNull List<Post> postList, Category category, int type) {
         Map<Integer, TmpEntry> changeMap = new HashMap(postList.size());//用map是为了防止id重复，把有改动的记录到changeMap中
         for (int i = 0; i < postList.size(); ++i)
@@ -171,6 +184,13 @@ public class PostIndexService implements ApplicationRunner {
             doUpdateLatestIndex(iter.next(), parent, false, new HashMap<>());
     }
 
+    /**
+     * 添加帖子索引，但不会修改数据库的索引字段
+     * @param post
+     * @param type 索引类型（POPULAR, LATEST)
+     * @param isNew 是否是新创建的帖子
+     * @param changeMap 用于记录在此过程中改变了索引状态的帖子（不只包括目标帖子），如果不需要获取索引状态的改变，则可传入null
+     */
     public void addPostIndex(Post post, int type, boolean isNew, Map<Integer, TmpEntry> changeMap) {
         if (type == LATEST) {
             long date = isNew ? new Date().getTime() : post.getCreateTime().getTime();
@@ -184,13 +204,15 @@ public class PostIndexService implements ApplicationRunner {
     private void doUpdateLatestIndex(Index index, Category category, boolean isNew, Map<Integer, TmpEntry> changeMap) {
         while (category != null) {
             IndexList indexList = category.getLatestPostList();
-            if (!indexList.hasIndex(index.getId())) {//没有该节点才放入
+            if (!indexList.hasIndex(index.getId())) {
+                // 没有该节点才放入
                 if (indexList.size() >= postIndexMaxCacheNum) {
                     Index last = indexList.popLast();
                     if (last != null && changeMap != null)
                         changeMap.put(last.getId(), new TmpEntry(last.getId(), 0));
                 }
-                if (isNew)//新加入的latest索引不需要设置index_flag，见PostService.createComment
+                if (isNew)
+                    // 新加入的latest索引不需要设置index_flag，见PostService.createComment
                     indexList.addFirst(index, false);
                 else {
                     Index last = indexList.addLast(index, true);
@@ -204,6 +226,17 @@ public class PostIndexService implements ApplicationRunner {
         }
     }
 
+    /**
+     * 更新帖子的POPULAR索引，用于点赞或取消点赞时更新索引
+     * @param post
+     * @param incr true表示点赞，false表示取消点赞
+     * @param onlyIfExistsOrGreaterThanLast 是否只在索引列表中已存在该帖子的索引，
+     * 或者该帖子的索引值（点赞数）大于索引列表末尾的索引的索引值时才添加该索引。
+     * 在添加从数据库获取的帖子列表时，需要添加索引中不存在的帖子，此时可以保证索引的顺序是正确的；
+     * 但是在点赞时如果不加判断直接将被点赞的帖子加入索引，则无法保证索引的顺序是正确的
+     * @param changeMap 用于记录在此过程中改变了索引状态的帖子（不只包括目标帖子），如果不需要获取索引状态的改变，则可传入null
+     * @return 该帖子是否加入到了索引中
+     */
     public boolean updatePostPopIndex(@NotNull Post post, boolean incr, boolean onlyIfExistsOrGreaterThanLast, Map<Integer, TmpEntry> changeMap) {
         Index index = new Index(post.getId(), post.getLikeCnt());
         Category category = categoryService.readCategory(post.getCategoryId(), false, progOperator).getObject();
@@ -214,13 +247,16 @@ public class PostIndexService implements ApplicationRunner {
         boolean success = false;
         while (category != null) {
             IndexList indexList = category.getPopularPostList();
-            if (incr) {//增加热度
+            if (incr) {
+                // 增加热度
                 boolean greaterThanLast = indexList.getLast() == null || index.getValue() > indexList.getLast().getValue();
-                if (indexList.hasIndex(index.getId())) {//原来在列表中
+                if (indexList.hasIndex(index.getId())) {
+                    // 原来在列表中
                     success = indexList.update(index, true, IndexList.LEFT);
                 } else if (!onlyIfExistsOrGreaterThanLast || greaterThanLast) {
-                    //不是只更新存在或插入更大的情况，或者是当前值比末尾更大，都继续执行
-                    if (indexList.size() < postIndexMaxCacheNum) {//不在列表中但列表还有空间
+                    // 不是只更新存在或插入更大的情况，或者是当前值比末尾更大，都继续执行
+                    if (indexList.size() < postIndexMaxCacheNum) {
+                        // 不在列表中但列表还有空间
                         Index last = indexList.addLast(index, true);
                         if (last != null) {
                             success = true;
@@ -228,7 +264,8 @@ public class PostIndexService implements ApplicationRunner {
                                 changeMap.put(last.getId(), new TmpEntry(last.getId(), 1));
                         }
                     } else {
-                        if (greaterThanLast) {//不在列表中且没有空间，判断要不要换掉末端帖子
+                        if (greaterThanLast) {
+                            // 不在列表中且没有空间，判断要不要换掉末端帖子
                             Index popped = indexList.popLast();
                             if (popped != null && changeMap != null)
                                 changeMap.put(popped.getId(), new TmpEntry(popped.getId(), 0));
@@ -245,8 +282,10 @@ public class PostIndexService implements ApplicationRunner {
 //                           break;
                     }
                 }
-            } else {//减少热度
-                if (indexList.hasIndex(index.getId())) {//原来在列表中
+            } else {
+                // 减少热度
+                if (indexList.hasIndex(index.getId())) {
+                    // 原来在列表中
                     indexList.update(index, true, IndexList.RIGHT);
                     success = true;
                 }
@@ -268,7 +307,8 @@ public class PostIndexService implements ApplicationRunner {
                 category.getLatestPostList().remove(post.getId());
             else if (type == POPULAR)
                 category.getPopularPostList().remove(post.getId());
-//            if (res == null)//子目录索引没有的，父目录索引必定没有，不用再往上找了
+//            if (res == null)
+//                //子目录索引没有的，父目录索引必定没有，不用再往上找了
 //                break;
             if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE))//私有目录，不向上展示
                 break;
@@ -278,7 +318,7 @@ public class PostIndexService implements ApplicationRunner {
 
     @Scheduled(cron = "0 50 3 * * ?")
     public void dailyFlushPostIndex() {
-        //把目录的索引列表长度减到默认缓存长度
+        // 把目录的索引列表长度减到默认缓存长度
         List<TmpEntry> remainedPopEntryList = new ArrayList();
         List<TmpEntry> remainedLatEntryList = new ArrayList();
         Set<Category> leafSet = categoryService.readLeafCategorySet().getObject();
@@ -296,6 +336,7 @@ public class PostIndexService implements ApplicationRunner {
         postService.multiSetIndexedFlag(remainedPopEntryList, POPULAR);
         postService.multiSetIndexedFlag(remainedLatEntryList, LATEST);
         Map<Integer, Category> categoryMap = categoryService.readCategoryMap().getObject();
+        // 清空所有非叶目录的索引列表，然后再由叶目录的索引列表重构其他目录的索引列表，以保证结构的正确
         for (Category category : categoryMap.values()) {
             if (!category.getIsLeaf()) {
                 category.setPopularPostList(new IndexList(10));
