@@ -34,7 +34,9 @@ export default {
 	},
 	data() {
 		const record = this.payload;
-		record.desc = JSON.parse(record.desc);
+		if (typeof record.desc === 'string') {
+			record.desc = JSON.parse(record.desc);
+		}
 		const entityType = record.desc.entity_type;
 		if (entityType === 'POST') {
 			global.states.postManager.add(record.desc);

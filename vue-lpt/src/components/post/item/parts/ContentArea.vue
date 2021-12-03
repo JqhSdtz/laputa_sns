@@ -13,7 +13,7 @@
 		</div>
 		<div v-if="!isShowFullText" class="content" :class="{'md-content': contentType === 'md'}">
 			<v-md-preview ref="contentMd" v-if="contentType === 'md'" :text="postContent"/>
-			<ellipsis v-if="contentType === 'normal'" :content="postContent" :rows="5"/>
+			<ellipsis v-if="contentType === 'normal' || contentType === 'amOps'" :content="postContent" :rows="5"/>
 		</div>
 		<p v-if="hasFullText && !isShowFullText" class="full-text-btn" @click.stop="showFullTextFun">
 			查看全文
