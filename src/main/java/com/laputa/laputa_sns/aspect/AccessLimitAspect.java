@@ -1,5 +1,16 @@
 package com.laputa.laputa_sns.aspect;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.laputa.laputa_sns.annotation.AccessLimit;
 import com.laputa.laputa_sns.annotation.AccessLimitTarget;
 import com.laputa.laputa_sns.annotation.AccessLimits;
@@ -9,12 +20,10 @@ import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.util.RedisUtil;
 import com.laputa.laputa_sns.util.ResourceUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.JoinPoint;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.reflections.Reflections;
@@ -26,9 +35,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.*;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author JQH
@@ -40,6 +47,7 @@ import java.util.*;
 @Aspect
 public class AccessLimitAspect implements ApplicationRunner {
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static final DefaultRedisScript<List<List<Object>>> globalTargetRegisterScript =
             new DefaultRedisScript(ResourceUtil.getString("/lua/access_limit/globalTargetRegister.lua"), List.class);
     private String methodRegisterKey = "METHOD";
@@ -81,7 +89,7 @@ public class AccessLimitAspect implements ApplicationRunner {
     }
 
     @Around("needLoginPoint()")
-    public Result testIfLogin(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Result<?> testIfLogin(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         boolean hasLogin = false;
         for (int i = 0; i < args.length; ++i) {
@@ -92,14 +100,14 @@ public class AccessLimitAspect implements ApplicationRunner {
             }
         }
         if (hasLogin) {
-            return (Result) joinPoint.proceed();
+            return (Result<?>) joinPoint.proceed();
         } else {
-            return new Result(Result.FAIL).setErrorCode(1010220202).setMessage("请求失败，该请求需要登录");
+            return new Result<Object>(Result.FAIL).setErrorCode(1010220202).setMessage("请求失败，该请求需要登录");
         }
     }
 
     @Around("point()")
-    public Result parseAccessLimit(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Result<?> parseAccessLimit(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature sign = (MethodSignature) joinPoint.getSignature();
         Method method = sign.getMethod();
         Parameter[] parameters = method.getParameters();
@@ -127,15 +135,15 @@ public class AccessLimitAspect implements ApplicationRunner {
         }
         if ((operator.getUserId() != null && operator.getUserId() < 0) || operator.isSuperAdmin()) {
             // 未登录或超级管理员不受任何限制
-            return (Result) joinPoint.proceed();
+            return (Result<?>) joinPoint.proceed();
         }
         AccessLimits limits = method.getAnnotation(AccessLimits.class);
         Arrays.sort(limits.value(), Comparator.comparing(AccessLimit::per).reversed());
         boolean result = doAccessLimit(method, target, operator, limits);
         if (result) {
-            return (Result) joinPoint.proceed();
+            return (Result<?>) joinPoint.proceed();
         } else {
-            return new Result(Result.FAIL).setErrorCode(1010220201).setMessage("请求过于频繁，请稍后再试").setOperator(operator);
+            return new Result<Object>(Result.FAIL).setErrorCode(1010220201).setMessage("请求过于频繁，请稍后再试").setOperator(operator);
         }
     }
 

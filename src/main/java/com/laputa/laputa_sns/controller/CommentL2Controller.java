@@ -1,5 +1,7 @@
 package com.laputa.laputa_sns.controller;
 
+import java.util.List;
+
 import com.laputa.laputa_sns.annotation.AccessLimit;
 import com.laputa.laputa_sns.annotation.AccessLimitTarget;
 import com.laputa.laputa_sns.annotation.LimitTimeUnit;
@@ -31,19 +33,19 @@ public class CommentL2Controller {
     @AccessLimit(value = 40, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 10, per = LimitTimeUnit.MINUTE)
     @RequestMapping(method = RequestMethod.POST)
-    public Result createComment(@AccessLimitTarget(byMethod = "getL1") @RequestBody CommentL2 comment, @RequestAttribute Operator operator) {
+    public Result<Integer> createComment(@AccessLimitTarget(byMethod = "getL1") @RequestBody CommentL2 comment, @RequestAttribute Operator operator) {
         return commentL2Service.createComment(comment, operator).setOperator(operator);
     }
 
     @AccessLimit(value = 40, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 10, per = LimitTimeUnit.MINUTE)
     @RequestMapping(method = RequestMethod.DELETE)
-    public Result deleteComment(@AccessLimitTarget(byMethod = "getL1") @RequestBody CommentL2 comment, @RequestAttribute Operator operator) {
+    public Result<Object> deleteComment(@AccessLimitTarget(byMethod = "getL1") @RequestBody CommentL2 comment, @RequestAttribute Operator operator) {
         return commentL2Service.deleteComment(comment, operator).setOperator(operator);
     }
 
     @RequestMapping(value = "/popular", method = {RequestMethod.GET, RequestMethod.POST})
-    public Result readPopularCommentL2List(@RequestBody CommentL2 comment, @RequestAttribute Operator operator) {
+    public Result<List<CommentL2>>  readPopularCommentL2List(@RequestBody CommentL2 comment, @RequestAttribute Operator operator) {
         return commentL2Service.readIndexCommentL2List(comment, operator).setOperator(operator);
     }
 

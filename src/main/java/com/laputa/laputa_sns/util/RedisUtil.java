@@ -1,16 +1,26 @@
 package com.laputa.laputa_sns.util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.laputa.laputa_sns.common.QueryParam;
-import com.laputa.laputa_sns.service.PostService;
-import lombok.extern.slf4j.Slf4j;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.data.redis.connection.RedisZSetCommands.Tuple;
-import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.DefaultTypedTuple;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
-import java.io.IOException;
-import java.util.*;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Redis相关的工具类，包括一些常用的lua脚本封装的方法
@@ -21,23 +31,26 @@ import java.util.*;
 
 @Slf4j
 public class RedisUtil {
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static final DefaultRedisScript<List<String>> zRevRangeUseStartIdFirstScript =
             new DefaultRedisScript(ResourceUtil.getString("/lua/index/zRevRangeUseStartIdFirst.lua"), List.class);
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static final DefaultRedisScript<List<String>> zRevRangeUseFromFirstScript =
             new DefaultRedisScript(ResourceUtil.getString("/lua/index/zRevRangeUseFromFirst.lua"), List.class);
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static final DefaultRedisScript<List<Object>> zAddAndGetLastScript =
             new DefaultRedisScript(ResourceUtil.getString("/lua/index/zAddAndGetLast.lua"), List.class);
 
-    private static final DefaultRedisScript<Long> zRemRangeByLex = new DefaultRedisScript("return redis.call('zremrangebylex', KEYS[1], ARGV[1], ARGV[2])", Long.class);
+    private static final DefaultRedisScript<Long> zRemRangeByLex = new DefaultRedisScript<>("return redis.call('zremrangebylex', KEYS[1], ARGV[1], ARGV[2])", Long.class);
 
     @NotNull
     /**返回object数组result[]，长度为2，result[0]为zSet最后一个值，result[1]为zSet长度*/
     public static Object[] addToZSetAndGetLastAndLength(@NotNull StringRedisTemplate redisTemplate, String key, @NotNull Set<Tuple> valueSet, int limit, boolean replaceWhenFull) {
         if (valueSet == null || valueSet.size() == 0)
             return null;
-        List<String> argv = new ArrayList(valueSet.size() * 2);
+        List<String> argv = new ArrayList<>(valueSet.size() * 2);
         for (Tuple tuple : valueSet) {
             argv.add(String.valueOf(tuple.getScore()));
             argv.add(new String(tuple.getValue()));
@@ -73,14 +86,14 @@ public class RedisUtil {
         if (resList == null || (resList.size() == 1 && resList.get(0) == null))
             return null;
         if (withScore) {
-            List<ZSetOperations.TypedTuple<String>> tupleList = new ArrayList(resList.size() / 2);
+            List<ZSetOperations.TypedTuple<String>> tupleList = new ArrayList<>(resList.size() / 2);
             for (int i = 0; i < resList.size(); i += 2)
-                tupleList.add(new DefaultTypedTuple(resList.get(i), Double.valueOf(resList.get(i + 1))));
+                tupleList.add(new DefaultTypedTuple<>(resList.get(i), Double.valueOf(resList.get(i + 1))));
             return tupleList;
         } else {
-            List<ZSetOperations.TypedTuple<String>> tupleList = new ArrayList(resList.size());
+            List<ZSetOperations.TypedTuple<String>> tupleList = new ArrayList<>(resList.size());
             for (int i = 0; i < resList.size(); ++i)
-                tupleList.add(new DefaultTypedTuple(resList.get(i), 0.0));
+                tupleList.add(new DefaultTypedTuple<>(resList.get(i), 0.0));
             return tupleList;
         }
     }
@@ -105,7 +118,7 @@ public class RedisUtil {
             int failCnt = 0;
             do {
                 try {
-                    Set<String> keysTmp = new HashSet();
+                    Set<String> keysTmp = new HashSet<>();
                     Cursor<byte[]> cursor = connection.scan(options);
                     while (cursor.hasNext())
                         keysTmp.add(new String(cursor.next()));

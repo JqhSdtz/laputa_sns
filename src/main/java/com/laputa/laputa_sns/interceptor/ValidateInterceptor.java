@@ -108,7 +108,7 @@ public class ValidateInterceptor implements HandlerInterceptor {
     private void writeResponse(@NotNull HttpServletResponse response, String message) {
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json");
-        Result result = new Result(Result.FAIL).setMessage(message);
+        Result<Object> result = new Result<Object>(Result.FAIL).setMessage(message);
         try {
             String str = new ObjectMapper().writeValueAsString(result);
             response.getWriter().write(str);

@@ -27,7 +27,7 @@ public class IndexList {
     }
 
     public IndexList(int capacity) {
-        nodeMap = new HashMap((int) (capacity / 0.75f));
+        nodeMap = new HashMap<>((int) (capacity / 0.75f));
         lPole = new Node(null);
         rPole = new Node(null);
         lPole.right = rPole;
@@ -187,7 +187,7 @@ public class IndexList {
      */
     public synchronized List<Index> trim(int size, boolean getRemained) {
         Node node = lPole;
-        List<Index> remainedList = getRemained ? new ArrayList() : null;
+        List<Index> remainedList = getRemained ? new ArrayList<>() : null;
         for (int i = 0; i < size; ++i) {//定位到要保留的最后一个节点
             node = node.right;
             if (node == null || node == rPole)
@@ -196,13 +196,13 @@ public class IndexList {
                 remainedList.add(node.data);
         }
         if (node == null || node == rPole)
-            return getRemained ? remainedList : new ArrayList(0);
+            return getRemained ? remainedList : new ArrayList<>(0);
         Node trimNode = node.right;//记录下最后一个节点的下一个
         //把最后一个节点连到右端点上
         node.right = rPole;
         rPole.left = node;
         //删除掉最后一个节点之后的所有节点
-        List<Index> removedList = getRemained ? null : new ArrayList();
+        List<Index> removedList = getRemained ? null : new ArrayList<>();
         while(trimNode != null && trimNode.data != null) {
             if (!getRemained)
                 removedList.add(trimNode.data);

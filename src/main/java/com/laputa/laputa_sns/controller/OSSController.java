@@ -35,7 +35,7 @@ public class OSSController {
         else if ("com".equals(type))
             bType = OSSService.COMMENT;
         else
-            return Result.EMPTY_FAIL;
+            return new Result<String>(Result.FAIL);
         return ossService.uploadImgSync(file.getBytes(), bType, operator);
     }
 }

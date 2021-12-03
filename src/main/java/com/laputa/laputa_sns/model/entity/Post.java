@@ -253,7 +253,7 @@ public class Post extends AbstractContent<Post> {
     }
 
     @JsonIgnore
-    public AbstractContent getParent() {
+    public AbstractContent<Post> getParent() {
         return null;
     }
 

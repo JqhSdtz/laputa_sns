@@ -29,7 +29,7 @@ public class NoticeController {
     }
 
     @RequestMapping(value = "/read", method = {RequestMethod.POST})
-    public Result markNoticeAsRead(@RequestBody Notice notice, @RequestAttribute Operator operator) {
+    public Result<Object> markNoticeAsRead(@RequestBody Notice notice, @RequestAttribute Operator operator) {
         return noticeService.markNoticeAsRead(notice, operator).setOperator(operator);
     }
 }

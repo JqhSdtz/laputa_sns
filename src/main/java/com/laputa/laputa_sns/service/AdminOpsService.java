@@ -70,9 +70,9 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
      */
     public Result<Integer> createAdminOpsRecord(AdminOpsRecord param, Operator operator) {
         if (!param.isValidInsertParam())
-            return new Result(Result.FAIL).setErrorCode(1010190201).setMessage("操作失败，参数错误");
+            return new Result<Integer>(Result.FAIL).setErrorCode(1010190201).setMessage("操作失败，参数错误");
         if (!operator.isAdmin())
-            return new Result(Result.FAIL).setErrorCode(1010190202).setMessage("操作失败，权限错误");
+            return new Result<Integer>(Result.FAIL).setErrorCode(1010190202).setMessage("操作失败，权限错误");
         Post recordPost = (Post) new Post().setCategoryId(adminOpsRecordCategoryId).setCreatorId(adminOpsRecordUserId)
                 .setType(Post.TYPE_PUBLIC);
         String recordContent = getHead() + "#";
@@ -108,7 +108,7 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
         }
         recordContent += "\n操作理由:" + param.getOpComment();
         recordPost.setContent(recordContent);
-        Map opRecordObj = new HashMap();
+        Map<String, Object> opRecordObj = new HashMap<>();
         opRecordObj.put("desc", param.getDesc());
         opRecordObj.put("comment", param.getOpComment());
         opRecordObj.put("type", param.getType());
@@ -117,12 +117,12 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
         try {
             recordPost.setFullText(this.opsRecordMapper.writeValueAsString(opRecordObj));
         } catch (JsonProcessingException e) {
-            return new Result(Result.FAIL).setErrorCode(1010190110).setMessage("操作格式转换失败;" + e.getMessage());
+            return new Result<Integer>(Result.FAIL).setErrorCode(1010190110).setMessage("操作格式转换失败;" + e.getMessage());
         }
         param.setCreator(operator.getUser());
         int res = insertOne(param);
         if (res == -1)
-            return new Result(Result.FAIL).setErrorCode(1010190103).setMessage("数据库操作失败");
+            return new Result<Integer>(Result.FAIL).setErrorCode(1010190103).setMessage("数据库操作失败");
         return postService.createPost(recordPost, new Operator(adminOpsRecordUserId));
     }
 
@@ -135,16 +135,16 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
      */
     public Result<AdminOpsRecord> readRecord(Integer id, Operator operator) {
         if (id == null)
-            return new Result(Result.FAIL).setErrorCode(1010190204).setMessage("操作失败，参数错误");
+            return new Result<AdminOpsRecord>(Result.FAIL).setErrorCode(1010190204).setMessage("操作失败，参数错误");
         if (!operator.isAdmin())
-            return new Result(Result.FAIL).setErrorCode(1010190205).setMessage("操作失败，权限错误");
+            return new Result<AdminOpsRecord>(Result.FAIL).setErrorCode(1010190205).setMessage("操作失败，权限错误");
         AdminOpsRecord res = selectOne(id);
         if (res == null)
-            return new Result(Result.FAIL).setErrorCode(1010190106).setMessage("数据库操作失败");
+            return new Result<AdminOpsRecord>(Result.FAIL).setErrorCode(1010190106).setMessage("数据库操作失败");
         Result<User> creatorResult = userService.readUserWithAllFalse(res.getCreatorId(), operator);
         if (creatorResult.getState() == Result.SUCCESS)
             res.setCreator(creatorResult.getObject());
-        return new Result(Result.SUCCESS).setObject(res);
+        return new Result<AdminOpsRecord>(Result.SUCCESS).setObject(res);
     }
 
     /**
@@ -157,15 +157,15 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
     @SneakyThrows
     public Result<List<AdminOpsRecord>> readRecordList(AdminOpsRecord param, Operator operator) {
         if (!param.isValidReadIndexParam())
-            return new Result(Result.FAIL).setErrorCode(1010190207).setMessage("操作失败，参数错误");
+            return new Result<List<AdminOpsRecord>>(Result.FAIL).setErrorCode(1010190207).setMessage("操作失败，参数错误");
         if (!operator.isAdmin())
-            return new Result(Result.FAIL).setErrorCode(1010190208).setMessage("操作失败，权限错误");
+            return new Result<List<AdminOpsRecord>>(Result.FAIL).setErrorCode(1010190208).setMessage("操作失败，权限错误");
         if (param.getQueryParam().getStartId().equals(0))
             param.getQueryParam().setStartId(Integer.MAX_VALUE);
         List<AdminOpsRecord> resList = selectList(param);
         if (resList == null)
-            return new Result(Result.FAIL).setErrorCode(1010190109).setMessage("数据库操作失败");
+            return new Result<List<AdminOpsRecord>>(Result.FAIL).setErrorCode(1010190109).setMessage("数据库操作失败");
         userService.multiSetUser(resList, AdminOpsRecord.class.getMethod("getCreatorId"), AdminOpsRecord.class.getMethod("setCreator", User.class));
-        return new Result(Result.SUCCESS).setObject(resList);
+        return new Result<List<AdminOpsRecord>>(Result.SUCCESS).setObject(resList);
     }
 }

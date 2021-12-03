@@ -4,7 +4,6 @@ import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.model.entity.Follow;
 import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.service.FollowService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.List;
  * @since 下午 9:41 20/02/20
  */
 
-@Slf4j
 @RestController
 @RequestMapping(value = "/api/follow")
 public class FollowController {
@@ -31,12 +29,12 @@ public class FollowController {
     }
 
     @RequestMapping(method = RequestMethod.PATCH)
-    public Result updateFollow(@RequestBody Follow follow, @RequestAttribute Operator operator) {
+    public Result<Object>  updateFollow(@RequestBody Follow follow, @RequestAttribute Operator operator) {
         return followService.updateFollow(follow, operator).setOperator(operator);
     }
 
     @RequestMapping(method = RequestMethod.DELETE)
-    public Result deleteFollow(@RequestBody Follow follow, @RequestAttribute Operator operator) {
+    public Result<Object>  deleteFollow(@RequestBody Follow follow, @RequestAttribute Operator operator) {
         return followService.deleteFollow(follow, operator).setOperator(operator);
     }
 

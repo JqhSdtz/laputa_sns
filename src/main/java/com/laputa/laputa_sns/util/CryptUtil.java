@@ -32,7 +32,7 @@ public class CryptUtil {
 
     private static final String HMAC_MD5_NAME = "HmacMD5";
 
-    private static final Queue<SecureRandom> randoms = new ConcurrentLinkedQueue();
+    private static final Queue<SecureRandom> randoms = new ConcurrentLinkedQueue<>();
 
     private static final Random notSecRand = new Random();
 

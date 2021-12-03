@@ -23,8 +23,8 @@ public class Result<ResultType> implements Serializable {
     public static final int SUCCESS = 1;
     public static final int FAIL = 0;
 
-    public static final Result EMPTY_SUCCESS = new Result(SUCCESS);
-    public static final Result EMPTY_FAIL = new Result(FAIL);
+    public static final Result<Object> EMPTY_SUCCESS = new Result<>(SUCCESS);
+    public static final Result<Object> EMPTY_FAIL = new Result<>(FAIL);
 
     private int state;
 
@@ -42,6 +42,17 @@ public class Result<ResultType> implements Serializable {
 
     public Result(int state) {
         this.state = state;
+    }
+
+    /**
+     * <b>该构造函数忽略object</b>，用于复制一个FAIL的Result对象，并且可以返回指定类型的Result
+     * @param original
+     */
+    public Result(Result<?> failResult) {
+        this.state = failResult.state;
+        this.errorCode = failResult.errorCode;
+        this.message = failResult.message;
+        this.operator = failResult.operator;
     }
 
     public String toString() {

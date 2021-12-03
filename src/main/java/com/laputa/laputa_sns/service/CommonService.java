@@ -1,16 +1,14 @@
 package com.laputa.laputa_sns.service;
 
+import java.util.List;
+
 import com.laputa.laputa_sns.common.TmpEntry;
 import com.laputa.laputa_sns.common.TmpListEntry;
 import com.laputa.laputa_sns.dao.CommonDao;
+
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 公共服务，主要是一些公共的数据库操作方法

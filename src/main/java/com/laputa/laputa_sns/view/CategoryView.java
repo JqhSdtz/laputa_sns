@@ -27,9 +27,9 @@ public class CategoryView {
     public Result<CategoryVo> readCategoryVo(Integer categoryId, Operator operator) {
         Result<Category> categoryResult = categoryService.readCategoryWithAllCounters(categoryId, operator);
         if (categoryResult.getState() == Result.FAIL)
-            return (Result<CategoryVo>) (Result) categoryResult;
+            return new Result<CategoryVo>(categoryResult);
         CategoryVo vo = new CategoryVo(categoryResult.getObject());
         validator.setRights(vo, operator);
-        return new Result(Result.SUCCESS).setObject(vo);
+        return new Result<CategoryVo>(Result.SUCCESS).setObject(vo);
     }
 }

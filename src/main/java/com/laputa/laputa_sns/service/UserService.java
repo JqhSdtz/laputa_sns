@@ -64,11 +64,11 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
     private final RedisHelper<UserRecvSetting> recvSettingRedisHelper;
     private final QueryHelper<UserRecvSetting> recvSettingQueryHelper;
     private final StringRedisTemplate redisTemplate;
-    private final DefaultRedisScript<Long> pushRecentVisitCategoryScript = new DefaultRedisScript(
+    private final DefaultRedisScript<Long> pushRecentVisitCategoryScript = new DefaultRedisScript<>(
             "local zscore = redis.call('zscore', KEYS[1], ARGV[1])\n" + "if (zscore ~= nil and zscore ~= false and tonumber(zscore) > 9000000000000) then\n" +
                     "\treturn 0 \n" + "end\n" + "redis.call('zadd', KEYS[1], ARGV[2], ARGV[1])\n" + "local len = redis.call('zcard', KEYS[1])\n" + "if (len > tonumber(ARGV[3])) then\n" +
                     "\tredis.call('zremrangebyrank', KEYS[1], 0, 0)\n" + "end\n" + "return len", Long.class);
-    private final DefaultRedisScript<Long> pinRecentVisitCategoryScript = new DefaultRedisScript(
+    private final DefaultRedisScript<Long> pinRecentVisitCategoryScript = new DefaultRedisScript<>(
             "if (ARGV[3] == '0') then\n" + "\treturn redis.call('zadd', KEYS[1], ARGV[2], ARGV[1])\n" + "else\n" +
                     "\tlocal maxScore = redis.call('zrangebyscore', KEYS[1], 9000000000000, 9999999999999, 'WITHSCORES', 'LIMIT', 0, 1)\n" +
                     "\tlocal setScore = 9999999999999\n" + "\tif (#maxScore ~= 0) then\n" + "\t\tsetScore = tonumber(maxScore[2]) - 1\n" + "\tend\n" +
@@ -86,14 +86,14 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         basicMapper.setFilterProvider(new SimpleFilterProvider().addFilter("UserFilter", SimpleBeanPropertyFilter
                 .filterOutAllExcept("nick_name", "raw_avatar", "type", "state", "talk_ban_to", "top_post_id", "followers_cnt", "following_cnt", "post_cnt")));
         int basicTimeOut = Integer.valueOf(environment.getProperty("timeout.redis.user.basic"));
-        this.redisHelper = new RedisHelper(RedisPrefix.USER_BASIC, basicMapper, basicTimeOut, null, null, null, RedisPrefix.USER_COUNTER, User.class, redisTemplate);
-        this.queryHelper = new QueryHelper(this, redisHelper);
+        this.redisHelper = new RedisHelper<>(RedisPrefix.USER_BASIC, basicMapper, basicTimeOut, null, null, null, RedisPrefix.USER_COUNTER, User.class, redisTemplate);
+        this.queryHelper = new QueryHelper<>(this, redisHelper);
         ObjectMapper recvSettingMapper = new ObjectMapper();
         recvSettingMapper.setFilterProvider(new SimpleFilterProvider().addFilter("UserRecvSettingFilter", SimpleBeanPropertyFilter
                 .filterOutAllExcept("recv_like", "recv_email", "recv_wx")));
         int recvSettingTimeOut = Integer.valueOf(environment.getProperty("timeout.redis.user.recv-setting"));
-        this.recvSettingRedisHelper = new RedisHelper(RedisPrefix.USER_RECV_SETTING, recvSettingMapper, recvSettingTimeOut, UserRecvSetting.class, redisTemplate);
-        this.recvSettingQueryHelper = new QueryHelper(null, recvSettingRedisHelper);
+        this.recvSettingRedisHelper = new RedisHelper<>(RedisPrefix.USER_RECV_SETTING, recvSettingMapper, recvSettingTimeOut, UserRecvSetting.class, redisTemplate);
+        this.recvSettingQueryHelper = new QueryHelper<>(null, recvSettingRedisHelper);
         this.recvSettingQueryHelper.selectOneCallBack = param -> dao.selectRecvSetting(param.getId());
     }
 
@@ -153,10 +153,10 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         Globals.UserNameInitialized = true;
     }
 
-    public Result checkNickName(String nickName) {
+    public Result<Object> checkNickName(String nickName) {
         if (redisTemplate.opsForHash().hasKey(RedisPrefix.USER_NAME_IDX_HASH, nickName))
-            return new Result(FAIL).setErrorCode(1010020201).setMessage("用户名已存在");
-        return Result.EMPTY_SUCCESS;
+            return new Result<Object>(FAIL).setErrorCode(1010020201).setMessage("用户名已存在");
+        return new Result<Object>(Result.SUCCESS);
     }
 
     public Integer getUserIdByName(String nickName) {
@@ -218,10 +218,10 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         return redisTemplate.execute(pushRecentVisitCategoryScript, Collections.singletonList(key), String.valueOf(categoryId), String.valueOf(new Date().getTime()), String.valueOf(userRecentVisitCategoryNum));
     }
 
-    public Result pinUserRecentVisitCategory(Integer categoryId, boolean isCancel, Operator operator) {
+    public Result<Object> pinUserRecentVisitCategory(Integer categoryId, boolean isCancel, Operator operator) {
         String key = getRecentVisitCategoryKey(operator.getUserId());
         redisTemplate.execute(pinRecentVisitCategoryScript, Collections.singletonList(key), String.valueOf(categoryId), isCancel ? String.valueOf(new Date().getTime()) : "", isCancel ? "0" : "1");
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
     private long pushUserRecentVisitCategory(Integer userId, String recordStr) {
@@ -231,10 +231,10 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         if (redisTemplate.hasKey(key))
             return 0;
         String[] str = recordStr.split(";");
-        Set<TypedTuple<String>> tupleSet = new HashSet(str.length);
+        Set<TypedTuple<String>> tupleSet = new HashSet<>(str.length);
         for (int i = 0; i < str.length; ++i) {
             String[] v = str[i].split("-");
-            tupleSet.add(new DefaultTypedTuple(v[0], Double.valueOf(v[1])));
+            tupleSet.add(new DefaultTypedTuple<>(v[0], Double.valueOf(v[1])));
         }
         return redisTemplate.opsForZSet().add(key, tupleSet);
     }
@@ -255,23 +255,23 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
     public Result<List<RecentVisitedCategory>> readRecentVisitedCategories(Operator operator) {
         String key = getRecentVisitCategoryKey(operator.getUserId());
         Set<TypedTuple<String>> resSet = redisTemplate.opsForZSet().reverseRangeWithScores(key, 0, -1);
-        List<RecentVisitedCategory> categoryList = new ArrayList(resSet.size());
+        List<RecentVisitedCategory> categoryList = new ArrayList<>(resSet.size());
         for (TypedTuple<String> tuple : resSet) {
             Category category = categoryService.readCategory(Integer.valueOf(tuple.getValue()), false, operator).getObject();
             categoryList.add(new RecentVisitedCategory(category, tuple.getScore()));
         }
-        return new Result(SUCCESS).setObject(categoryList);
+        return new Result<List<RecentVisitedCategory>>(SUCCESS).setObject(categoryList);
     }
 
     /**
      * 根据权限表重定义用户状态
      */
-    public Result redefineUserState(Integer userId, Operator operator) {
+    public Result<Object> redefineUserState(Integer userId, Operator operator) {
         if (!userValidator.checkRedefineUserStatePermission(operator))
-            return new Result(FAIL).setErrorCode(1010020221).setMessage("操作失败，权限错误");
+            return new Result<Object>(FAIL).setErrorCode(1010020221).setMessage("操作失败，权限错误");
         if (dao.redefineState(userId) == 0)
-            return new Result(FAIL).setErrorCode(1010020123).setMessage("数据库操作失败");
-        return Result.EMPTY_SUCCESS;
+            return new Result<Object>(FAIL).setErrorCode(1010020123).setMessage("数据库操作失败");
+        return new Result<Object>(Result.SUCCESS);
     }
 
     public void updateFollowingCnt(Integer userId, Long delta) {
@@ -297,16 +297,16 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
     }
 
     @SneakyThrows
-    public <T> Result multiSetUser(@NotNull List<T> entityList, Method getUserIdMethod, Method setUserMethod) {
-        Set<Integer> creatorIdSet = new HashSet(entityList.size());
+    public <T> Result<Object> multiSetUser(@NotNull List<T> entityList, Method getUserIdMethod, Method setUserMethod) {
+        Set<Integer> creatorIdSet = new HashSet<>(entityList.size());
         for (int i = 0; i < entityList.size(); ++i)
             if (entityList.get(i) != null)
                 creatorIdSet.add((Integer) getUserIdMethod.invoke(entityList.get(i)));
-        Result<List<User>> creatorListResult = multiReadUser(new ArrayList(creatorIdSet));
+        Result<List<User>> creatorListResult = multiReadUser(new ArrayList<>(creatorIdSet));
         if (creatorListResult.getState() == FAIL)
-            return creatorListResult;
+            return new Result<Object>(creatorListResult);
         List<User> creatorList = creatorListResult.getObject();
-        Map<Integer, User> creatorMap = new HashMap(creatorList.size());
+        Map<Integer, User> creatorMap = new HashMap<>(creatorList.size());
         for (int i = 0; i < creatorList.size(); ++i) {
             User creator = creatorList.get(i);
             if (creator != null)
@@ -319,7 +319,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
                     setUserMethod.invoke(entityList.get(i), creator);
             }
         }
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
     /**
@@ -327,27 +327,27 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
      */
     public Result<Integer> createUser(@NotNull User user) {
         if (!user.isValidInsertParam(true))
-            return new Result(FAIL).setErrorCode(1010020203).setMessage("操作错误，参数不合法");
-        Result checkNameResult = checkNickName(user.getNickName());
+            return new Result<Integer>(FAIL).setErrorCode(1010020203).setMessage("操作错误，参数不合法");
+        Result<Object> checkNameResult = checkNickName(user.getNickName());
         if (checkNameResult.getState() == FAIL)
-            return checkNameResult;
+            return new Result<Integer>(checkNameResult);
         user.setPwdSalt(CryptUtil.randUrlSafeStr(32, true));
         user.setPassword(CryptUtil.md5(user.getPassword() + user.getPwdSalt()));
         int res = insertOne(user);
         if (res == -1)
-            return new Result(FAIL).setErrorCode(1010020104).setMessage("数据库操作失败");
+            return new Result<Integer>(FAIL).setErrorCode(1010020104).setMessage("数据库操作失败");
         addNickNameIdx(user.getId(), user.getNickName());
-        return new Result(SUCCESS).setObject(user.getId());
+        return new Result<Integer>(SUCCESS).setObject(user.getId());
     }
 
     public Result<User> readUserWithToken(Integer id) {
         User queryEntity = new User(id).setWithTokenInfo(true).setFromLogin(true);
         User user = selectOne(queryEntity);
         if (user == null || user.getToken() == null)
-            return new Result(FAIL).setErrorCode(1010020205).setMessage("数据库操作失败");
+            return new Result<User>(FAIL).setErrorCode(1010020205).setMessage("数据库操作失败");
         redisHelper.setEntity(user, false);
 //        setCounter(user);
-        return new Result(SUCCESS).setObject(user);
+        return new Result<User>(SUCCESS).setObject(user);
     }
 
     public Result<User> readUserWithQqOpenId(String openId) {
@@ -356,7 +356,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         if (user != null) {
             redisHelper.setEntity(user, false);
         }
-        return new Result(SUCCESS).setObject(user);
+        return new Result<User>(SUCCESS).setObject(user);
     }
 
     public Result<User> readUserWithCounter(Integer id, Operator operator) {
@@ -373,7 +373,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
     public Result<User> readUserByName(String name, boolean isFull, boolean withCnt, boolean withIsFollowedByViewer, Operator operator) {
         Integer userId = getUserIdByName(name);
         if (userId == null) {
-            return new Result(FAIL).setErrorCode(1010020224).setMessage("该用户名不存在");
+            return new Result<User>(FAIL).setErrorCode(1010020224).setMessage("该用户名不存在");
         }
         return readUser(userId, isFull, withCnt, withIsFollowedByViewer, operator);
     }
@@ -384,7 +384,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
     public Result<List<User>> readUserByNamePattern(String pattern, Operator operator) {
         List<Map.Entry<Object, Object>> resultList = getUserIdByNamePattern(pattern);
         if (resultList == null) {
-            return new Result(FAIL).setErrorCode(1010020224).setMessage("用户模糊查询失败");
+            return new Result<List<User>>(FAIL).setErrorCode(1010020224).setMessage("用户模糊查询失败");
         }
         List<Integer> idList = new ArrayList<>();
         for (int i = 0; i < resultList.size(); ++i) {
@@ -442,128 +442,128 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
 
     public Result<User> login(@NotNull User paramUser) {
         if (paramUser.getNickName() == null || paramUser.getPassword() == null)
-            return new Result(FAIL).setErrorCode(1010130206).setMessage("参数错误");
+            return new Result<User>(FAIL).setErrorCode(1010130206).setMessage("参数错误");
         Integer userId = getUserIdByName(paramUser.getNickName());
         if (userId == null)
-            return new Result(FAIL).setErrorCode(1010130207).setMessage("用户名不存在");
+            return new Result<User>(FAIL).setErrorCode(1010130207).setMessage("用户名不存在");
         paramUser.setWithPwdInfo(true).setFromLogin(true).setId(userId);
         User resUser = selectOne(paramUser);
         if (resUser == null || resUser.getPassword() == null || resUser.getPwdSalt() == null)
-            return new Result(FAIL).setErrorCode(1010020208).setMessage("未设置密码，请使用其他方式登录");
+            return new Result<User>(FAIL).setErrorCode(1010020208).setMessage("未设置密码，请使用其他方式登录");
         String testPwd = CryptUtil.md5(paramUser.getPassword() + resUser.getPwdSalt());
         if (!testPwd.equals(resUser.getPassword()))
-            return new Result(FAIL).setErrorCode(1010130209).setMessage("密码错误");
-        return new Result(SUCCESS).setObject(resUser);
+            return new Result<User>(FAIL).setErrorCode(1010130209).setMessage("密码错误");
+        return new Result<User>(SUCCESS).setObject(resUser);
     }
 
     /**
      * 处理登录后的用户数据加载
      */
-    public Result afterLogin(User user, String token, boolean fromRegister) {
+    public Result<Object> afterLogin(User user, String token, boolean fromRegister) {
         if (dao.updateAfterLogin(user.getId(), token, new Date()) == 0)//更新数据库，增加登录次数
-            return new Result(FAIL).setErrorCode(1010020102).setMessage("数据库操作失败");
+            return new Result<Object>(FAIL).setErrorCode(1010020102).setMessage("数据库操作失败");
         redisHelper.setEntity(user, false);
         if (!fromRegister) {
             pushUserRecentVisitCategory(user.getId(), user.getRecentVisitCategories());
             redisTemplate.opsForHash().putIfAbsent(getLastRefreshTimeKey(), String.valueOf(user.getId()), String.valueOf(user.getLastGetNewsTime().getTime()));
             setCounter(user);
         }
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
     /**
      * 更新用户信息
      */
-    public Result updateUserInfo(@NotNull User paramUser, Operator operator) {
+    public Result<Object> updateUserInfo(@NotNull User paramUser, Operator operator) {
         if (!paramUser.isValidUpdateInfoParam(true))
-            return new Result(FAIL).setErrorCode(1010020210).setMessage("操作错误，参数不合法");
+            return new Result<Object>(FAIL).setErrorCode(1010020210).setMessage("操作错误，参数不合法");
         if (!userValidator.checkUpdatePermission(paramUser, operator))//检查操作者权限
-            return new Result(FAIL).setErrorCode(1010020211).setMessage("操作失败，权限错误");
+            return new Result<Object>(FAIL).setErrorCode(1010020211).setMessage("操作失败，权限错误");
         int res = updateOne(new User(paramUser.getId()).copyUpdateParamInfo(paramUser));
         if (res == 0)
-            return new Result(FAIL).setErrorCode(1010020112).setMessage("数据库操作失败");
+            return new Result<Object>(FAIL).setErrorCode(1010020112).setMessage("数据库操作失败");
         if (paramUser.getId().equals(operator.getUserId()))//如果更新的是操作者自己，则更新本次请求中操作者的用户信息
             operator.getUser().copyUpdateParamInfo(paramUser);
         redisHelper.removeEntity(paramUser.getId());
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
-    public Result setTopPost(User param, boolean isCancel, Operator operator) {
+    public Result<Object> setTopPost(User param, boolean isCancel, Operator operator) {
         if (!isCancel && param.getTopPostId() == null)
-            return new Result(FAIL).setErrorCode(1010010213).setMessage("操作失败，参数不合法");
+            return new Result<Object>(FAIL).setErrorCode(1010010213).setMessage("操作失败，参数不合法");
         Result<Post> topPostResult = postService.readPostWithAllFalse(param.getTopPostId(), operator);
         if (topPostResult.getState() == FAIL)
-            return topPostResult;
+            return new Result<Object>(topPostResult);
         Integer topPostId = null;
         if (!isCancel) {
             Post topPost = topPostResult.getObject();
             if (!topPost.getCreatorId().equals(operator.getUserId()))
-                return new Result(FAIL).setErrorCode(1010010214).setMessage("操作失败，权限错误");
+                return new Result<Object>(FAIL).setErrorCode(1010010214).setMessage("操作失败，权限错误");
             topPostId = param.getTopPostId();
         }
         int res = updateTopPost(operator.getUserId(), topPostId);
         if (res == 0)//数据库操作失败
-            return new Result(FAIL).setErrorCode(1010010117).setMessage("数据库操作失败");
+            return new Result<Object>(FAIL).setErrorCode(1010010117).setMessage("数据库操作失败");
         operator.getUser().setTopPostId(topPostId);
         redisHelper.removeEntity(operator.getUser().getId());
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
-    public Result updateUserName(@NotNull User paramUser, @NotNull Operator operator) {
+    public Result<Object> updateUserName(@NotNull User paramUser, @NotNull Operator operator) {
         if (!paramUser.isValidUpdateNickNameParam(true))
-            return new Result(FAIL).setErrorCode(1010020215).setMessage("操作错误，参数不合法");
+            return new Result<Object>(FAIL).setErrorCode(1010020215).setMessage("操作错误，参数不合法");
         String newName = paramUser.getNickName();
-        Result checkNameResult = checkNickName(newName);
+        Result<Object> checkNameResult = checkNickName(newName);
         if (checkNameResult.getState() == FAIL)
             return checkNameResult;
         String oriName = operator.getUser().getNickName();
         int res = updateOne(new User(operator.getUserId()).setNickName(newName).setLastAlterNameTime(new Date()));
         if (res == 0)
-            return new Result(FAIL).setErrorCode(1010020116).setMessage("数据库操作失败");
+            return new Result<Object>(FAIL).setErrorCode(1010020116).setMessage("数据库操作失败");
         alterNickNameIdx(operator.getUserId(), oriName, newName);
         operator.getUser().setNickName(newName);
         redisHelper.removeEntity(paramUser.getId());
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
     @NeedLogin
-    public Result updatePassword(@NotNull User paramUser, @NotNull Operator operator) {
+    public Result<Object> updatePassword(@NotNull User paramUser, @NotNull Operator operator) {
         if (!paramUser.isValidUpdatePasswordParam())
-            return new Result(FAIL).setErrorCode(1010020225).setMessage("操作错误，参数不合法");
+            return new Result<Object>(FAIL).setErrorCode(1010020225).setMessage("操作错误，参数不合法");
         paramUser.setWithPwdInfo(true).setFromLogin(true).setId(operator.getUserId());
         User resUser = selectOne(paramUser);
         if (resUser == null || resUser.getPassword() == null || resUser.getPwdSalt() == null)
-            return new Result(FAIL).setErrorCode(1010020126).setMessage("数据库操作失败");
+            return new Result<Object>(FAIL).setErrorCode(1010020126).setMessage("数据库操作失败");
         paramUser.setPassword(CryptUtil.md5(paramUser.getPassword() + resUser.getPwdSalt()));
         int res = updatePassword(paramUser);
         if (res == 0)
-            return new Result(FAIL).setErrorCode(1010020227).setMessage("数据库操作失败");
-        return Result.EMPTY_SUCCESS;
+            return new Result<Object>(FAIL).setErrorCode(1010020227).setMessage("数据库操作失败");
+        return new Result<Object>(Result.SUCCESS);
     }
 
     @NeedLogin
-    public Result updateRecvSetting(@NotNull UserRecvSetting param, Operator operator) {
+    public Result<Object> updateRecvSetting(@NotNull UserRecvSetting param, Operator operator) {
         if (!param.isValidUpdateParam())
-            return new Result(FAIL).setErrorCode(1010020217).setMessage("操作错误，参数不合法");
+            return new Result<Object>(FAIL).setErrorCode(1010020217).setMessage("操作错误，参数不合法");
         if (!param.getId().equals(operator.getUserId()))
-            return new Result(FAIL).setErrorCode(1010010218).setMessage("操作失败，权限错误");
+            return new Result<Object>(FAIL).setErrorCode(1010010218).setMessage("操作失败，权限错误");
         int res = updateRecvSetting(param);
         if (res == 0)
-            return new Result(FAIL).setErrorCode(1010020119).setMessage("数据库操作失败");
+            return new Result<Object>(FAIL).setErrorCode(1010020119).setMessage("数据库操作失败");
         recvSettingRedisHelper.removeEntity(param.getId());//删除缓存
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
-    public Result setTalkBanTo(@NotNull User param, @NotNull Operator operator) {
+    public Result<Object> setTalkBanTo(@NotNull User param, @NotNull Operator operator) {
         if (param.getId() == null || param.getTalkBanTo() == null || !param.isValidOpComment())
-            return new Result(FAIL).setErrorCode(1010020220).setMessage("操作错误，参数不合法");
+            return new Result<Object>(FAIL).setErrorCode(1010020220).setMessage("操作错误，参数不合法");
         if (!userValidator.checkSetTalkBanToPermission(operator))
-            return new Result(FAIL).setErrorCode(1010010221).setMessage("操作失败，权限错误");
+            return new Result<Object>(FAIL).setErrorCode(1010010221).setMessage("操作失败，权限错误");
         int res = updateOne(new User(param.getId()).setTalkBanTo(param.getTalkBanTo()));
         if (res == 0)
-            return new Result(FAIL).setErrorCode(1010020122).setMessage("数据库操作失败");
+            return new Result<Object>(FAIL).setErrorCode(1010020122).setMessage("数据库操作失败");
         redisHelper.removeEntity(param.getId());
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
     public String correctCounters() {
@@ -580,6 +580,7 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         return "粉丝数校正" + r1 + "条数据;关注数校正" + r2 + "条数据;用户发帖数校正" + r3 + "条数据";
     }
 
+    @SuppressWarnings("unchecked")
     @Scheduled(cron = "0 40 3 * * ?")
     public void dailyFlushRedisToDB() {
         List<TmpEntry>[] cntLists = redisHelper.flushRedisCounter("fln", "flr", "pst");
@@ -589,25 +590,25 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         commonService.batchUpdate("lpt_user", "user_id", "user_post_cnt", CommonService.OPS_INCR_BY, cntLists[2]);
         log.info("用户的关注数、粉丝数以及发帖数写入数据库");
         Set<String> onlineOpKeys = RedisUtil.scanAllKeys(redisTemplate, operatorService.getBasicKeyPrefix());
-        Set<Integer> onlineUserSet = new HashSet(onlineOpKeys.size());
+        Set<Integer> onlineUserSet = new HashSet<>(onlineOpKeys.size());
         for (String key : onlineOpKeys)//获取在线用户ID集合
             onlineUserSet.add(Integer.valueOf(key.split(":")[1]));
         String recentVisitKeyPrefix = getRecentVisitCategoryKey("*");
         Set<String> recentVisitKeys = RedisUtil.scanAllKeys(redisTemplate, recentVisitKeyPrefix);
-        List<TmpEntry> tmpList = new ArrayList(recentVisitKeys.size());
+        List<TmpEntry> tmpList = new ArrayList<>(recentVisitKeys.size());
         for (String key : recentVisitKeys) {
             Integer userId = Integer.valueOf(key.split(":")[1]);
-            List<Object> resList = redisTemplate.executePipelined((RedisCallback) connection -> {
+            List<Object> resList = redisTemplate.executePipelined((RedisCallback<?>) connection -> {
                 connection.zRevRangeWithScores(key.getBytes(), 0, -1);
                 if (!onlineUserSet.contains(userId))//用户不在线，则清除redis中的访问记录
                     connection.del(key.getBytes());
                 return null;
             });
-            Set<TypedTuple<String>> categoryStrSet = (Set) resList.get(0);
+            Set<TypedTuple<String>> categoryStrSet = (Set<TypedTuple<String>>) resList.get(0);
             if (categoryStrSet != null && categoryStrSet.size() != 0) {
                 StringBuilder stringBuilder = new StringBuilder();
                 boolean first = true;
-                for (TypedTuple tuple : categoryStrSet) {
+                for (TypedTuple<String> tuple : categoryStrSet) {
                     if (first) {
                         stringBuilder.append(tuple.getValue()).append('-').append((long) (double) tuple.getScore());
                         first = false;
@@ -620,8 +621,8 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         commonService.batchUpdate("lpt_user", "user_id", "user_recent_visit_categories", CommonService.OPS_COPY, tmpList);
         log.info("用户最近访问的目录记录写入数据库");
         Map<Object, Object> resMap = redisTemplate.opsForHash().entries(getLastRefreshTimeKey());
-        tmpList = new ArrayList(resMap.size());
-        List<Object> deleteKeys = new ArrayList();
+        tmpList = new ArrayList<>(resMap.size());
+        List<Object> deleteKeys = new ArrayList<>();
         for (Map.Entry<Object, Object> entry : resMap.entrySet()) {
             Integer userId = Integer.valueOf((String) entry.getKey());
             Date time = new Date(Long.valueOf((String) entry.getValue()));

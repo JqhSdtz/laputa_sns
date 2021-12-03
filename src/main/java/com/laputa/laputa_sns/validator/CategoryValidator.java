@@ -7,7 +7,6 @@ import com.laputa.laputa_sns.service.CategoryService;
 import com.laputa.laputa_sns.service.PermissionService;
 import com.laputa.laputa_sns.util.ProgOperatorManager;
 import com.laputa.laputa_sns.vo.CategoryVo;
-import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -19,7 +18,6 @@ import static com.laputa.laputa_sns.validator.AdminLevel.*;
  * @since 下午 3:55 20/02/15
  */
 
-@Slf4j
 @Component
 public class CategoryValidator {
 

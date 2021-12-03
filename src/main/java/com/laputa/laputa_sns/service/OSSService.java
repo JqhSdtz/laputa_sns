@@ -43,9 +43,9 @@ public class OSSService {
             hasSigned = !operator.getUserId().equals(-1) || operator.getUser().getQqOpenId() != null;
         }
         if (!hasSigned)
-            return new Result(Result.FAIL).setErrorCode(1010150201).setMessage("未登录");
+            return new Result<String>(Result.FAIL).setErrorCode(1010150201).setMessage("未登录");
         FormUploader uploader = new FormUploader(BUCKET_NAME, Secrets.OSS_Operator_Name, Secrets.OSS_Operator_Pwd);
-        final Map<String, Object> paramsMap = new HashMap();
+        final Map<String, Object> paramsMap = new HashMap<>();
         String path = getPath(fileType, operator);
         paramsMap.put(Params.SAVE_KEY, path);
         String style = FILENAME_PREFIX[fileType] + ".standard";
@@ -57,7 +57,7 @@ public class OSSService {
         try {
             com.upyun.Result result = uploader.upload(paramsMap, file);
             if (!result.isSucceed())
-                return new Result(Result.FAIL).setErrorCode(1010150202).setMessage(result.toString());
+                return new Result<String>(Result.FAIL).setErrorCode(1010150202).setMessage(result.toString());
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (SignatureException e) {
@@ -65,7 +65,7 @@ public class OSSService {
         } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
-        return new Result(Result.SUCCESS).setObject(path);
+        return new Result<String>(Result.SUCCESS).setObject(path);
     }
 
     @NotNull

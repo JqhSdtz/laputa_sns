@@ -136,7 +136,7 @@ public class RedisHelper<T extends AbstractBaseEntity> {
     public List<List<String>> multiGetRedisCounterCnt(@NotNull List<T> entityList, String... hks) {
         if (counterPrefix == null)
             return null;
-        List<String> counterKeys = new ArrayList(entityList.size());
+        List<String> counterKeys = new ArrayList<>(entityList.size());
         for (int i = 0; i < entityList.size(); ++i) {
             Integer id = entityList.get(i) == null ? -1 : entityList.get(i).getId();
             counterKeys.add(getCounterKey(id));
@@ -144,13 +144,14 @@ public class RedisHelper<T extends AbstractBaseEntity> {
         return multiGetRedisCounterCntByKeys(counterKeys, false, hks);
     }
 
+    @SuppressWarnings("unchecked")
     public List<List<String>> multiGetRedisCounterCntByKeys(@NotNull List<String> counterKeys, boolean delAfterGet, String... hks) {
         if (counterPrefix == null)
             return null;
         byte[][] rawHks = new byte[hks.length][];
         for (int i = 0; i < hks.length; ++i)
             rawHks[i] = hks[i].getBytes();
-        List<Object> resList = redisTemplate.executePipelined((RedisCallback) connection -> {
+        List<Object> resList = redisTemplate.executePipelined((RedisCallback<?>) connection -> {
             for (int i = 0; i < counterKeys.size(); ++i) {
                 byte[] rKey = counterKeys.get(i).getBytes();
                 connection.hMGet(rKey, rawHks);
@@ -160,13 +161,13 @@ public class RedisHelper<T extends AbstractBaseEntity> {
             return null;
         });
         if (delAfterGet) {
-            List<List<String>> strList = new ArrayList(resList.size() / 2);
+            List<List<String>> strList = new ArrayList<>(resList.size() / 2);
             for (int i = 0; i < resList.size(); ++i)
                 if (resList.get(i) instanceof List)
                     strList.add((List<String>) resList.get(i));
             return strList;
         }
-        return (List<List<String>>) (List) resList;
+        return (List<List<String>>) (List<?>) resList;
     }
 
     public void updateCounters(Integer id, Map<String, Long> fieldsMap) {
@@ -212,6 +213,7 @@ public class RedisHelper<T extends AbstractBaseEntity> {
     }
 
     @Nullable
+    @SuppressWarnings("unchecked")
     public T getEntity(Integer id, boolean isFull, boolean withRefresh) {
         if (contentPrefix == null)
             isFull = false;
@@ -229,7 +231,7 @@ public class RedisHelper<T extends AbstractBaseEntity> {
             if (isFull) {
                 T content = contentMapper.readValue(contentValue, entityType);
                 if (content instanceof AbstractContent)
-                    ((AbstractContent) entity).setEntityContent(content);
+                    ((AbstractContent<T>) entity).setEntityContent(content);
             }
             entity.setId(id);
             return entity;
@@ -294,21 +296,22 @@ public class RedisHelper<T extends AbstractBaseEntity> {
     }
 
     @Nullable
+    @SuppressWarnings("unchecked")
     public List<T> multiGetEntity(@NotNull List<Integer> idList, boolean isFull) {
         if (contentPrefix == null)
             isFull = false;
         int keysLen = idList.size();
         List<String> contentKeys;
-        List<String> basicKeys = new ArrayList(keysLen);
-        List<T> entityList = new ArrayList(keysLen);
+        List<String> basicKeys = new ArrayList<>(keysLen);
+        List<T> entityList = new ArrayList<>(keysLen);
         try {
             if (isFull) {//MGET操作返回的List中，没有的key返回null，所以返回的List和keyList是一一对应的
                 //大多数情况下是有content没有basic，所以先获取content，有content的再获取basic
-                contentKeys = new ArrayList(keysLen);
+                contentKeys = new ArrayList<>(keysLen);
                 for (int i = 0; i < idList.size(); ++i)
                     contentKeys.add(getContentKey(idList.get(i)));
                 List<String> contentStrList = redisTemplate.opsForValue().multiGet(contentKeys);
-                List<T> contentList = new ArrayList(keysLen);
+                List<T> contentList = new ArrayList<>(keysLen);
                 for (int i = 0; i < keysLen; ++i)
                     if (contentStrList.get(i) != null) {
                         contentList.add(contentMapper.readValue(contentStrList.get(i), entityType));
@@ -323,7 +326,7 @@ public class RedisHelper<T extends AbstractBaseEntity> {
                         if (basicStrList.get(j) != null) {//content和basic都有，才最终加入entityList
                             T basic = basicMapper.readValue(basicStrList.get(j), entityType);
                             if (contentList.get(i) instanceof AbstractContent)
-                                ((T) ((AbstractContent) basic).setEntityContent(contentList.get(i))).setId(idList.get(i));
+                                ((T) ((AbstractContent<T>) basic).setEntityContent(contentList.get(i))).setId(idList.get(i));
                             entityList.add(basic);
                         } else//否则，还是加空
                             entityList.add(null);
@@ -346,14 +349,15 @@ public class RedisHelper<T extends AbstractBaseEntity> {
         return entityList;
     }
 
+    @SuppressWarnings("unchecked")
     public List<TmpEntry>[] flushRedisCounter(String... hks) {
         if (counterPrefix == null)
             return null;
         Set<String> counterKeys = RedisUtil.scanAllKeys(redisTemplate, getCounterKey("*"));
         List<TmpEntry>[] cntLists = new List[hks.length];
         for (int i = 0; i < hks.length; ++i)
-            cntLists[i] = new ArrayList(counterKeys.size());
-        List<String> counterKeyList = new ArrayList(counterKeys);
+            cntLists[i] = new ArrayList<>(counterKeys.size());
+        List<String> counterKeyList = new ArrayList<>(counterKeys);
         List<List<String>> counterList = multiGetRedisCounterCntByKeys(counterKeyList, true, hks);
         for (int i = 0; i < counterList.size(); ++i) {
             Integer entityId = Integer.valueOf(counterKeyList.get(i).split(":")[1]);

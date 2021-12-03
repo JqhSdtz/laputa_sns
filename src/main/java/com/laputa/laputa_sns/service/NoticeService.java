@@ -30,14 +30,15 @@ public class NoticeService {
     private final CommentL2Service commentL2Service;
     private final StringRedisTemplate redisTemplate;
     private final DefaultRedisScript<Long> pushNoticeScript;
-    private final DefaultRedisScript<List> pullNoticeScript;
+    private final DefaultRedisScript<List<String>> pullNoticeScript;
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public NoticeService(@Lazy PostService postService, @Lazy CommentL1Service commentL1Service, @Lazy CommentL2Service commentL2Service, StringRedisTemplate redisTemplate) {
         this.postService = postService;
         this.commentL1Service = commentL1Service;
         this.commentL2Service = commentL2Service;
         this.redisTemplate = redisTemplate;
-        this.pushNoticeScript = new DefaultRedisScript(
+        this.pushNoticeScript = new DefaultRedisScript<>(
                 "redis.call('zadd', KEYS[1], ARGV[2], ARGV[1])\n" + "local initTime = redis.call('hget', KEYS[2], ARGV[1])\n" + "if (initTime == nil or initTime == false or initTime == '0') then\n" +
                         "\tredis.call('hset', KEYS[2], ARGV[1], ARGV[2])\n" + "\tredis.call('hset', KEYS[3], ARGV[1], ARGV[3])\n" + "else\n" + "\tredis.call('hincrby', KEYS[3], ARGV[1], ARGV[3])\n" + "end\n" +
                         "local len = redis.call('zcard', KEYS[1])\n" + "if (len > tonumber(ARGV[4])) then\n" + "\tlocal lstKey = redis.call('zrange', KEYS[1], 0, 0)[1]\n" +
@@ -76,8 +77,9 @@ public class NoticeService {
         return executePushScript(getRedisTimeKey(receiverId), getRedisInitTimeKey(receiverId), getRedisCntKey(receiverId), type + ":" + contentId, 1, new Date().getTime(), userNoticeBoxLength);
     }
 
+    @SuppressWarnings("unchecked")
     public long pullNoticeCnt(int receiverId) {
-        List<Object> resList = redisTemplate.executePipelined((RedisCallback) connection -> {
+        List<Object> resList = redisTemplate.executePipelined((RedisCallback<?>) connection -> {
             connection.hGetAll(getRedisInitTimeKey(receiverId).getBytes());
             connection.hGetAll(getRedisCntKey(receiverId).getBytes());
             return null;
@@ -95,13 +97,13 @@ public class NoticeService {
 
     public Result<List<Notice>> pullNotice(@NotNull Notice paramNotice, @NotNull Operator operator) {
         if (!paramNotice.isValidPullNoticeParam())
-            return new Result(Result.FAIL).setErrorCode(1010160201).setMessage("操作错误，参数不合法");
+            return new Result<List<Notice>>(Result.FAIL).setErrorCode(1010160201).setMessage("操作错误，参数不合法");
         int receiverId = operator.getUserId();
         QueryParam queryParam = paramNotice.getQueryParam();
         List<String> resList = redisTemplate.execute(pullNoticeScript, Arrays.asList(getRedisTimeKey(receiverId), getRedisInitTimeKey(receiverId), getRedisCntKey(receiverId)),
                 String.valueOf(queryParam.getFrom()), String.valueOf(queryParam.getFrom() + queryParam.getQueryNum() - 1));
         int len = resList.size() / 4;
-        List<Notice> noticeList = new ArrayList(len);
+        List<Notice> noticeList = new ArrayList<>(len);
         int initTimeStart = len * 2;
         int cntStart = len * 3;
         for (int i = 0; i < len; ++i) {
@@ -112,20 +114,20 @@ public class NoticeService {
             noticeList.add(notice);
         }
         fillNoticeWithContent(noticeList, operator);
-        return new Result(Result.SUCCESS).setObject(noticeList);
+        return new Result<List<Notice>>(Result.SUCCESS).setObject(noticeList);
     }
 
-    public Result markNoticeAsRead(@NotNull Notice notice, @NotNull Operator operator) {
+    public Result<Object> markNoticeAsRead(@NotNull Notice notice, @NotNull Operator operator) {
         if (notice.getContentId() == null || notice.getType() == null)
-            return new Result(Result.FAIL).setErrorCode(1010160202).setMessage("操作失败，参数错误");
+            return new Result<Object>(Result.FAIL).setErrorCode(1010160202).setMessage("操作失败，参数错误");
         redisTemplate.opsForHash().put(getRedisInitTimeKey(operator.getUserId()), notice.getType() + ":" + notice.getContentId(), "0");
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
     private void fillNoticeWithContent(@NotNull List<Notice> noticeList, Operator operator) {
-        Map<Integer, Post> postMap = new HashMap();
-        Map<Integer, CommentL1> cml1Map = new HashMap();
-        Map<Integer, CommentL2> cml2Map = new HashMap();
+        Map<Integer, Post> postMap = new HashMap<>();
+        Map<Integer, CommentL1> cml1Map = new HashMap<>();
+        Map<Integer, CommentL2> cml2Map = new HashMap<>();
         for (int i = 0; i < noticeList.size(); ++i) {
             Notice notice = noticeList.get(i);
             int type = notice.getType(), id = notice.getContentId();
@@ -137,7 +139,7 @@ public class NoticeService {
                 cml2Map.put(id, null);
         }
         if (postMap.size() != 0) {
-            List<Integer> postIdList = new ArrayList(postMap.keySet());
+            List<Integer> postIdList = new ArrayList<>(postMap.keySet());
             List<Post> postList = postService.multiReadPostWithContentAndCounter(postIdList, operator).getObject();
             if (postList != null) {
                 for (int i = 0; i < postList.size(); ++i) {
@@ -151,7 +153,7 @@ public class NoticeService {
             }
         }
         if (cml1Map.size() != 0) {
-            List<Integer> cml1IdList = new ArrayList(cml1Map.keySet());
+            List<Integer> cml1IdList = new ArrayList<>(cml1Map.keySet());
             List<CommentL1> cml1List = commentL1Service.multiReadCommentWithContentAndCounter(cml1IdList).getObject();
             if (cml1List != null) {
                 for (int i = 0; i < cml1List.size(); ++i) {
@@ -165,7 +167,7 @@ public class NoticeService {
             }
         }
         if (cml2Map.size() != 0) {
-            List<Integer> cml2IdList = new ArrayList(cml2Map.keySet());
+            List<Integer> cml2IdList = new ArrayList<>(cml2Map.keySet());
             List<CommentL2> cml2List = commentL2Service.multiReadCommentWithContentAndCounter(cml2IdList).getObject();
             if (cml2List != null) {
                 for (int i = 0; i < cml2List.size(); ++i) {

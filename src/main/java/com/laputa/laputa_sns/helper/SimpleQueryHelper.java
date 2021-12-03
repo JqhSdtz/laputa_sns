@@ -42,11 +42,11 @@ public class SimpleQueryHelper {
         if (value == null) {
             value = selectOneCallBack.selectOne(id);
             if (value == null)
-                return new Result(Result.FAIL).setErrorCode(1010180101).setMessage("数据库操作失败");
+                return new Result<String>(Result.FAIL).setErrorCode(1010180101).setMessage("数据库操作失败");
             redisTemplate.opsForValue().set(key, value, timeOut, TimeUnit.MINUTES);
         } else if (random.nextInt() % refreshProbability == 0)
             redisTemplate.expire(key, timeOut, TimeUnit.MINUTES);
-        return new Result(Result.SUCCESS).setObject(value);
+        return new Result<String>(Result.SUCCESS).setObject(value);
     }
 
     public void setRedisValue(Integer id, String value) {

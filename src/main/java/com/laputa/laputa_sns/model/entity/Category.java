@@ -118,7 +118,7 @@ public class Category extends AbstractBaseEntity implements Cloneable {
      * 子目录列表
      */
     @JsonIgnore
-    private List<Category> subCategoryList = new ArrayList();
+    private List<Category> subCategoryList = new ArrayList<>();
     /**
      * 新帖列表
      */

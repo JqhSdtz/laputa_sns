@@ -4,7 +4,6 @@ import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.model.entity.Permission;
 import com.laputa.laputa_sns.service.PermissionService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.List;
  * @since 下午 4:02 20/02/13
  */
 
-@Slf4j
 @RestController
 @RequestMapping(value = "/api/permission")
 public class PermissionController {
@@ -26,17 +24,17 @@ public class PermissionController {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public Result createPermission(@RequestBody Permission permission, @RequestAttribute Operator operator) {
+    public Result<Object> createPermission(@RequestBody Permission permission, @RequestAttribute Operator operator) {
         return permissionService.createPermission(permission, operator).setOperator(operator);
     }
 
     @RequestMapping(method = RequestMethod.PATCH)
-    public Result updatePermission(@RequestBody Permission permission, @RequestAttribute Operator operator) {
+    public Result<Object> updatePermission(@RequestBody Permission permission, @RequestAttribute Operator operator) {
         return permissionService.updatePermission(permission, operator).setOperator(operator);
     }
 
     @RequestMapping(method = RequestMethod.DELETE)
-    public Result deletePermission(@RequestBody Permission permission, @RequestAttribute Operator operator) {
+    public Result<Object> deletePermission(@RequestBody Permission permission, @RequestAttribute Operator operator) {
         return permissionService.deletePermission(permission, operator).setOperator(operator);
     }
 

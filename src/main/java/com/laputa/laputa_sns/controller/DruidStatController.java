@@ -23,11 +23,11 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
 @RequestMapping(value = "/api/druid")
 public class DruidStatController {
     @GetMapping("/stat")
-    public Result druidStat(@RequestAttribute Operator operator){
-        Map permissionMap = operator.getPermissionMap();
+    public Result<List<Map<String, Object>>> druidStat(@RequestAttribute Operator operator){
+        Map<Integer, Integer> permissionMap = operator.getPermissionMap();
         Integer rootPermLevel  = permissionMap == null ? null : (Integer) permissionMap.get(CategoryService.GROUND_ID);
         if (rootPermLevel == null || rootPermLevel != 99)
-            return Result.EMPTY_FAIL;
+            return new Result<List<Map<String, Object>>>(Result.FAIL);
         // DruidStatManagerFacade#getDataSourceStatDataList 该方法可以获取所有数据源的监控数据，
         // 除此之外 DruidStatManagerFacade 还提供了一些其他方法，你可以按需选择使用。
         List<Map<String, Object>> dataList = DruidStatManagerFacade.getInstance().getDataSourceStatDataList();
@@ -36,6 +36,6 @@ public class DruidStatController {
             List<Map<String, Object>> sqlStatList = DruidStatManagerFacade.getInstance().getSqlStatDataList(dataSourceId);
             dataSource.put("SqlStatList", sqlStatList);
         });
-        return new Result(SUCCESS).setObject(dataList);
+        return new Result<List<Map<String, Object>>>(SUCCESS).setObject(dataList);
     }
 }

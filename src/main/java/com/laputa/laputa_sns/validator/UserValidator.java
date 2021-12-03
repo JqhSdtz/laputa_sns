@@ -4,7 +4,6 @@ import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.model.entity.User;
 import com.laputa.laputa_sns.service.CategoryService;
 import com.laputa.laputa_sns.util.ProgOperatorManager;
-import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Component;
  * @since 下午 4:24 20/02/15
  */
 
-@Slf4j
 @Component
 public class UserValidator {
 

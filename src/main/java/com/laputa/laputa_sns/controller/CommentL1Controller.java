@@ -1,5 +1,7 @@
 package com.laputa.laputa_sns.controller;
 
+import java.util.List;
+
 import com.laputa.laputa_sns.annotation.AccessLimit;
 import com.laputa.laputa_sns.annotation.AccessLimitTarget;
 import com.laputa.laputa_sns.annotation.LimitTimeUnit;
@@ -33,25 +35,25 @@ public class CommentL1Controller {
     @AccessLimit(value = 40, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 10, per = LimitTimeUnit.MINUTE)
     @RequestMapping(method = RequestMethod.POST)
-    public Result createComment(@AccessLimitTarget(byMethod = "getPost") @RequestBody CommentL1 comment, @RequestAttribute Operator operator) {
+    public Result<Integer> createComment(@AccessLimitTarget(byMethod = "getPost") @RequestBody CommentL1 comment, @RequestAttribute Operator operator) {
         return commentL1Service.createComment(comment, operator).setOperator(operator);
     }
 
     @AccessLimit(value = 40, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 10, per = LimitTimeUnit.MINUTE)
     @RequestMapping(method = RequestMethod.DELETE)
-    public Result deleteComment(@AccessLimitTarget(byMethod = "getPost") @RequestBody CommentL1 comment, @RequestAttribute Operator operator) {
+    public Result<Object> deleteComment(@AccessLimitTarget(byMethod = "getPost") @RequestBody CommentL1 comment, @RequestAttribute Operator operator) {
         return commentL1Service.deleteComment(comment, operator).setOperator(operator);
     }
 
     @RequestMapping(value = "/popular", method = {RequestMethod.GET, RequestMethod.POST})
-    public Result readPopularCommentL1List(@RequestBody CommentL1 comment, @RequestAttribute Operator operator) {
+    public Result<List<CommentL1>> readPopularCommentL1List(@RequestBody CommentL1 comment, @RequestAttribute Operator operator) {
         return commentL1Service.readIndexCommentL1List(comment, CommentServiceHelper.POPULAR, true, operator).setOperator(operator);
     }
 
     @RequestMapping(value = "/latest", method = {RequestMethod.GET, RequestMethod.POST})
     //还在考虑，现在是按时间读取评论列表直接读数据库，考虑取消这个功能或者缓存中再加一个按时间排序的列表
-    public Result readLatestCommentL1List(@RequestBody CommentL1 comment, @RequestAttribute Operator operator) {
+    public Result<List<CommentL1>> readLatestCommentL1List(@RequestBody CommentL1 comment, @RequestAttribute Operator operator) {
         return commentL1Service.readIndexCommentL1List(comment, CommentServiceHelper.LATEST, true, operator).setOperator(operator);
     }
 

@@ -9,7 +9,6 @@ import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.service.CategoryService;
 import com.laputa.laputa_sns.view.CategoryView;
 import com.laputa.laputa_sns.vo.CategoryVo;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,7 +20,6 @@ import java.util.Set;
  * @since 下午 8:35 20/02/06
  */
 
-@Slf4j
 @RestController
 @RequestMapping(value = "/api/category")
 public class CategoryController {
@@ -42,68 +40,68 @@ public class CategoryController {
     @AccessLimit(value = 5, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 1, per = LimitTimeUnit.MINUTE)
     @RequestMapping(method = RequestMethod.POST)
-    public Result createCategory(@RequestBody Category category, @RequestAttribute Operator operator) {
+    public Result<Integer> createCategory(@RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.createCategory(category, operator).setOperator(operator);
     }
 
     @AccessLimit(value = 10, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 1, per = LimitTimeUnit.MINUTE)
     @RequestMapping(value = "/info", method = RequestMethod.PATCH)
-    public Result updateCategoryInfo(@AccessLimitTarget @RequestBody Category category, @RequestAttribute Operator operator) {
+    public Result<Category> updateCategoryInfo(@AccessLimitTarget @RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.updateCategoryInfo(category, operator).setOperator(operator);
     }
 
     @AccessLimit(value = 10, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 2, per = LimitTimeUnit.MINUTE)
     @RequestMapping(value = "/disp_seq", method = RequestMethod.PATCH)
-    public Result updateCategoryDispSeq(@AccessLimitTarget @RequestBody Category category, @RequestAttribute Operator operator) {
+    public Result<Category> updateCategoryDispSeq(@AccessLimitTarget @RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.updateCategoryDispSeq(category, operator).setOperator(operator);
     }
 
     @RequestMapping(value = "/cache_num", method = RequestMethod.PATCH)
-    public Result updateCategoryCacheNum(@RequestBody Category category, @RequestAttribute Operator operator) {
+    public Result<Category> updateCategoryCacheNum(@RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.updateCategoryCacheNum(category, operator).setOperator(operator);
     }
 
     @AccessLimit(value = 5, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 1, per = LimitTimeUnit.MINUTE)
     @RequestMapping(value = "/parent", method = RequestMethod.PATCH)
-    public Result updateCategoryParent(@RequestBody Category category, @RequestAttribute Operator operator) {
+    public Result<Category> updateCategoryParent(@RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.updateCategoryParent(category, operator).setOperator(operator);
     }
 
     @RequestMapping(value = "/top_post/{action}", method = RequestMethod.PATCH)
-    public Result setCategoryTopPost(@RequestBody Category category, @PathVariable String action, @RequestAttribute Operator operator) {
+    public Result<Category> setCategoryTopPost(@RequestBody Category category, @PathVariable String action, @RequestAttribute Operator operator) {
         if ("create".equals(action))
             return categoryService.setCategoryTopPost(category, false, operator).setOperator(operator);
         if ("cancel".equals(action))
             return categoryService.setCategoryTopPost(category, true, operator).setOperator(operator);
-        return Result.EMPTY_FAIL;
+        return new Result<Category>(Result.FAIL);
     }
 
     @RequestMapping(value = "/allow_post_level/{action}", method = RequestMethod.PATCH)
-    public Result setAllowPostLevel(@RequestBody Category category, @PathVariable String action, @RequestAttribute Operator operator) {
+    public Result<Category> setAllowPostLevel(@RequestBody Category category, @PathVariable String action, @RequestAttribute Operator operator) {
         if ("create".equals(action))
             return categoryService.setAllowPostLevel(category, false, operator).setOperator(operator);
         if ("cancel".equals(action))
             return categoryService.setAllowPostLevel(category, true, operator).setOperator(operator);
-        return Result.EMPTY_FAIL;
+        return new Result<Category>(Result.FAIL);
     }
 
     @RequestMapping(value = "/def_sub", method = RequestMethod.PATCH)
-    public Result setDefaultSubCategory(@RequestBody Category category, @RequestAttribute Operator operator) {
+    public Result<Category> setDefaultSubCategory(@RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.setDefaultSubCategory(category, false, operator).setOperator(operator);
     }
 
     @AccessLimit(value = 5, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 1, per = LimitTimeUnit.MINUTE)
     @RequestMapping(method = RequestMethod.DELETE)
-    public Result deleteCategory(@RequestBody Category category, @RequestAttribute Operator operator) {
+    public Result<Object> deleteCategory(@RequestBody Category category, @RequestAttribute Operator operator) {
         return categoryService.deleteCategory(category, operator, false).setOperator(operator);
     }
 
     @RequestMapping(value = "/reload", method = RequestMethod.POST)
-    public Result reloadCategory(@RequestAttribute Operator operator) {
+    public Result<Object> reloadCategory(@RequestAttribute Operator operator) {
         return categoryService.reloadCategory(operator).setOperator(operator);
     }
 
@@ -128,7 +126,7 @@ public class CategoryController {
     }
 
     @RequestMapping(value = "/category_tree", method = RequestMethod.GET)
-    public Result readTree(@RequestAttribute Operator operator) {
+    public Result<String> readTree(@RequestAttribute Operator operator) {
         return categoryService.readCategoryTreeString().setOperator(operator);
     }
 

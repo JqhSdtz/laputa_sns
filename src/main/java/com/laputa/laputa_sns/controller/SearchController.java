@@ -21,7 +21,7 @@ public class SearchController {
     }
 
     @RequestMapping(value = "/{type}/{words}/{mode}", method = RequestMethod.GET)
-    public Result search(@PathVariable("type") String type, @PathVariable("words") String words, @PathVariable("mode") String mode, @RequestAttribute Operator operator) {
+    public Result<?> search(@PathVariable("type") String type, @PathVariable("words") String words, @PathVariable("mode") String mode, @RequestAttribute Operator operator) {
         if ("post".equals(type))
             return searchService.searchPost(words, mode, operator);
         else if ("category".equals(type))
@@ -29,6 +29,6 @@ public class SearchController {
         else if ("user".equals(type))
             return searchService.searchUser(words, mode, operator);
         else
-            return Result.EMPTY_FAIL;
+            return new Result<Object>(Result.FAIL);
     }
 }

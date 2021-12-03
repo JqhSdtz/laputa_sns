@@ -81,9 +81,9 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
                 .addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("nick_name", "raw_avatar", "type", "state")));
         int basicRedisTimeOut = Integer.valueOf(environment.getProperty("timeout.redis.comment.l2.basic"));
         int contentRedisTimeOut = Integer.valueOf(environment.getProperty("timeout.redis.comment.l2.content"));
-        this.redisHelper = new RedisHelper(RedisPrefix.CML2_BASIC, basicMapper, basicRedisTimeOut, RedisPrefix.CML2_CONTENT, contentMapper, contentRedisTimeOut, null, CommentL2.class, redisTemplate);
-        this.queryHelper = new QueryHelper(this, redisHelper);
-        this.serviceHelper = new CommentServiceHelper(2, queryHelper, redisHelper, redisTemplate, likeRecordService, commonService, userService, this, CommentL2.class);
+        this.redisHelper = new RedisHelper<>(RedisPrefix.CML2_BASIC, basicMapper, basicRedisTimeOut, RedisPrefix.CML2_CONTENT, contentMapper, contentRedisTimeOut, null, CommentL2.class, redisTemplate);
+        this.queryHelper = new QueryHelper<>(this, redisHelper);
+        this.serviceHelper = new CommentServiceHelper<>(2, queryHelper, redisHelper, redisTemplate, likeRecordService, commonService, userService, this, CommentL2.class);
     }
 
     @Value("${preview-cml2-num}")//在显示一级评论时附带显示的二级评论的数量
@@ -109,12 +109,12 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
      * 设置预览的L2的索引，一次设置多个L1的L2索引
      */
     private void setMultiParentRedisCommentIndex(int l1ListSize, @NotNull List<CommentL2> indexList) {
-        HashMap<Integer, Set<Tuple>> l2OfL1Map = new HashMap(l1ListSize);
+        HashMap<Integer, Set<Tuple>> l2OfL1Map = new HashMap<>(l1ListSize);
         for (int i = 0; i < indexList.size(); ++i) {
             CommentL2 comment = indexList.get(i);
             Set<Tuple> tupleSet;
             if (!l2OfL1Map.containsKey(comment.getL1Id())) {
-                tupleSet = new HashSet();
+                tupleSet = new HashSet<>();
                 l2OfL1Map.put(comment.getL1Id(), tupleSet);
             } else
                 tupleSet = l2OfL1Map.get(comment.getL1Id());
@@ -147,9 +147,9 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
             len += redisResIdList.get(i).size();
         List<Integer> dbL1IdList;
         if (len != 0) {//redis中包含部分或全部的目标索引
-            dbL1IdList = new ArrayList();
-            List<Integer> l2IdList = new ArrayList(len);
-            HashMap<Integer, Long> likeCntMap = new HashMap(len);
+            dbL1IdList = new ArrayList<>();
+            List<Integer> l2IdList = new ArrayList<>(len);
+            HashMap<Integer, Long> likeCntMap = new HashMap<>(len);
             for (int i = 0; i < redisResIdList.size(); ++i) {
                 if (redisResIdList.get(i).size() == 0)
                     dbL1IdList.add(l1IdList.get(i));
@@ -165,10 +165,10 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
         } else
             dbL1IdList = l1IdList;
         if (l2List == null)
-            l2List = new ArrayList();
+            l2List = new ArrayList<>();
         List<CommentL2> dbL2List = null;
         if (dbL1IdList.size() != 0) {//需要查数据库
-            List<Integer> l2IdList = new ArrayList();
+            List<Integer> l2IdList = new ArrayList<>();
             List<TmpEntry> topNL2TmpList = selectTopNL2OfL1StrByMultiId(dbL1IdList);
             if (topNL2TmpList != null) {
                 for (int i = 0; i < topNL2TmpList.size(); ++i) {
@@ -216,17 +216,17 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
      */
     public Result<List<CommentL2>> readIndexCommentL2List(@NotNull CommentL2 comment, Operator operator) {
         if (!comment.isValidReadIndexParam(previewCml2Num, true))
-            return new Result(FAIL).setErrorCode(1010090203).setMessage("操作错误，参数不合法");
-        Result validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(comment, POPULAR, hmacKey);
+            return new Result<List<CommentL2>>(FAIL).setErrorCode(1010090203).setMessage("操作错误，参数不合法");
+        Result<Object> validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(comment, POPULAR, hmacKey);
         if (validateTokenResult.getState() == FAIL)
-            return validateTokenResult;
+            return new Result<List<CommentL2>>(validateTokenResult);
         //在serviceHelper.readIndexComment中需要判断l1的l2_cnt，所以需要带counter
         Result<CommentL1> commentL1Result = commentL1Service.readCommentWithCounter(comment.getL1Id(), operator);
         if (commentL1Result.getState() == FAIL)
-            return (Result<List<CommentL2>>) (Result) commentL1Result;
+            return new Result<List<CommentL2>>(commentL1Result);
         Result<Post> postResult = postService.readPostWithAllFalse(commentL1Result.getObject().getPostId(), operator);
         if (postResult.getState() == FAIL)
-            return (Result<List<CommentL2>>) (Result) postResult;
+            return new Result<List<CommentL2>>(postResult);
         comment.setL1(commentL1Result.getObject().setPost(postResult.getObject()));
         long l2Ofl1Cnt = commentL1Result.getObject().getL2Cnt();
         if (comment.getQueryParam().getFrom().equals(0)
@@ -243,7 +243,7 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
     }
 
     @SneakyThrows
-    private Result multiSetReplyToUser(@NotNull List<CommentL2> commentList) {
+    private Result<Object> multiSetReplyToUser(@NotNull List<CommentL2> commentList) {
         return userService.multiSetUser(commentList, CommentL2.class.getMethod("getReplyToUserId"), CommentL2.class.getMethod("setReplyToUser", User.class));
     }
 
@@ -252,25 +252,25 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
      */
     public Result<Integer> createComment(@NotNull CommentL2 commentL2, Operator operator) {
         if (!commentL2.isValidInsertParam())
-            return new Result(FAIL).setErrorCode(1010090204).setMessage("操作错误，参数不合法");
+            return new Result<Integer>(FAIL).setErrorCode(1010090204).setMessage("操作错误，参数不合法");
         if (!commentL2Validator.checkCreatePermission(commentL2, operator))
-            return new Result(FAIL).setErrorCode(1010090205).setMessage("操作失败，权限错误");
+            return new Result<Integer>(FAIL).setErrorCode(1010090205).setMessage("操作失败，权限错误");
         Result<CommentL1> commentL1Result = commentL1Service.readCommentWithCounter(commentL2.getL1Id(), operator);
         if (commentL1Result.getState() == FAIL)
-            return (Result) commentL1Result;
+            return new Result<Integer>(commentL1Result);
         CommentL1 commentL1 = commentL1Result.getObject();
         Result<Post> postResult = postService.readPostWithAllFalse(commentL1.getPostId(), operator);
         // 帖子不存在
         if (postResult.getState() == FAIL)
-            return (Result) postResult;
+            return new Result<Integer>(postResult);
         // 其他二级评论的回复
         if (commentL2.getReplyToL2Id() != null) {
             Result<CommentL2> replyToTargetResult = readCommentWithAllFalse(commentL2.getReplyToL2Id(), operator);
             if (replyToTargetResult.getState() == FAIL)
-                return new Result(FAIL).setErrorCode(1010090210).setMessage("回复对象不存在");
+                return new Result<Integer>(FAIL).setErrorCode(1010090210).setMessage("回复对象不存在");
             CommentL2 replyToTarget = replyToTargetResult.getObject();
             if (!commentL2.getL1Id().equals(replyToTarget.getL1Id()))
-                return new Result(FAIL).setErrorCode(1010090211).setMessage("回复对象不在同一评论下");
+                return new Result<Integer>(FAIL).setErrorCode(1010090211).setMessage("回复对象不在同一评论下");
             commentL2.setReplyToUserId(replyToTarget.getCreatorId());
         }
         commentL2.setPostId(commentL1.getPostId()).setCreator(operator.getUser());
@@ -278,7 +278,7 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
             commentL2.setPIndexedFlag(true);
         int res = insertOne(commentL2);
         if (res == -1)
-            return new Result(FAIL).setErrorCode(1010090106).setMessage("数据库操作失败");
+            return new Result<Integer>(FAIL).setErrorCode(1010090106).setMessage("数据库操作失败");
         commentL2.setLikeCnt(0L);
         if (commentL1.getL2Cnt() < previewCml2Num)
             serviceHelper.addNewToRedisIndex(commentL2, POPULAR);
@@ -294,7 +294,7 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
         } else if (!commentL1.getCreatorId().equals(operator.getUserId())) {
             noticeService.pushNotice(commentL1.getId(), Notice.TYPE_CML2_OF_CML1, commentL1.getCreatorId());
         }
-        return new Result(SUCCESS).setObject(commentL2.getId());
+        return new Result<Integer>(SUCCESS).setObject(commentL2.getId());
     }
 
     public String correctCounters() {
@@ -308,29 +308,29 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
      * 删除评论
      */
     @SneakyThrows
-    public Result deleteComment(@NotNull CommentL2 param, Operator operator) {
+    public Result<Object> deleteComment(@NotNull CommentL2 param, Operator operator) {
         if (!param.isValidDeleteParam())
-            return new Result(FAIL).setErrorCode(1010090207).setMessage("操作错误，参数不合法");
+            return new Result<Object>(FAIL).setErrorCode(1010090207).setMessage("操作错误，参数不合法");
         Result<CommentL2> commentL2Result = readCommentWithContent(param.getId(), operator);
         if (commentL2Result.getState() == FAIL)
-            return commentL2Result;
+            return new Result<Object>(commentL2Result);
         CommentL2 commentL2 = commentL2Result.getObject();
         Result<CommentL1> commentL1Result = commentL1Service.readCommentWithAllFalse(commentL2.getL1Id(), operator);
         if (commentL1Result.getState() == FAIL)
-            return commentL1Result;
+            return new Result<Object>(commentL1Result);
         CommentL1 commentL1 = commentL1Result.getObject();
         Result<Post> postResult = postService.readPostWithAllFalse(commentL1.getPostId(), operator);
         if (postResult.getState() == FAIL)
-            return postResult;
+            return new Result<Object>(postResult);
         commentL2.setL1(commentL1.setPost(postResult.getObject()));
         if (!commentL2Validator.checkDeletePermission(commentL2, operator))
-            return new Result(FAIL).setErrorCode(1010090208).setMessage("操作失败，权限错误");
+            return new Result<Object>(FAIL).setErrorCode(1010090208).setMessage("操作失败，权限错误");
         boolean isAdminOp = !commentL2.getCreatorId().equals(operator.getUserId());
         if (isAdminOp && !param.isValidOpComment())
-            return new Result(FAIL).setErrorCode(1010090212).setMessage("操作错误，操作原因字数在5-256");
+            return new Result<Object>(FAIL).setErrorCode(1010090212).setMessage("操作错误，操作原因字数在5-256");
         int res = deleteOne(commentL2);
         if (res == 0)
-            return new Result(FAIL).setErrorCode(1010090209).setMessage("数据库操作失败");
+            return new Result<Object>(FAIL).setErrorCode(1010090209).setMessage("数据库操作失败");
         Long pcmCnt = null;
         if (operator.getUserId().equals(postResult.getObject().getCreatorId())) //发帖人删除回复
             pcmCnt = -1L;
@@ -339,9 +339,9 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
         if (isAdminOp) {
             AdminOpsRecord record = new AdminOpsRecord();
             record.setTargetId(commentL2.getCreatorId()).setTarget(commentL2).setDesc(fullObjectMapper.writeValueAsString(commentL2)).setOpComment(param.getOpComment()).setType(AdminOpsRecord.TYPE_DELETE_CML2);
-            return adminOpsService.createAdminOpsRecord(record, operator);
+            adminOpsService.createAdminOpsRecord(record, operator);
         }
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
     /**
@@ -350,7 +350,7 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
     @Scheduled(cron = "0 20 3 * * ?")
     public void dailyFlushRedisToDB() {
         Set<String> zSetKeys = RedisUtil.scanAllKeys(redisTemplate, serviceHelper.getRedisIndexZSetKey("*", POPULAR));
-        List<TmpEntry> topNL2IdStrList = new ArrayList(zSetKeys.size());
+        List<TmpEntry> topNL2IdStrList = new ArrayList<>(zSetKeys.size());
         int end = previewCml2Num - 1;
         for (String key : zSetKeys) {
             Integer l1Id = Integer.valueOf(key.split(":")[1]);

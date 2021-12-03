@@ -60,6 +60,7 @@ public class QQController {
 
     @SneakyThrows
     @RequestMapping(value = "/login/{code}", method = RequestMethod.POST)
+    @SuppressWarnings("unchecked")
     public Result<Operator> login(@PathVariable String code, HttpServletRequest request, HttpServletResponse response, @RequestAttribute Operator operator) {
         MultiValueMap<String, Object> getTokenParam = new LinkedMultiValueMap<>();
         getTokenParam.add("grant_type", "authorization_code");
@@ -74,7 +75,7 @@ public class QQController {
         Integer error = (Integer) tokenJsonResult.get("error");
         if (error != null) {
             log.error("QQ登录失败！错误信息:" + tokenResult);
-            return new Result(Result.FAIL).setErrorCode(1010230101).setMessage(tokenResult);
+            return new Result<Operator>(Result.FAIL).setErrorCode(1010230101).setMessage(tokenResult);
         }
         String accessToken = tokenJsonResult.get("access_token").toString();
         MultiValueMap<String, Object> getOpenIdParam = new LinkedMultiValueMap<>();
@@ -86,7 +87,7 @@ public class QQController {
         error = (Integer) openIdJsonResult.get("error");
         if (error != null) {
             log.error("QQ登录获取OpenID失败！错误信息:" + openIdResult);
-            return new Result(Result.FAIL).setErrorCode(1010230102).setMessage(openIdResult);
+            return new Result<Operator>(Result.FAIL).setErrorCode(1010230102).setMessage(openIdResult);
         }
         String openId = openIdJsonResult.get("openid").toString();
         Result<User> userResult = userService.readUserWithQqOpenId(openId);
@@ -101,14 +102,14 @@ public class QQController {
             Map<String, Object> userInfoJsonResult = resultMapper.readValue(userInfoResult, Map.class);
             if (((Integer) userInfoJsonResult.get("ret")) != 0) {
                 log.error("QQ登录获取用户信息失败！错误信息:" + userInfoResult);
-                return new Result(Result.FAIL).setErrorCode(1010230103).setMessage(userInfoResult);
+                return new Result<Operator>(Result.FAIL).setErrorCode(1010230103).setMessage(userInfoResult);
             }
             int randomBase = 100;
             String userName;
             do {
                 if (randomBase == 0) {
                     log.error("尝试创建用户名失败！极小概率事件，请检查是否有异常。");
-                    return new Result(Result.FAIL).setErrorCode(1010230104).setMessage("尝试创建用户名失败！");
+                    return new Result<Operator>(Result.FAIL).setErrorCode(1010230104).setMessage("尝试创建用户名失败！");
                 }
                 userName = userInfoJsonResult.get("nickname") + String.valueOf((int) (Math.random() * randomBase));
                 randomBase *= 10;

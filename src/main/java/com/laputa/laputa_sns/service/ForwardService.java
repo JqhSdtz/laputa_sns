@@ -15,7 +15,6 @@ import com.laputa.laputa_sns.util.QueryTokenUtil;
 import com.laputa.laputa_sns.util.RedisUtil;
 import com.laputa.laputa_sns.validator.PostValidator;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.data.redis.connection.DefaultTuple;
@@ -36,7 +35,6 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
  * @since 下午 3:15 20/03/08
  */
 
-@Slf4j
 @EnableScheduling
 @Service
 public class ForwardService extends BaseService<PostDao, Post> {
@@ -47,7 +45,7 @@ public class ForwardService extends BaseService<PostDao, Post> {
     private final NoticeService noticeService;
     private final PostValidator postValidator;
     private final StringRedisTemplate redisTemplate;
-    private final IndexExecutor.CallBacks indexExecutorCallBacks;
+    private final IndexExecutor.CallBacks<Post> indexExecutorCallBacks;
 
     private String hmacKey;
 
@@ -78,8 +76,8 @@ public class ForwardService extends BaseService<PostDao, Post> {
     }
 
     @NotNull
-    private void addToForwardZSet(Integer supId, @NotNull List<Post> forwardList, IndexExecutor.Param param) {
-        Set<Tuple> indexSet = new HashSet();
+    private void addToForwardZSet(Integer supId, @NotNull List<Post> forwardList, IndexExecutor<Post>.Param param) {
+        Set<Tuple> indexSet = new HashSet<>();
         for (int i = 0; i < forwardList.size(); ++i) {
             Post forward = forwardList.get(i);
             indexSet.add(new DefaultTuple(String.valueOf(forward.getId()).getBytes(), (double) (forward.getCreateTime().getTime())));
@@ -111,14 +109,14 @@ public class ForwardService extends BaseService<PostDao, Post> {
     }
 
     @NotNull
-    private IndexExecutor.CallBacks initIndexExecutorCallBacks() {
-        IndexExecutor.CallBacks<Post> callBacks = new IndexExecutor.CallBacks();
+    private IndexExecutor.CallBacks<Post> initIndexExecutorCallBacks() {
+        IndexExecutor.CallBacks<Post> callBacks = new IndexExecutor.CallBacks<>();
         callBacks.getIdListCallBack = executor -> {
             List<String> indexList = getRedisForwardIndex((Post) executor.param.paramEntity);
             if (indexList == null)
                 executor.param.idList = null;
             else {
-                executor.param.idList = new ArrayList(indexList.size());
+                executor.param.idList = new ArrayList<>(indexList.size());
                 for (int i = 0; i < indexList.size(); ++i)
                     executor.param.idList.add(Integer.valueOf(indexList.get(i)));
             }
@@ -134,15 +132,15 @@ public class ForwardService extends BaseService<PostDao, Post> {
         post.setOfType(Post.OF_SUP_POST);
         post.setType(Post.TYPE_FORWARD);
         if (!post.isValidReadForwardListParam())
-            return new Result(FAIL).setErrorCode(1010100204).setMessage("操作错误，参数不合法");
-        Result validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(post, PostIndexService.SUP_POST, hmacKey);
+            return new Result<List<Post>>(FAIL).setErrorCode(1010100204).setMessage("操作错误，参数不合法");
+        Result<Object> validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(post, PostIndexService.SUP_POST, hmacKey);
         if (validateTokenResult.getState() == FAIL)
-            return validateTokenResult;
+            return new Result<List<Post>>(validateTokenResult);
         Result<Post> supPostResult = postService.readPostWithCounter(post.getSupId(), operator);
         if (supPostResult.getState() == FAIL)
-            return (Result<List<Post>>) (Result) supPostResult;
+            return new Result<List<Post>>(supPostResult);
         Post queryEntity = (Post) new Post().setQueryParam(new QueryParam());
-        IndexExecutor indexExecutor = new IndexExecutor(post, queryEntity, null, indexExecutorCallBacks, operator);
+        IndexExecutor<Post> indexExecutor = new IndexExecutor<Post>(post, queryEntity, null, indexExecutorCallBacks, operator);
         indexExecutor.param.childNumOfParent = supPostResult.getObject().getForwardCnt();
         Result<List<Post>> forwardListResult = indexExecutor.doIndex();
         if (forwardListResult.getState() == FAIL)
@@ -150,32 +148,32 @@ public class ForwardService extends BaseService<PostDao, Post> {
         List<Post> forwardList = forwardListResult.getObject();
         userService.multiSetUser(forwardList, Post.class.getMethod("getCreatorId"), Post.class.getMethod("setCreator", User.class));
         String newToken = QueryTokenUtil.generateQueryToken(post, forwardList, queryEntity.getQueryParam(), PostIndexService.SUP_POST, hmacKey);
-        return new Result(SUCCESS).setObject(forwardList).setAttachedToken(newToken);
+        return new Result<List<Post>>(SUCCESS).setObject(forwardList).setAttachedToken(newToken);
     }
 
     /**创建转发，删除转发见PostService.deletePost*/
     public Result<Integer> createForward(@NotNull Post post, Operator operator) {
         if (!post.isValidInsertForwardParam())
-            return new Result(FAIL).setErrorCode(1010100201).setMessage("操作错误，参数不合法");
+            return new Result<Integer>(FAIL).setErrorCode(1010100201).setMessage("操作错误，参数不合法");
         Result<Post> supPostResult = postService.readPostWithAllFalse(post.getSupId(), operator);
         if (supPostResult.getState() == FAIL)
-            return (Result) supPostResult;
+            return new Result<Integer>(supPostResult);
         Post supPost = supPostResult.getObject();
         if (!postValidator.checkCreateForwardPermission(supPost, operator))
-            return new Result(FAIL).setErrorCode(1010100202).setMessage("操作失败，权限错误");
+            return new Result<Integer>(FAIL).setErrorCode(1010100202).setMessage("操作失败，权限错误");
         post.setOriId(supPost.getOriId() == null ? supPost.getId() : supPost.getOriId())
                 .setCategory(supPost.getCategory()).setLength(post.getContent().length())
                 .setCreator(operator.getUser()).setType(Post.TYPE_FORWARD);
         int res = insertOne(post);
         if (res == -1)
-            return new Result(FAIL).setErrorCode(1010050103).setMessage("数据库操作失败");
+            return new Result<Integer>(FAIL).setErrorCode(1010050103).setMessage("数据库操作失败");
         addToForwardZSet(post.getSupId(), post.getId());
         postService.updateForwardCnt(post.getSupId(), 1L);
         userService.updatePostCnt(post.getCreatorId(), 1L);
         postNewsService.pushNews(post.getCreatorId(), post.getId());
         if (!supPost.getCreatorId().equals(operator.getUserId()))
             noticeService.pushNotice(supPost.getId(), Notice.TYPE_FW_POST, supPost.getCreatorId());
-        return new Result(SUCCESS).setObject(post.getId());
+        return new Result<Integer>(SUCCESS).setObject(post.getId());
     }
 
     /**

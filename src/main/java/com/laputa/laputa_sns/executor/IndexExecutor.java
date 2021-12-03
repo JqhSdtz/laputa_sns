@@ -27,23 +27,23 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
         /**
          * 要找的索引不存在则返回null，索引存在但位置不存在时应返回空的ArrayList
          */
-        void getIdList(IndexExecutor executor);
+        void getIdList(IndexExecutor<T> executor);
     }
 
     public interface MultiReadEntityCallBack<T extends AbstractBaseEntity> {
-        Result<List<T>> multiReadEntity(IndexExecutor executor);
+        Result<List<T>> multiReadEntity(IndexExecutor<T> executor);
     }
 
     public interface GetDBListCallBack<T extends AbstractBaseEntity> {
-        Result<List<T>> getDBList(IndexExecutor executor) throws NoSuchMethodException;
+        Result<List<T>> getDBList(IndexExecutor<T> executor) throws NoSuchMethodException;
     }
 
     public interface MultiSetRedisIndexCallBack<T extends AbstractBaseEntity> {
-        void multiSetRedisIndex(List<T> entityList, IndexExecutor executor);
+        void multiSetRedisIndex(List<T> entityList, IndexExecutor<T> executor);
     }
 
     public interface ReadOneEntityCallBack<T extends AbstractBaseEntity> {
-        Result<T> readOneEntity(Integer id, IndexExecutor executor);
+        Result<T> readOneEntity(Integer id, IndexExecutor<T> executor);
     }
 
     public static class CallBacks<T extends AbstractBaseEntity> {
@@ -69,7 +69,7 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
         public ReadOneEntityCallBack<T> readOneEntityCallBack;
     }
 
-    public class Param<T extends AbstractBaseEntity> {
+    public class Param {
         /**
          * 索引列表，保存一个索引对象ID和索引排序值的二元组列表，具体用途不定
          */
@@ -132,7 +132,7 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
 
     public CallBacks<T> callBacks;
 
-    public Param<T> param;
+    public Param param;
 
     public IndexExecutor(T paramEntity, T queryEntity, Integer type, CallBacks<T> callBacks, Operator operator) {
         this.param = new Param();
@@ -147,7 +147,7 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
     public Result<List<T>> doIndex() {
         if (param.childNumOfParent != null && (param.childNumOfParent == 0
                 || param.childNumOfParent <= param.paramEntity.getQueryParam().getFrom()))
-            return new Result(SUCCESS).setObject(new ArrayList(0));
+            return new Result<List<T>>(SUCCESS).setObject(new ArrayList<>(0));
         int queryNum = param.paramEntity.getQueryParam().getQueryNum();
         param.queryEntity.getQueryParam().setAddition(param.paramEntity.getQueryParam().getAddition());
         callBacks.getIdListCallBack.getIdList(this);
@@ -203,7 +203,7 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
         }
         if (param.topId != null) {
             boolean set = queryParam.getStartId().equals(0) && queryParam.getFrom().equals(0);
-            List<T> tmpList = new ArrayList(param.entityList.size() + 1);
+            List<T> tmpList = new ArrayList<>(param.entityList.size() + 1);
             if (set)
                 tmpList.add(null);
             T topEntity = null;
@@ -215,8 +215,8 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
             if (set) {
                 if (topEntity == null)
                     topEntity = callBacks.readOneEntityCallBack.readOneEntity(param.topId, this).getObject();
-                if (topEntity != null)
-                    ((AbstractContent) topEntity).setIsTopped(true);
+                if (topEntity != null && topEntity instanceof AbstractContent<?>)
+                    ((AbstractContent<?>) topEntity).setIsTopped(true);
                 tmpList.set(0, topEntity);
             }
             //topEntity另外读取的，是顺序之外的内容，不能影响正常顺序，所以设置考虑置顶之后的顺序前确定from的值
@@ -227,13 +227,13 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
             // 没有置顶的都把isTopped字段设为false，方便前端
             T entity = param.entityList.get(i);
             if (entity instanceof AbstractContent) {
-                AbstractContent content = (AbstractContent) entity;
+                AbstractContent<?> content = (AbstractContent<?>) entity;
                 if (content.getIsTopped() == null) {
                     content.setIsTopped(false);
                 }
             }
         }
         param.queryEntity.getQueryParam().setStartId(param.newStartId).setStartValue(param.newStartValue).setFrom(param.newFrom);
-        return new Result(Result.SUCCESS).setObject(param.entityList);
+        return new Result<List<T>>(Result.SUCCESS).setObject(param.entityList);
     }
 }

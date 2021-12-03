@@ -18,7 +18,7 @@ public abstract class AbstractContent<T> extends AbstractBaseEntity {
     abstract public T setLikedByViewer(Boolean likedByViewer);
     abstract public Boolean getLikedByViewer();
     abstract public Integer getParentId();
-    abstract public AbstractContent getParent();
+    abstract public AbstractContent<T> getParent();
     abstract public T setEntityContent(T content);
     abstract public Long getChildNum();
     abstract public Integer getCreatorId();

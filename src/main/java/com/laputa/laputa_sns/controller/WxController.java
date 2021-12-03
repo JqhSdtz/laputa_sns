@@ -24,7 +24,7 @@ public class WxController {
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public Result login(@RequestBody CodeAndUserInfo codeAndUserInfo) {
+    public Result<Object> login(@RequestBody CodeAndUserInfo codeAndUserInfo) {
         return wxService.login(codeAndUserInfo);
     }
 }

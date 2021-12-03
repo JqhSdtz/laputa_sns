@@ -37,13 +37,13 @@ public class OperatorController {
     }
 
     @RequestMapping(value = "/logout", method = RequestMethod.POST)
-    public Result logout(@RequestAttribute Operator operator, HttpServletRequest request, HttpServletResponse response) {
+    public Result<Object> logout(@RequestAttribute Operator operator, HttpServletRequest request, HttpServletResponse response) {
         return operatorService.logout(operator, request, response).setOperator(new Operator(-1));
     }
 
     @RequestMapping(value = "/empty")
-    public Result emptyAction(@RequestAttribute Operator operator) {
-        return new Result(Result.SUCCESS).setOperator(operator);
+    public Result<Object> emptyAction(@RequestAttribute Operator operator) {
+        return new Result<Object>(Result.SUCCESS).setOperator(operator);
     }
 
 }

@@ -1,16 +1,15 @@
 package com.laputa.laputa_sns.validator;
 
-import com.laputa.laputa_sns.model.entity.Category;
+import java.util.Date;
+import java.util.List;
+
 import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.model.entity.Post;
 import com.laputa.laputa_sns.right.PostRight;
-import com.laputa.laputa_sns.service.CategoryService;
 import com.laputa.laputa_sns.service.PermissionService;
+
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
-
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author JQH

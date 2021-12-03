@@ -53,7 +53,7 @@ public class FollowService extends BaseService<FollowDao, Follow> {
 
     private final UserService userService;
     private final NoticeService noticeService;
-    private final IndexExecutor.CallBacks indexExecutorCallBacks;
+    private final IndexExecutor.CallBacks<Follow> indexExecutorCallBacks;
     private final FollowValidator followValidator;
     private final StringRedisTemplate redisTemplate;
 
@@ -97,7 +97,7 @@ public class FollowService extends BaseService<FollowDao, Follow> {
         String str = redisTemplate.opsForValue().get(getFollowingListKey(followerId));
         if (str == null)
             return null;
-        return new ArrayList(Arrays.asList(str.split("-")));
+        return new ArrayList<>(Arrays.asList(str.split("-")));
     }
 
     /**
@@ -111,7 +111,7 @@ public class FollowService extends BaseService<FollowDao, Follow> {
         List<String> strList = getRedisFollowingStrList(followerId);
         if (strList == null)
             return null;
-        List<Follow> followList = new ArrayList(strList.size());
+        List<Follow> followList = new ArrayList<>(strList.size());
         // 解析关注列表字符串
         for (int i = strList.size() - 1; i >= 0; --i) {
             String[] v = strList.get(i).split("_");
@@ -125,14 +125,14 @@ public class FollowService extends BaseService<FollowDao, Follow> {
      * 因为获取用户的动态数量时需要取出用户的全部关注
      * 所以取出关注列表是个频繁操作，直接使用一个字符串存储会更快
      * @param followerId
-     * @param followingList
-     * @param listClass
+     * @param followingList 关注列表，可能是String类型，也可能是Follow类型
+     * @param listClass 用于指明followingList参数的类型
      */
-    private void setRedisFollowingList(Integer followerId, @NotNull List followingList, @NotNull Class listClass) {
+    private void setRedisFollowingList(Integer followerId, @NotNull List<?> followingList, @NotNull Class<?> listClass) {
         if (followingList.size() == 0)
             return;
         if (listClass.equals(Follow.class)) {
-            List<String> strList = new ArrayList(followingList.size());
+            List<String> strList = new ArrayList<>(followingList.size());
             for (int i = 0; i < followingList.size(); ++i) {
                 Follow follow = (Follow) followingList.get(i);
                 strList.add(follow.getTargetId() + "_" + follow.getType());
@@ -196,38 +196,38 @@ public class FollowService extends BaseService<FollowDao, Follow> {
      * @return
      */
     @SneakyThrows
-    private Result fillFollowWithUser(@NotNull List<Follow> followList, int type) {
+    private Result<Object> fillFollowWithUser(@NotNull List<Follow> followList, int type) {
         if (type == FOLLOWING)
             return userService.multiSetUser(followList, Follow.class.getMethod("getTargetId"), Follow.class.getMethod("setTarget", User.class));
         else if (type == FOLLOWER)
             return userService.multiSetUser(followList, Follow.class.getMethod("getFollowerId"), Follow.class.getMethod("setFollower", User.class));
-        return Result.EMPTY_FAIL;
+        return new Result<Object>(Result.FAIL);
     }
 
     public Result<List<Follow>> readFollowingList(Integer userId, boolean withUserInfo, @NotNull Operator operator) {
         if (operator.getFollowList() != null && operator.getUserId().equals(userId)) {
             if (withUserInfo)
                 fillFollowWithUser(operator.getFollowList(), FOLLOWING);
-            return new Result(SUCCESS).setObject(operator.getFollowList());
+            return new Result<List<Follow>>(SUCCESS).setObject(operator.getFollowList());
         }
         Result<User> userResult = userService.readUserWithCounter(userId, operator);
         if (userResult.getState() == FAIL)
-            return (Result<List<Follow>>) (Result) userResult;
+            return new Result<List<Follow>>(userResult);
         Long cnt = userResult.getObject().getFollowingCnt();
         if (cnt == null || cnt == 0)
-            return new Result(SUCCESS).setObject(new ArrayList(0));
+            return new Result<List<Follow>>(SUCCESS).setObject(new ArrayList<>(0));
         List<Follow> followList = getRedisFollowingList(userId);
         if (followList == null) {//redis中没有
             Follow queryEntity = new Follow().setFollowerId(userId);
             queryEntity.setQueryParam(new QueryParam().setCustomAddition("FOLLOWING"));
             followList = selectList(queryEntity);//获取following要设置follower的id
             if (followList == null)
-                return new Result(FAIL).setErrorCode(1010040101).setMessage("数据库操作失败");
+                return new Result<List<Follow>>(FAIL).setErrorCode(1010040101).setMessage("数据库操作失败");
             setRedisFollowingList(userId, followList, Follow.class);
         }
         if (withUserInfo && followList != null && followList.size() != 0)
             fillFollowWithUser(followList, FOLLOWING);
-        return new Result(SUCCESS).setObject(followList);
+        return new Result<List<Follow>>(SUCCESS).setObject(followList);
     }
 
     /**
@@ -287,15 +287,15 @@ public class FollowService extends BaseService<FollowDao, Follow> {
     }
 
     @NotNull
-    private IndexExecutor.CallBacks initIndexExecutorCallBacks() {
-        IndexExecutor.CallBacks<Follow> callBacks = new IndexExecutor.CallBacks();
+    private IndexExecutor.CallBacks<Follow> initIndexExecutorCallBacks() {
+        IndexExecutor.CallBacks<Follow> callBacks = new IndexExecutor.CallBacks<Follow>();
         callBacks.getIdListCallBack = (executor) -> {
-            IndexExecutor.Param param = executor.param;
+            IndexExecutor<Follow>.Param param = executor.param;
             int targetId = ((Follow) param.paramEntity).getTargetId();
             List<TypedTuple<String>> indexList = RedisUtil.readIndex(redisTemplate, getFollowerZSetKey(targetId), param.paramEntity.getQueryParam(), false, true);
             List<Integer> idList = null;
             if (indexList != null) {
-                idList = new ArrayList(indexList.size());
+                idList = new ArrayList<>(indexList.size());
                 for (int i = 0; i < indexList.size(); ++i)
                     idList.add(parseRedisValue(indexList.get(i).getValue()).followerId);
                 if (indexList.size() != 0) {
@@ -307,17 +307,17 @@ public class FollowService extends BaseService<FollowDao, Follow> {
             param.idList = idList;
         };
         callBacks.multiReadEntityCallBack = (executor) -> {
-            IndexExecutor.Param param = executor.param;
+            IndexExecutor<Follow>.Param param = executor.param;
             Result<List<User>> userListResult = userService.multiReadUser(param.idList);
             if (userListResult.getState() == FAIL)
-                return (Result<List<Follow>>) (Result) userListResult;
+                return new Result<List<Follow>>(userListResult);
             List<User> userList = userListResult.getObject();
-            List<Follow> followList = new ArrayList(userList.size());
+            List<Follow> followList = new ArrayList<>(userList.size());
             for (int i = 0; i < userList.size(); ++i) {
-                Date createTime = new Date(Math.round(((TypedTuple) param.indexSetList.get(i)).getScore()));
+                Date createTime = new Date(Math.round(((TypedTuple<String>) param.indexSetList.get(i)).getScore()));
                 followList.add((Follow) new Follow().setFollower(userList.get(i)).setCreateTime(createTime));
             }
-            return new Result(SUCCESS).setObject(followList);
+            return new Result<List<Follow>>(SUCCESS).setObject(followList);
         };
         callBacks.getDBListCallBack = (executor) -> {
             Follow follow = (Follow) executor.param.paramEntity;
@@ -331,12 +331,12 @@ public class FollowService extends BaseService<FollowDao, Follow> {
                 follow.getQueryParam().setUseStartIdAtSql(1);
             List<Follow> followList = selectList(follow);
             if (followList == null)
-                return new Result(FAIL).setErrorCode(1010040102).setMessage("数据库操作失败");
+                return new Result<List<Follow>>(FAIL).setErrorCode(1010040102).setMessage("数据库操作失败");
             fillFollowWithUser(followList, FOLLOWER);
-            return new Result(SUCCESS).setObject(followList);
+            return new Result<List<Follow>>(SUCCESS).setObject(followList);
         };
         callBacks.multiSetRedisIndexCallBack = (entityList, executor) -> {
-            Set<Tuple> indexSet = new HashSet();
+            Set<Tuple> indexSet = new HashSet<>();
             for (int i = 0; i < entityList.size(); ++i) {
                 Follow follow = entityList.get(i);
                 Integer followId = i == entityList.size() - 1 ? follow.getId() : null;
@@ -354,16 +354,16 @@ public class FollowService extends BaseService<FollowDao, Follow> {
 
     public Result<List<Follow>> readFollowerList(@NotNull Follow follow, Operator operator) {
         if (!follow.isValidReadIndexOfTargetParam())
-            return new Result(FAIL).setErrorCode(1010040216).setMessage("操作错误，参数不合法");
-        Result validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(follow, 0, hmacKey);
+            return new Result<List<Follow>>(FAIL).setErrorCode(1010040216).setMessage("操作错误，参数不合法");
+        Result<Object> validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(follow, 0, hmacKey);
         if (validateTokenResult.getState() == FAIL)
-            return validateTokenResult;
+            return new Result<List<Follow>>(validateTokenResult);
         Result<User> userResult = userService.readUserWithCounter(follow.getTargetId(), operator);
         if (userResult.getState() == FAIL)
-            return (Result<List<Follow>>) (Result) userResult;
+            return new Result<List<Follow>>(userResult);
         Follow queryEntity = (Follow) new Follow().setQueryParam(new QueryParam());
         follow.getQueryParam().setCustomAddition("FOLLOWER");
-        IndexExecutor indexExecutor = new IndexExecutor(follow, queryEntity, null, indexExecutorCallBacks, operator);
+        IndexExecutor<Follow> indexExecutor = new IndexExecutor<>(follow, queryEntity, null, indexExecutorCallBacks, operator);
         indexExecutor.param.childNumOfParent = userResult.getObject().getFollowersCnt();
         indexExecutor.param.initStartId = Integer.MAX_VALUE;
         Result<List<Follow>> followListResult = indexExecutor.doIndex();
@@ -375,63 +375,63 @@ public class FollowService extends BaseService<FollowDao, Follow> {
 
     public Result<Integer> createFollow(@NotNull Follow follow, Operator operator) {
         if (!follow.isValidInsertParam())
-            return new Result(FAIL).setErrorCode(1010040206).setMessage("操作错误，参数不合法");
+            return new Result<Integer>(FAIL).setErrorCode(1010040206).setMessage("操作错误，参数不合法");
         if (!followValidator.checkCreatePermission(follow, operator))
-            return new Result(FAIL).setErrorCode(1010040209).setMessage("操作失败，权限错误");
+            return new Result<Integer>(FAIL).setErrorCode(1010040209).setMessage("操作失败，权限错误");
         if (!userService.existUser(follow.getTargetId()))
-            return new Result(FAIL).setErrorCode(1010040213).setMessage("目标用户不存在");
+            return new Result<Integer>(FAIL).setErrorCode(1010040213).setMessage("目标用户不存在");
         if (follow.getTargetId().equals(operator.getUserId()))
-            return new Result(FAIL).setErrorCode(1010040215).setMessage("不能关注自己");
+            return new Result<Integer>(FAIL).setErrorCode(1010040215).setMessage("不能关注自己");
         follow.setFollowerId(operator.getUserId());
         List<String> followingStrList = null;
         if (operator.getUser().getFollowingCnt() > 0) {
             followingStrList = getRedisFollowingStrList(follow.getFollowerId());
             if (followingStrList != null && followingStrList.size() >= userFollowMaxNum)
-                return new Result(FAIL).setErrorCode(1010040214).setMessage("最多只能关注" + userFollowMaxNum + "个用户");
+                return new Result<Integer>(FAIL).setErrorCode(1010040214).setMessage("最多只能关注" + userFollowMaxNum + "个用户");
             if (followingStrList != null && getTargetIdxOfList(follow.getTargetId(), followingStrList) != -1)
-                return new Result(FAIL).setErrorCode(1010040212).setMessage("操作错误，不能重复关注");
+                return new Result<Integer>(FAIL).setErrorCode(1010040212).setMessage("操作错误，不能重复关注");
         }
         int res = insertOne(follow);
         if (res == -1)
-            return new Result(FAIL).setErrorCode(1010040103).setMessage("数据库操作失败");
+            return new Result<Integer>(FAIL).setErrorCode(1010040103).setMessage("数据库操作失败");
         if (followingStrList != null)//Redis中有该用户的关注列表
             opRedisFollowingList(follow, followingStrList, ADD);
         addNewToRedisFollowerIndex(follow);
         userService.updateFollowingCnt(follow.getFollowerId(), 1L);
         userService.updateFollowersCnt(follow.getTargetId(), 1L);
         noticeService.pushNotice(follow.getTargetId(), Notice.TYPE_FOLLOWER, follow.getTargetId());
-        return new Result(SUCCESS).setObject(follow.getId());
+        return new Result<Integer>(SUCCESS).setObject(follow.getId());
     }
 
-    public Result updateFollow(@NotNull Follow follow, Operator operator) {
+    public Result<Object> updateFollow(@NotNull Follow follow, Operator operator) {
         if (!follow.isValidUpdateParam())
-            return new Result(FAIL).setErrorCode(1010040207).setMessage("操作错误，参数不合法");
+            return new Result<Object>(FAIL).setErrorCode(1010040207).setMessage("操作错误，参数不合法");
         if (!followValidator.checkUpdatePermission(follow, operator))
-            return new Result(FAIL).setErrorCode(1010040210).setMessage("操作失败，权限错误");
+            return new Result<Object>(FAIL).setErrorCode(1010040210).setMessage("操作失败，权限错误");
         if (!userService.existUser(follow.getTargetId()))
-            return new Result(FAIL).setErrorCode(1010040213).setMessage("目标用户不存在");
+            return new Result<Object>(FAIL).setErrorCode(1010040213).setMessage("目标用户不存在");
         follow.setFollowerId(operator.getUserId());
         if (updateOne(follow) == 0)
-            return new Result(FAIL).setErrorCode(1010040105).setMessage("数据库操作失败");
+            return new Result<Object>(FAIL).setErrorCode(1010040105).setMessage("数据库操作失败");
         opRedisFollowingList(follow, null, UPDATE);
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
-    public Result deleteFollow(@NotNull Follow follow, Operator operator) {
+    public Result<Object> deleteFollow(@NotNull Follow follow, Operator operator) {
         if (!follow.isValidDeleteParam())
-            return new Result(FAIL).setErrorCode(1010040208).setMessage("操作错误，参数不合法");
+            return new Result<Object>(FAIL).setErrorCode(1010040208).setMessage("操作错误，参数不合法");
         if (!followValidator.checkDeletePermission(follow, operator))
-            return new Result(FAIL).setErrorCode(1010040211).setMessage("操作失败，权限错误");
+            return new Result<Object>(FAIL).setErrorCode(1010040211).setMessage("操作失败，权限错误");
         if (!userService.existUser(follow.getTargetId()))
-            return new Result(FAIL).setErrorCode(1010040213).setMessage("目标用户不存在");
+            return new Result<Object>(FAIL).setErrorCode(1010040213).setMessage("目标用户不存在");
         follow.setFollowerId(operator.getUserId());
         if (deleteOne(follow) == 0)
-            return new Result(FAIL).setErrorCode(1010040104).setMessage("数据库操作失败");
+            return new Result<Object>(FAIL).setErrorCode(1010040104).setMessage("数据库操作失败");
         opRedisFollowingList(follow, null, REMOVE);
         removeRedisFollowerIndex(follow);
         userService.updateFollowingCnt(follow.getFollowerId(), -1L);
         userService.updateFollowersCnt(follow.getTargetId(), -1L);
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
     @Scheduled(cron = "0 10 3 * * ?")

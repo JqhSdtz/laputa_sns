@@ -67,32 +67,32 @@ public class PostController {
     }
 
     @RequestMapping(value = "/top_comment/{action}", method = RequestMethod.PATCH)
-    public Result setTopComment(@RequestBody Post post, @PathVariable String action, @RequestAttribute Operator operator) {
+    public Result<Object> setTopComment(@RequestBody Post post, @PathVariable String action, @RequestAttribute Operator operator) {
         if ("create".equals(action))
             return postService.setTopComment(post, false, operator).setOperator(operator);
         if ("cancel".equals(action))
             return postService.setTopComment(post, true, operator).setOperator(operator);
-        return Result.EMPTY_FAIL;
+        return new Result<Object>(Result.FAIL);
     }
 
     @AccessLimit(value = 3, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 1, per = LimitTimeUnit.MINUTE)
     @RequestMapping(value = "/category", method = RequestMethod.PATCH)
-    public Result setCategory(@RequestBody Post post, @RequestAttribute Operator operator) {
+    public Result<Object> setCategory(@RequestBody Post post, @RequestAttribute Operator operator) {
         return postService.setCategory(post, operator).setOperator(operator);
     }
 
     @AccessLimit(value = 40, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 10, per = LimitTimeUnit.MINUTE)
     @RequestMapping(value = "/content", method = RequestMethod.PATCH)
-    public Result updateContent(@RequestBody Post post, @RequestAttribute Operator operator) {
+    public Result<Object> updateContent(@RequestBody Post post, @RequestAttribute Operator operator) {
         return postService.updateContent(post, operator).setOperator(operator);
     }
 
     @AccessLimit(value = 40, per = LimitTimeUnit.HOUR)
     @AccessLimit(value = 10, per = LimitTimeUnit.MINUTE)
     @RequestMapping(method = RequestMethod.DELETE)
-    public Result deletePost(@RequestBody Post post, @RequestAttribute Operator operator) {
+    public Result<Object> deletePost(@RequestBody Post post, @RequestAttribute Operator operator) {
         return postService.deletePost(post, operator).setOperator(operator);
     }
 

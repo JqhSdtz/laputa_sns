@@ -10,7 +10,6 @@ import com.laputa.laputa_sns.model.entity.Operator;
 import com.laputa.laputa_sns.model.entity.User;
 import com.laputa.laputa_sns.util.CryptUtil;
 import com.laputa.laputa_sns.util.ProgOperatorManager;
-import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +37,6 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
  * @since 上午 9:50 20/02/19
  */
 
-@Slf4j
 @Service
 public class OperatorService {
 
@@ -59,7 +57,7 @@ public class OperatorService {
         objectMapper.setFilterProvider(new SimpleFilterProvider().addFilter("OperatorFilter", SimpleBeanPropertyFilter
                 .filterOutAllExcept("user_id", "token", "permission_map", "unread_news_cnt", "unread_notice_cnt", "last_access_time")));
         int operatorTimeOut = Integer.parseInt(Objects.requireNonNull(environment.getProperty("timeout.redis.operator")));
-        this.redisHelper = new RedisHelper(RedisPrefix.OPERATOR_ONLINE, objectMapper, operatorTimeOut, null, null, null, null, Operator.class, redisTemplate);
+        this.redisHelper = new RedisHelper<>(RedisPrefix.OPERATOR_ONLINE, objectMapper, operatorTimeOut, null, null, null, null, Operator.class, redisTemplate);
     }
 
     @Value("${pass-token-through-header}")
@@ -132,34 +130,34 @@ public class OperatorService {
         } else {
             Result<User> loginResult = userService.login(paramUser);
             if (loginResult.getState() == FAIL)
-                return (Result<Operator>) (Result) loginResult;
+                return new Result<Operator>(loginResult);
             resUser = loginResult.getObject();
         }
         Operator operator = new Operator();
         operator.setUser(resUser).setFromLogin(true);
         afterLogin(operator, request, response, false, false);
-        return new Result(SUCCESS).setObject(operator);
+        return new Result<Operator>(SUCCESS).setObject(operator);
     }
 
     public Result<Operator> registerWithPow(User paramUser, String extra64, String rand, String calRes,
                                             HttpServletRequest request, HttpServletResponse response) {
         String nickName = paramUser.getNickName();
         if (nickName == null) {
-            return new Result(FAIL).setErrorCode(1010130202).setMessage("用户名不能为空");
+            return new Result<Operator>(FAIL).setErrorCode(1010130202).setMessage("用户名不能为空");
         }
         if (calRes == null || calRes.length() < powZeroLength) {
-            return new Result(FAIL).setErrorCode(1010130203).setMessage("工作量证明结果格式错误");
+            return new Result<Operator>(FAIL).setErrorCode(1010130203).setMessage("工作量证明结果格式错误");
         }
         for (int i = 0; i < powZeroLength; ++i) {
             if (calRes.charAt(i) != '0') {
-                return new Result(FAIL).setErrorCode(1010130204).setMessage("工作量证明结果验证失败");
+                return new Result<Operator>(FAIL).setErrorCode(1010130204).setMessage("工作量证明结果验证失败");
             }
         }
         String name64 = new String(Base64.getEncoder().encode(paramUser.getNickName().getBytes(StandardCharsets.UTF_8)));
         String nameMd5 = CryptUtil.md5(name64);
         String testRes = CryptUtil.md5(nameMd5 + extra64 + rand);
         if (!testRes.equals(calRes)) {
-            return new Result(FAIL).setErrorCode(1010130204).setMessage("工作量证明结果与参数不符");
+            return new Result<Operator>(FAIL).setErrorCode(1010130204).setMessage("工作量证明结果与参数不符");
         }
         return register(paramUser, request, response);
     }
@@ -170,50 +168,50 @@ public class OperatorService {
         setToken(operator, request, response);
         Result<Integer> registerResult = userService.createUser(paramUser);
         if (registerResult.getState() == FAIL)
-            return (Result<Operator>) (Result) registerResult;
+            return new Result<Operator>(registerResult);
         operator.setUserId(registerResult.getObject()).setFromLogin(true);
         afterLogin(operator, request, response, false, true);
-        return new Result(SUCCESS).setObject(operator);
+        return new Result<Operator>(SUCCESS).setObject(operator);
     }
 
-    public Result logout(@NotNull Operator operator, HttpServletRequest request, HttpServletResponse response) {
+    public Result<Object> logout(@NotNull Operator operator, HttpServletRequest request, HttpServletResponse response) {
         redisHelper.removeEntity(operator.getUserId());
         setCookie(request, response, "token", "");
         if (passTokenThroughHeader) {
             response.addHeader("X-LPT-USER-TOKEN", "");
         }
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
-    private Result afterLogin(@NotNull Operator operator, HttpServletRequest request, HttpServletResponse response, boolean fromLoad, boolean fromRegister) {
+    private Result<Object> afterLogin(@NotNull Operator operator, HttpServletRequest request, HttpServletResponse response, boolean fromLoad, boolean fromRegister) {
         User user = operator.getUser();
         if (user.getState() != null && user.getState() > 0) {
             //该用户涉及管理权限
             Result<Map<Integer, Integer>> permissionMapResult = permissionService.readPermissionMapOfUser(user.getId(), progOperator);
             if (permissionMapResult.getState() == FAIL) {
                 //获取权限映射表失败
-                return permissionMapResult;
+                return new Result<Object>(permissionMapResult);
             }
             operator.setPermissionMap(permissionMapResult.getObject());
         }
         setToken(operator, request, response);
         //operator.setLastAccessTime(new Date().getTime()).setFromLogin(null);
         //更新数据库，增加登录次数
-        Result afterLogin = userService.afterLogin(user, operator.getToken(), fromRegister);
+        Result<Object> afterLogin = userService.afterLogin(user, operator.getToken(), fromRegister);
         if (afterLogin.getState() == FAIL)
             return afterLogin;
         if (!fromLoad) {
             pullNewsAndNoticeCnt(operator);
             redisHelper.setEntity(operator, false);
         }
-        return Result.EMPTY_SUCCESS;
+        return new Result<Object>(Result.SUCCESS);
     }
 
     public Result<Operator> loadOperator(Integer userId, Operator operator, HttpServletRequest request, HttpServletResponse response) {
         if (operator == null)
             operator = getOnlineOperator(userId);
         if (operator == null)
-            return new Result(FAIL).setErrorCode(1010130201).setMessage("用户离线");
+            return new Result<Operator>(FAIL).setErrorCode(1010130201).setMessage("用户离线");
         boolean fromLogin = operator.getFromLogin() != null && operator.getFromLogin();
         if (fromLogin) {
             afterLogin(operator, request, response, true, false);
@@ -221,10 +219,10 @@ public class OperatorService {
             //获取用户基本信息
             Result<User> userResult = userService.readUserWithCounter(userId, operator);
             if (userResult.getState() == FAIL)
-                return (Result) userResult.setMessage("ID错误");
+                return new Result<Operator>(userResult.setMessage("ID错误"));
             operator.setUser(userResult.getObject());
         }
-        return new Result(SUCCESS).setObject(operator);
+        return new Result<Operator>(SUCCESS).setObject(operator);
     }
 
     /**

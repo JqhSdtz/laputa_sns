@@ -32,16 +32,16 @@ public class CommentServiceHelper<T extends AbstractContent<T>> {
     private final String[] typeStr = {"P", "L"};
 
     private final int commentLevel;
-    private final QueryHelper queryHelper;
-    private final RedisHelper redisHelper;
-    private final IndexExecutor.CallBacks indexExecutorCallBacks;
+    private final QueryHelper<T> queryHelper;
+    private final RedisHelper<T> redisHelper;
+    private final IndexExecutor.CallBacks<T> indexExecutorCallBacks;
     private final StringRedisTemplate redisTemplate;
     private final LikeRecordService likeRecordService;
     private final CommonService commonService;
     private final UserService userService;
-    private final BaseService commentService;
-    private final Class commentClass;
-    private static final DefaultRedisScript<Long> incrLikeCntScript = new DefaultRedisScript(
+    private final BaseService<?, T> commentService;
+    private final Class<T> commentClass;
+    private static final DefaultRedisScript<Long> incrLikeCntScript = new DefaultRedisScript<>(
             "local delta = tonumber(ARGV[3])\n" + "local zscore = redis.call('zscore', KEYS[1], ARGV[1])\n" + "if (zscore ~= nil and zscore ~= false) then\n" +
                     "\tredis.call('zincrby', KEYS[1], delta, ARGV[1])\n" + "\treturn 0\n" + "end\n" + "if (delta > 0) then\n" +
                     "\tlocal zrange = redis.call('zrange', KEYS[1], 0, 0, 'WITHSCORES')\n" + "\tif (#zrange == 0) then \n" + "\t\treturn -1\n" +
@@ -50,7 +50,7 @@ public class CommentServiceHelper<T extends AbstractContent<T>> {
 
     private final String redisIndexKeyPrefix;
 
-    public CommentServiceHelper(int commentLevel, QueryHelper queryHelper, RedisHelper redisHelper, StringRedisTemplate redisTemplate, LikeRecordService likeRecordService, CommonService commonService, UserService userService, BaseService commentService, Class commentClass) {
+    public CommentServiceHelper(int commentLevel, QueryHelper<T> queryHelper, RedisHelper<T> redisHelper, StringRedisTemplate redisTemplate, LikeRecordService likeRecordService, CommonService commonService, UserService userService, BaseService<?, T> commentService, Class<T> commentClass) {
         this.commentLevel = commentLevel;
         this.queryHelper = queryHelper;
         this.redisHelper = redisHelper;
@@ -91,16 +91,17 @@ public class CommentServiceHelper<T extends AbstractContent<T>> {
     }
 
     @NotNull
+    @SuppressWarnings("unchecked")
     public List<Set<TypedTuple<String>>> multiGetRedisCommentIndex(List<Integer> parentIdList, int num, int type) {
         final int end = num - 1;
-        List<Object> resList = redisTemplate.executePipelined((RedisCallback) connection -> {
+        List<Object> resList = redisTemplate.executePipelined((RedisCallback<?>) connection -> {
             for (int i = 0; i < parentIdList.size(); ++i) {
                 byte[] key = getRedisIndexZSetKey(parentIdList.get(i), type).getBytes();
                 connection.zRevRangeWithScores(key, 0, end);
             }
             return null;
         });
-        return (List<Set<TypedTuple<String>>>) (List) resList;
+        return (List<Set<TypedTuple<String>>>) (List<?>) resList;
     }
 
     public void addNewToRedisIndex(@NotNull T comment, int type) {
@@ -110,7 +111,7 @@ public class CommentServiceHelper<T extends AbstractContent<T>> {
     }
 
     public void multiSetIndexedFlag(@NotNull List<T> entityList, int type, Integer flag) {
-        List<TmpEntry> entryList = new ArrayList(entityList.size());
+        List<TmpEntry> entryList = new ArrayList<>(entityList.size());
         for (int i = 0; i < entityList.size(); ++i)
             entryList.add(new TmpEntry(entityList.get(i).getId(), flag));
         String tableName = commentLevel == 1 ? "lpt_comment_l1" : "lpt_comment_l2";
@@ -119,8 +120,8 @@ public class CommentServiceHelper<T extends AbstractContent<T>> {
     }
 
     @NotNull
-    private void multiSetRedisCommentIndexAndGetLast(Integer parentId, @NotNull List<T> commentList, IndexExecutor.Param param) {
-        Set<Tuple> indexSet = new HashSet();
+    private void multiSetRedisCommentIndexAndGetLast(Integer parentId, @NotNull List<T> commentList, IndexExecutor<T>.Param param) {
+        Set<Tuple> indexSet = new HashSet<>();
         for (int i = 0; i < commentList.size(); ++i) {
             T comment = commentList.get(i);
             indexSet.add(new DefaultTuple(String.valueOf(comment.getId()).getBytes(), genScore(comment, param.type)));
@@ -176,11 +177,11 @@ public class CommentServiceHelper<T extends AbstractContent<T>> {
         List<T> commentList = commentService.selectList(comment);
         comment.getQueryParam().setFrom(oriFrom);
         if (commentList == null)
-            return new Result(FAIL).setErrorCode(1010170101).setMessage("数据库操作失败");
+            return new Result<List<T>>(FAIL).setErrorCode(1010170101).setMessage("数据库操作失败");
         redisHelper.multiSetAndRefreshEntity(commentList, null, true);
         //因为ZSet中保存的是完整的likeCnt的值，但是value中保存的是原始的likeCnt的值，所以设置value后，加入ZSet前要获取完整的likeCnt
         likeRecordService.multiSetLikeCnt(commentList, commentLevel == 1 ? LikeRecord.TYPE_CML1 : LikeRecord.TYPE_CML2);
-        return new Result(SUCCESS).setObject(commentList);
+        return new Result<List<T>>(SUCCESS).setObject(commentList);
     }
 
     private void setCreator(@NotNull T entity, Operator operator) {
@@ -190,7 +191,8 @@ public class CommentServiceHelper<T extends AbstractContent<T>> {
     }
 
     public Result<T> readComment(Integer commentId, @NotNull T queryEntity, boolean withCreator, boolean withCounter, boolean withContent, boolean withIsLikedByViewer, Operator operator) {
-        Result<T> commentResult = queryHelper.readEntity(queryEntity.setId(commentId), withContent);
+        queryEntity.setId(commentId);
+        Result<T> commentResult = queryHelper.readEntity(queryEntity, withContent);
         if (commentResult.getState() == FAIL)
             return commentResult;
         T resComment = commentResult.getObject();
@@ -203,19 +205,20 @@ public class CommentServiceHelper<T extends AbstractContent<T>> {
             boolean res = likeRecordService.existLikeRecordInRedis((LikeRecord) new LikeRecord().setTargetId(commentId).setCreatorId(operator.getUserId()).setType(likeRecordType));
             resComment.setLikedByViewer(res);
         }
-        return new Result(SUCCESS).setObject(resComment);
+        return new Result<T>(SUCCESS).setObject(resComment);
     }
 
     @NotNull
-    private IndexExecutor.CallBacks initIndexExecutorCallBacks() {
-        IndexExecutor.CallBacks<T> callBacks = new IndexExecutor.CallBacks();
+    @SuppressWarnings("unchecked")
+    private IndexExecutor.CallBacks<T> initIndexExecutorCallBacks() {
+        IndexExecutor.CallBacks<T> callBacks = new IndexExecutor.CallBacks<>();
         callBacks.getIdListCallBack = (executor) -> {
-            IndexExecutor.Param param = executor.param;
+            IndexExecutor<T>.Param param = executor.param;
             int parentId = ((T) param.paramEntity).getParentId();
             List<ZSetOperations.TypedTuple<String>> indexList = getRedisCommentIndex(parentId, param.paramEntity.getQueryParam(), param.type);
             List<Integer> idList = null;
             if (indexList != null) {
-                idList = new ArrayList(indexList.size());
+                idList = new ArrayList<>(indexList.size());
                 for (int i = 0; i < indexList.size(); ++i)
                     idList.add(Integer.valueOf(indexList.get(i).getValue()));
             }
@@ -223,8 +226,8 @@ public class CommentServiceHelper<T extends AbstractContent<T>> {
             param.idList = idList;
         };
         callBacks.multiReadEntityCallBack = (executor) -> {
-            IndexExecutor.Param param = executor.param;
-            Result<List<T>> commentListResult = queryHelper.multiReadEntity(param.idList, true, param.queryEntity);
+            IndexExecutor<T>.Param param = executor.param;
+            Result<List<T>> commentListResult = queryHelper.multiReadEntity(param.idList, true, (T) param.queryEntity);
             if (commentListResult.getState() == FAIL)
                 return commentListResult;
             List<T> commentList = commentListResult.getObject();
@@ -240,10 +243,11 @@ public class CommentServiceHelper<T extends AbstractContent<T>> {
         callBacks.getDBListCallBack = (executor) -> getIndexFromDB((T) executor.param.paramEntity, executor.param.type);
         callBacks.multiSetRedisIndexCallBack = (entityList, executor) -> multiSetRedisCommentIndexAndGetLast(((T) executor.param.paramEntity).getParentId(), entityList, executor.param);
         callBacks.readOneEntityCallBack = (id, executor) -> {
-            if (commentLevel == 1)
+            if (commentLevel == 1) {
                 return (Result<T>) ((CommentL1Service) commentService).readComment(id, true, false, true, false, executor.param.operator);
-            else
+            } else {
                 return (Result<T>) ((CommentL2Service) commentService).readComment(id, true, false, true, false, executor.param.operator);
+            }
         };
         return callBacks;
     }
@@ -255,7 +259,7 @@ public class CommentServiceHelper<T extends AbstractContent<T>> {
     public Result<List<T>> readIndexComment(@NotNull T comment, T queryEntity, int type, Operator operator) {
         if (commentLevel == 2)//二级评论只能按热度排序
             type = POPULAR;
-        IndexExecutor indexExecutor = new IndexExecutor(comment, queryEntity, type, indexExecutorCallBacks, operator);
+        IndexExecutor<T> indexExecutor = new IndexExecutor<>(comment, queryEntity, type, indexExecutorCallBacks, operator);
         indexExecutor.param.childNumOfParent = comment.getParent().getChildNum();
         if (commentLevel == 1)
             indexExecutor.param.topId = ((CommentL1) comment).getPost().getTopCommentId();
@@ -266,7 +270,7 @@ public class CommentServiceHelper<T extends AbstractContent<T>> {
         userService.multiSetUser(commentList, commentClass.getMethod("getCreatorId"), commentClass.getMethod("setCreator", User.class));
         int likeRecordType = commentLevel == 1 ? LikeRecord.TYPE_CML1 : LikeRecord.TYPE_CML2;
         likeRecordService.multiSetIsLikedByViewer(commentList, likeRecordType, operator.getUserId());
-        return new Result(SUCCESS).setObject(commentList);
+        return new Result<List<T>>(SUCCESS).setObject(commentList);
     }
 
 }

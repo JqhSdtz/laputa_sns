@@ -47,30 +47,30 @@ public class SearchService {
     public Result<List<Post>> searchPost(String words, String mode, Operator operator) {
         int len = words.length();
         if (len < 1 || len > 40)
-            return new Result(Result.FAIL).setErrorCode(1010200201).setMessage("搜索内容长度应在1-40之间");
+            return new Result<List<Post>>(Result.FAIL).setErrorCode(1010200201).setMessage("搜索内容长度应在1-40之间");
         words = processWords(words);
         List<Post> postList = dao.searchPost(words, mode, searchResultLimit);
         userService.multiSetUser(postList, Post.class.getMethod("getCreatorId"), Post.class.getMethod("setCreator", User.class));
         categoryService.multiSetCategory(postList, Post.class.getMethod("getCategoryId"), Post.class.getMethod("setCategory", Category.class), operator);
-        return new Result(Result.SUCCESS).setObject(postList);
+        return new Result<List<Post>>(Result.SUCCESS).setObject(postList);
     }
 
     public Result<List<Category>> searchCategory(String words, String mode, Operator operator) {
         int len = words.length();
         if (len < 1 || len > 40)
-            return new Result(Result.FAIL).setErrorCode(1010200201).setMessage("搜索内容长度应在1-40之间");
+            return new Result<List<Category>>(Result.FAIL).setErrorCode(1010200201).setMessage("搜索内容长度应在1-40之间");
         words = processWords(words);
         List<Category> categoryList = dao.searchCategory(words, mode, searchResultLimit);
         for (int i = 0; i < categoryList.size(); ++i)
             categoryList.set(i, categoryService.readCategory(categoryList.get(i).getId(), false, operator).getObject());
-        return new Result(Result.SUCCESS).setObject(categoryList);
+        return new Result<List<Category>>(Result.SUCCESS).setObject(categoryList);
     }
 
     public Result<List<User>> searchUser(String words, String mode, Operator operator) {
         int len = words.length();
         if (len < 1 || len > 40)
-            return new Result(Result.FAIL).setErrorCode(1010200201).setMessage("搜索内容长度应在1-40之间");
+            return new Result<List<User>>(Result.FAIL).setErrorCode(1010200201).setMessage("搜索内容长度应在1-40之间");
         words = processWords(words);
-        return new Result(Result.SUCCESS).setObject(dao.searchUser(words, mode, searchResultLimit));
+        return new Result<List<User>>(Result.SUCCESS).setObject(dao.searchUser(words, mode, searchResultLimit));
     }
 }
