@@ -574,7 +574,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         Category resCategory = categoryResult.getObject();
         applyUpdateParentParam(resCategory, paramObject.getParentId());
         postIndexService.transferCategoryIndexList(resCategory);
-        writeToAdminOpsRecord((Category) opParam.setName(resCategory.getName()).setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_PARENT, operator);
+        opParam.setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
+        writeToAdminOpsRecord((Category) opParam.setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_PARENT, operator);
         return categoryResult;
     }
 
@@ -612,7 +613,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             // 更改名字，要级联更新该目录及子目录的路径信息
             setPathListOfCascadeSub(resCategory);
         }
-        writeToAdminOpsRecord((Category) opParam.setName(resCategory.getName()).setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_INFO, operator);
+        opParam.setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
+        writeToAdminOpsRecord((Category) opParam.setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_INFO, operator);
         return categoryResult;
     }
 
@@ -636,7 +638,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         if (res == 0)
             return new Result<Category>(FAIL).setErrorCode(1010010131).setMessage("数据库操作失败");
         resCategory.setDispSeq(paramObject.getDispSeq());
-        writeToAdminOpsRecord((Category) opParam.setName(resCategory.getName()).setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_DISP_SEQ, operator);
+        opParam.setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
+        writeToAdminOpsRecord((Category) opParam.setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_DISP_SEQ, operator);
         return categoryResult;
     }
 
@@ -660,7 +663,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         if (res == 0)
             return new Result<Category>(FAIL).setErrorCode(1010010134).setMessage("数据库操作失败");
         resCategory.setCacheNum(paramObject.getCacheNum());
-        writeToAdminOpsRecord((Category) opParam.setName(resCategory.getName()).setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_CACHE_NUM, operator);
+        opParam.setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
+        writeToAdminOpsRecord((Category) opParam.setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_CACHE_NUM, operator);
         return categoryResult;
     }
 
@@ -697,7 +701,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             return new Result<Category>(FAIL).setErrorCode(1010010127).setMessage("数据库操作失败");
         resCategory.setTopPostId(param.getTopPostId());
         int type = isCancel ? AdminOpsRecord.TYPE_CANCEL_CATEGORY_TOP_POST : AdminOpsRecord.TYPE_SET_CATEGORY_TOP_POST;
-        writeToAdminOpsRecord((Category) new Category(param.getId()).setName(resCategory.getName()).setTopPostId(param.getTopPostId()).setOpComment(param.getOpComment()), type, operator);
+        Category opParam = new Category(param.getId()).setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
+        writeToAdminOpsRecord((Category) opParam.setTopPostId(param.getTopPostId()).setOpComment(param.getOpComment()), type, operator);
         return categoryResult;
     }
 
@@ -731,7 +736,8 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         // 级联更新子节点
         cascadeSetAllowPostLevel(resCategory);
         int type = isCancel ? AdminOpsRecord.TYPE_CANCEL_ALLOW_POST_LEVEL : AdminOpsRecord.TYPE_SET_ALLOW_POST_LEVEL;
-        writeToAdminOpsRecord((Category) new Category(param.getId()).setName(resCategory.getName()).setAllowPostLevel(param.getAllowPostLevel()).setOpComment(param.getOpComment()), type, operator);
+        Category opParam = new Category(param.getId()).setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
+        writeToAdminOpsRecord((Category) opParam.setAllowPostLevel(param.getAllowPostLevel()).setOpComment(param.getOpComment()), type, operator);
         return categoryResult;
     }
 
@@ -753,21 +759,22 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             return categoryResult;
         if (!categoryValidator.checkUpdateDefSubPermission(param, operator))
             return new Result<Category>(FAIL).setErrorCode(1010010221).setMessage("操作失败，权限错误");
-        Category category = categoryResult.getObject();
+        Category resCategory = categoryResult.getObject();
         if (!isCancel) {
             Result<Category> subCategoryResult = readOriginalCategory(param.getDefSubId(), false, operator);
             if (subCategoryResult.getState() == FAIL)
                 return subCategoryResult;
             Category subCategory = subCategoryResult.getObject();
-            if (subCategory.getParent() == null || !subCategory.getParent().getId().equals(category.getId()))
+            if (subCategory.getParent() == null || !subCategory.getParent().getId().equals(resCategory.getId()))
                 return new Result<Category>(FAIL).setErrorCode(1010010226).setMessage("默认子目录不在本目录");
         }
         int res = dao.updateDefSub(param.getId(), param.getDefSubId());//数据库操作
         if (res == 0)//数据库操作失败
             return new Result<Category>(FAIL).setErrorCode(1010010128).setMessage("数据库操作失败");
-        category.setDefSubId(param.getDefSubId());
+            resCategory.setDefSubId(param.getDefSubId());
         int type = isCancel ? AdminOpsRecord.TYPE_CANCEL_CATEGORY_DEF_SUB : AdminOpsRecord.TYPE_SET_CATEGORY_DEF_SUB;
-        writeToAdminOpsRecord((Category) new Category(param.getId()).setName(category.getName()).setDefSubId(param.getDefSubId()).setOpComment(param.getOpComment()), type, operator);
+        Category opParam = new Category(param.getId()).setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
+        writeToAdminOpsRecord((Category) opParam.setDefSubId(param.getDefSubId()).setOpComment(param.getOpComment()), type, operator);
         return categoryResult;
     }
 
