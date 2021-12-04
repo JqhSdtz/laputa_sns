@@ -59,7 +59,7 @@ public class RedisUtil {
         if (resList.get(0) instanceof String && "f".equals(resList.get(0)))
             return null;
         Object[] result = new Object[2];
-        result[0] = ((List) resList.get(0)).get(0);
+        result[0] = ((List<?>) resList.get(0)).get(0);
         result[1] = resList.get(1);
         return result;
     }

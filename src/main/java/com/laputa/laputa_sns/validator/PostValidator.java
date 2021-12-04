@@ -9,6 +9,7 @@ import com.laputa.laputa_sns.right.PostRight;
 import com.laputa.laputa_sns.service.PermissionService;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,6 +19,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PostValidator {
+
+    @Value("${debug}")
+    private boolean isDebug;
 
     private final PermissionService permissionService;
 
@@ -67,6 +71,9 @@ public class PostValidator {
     }
 
     public boolean checkCreatePermission(Post post, @NotNull Operator operator) {
+        if (isDebug) {
+            return true;
+        }
         if (operator.getId().equals(-1))
             return false;
         Date talkBanTo = operator.getUser().getTalkBanTo();
