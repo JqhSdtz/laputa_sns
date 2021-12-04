@@ -217,16 +217,20 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     /**
      * 深度优先搜索将该目录节点的所有级联的子节点都放到结果列表中
      */
-    private void deepFirstSearchSubCategoryToList(@NotNull Category category, List<Category> resultList, boolean preventPrivate) {
-        if (preventPrivate && category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE))
-            return;
+    private void deepFirstSearchLeavesToList(@NotNull Category category, List<Category> resultList, boolean preventPrivate) {
         if (category.getIsLeaf() == null || category.getIsLeaf())
             resultList.add(category);
         List<Category> curSubCategories = category.getSubCategoryList();
         if (curSubCategories.size() == 0)
             return;
-        for (int i = 0; i < curSubCategories.size(); ++i)
-            deepFirstSearchSubCategoryToList(curSubCategories.get(i), resultList, preventPrivate);
+        for (int i = 0; i < curSubCategories.size(); ++i) {
+            Category subCategory = curSubCategories.get(i);
+            if (preventPrivate && subCategory.getType() != null && subCategory.getType().equals(Category.TYPE_PRIVATE)) {
+                // preventPrivate为true，则忽略私有目录
+                continue;
+            }
+            deepFirstSearchLeavesToList(subCategory, resultList, preventPrivate);
+        }
     }
 
     /**
@@ -339,7 +343,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         if (result.getState() == FAIL)
             return new Result<List<Category>>(result);
         List<Category> resultList = new ArrayList<>();
-        deepFirstSearchSubCategoryToList(result.getObject(), resultList, preventPrivate);
+        deepFirstSearchLeavesToList(result.getObject(), resultList, preventPrivate);
         return new Result<List<Category>>(SUCCESS).setObject(resultList);
     }
 
@@ -572,8 +576,13 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         if (res == 0)//数据库操作失败
             return new Result<Category>(FAIL).setErrorCode(1010010112).setMessage("数据库操作失败");
         Category resCategory = categoryResult.getObject();
-        applyUpdateParentParam(resCategory, paramObject.getParentId());
+        Integer oriParentId = resCategory.getParentId();
+        Integer newParentId = paramObject.getParentId();
+        applyUpdateParentParam(resCategory, newParentId);
         postIndexService.transferCategoryIndexList(resCategory);
+        // 处理新旧父目录的贴子数的变更
+        cascadeUpdatePostCnt(oriParentId, resCategory.getPostCnt() * -1L);
+        cascadeUpdatePostCnt(newParentId, resCategory.getPostCnt());
         opParam.setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
         writeToAdminOpsRecord((Category) opParam.setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_PARENT, operator);
         return categoryResult;

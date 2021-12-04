@@ -51,6 +51,8 @@ export default {
 			type: String,
 			default: 'popular'
 		},
+		// 是否在refresh的时候清除原来的列表，用于防止相册中img元素onload事件不触发
+		clearOnRefresh: Boolean,
 		itemStyle: Function,
 		topPostId: Number,
 		userId: String,
@@ -288,6 +290,9 @@ export default {
 	methods: {
 		onRefresh() {
 			this.reset();
+			if (this.clearOnRefresh) {
+				this.list.splice(0);
+			}
 			this.loadMore(true);
 		},
 		reset() {

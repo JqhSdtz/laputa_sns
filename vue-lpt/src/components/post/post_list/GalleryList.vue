@@ -1,6 +1,7 @@
 <template>
 	<post-list ref="postList" :category-id="category.id" :top-post-id="category.top_post_id"
 					@refresh="$emit('refresh');"
+					:clear-on-refresh="true"
 					@loaded="$emit('loaded');"
 		           :sort-type="sortType"
 		           :custom-load-process="processImgLoad"
@@ -81,15 +82,10 @@ export default {
 	},
 	methods: {
 		processImgLoad(post) {
-			const promise = this.imgLoadResolveMap.get(post.id);
-			if (promise) {
-				return promise;
-			} else {
-				post.settled = false;
-				return new Promise(resolve => {
-					this.imgLoadResolveMap.set(post.id, resolve);
-				});
-			}
+			post.settled = false;
+			return new Promise(resolve => {
+				this.imgLoadResolveMap.set(post.id, resolve);
+			});
 		},
 		onImgLoaded(post) {
 			const resolve = this.imgLoadResolveMap.get(post.id);

@@ -238,6 +238,7 @@ export default {
 		resolveIntroChange(category) {
 			if (!category.intro || !typeReg.test(category.intro)) {
 				this.categoryDetailType = 'plain';
+				this.categoryIntro = category.intro;
 			} else {
 				this.categoryDetailType = category.intro.match(typeReg)[1];
 				this.categoryIntro = category.intro.replace(typeReg, '');
