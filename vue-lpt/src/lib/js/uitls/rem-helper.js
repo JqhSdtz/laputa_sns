@@ -48,8 +48,14 @@ function getRem() {
     return document.getElementsByTagName('html')[0].style.fontSize;
 }
 
+function isMobile() {
+    // 如果当前页面的宽度小于设定的PC端最小宽度，则判断为移动端
+    return document.body.clientWidth < option.pcWidth;
+}
+
 export default {
     initRem,
     getRem,
-    remToPx
+    remToPx,
+    isMobile
 }

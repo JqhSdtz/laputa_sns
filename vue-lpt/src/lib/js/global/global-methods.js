@@ -36,14 +36,16 @@ export default {
             title = state.curTitle + '-' + param.appendAfter;
         } else {
             if (param.contentDesc) {
-                title += param.contentDesc + '-';
-                tabTitle += param.contentDesc + '-';
+                title += param.contentDesc;
+                tabTitle += param.contentDesc;
             }
             if (param.pageDesc) {
-                title += param.pageDesc + '-';
-                tabTitle += param.pageDesc;
+                title += (title ? '-' : '') + param.pageDesc;
+                tabTitle += (tabTitle ? '-' : '') + param.pageDesc;
             }
-            title += option.moduleTitle;
+            if (option.moduleTitle) {
+                title += (title ? '-' : '') + option.moduleTitle;
+            }
         }
         state.curTitle = title;
         document.title = title;

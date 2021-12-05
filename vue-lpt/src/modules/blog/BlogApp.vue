@@ -52,6 +52,8 @@ import {noCacheList} from '@/modules/lpt/router';
 import global from '@/lib/js/global';
 import {toRef} from 'vue';
 import description from './description';
+import lpt from '@/lib/js/laputa/laputa';
+import remHelper from '@/lib/js/uitls/rem-helper';
 
 export default {
 	name: 'App',
@@ -114,6 +116,15 @@ export default {
 		});
 	},
 	mounted() {
+		if (remHelper.isMobile()) {
+			Modal.confirm({
+				title: '是否前往移动版？',
+				content: '移动版更适合您的屏幕大小',
+				onOk() {
+					window.location.href = 'https://lpt.jqh.zone/category_detail/' + lpt.categoryServ.rootCategoryId;
+				}
+			});
+		}
 		document.body.style.backgroundImage = this.backgroundImage;
 		global.methods.prompt = this.$refs.prompt.prompt;
 		global.methods.getPrompt = (container) => {
@@ -268,6 +279,7 @@ div:not(.with-scroll-bar)::-webkit-scrollbar {
 
 .with-scroll-bar::-webkit-scrollbar-track {
 	-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+	box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
 	border-radius: 10px;
 	background-color: #F5F5F5;
 }
@@ -275,6 +287,7 @@ div:not(.with-scroll-bar)::-webkit-scrollbar {
 .with-scroll-bar::-webkit-scrollbar-thumb {
 	border-radius: 10px;
 	-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
+	box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
 	background-color: #555;
 }
 
