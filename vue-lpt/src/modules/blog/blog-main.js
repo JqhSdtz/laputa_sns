@@ -22,6 +22,16 @@ import '@kangc/v-md-editor/lib/style/preview.css';
 import '@kangc/v-md-editor/lib/theme/style/github.css';
 import markdownItKatex from 'markdown-it-katex';
 import 'markdown-it-katex/node_modules/katex/dist/katex.min.css';
+// 引入所有语言包
+import hljs from 'highlight.js';
+
+hljs.registerAliases('cpp', {languageName: 'cpp'});
+VMdPreview.use(githubTheme, {
+    Hljs: hljs,
+    extend(md) {
+        md.use(markdownItKatex);
+    }
+});
 
 // 设置rem单位的相对大小
 remHelper.initRem({
@@ -38,11 +48,6 @@ const app = createApp(BlogApp);
 initRouter();
 app.use(router);
 app.use(JsonViewer);
-VMdPreview.use(githubTheme, {
-    extend(md) {
-        md.use(markdownItKatex);
-    }
-});
 app.use(VMdPreview);
 
 const antdUseList = [ConfigProvider, Button, Row, Col, Spin, Form, Mentions, Input, Badge, BackTop,

@@ -120,8 +120,24 @@ export default {
 			Modal.confirm({
 				title: '是否前往移动版？',
 				content: '移动版更适合您的屏幕大小',
-				onOk() {
-					window.location.href = 'https://lpt.jqh.zone/category_detail/' + lpt.categoryServ.rootCategoryId;
+				onOk: () => {
+					const baseMobUrl = 'https://lpt.jqh.zone';
+					const defaultMobUrl = baseMobUrl + '/category_detail/' + lpt.categoryServ.rootCategoryId;
+					const route = this.$route;
+					if (!route || !route.meta) {
+						window.location.href = defaultMobUrl;
+					} else {
+						// 判断访问的是哪种页面（目录详情、帖子详情、目录首页），从而跳转到对应的移动版页面
+						let url = defaultMobUrl;
+						const mainPath = route.meta.fullMainPath;
+						const params = route.params;
+						if (mainPath.indexOf('category_detail') >= 0 || mainPath.indexOf('index') >= 0) {
+							url = baseMobUrl + '/category_detail/' + params.blogCategoryId;
+						} else if (mainPath.indexOf('post_detail') >= 0) {
+							url = baseMobUrl + '/post_detail/' + params.blogPostId;
+						}
+						window.location.href = url;
+					}
 				}
 			});
 		}

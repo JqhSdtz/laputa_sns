@@ -4,13 +4,13 @@
 	<select id="searchPost" resultMap="com.laputa.laputa_sns.dao.PostDao.PostResultMap">
 		select *
 		from lpt_post
-		where match(post_title, post_content) against(#{words} <if test="mode != null and mode == 'bool'">in boolean mode </if>)
+		where post_del_flag = 0 and match(post_title, post_content) against(#{words} <if test="mode != null and mode == 'bool'">in boolean mode </if>)
 		limit 0, #{limit};
 	</select>
 	<select id="searchCategory" resultMap="com.laputa.laputa_sns.dao.CategoryDao.CategoryResultMap">
 		select category_id
 		from lpt_category
-		where match(category_name, category_intro) against(#{words} <if test="mode != null and mode == 'bool'">in boolean mode </if>)
+		where category_del_flag = 0 and match(category_name, category_intro) against(#{words} <if test="mode != null and mode == 'bool'">in boolean mode </if>)
 		limit 0, #{limit};
 	</select>
 	<select id="searchUser" resultMap="com.laputa.laputa_sns.dao.UserDao.UserResultMap">

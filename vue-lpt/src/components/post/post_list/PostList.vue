@@ -2,7 +2,7 @@
 	<div style="height: 100%">
 		<van-empty v-if="hasEverLoad && isEmpty" description="没有帖子"/>
 		<van-pull-refresh ref="pullArea" v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onRefresh"
-		                  success-text="刷新成功">
+		                :disabled="disablePullRefresh" success-text="刷新成功">
 			<van-list ref="list" class="post-list" @load="loadMore" :offset="listOffset"
 			          :fill-parent="$el" v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
 				<slot :post-list="list" :top-post-id="topPostId" :post-of="postOf">
@@ -56,6 +56,7 @@ export default {
 		itemStyle: Function,
 		topPostId: Number,
 		userId: String,
+		postList: Object,
 		onLoaded: Function,
 		customLoadProcess: Function,
 		onBatchProcessed: Function
@@ -79,13 +80,16 @@ export default {
 	data() {
 		this.querior = lpt.createQuerior();
 		this.postListEvents = createEventBus();
+		const hasPostList = typeof this.postList !== 'undefined';
 		return {
-			finished: toRef(this.querior, 'hasReachedBottom'),
+			// 如果提前指定了postList，就直接设置为已经加载完成
+			finished: hasPostList ? true : toRef(this.querior, 'hasReachedBottom'),
 			showSelectedCategory: false,
 			curSelectedCategory: lpt.categoryServ.getDefaultCategory(-1),
-			hasEverLoad: false,
+			hasEverLoad: hasPostList,
+			disablePullRefresh: hasPostList,
 			isEmpty: false,
-			list: [],
+			list: this.postList || [],
 			listOffset: global.vars.style.tabBarHeight + 10,
 			isRefreshing: false,
 			isBusy: false,
@@ -100,6 +104,9 @@ export default {
 			// 切换排序方式时先清空列表，防止原本就存在的元素位置异常
 			this.list.splice(0);
 			this.loadMore(true);
+		},
+		postList() {
+			this.list = this.postList;
 		}
 	},
 	mounted() {
@@ -150,7 +157,9 @@ export default {
 				querior: this.querior
 			};
 		}
-		this.loadMore(false);
+		if (!this.finished) {
+			this.loadMore(false);
+		}
 		global.events.on(['signIn', 'signOut', 'forceRefresh', 'addFollow'], (obj, name) => {
 			if (name === 'forceRefresh')
 				this.isRefreshing = true;

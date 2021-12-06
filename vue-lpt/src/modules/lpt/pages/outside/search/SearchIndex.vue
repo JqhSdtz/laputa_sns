@@ -1,21 +1,22 @@
 <template>
-	<van-tabs v-model:active="curTabKey" swipeable lazy-render :style="{width: clientWidth + 'px'}">
-		<van-tab name="post" title="帖子">
-			<post-item class="post-item" v-for="post in postList" :post-id="post.id" :key="post.id"/>
+	<van-tabs ref="tabs" v-model:active="curTabKey" swipeable lazy-render :style="{width: clientWidth + 'px'}">
+		<van-tab ref="postTab" name="post" title="帖子">
+			<post-list :post-list="postList"/>
 		</van-tab>
-		<van-tab name="user" title="用户">
+		<van-tab ref="userTab" name="user" title="用户">
 			<user-item class="user-item" v-for="user in userList" :key="user.id" :user="user"/>
 		</van-tab>
-		<van-tab name="category" title="目录">
+		<van-tab ref="categoryTab" name="category" title="目录">
 			<div v-for="category in categoryList" :key="category.id">
-				<p style="text-align: center">{{category.name}}</p>
+				<category-grid-item :category-id="category.id"/>
 			</div>
 		</van-tab>
 	</van-tabs>
 </template>
 
 <script>
-import PostItem from '@/components/post/item/PostItem';
+import CategoryGridItem from '@/components/category/item/CategoryGridItem';
+import PostList from '@/components/post/post_list/PostList';
 import UserItem from '@/modules/lpt/pages/outside/user/user_list/item/UserItem';
 import lpt from '@/lib/js/laputa/laputa';
 import {Toast} from 'vant';
@@ -24,24 +25,36 @@ import global from "@/lib/js/global";
 export default {
 	name: 'SearchIndex',
 	components: {
-		PostItem,
-		UserItem
+		PostList,
+		UserItem,
+		CategoryGridItem
 	},
 	data() {
 		return {
 			curTabKey: 'post',
 			postList: [],
 			categoryList: [],
-			userList: []
+			userList: [],
+			preHref: ''
 		}
 	},
 	watch: {
 		curTabKey() {
 			this.init();
-		}
+		},
+		$route(route) {
+			if (route.name && route.name.indexOf('searchIndex') >= 0) {
+				this.onActivated();
+			}
+		},
 	},
 	computed: {
 		clientWidth() {
+			const curTab = this.$refs[this.curTabKey + 'Tab'];
+			if (curTab) {
+				this.$nextTick(() => curTab.$parent.resize());
+				this.$refs.tabs.resize();
+			}
 			if (global.vars.env === 'blog') {
 				return global.states.style.drawerWidth;
 			} else {
@@ -53,10 +66,20 @@ export default {
 		this.lptConsumer = lpt.createConsumer();
 		this.init();
 	},
+	activated() {
+		this.onActivated();
+	},
 	methods: {
+		onActivated() {
+			const href = this.$route.fullPath;
+			if (href !== this.preHref) {
+				this.init();
+			}
+		},
 		init() {
 			const ref = this;
 			const query = this.$route.query;
+			this.preHref = this.$route.fullPath;
 			lpt.searchServ.search({
 				consumer: this.lptConsumer,
 				param : {
@@ -69,9 +92,11 @@ export default {
 						global.states.postManager.addList(result.object);
 						ref.postList = result.object;
 					} else if (ref.curTabKey === 'user') {
+						global.states.userManager.addList(result.object);
 						ref.userList = result.object;
 					} else if (ref.curTabKey === 'category') {
 						result.object = result.object.filter((obj) => obj !== null);
+						global.states.categoryManager.addList(result.object);
 						ref.categoryList = result.object;
 					}
 				},

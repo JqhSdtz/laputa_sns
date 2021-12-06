@@ -6,9 +6,9 @@
 			<van-field :rules="rules.title" v-model="form.title" placeholder="输入标题（可选，最多20字符）"/>
 			<van-field :rules="rules.abstract"
 			            v-model="form.abstract" type="textarea" placeholder="输入摘要（可选，最多256字符）"
-			            :autosize="{minHeight: 100}"/>
+			            :autosize="{minHeight: 100, maxHeight: fieldMaxHeight}"/>
 			<van-field :rules="rules.content" v-model="form.content" type="textarea" placeholder="输入内容（必填，最多100000字符）"
-			           :autosize="{minHeight: 100}"/>
+			           :autosize="{minHeight: 100, maxHeight: fieldMaxHeight}"/>
 			<van-uploader ref="uploader" class="uploader" v-model="fileList" @click="beforeChoose"
 			              :before-read="parseUpload" multiple :max-count="maxImgCount"/>
 			<van-cell center title="是否公开">
@@ -177,6 +177,10 @@ export default {
 				return global.states.style.bodyWidth;
 			}
 		},
+		fieldMaxHeight() {
+			// 输入框最大高度为屏幕高度的80%
+			return global.states.style.bodyHeight * 0.8;
+		}
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();

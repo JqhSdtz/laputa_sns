@@ -387,4 +387,13 @@ export default {
 	font-size: 1.5rem;
 	font-weight: bold
 }
+
+:global(.github-markdown-body table) {
+	/* 不然markdown中的表格会居左显示 */
+	display: table;
+}
+
+:global(.github-markdown-body) {
+	padding: 1rem 0 2rem;
+}
 </style>

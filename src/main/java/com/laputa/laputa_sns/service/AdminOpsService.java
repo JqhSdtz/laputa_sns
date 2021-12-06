@@ -109,6 +109,10 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
         recordContent += "\n操作理由:" + param.getOpComment();
         recordPost.setContent(recordContent);
         Map<String, Object> opRecordObj = new HashMap<>();
+        if (param.getDesc() != null && param.getDesc().length() > 1024) {
+            // 数据库的desc字段长度限制为1024
+            param.setDesc(param.getDesc().substring(0, 1024));
+        }
         opRecordObj.put("desc", param.getDesc());
         opRecordObj.put("comment", param.getOpComment());
         opRecordObj.put("type", param.getType());

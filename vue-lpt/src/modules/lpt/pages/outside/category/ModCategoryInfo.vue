@@ -71,11 +71,12 @@ export default {
 	},
 	data() {
 		const opType = this.$route.query.opType;
-		let category;
+		let category = {};
 		if (opType === 'create') {
 			category = lpt.categoryServ.getDefaultCategory(-1);
 			category.parent_id = this.$route.query.parentId;
-		} else {
+		} else if (this.categoryId) {
+			// 直接从url中获取的cateogoryId可能为空，为空的话请求会报错
 			category = global.states.categoryManager.get({
 				itemId: this.categoryId,
 				fail(result) {

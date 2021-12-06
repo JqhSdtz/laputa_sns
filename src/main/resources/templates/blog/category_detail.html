@@ -39,7 +39,7 @@
 				<h1>热门帖子：</h1>
 				<li class="list post-list content-list" 
 					th:with="popularList = ${postService.readIndexPostList(queryPost, popular, operator).object}">
-					<ul class="post" th:each="post: ${popularList}">
+					<ul class="post" th:each="post: ${popularList}" th:if="${post} != null">
 						<h2 class="title">
 							<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
 						</h2>
@@ -51,7 +51,7 @@
 				<h1>最新帖子：</h1>
 				<li class="list post-list content-list" 
 					th:with="latestList = ${postService.readIndexPostList(queryPost, latest, operator).object}">
-					<ul class="post" th:each="post: ${latestList}">
+					<ul class="post" th:each="post: ${latestList}" th:if="${post} != null">
 						<h2 class="title">
 							<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
 						</h2>

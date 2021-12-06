@@ -2,8 +2,7 @@
 	<template v-if="forceReloadFlag">
 		<div class="main-area" :class="{'with-scroll-bar': lptContainer === 'blogMain'}"
 		     :style="{height: scrollHeight, position: 'relative'}" keep-scroll-top v-scroll-view>
-			<van-search v-model="searchValue" @search="onSearch" placeholder="请输入搜索关键词"
-			            style="height: 3.5rem">
+			<van-search v-model="searchValue" @search="onSearch" placeholder="请输入搜索关键词">
 				<template v-slot:right-icon>
 					<van-checkbox v-model="enableBoolMode" style="font-size: 0.9rem">多关键字</van-checkbox>
 				</template>

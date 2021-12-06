@@ -34,9 +34,9 @@ export default {
 		}
 	},
 	data() {
-		const category = global.states.categoryManager.get({
+		const category = this.categoryId ? global.states.categoryManager.get({
 			itemId: this.categoryId
-		});
+		}) : {};
 		return {
 			category
 		};
@@ -48,6 +48,9 @@ export default {
 	},
 	methods: {
 		showCategoryDetail() {
+			if (!this.categoryId) {
+				return;
+			}
 			if (this.lptContainer === 'blogMain') {
 				this.$router.push({
 					path: '/blog/category_detail/' + this.categoryId

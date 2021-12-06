@@ -400,7 +400,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             if (parent.getIsLeaf() && !parent.getPostCnt().equals(0L))
                 return new Result<Category>(FAIL).setErrorCode(1010010206).setMessage("操作失败，新的父目录不能包含帖子");
         }
-        return new Result<Category>(Result.FAIL);
+        return new Result<Category>(Result.SUCCESS);
     }
 
     private void setCounter(Category category) {

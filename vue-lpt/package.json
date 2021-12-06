@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@ant-design/icons-vue": "^5.1.9",
-    "@kangc/v-md-editor": "^2.2.2",
+    "@kangc/v-md-editor": "^2.3.12",
     "@vant/use": "^1.0.5",
     "@vue/cli": "^5.0.0-rc.1",
     "ant-design-vue": "^2.1.2",
