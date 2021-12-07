@@ -43,7 +43,7 @@ public class PostController {
 
     @RequestMapping(value = "/{postId}", method = RequestMethod.GET)
     public Result<Post> readPost(@PathVariable Integer postId, @RequestAttribute Operator operator) {
-        return postService.readPost(postId,true, true, true, true, true, true,5, true, operator).setOperator(operator);
+        return postService.readPost(postId, true, true, true, true, true, true, 5, true, operator).setOperator(operator);
     }
 
     @RequestMapping(value = "/full_text/{fullTextId}", method = RequestMethod.GET)

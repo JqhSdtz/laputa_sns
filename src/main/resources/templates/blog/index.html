@@ -14,37 +14,45 @@
 	<body th:with="queryPost = ${new com.laputa.laputa_sns.model.entity.Post()},
                     popular = ${T(com.laputa.laputa_sns.service.PostIndexService).POPULAR},
                     latest = ${T(com.laputa.laputa_sns.service.PostIndexService).LATEST},
+                    typePrivate = ${T(com.laputa.laputa_sns.model.entity.Category).TYPE_PRIVATE},
                     tmp = ${queryPost.setQueryParam(new com.laputa.laputa_sns.common.QueryParam())},
                     tmp = ${queryPost.queryParam.setQueryNum(10)},
                     tmp = ${queryPost.setCategoryId(blogRoot.id)}">
+        <h1>首页-写博客的小姜</h1>
         <div id="navigation-bar">
-        	<h1>网站导航：</h1>
+        	<h2>网站导航：</h2>
 			<li class="nav header nav-bar">
 				<ul class="nav nav-item" th:each="sub: ${blogRoot.subCategoryList}">
-					<a th:text="${sub.name}" th:href="@{'/blog/category_detail/' + ${sub.id}}"></a>
+					<th:block th:if="${sub.type == typePrivate}">
+						<a th:text="${sub.name}" th:href="@{'/blog/category_detail/' + ${sub.id}}"
+							rel="nofollow"></a>
+					</th:block>
+					<th:block th:if="${sub.type != typePrivate}">
+						<a th:text="${sub.name}" th:href="@{'/blog/category_detail/' + ${sub.id}}"></a>
+					</th:block>
 				</ul>
 			</li>
         </div>
         <div id="popular-post-list">
-        	<h1>热门帖子：</h1>
+        	<h2>热门帖子：</h2>
 			<li class="list post-list content-list" 
 				th:with="popularList = ${postService.readIndexPostList(queryPost, popular, operator).object}">
 				<ul class="post" th:each="post: ${popularList}" th:if="${post} != null">
-					<h2 class="title">
+					<h3 class="title">
 						<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
-					</h2>
+					</h3>
 					<p class="brief content" th:text="${post.content}"></p>
 				</ul>
 			</li>
         </div>
 		<div id="latest-post-list">
-			<h1>最新帖子：</h1>
+			<h2>最新帖子：</h2>
 			<li class="list post-list content-list" 
 				th:with="latestList = ${postService.readIndexPostList(queryPost, latest, operator).object}">
 				<ul class="post" th:each="post: ${latestList}" th:if="${post} != null">
-					<h2 class="title">
+					<h3 class="title">
 						<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
-					</h2>
+					</h3>
 					<p class="brief content" th:text="${post.content}"></p>
 				</ul>
 			</li>

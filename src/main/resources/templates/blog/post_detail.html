@@ -4,6 +4,7 @@
 	<th:block th:if="${post} != null">
 		<head>
 			<meta charset="UTF-8">
+			<meta name="Description" th:attr="Content=${post.content}">
 			<th:block th:with="keywords = ${new java.lang.StringBuilder()}">
 				<th:block th:each="category: ${post.categoryPath}"
 						  th:with="tmp = ${categoryStat.first ? keywords.append(category.name) : keywords.append(',').append(category.name)}">
@@ -12,12 +13,18 @@
 			</th:block>
 			<title th:utext="|${post.title}-${post.categoryPath[0].name}-写博客的小姜|"></title>
 		</head>
-		<body>
+		<body th:with="typePrivate = ${T(com.laputa.laputa_sns.model.entity.Category).TYPE_PRIVATE}">
 			<div id="breadcrumb-navigation" th:if="${post.category} != null">
 				<span>当前位置：</span>
 				<span class="breadcrumb-item" th:each="i: ${#numbers.sequence(post.category.pathList.size() - 1, 0, -1)}">
 					<span th:with="path = ${post.category.pathList[i]}">
-						<a th:text="${path.name}" th:href="@{'/blog/category_detail/' + ${path.id}}"></a>
+						<th:block th:if="${path.type == typePrivate}">
+							<a th:text="${path.name}" th:href="@{'/blog/category_detail/' + ${path.id}}"
+								rel="nofollow"></a>
+						</th:block>
+						<th:block th:if="${path.type != typePrivate}">
+							<a th:text="${path.name}" th:href="@{'/blog/category_detail/' + ${path.id}}"></a>
+						</th:block>
 						<span>/</span>
 					</span>
 				</span>
@@ -35,7 +42,7 @@
                     tmp = ${queryEntity.queryParam.setQueryNum(10)},
                     tmp = ${queryEntity.setPostId(post.id)}">
 				<div id="popular-comment-list">
-					<h1>热门评论：</h1>
+					<h2>热门评论：</h2>
 					<li class="list comment-list content-list" 
 						th:with="popularList = ${commentL1Service.readIndexCommentL1List(queryEntity, popular, false, operator).object}">
 						<ul class="commentl1" th:each="commentl1: ${popularList}">
@@ -46,7 +53,7 @@
 					</li>
 				</div>
 				<div id="latest-comment-list">
-					<h1>最新帖子：</h1>
+					<h2>最新帖子：</h2>
 					<li class="list comment-list content-list" 
 						th:with="latestList = ${commentL1Service.readIndexCommentL1List(queryEntity, latest, false, operator).object}">
 						<ul class="commentl1" th:each="commentl1: ${latestList}">

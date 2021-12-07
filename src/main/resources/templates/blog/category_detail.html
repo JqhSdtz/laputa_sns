@@ -15,14 +15,22 @@
 		<body th:with="queryPost = ${new com.laputa.laputa_sns.model.entity.Post()},
                     popular = ${T(com.laputa.laputa_sns.service.PostIndexService).POPULAR},
                     latest = ${T(com.laputa.laputa_sns.service.PostIndexService).LATEST},
+                    typePrivate = ${T(com.laputa.laputa_sns.model.entity.Category).TYPE_PRIVATE},
                     tmp = ${queryPost.setQueryParam(new com.laputa.laputa_sns.common.QueryParam())},
                     tmp = ${queryPost.queryParam.setQueryNum(10)},
                     tmp = ${queryPost.setCategoryId(category.id)}">
+            <h1 th:text="${category.name}"></h1>
             <div id="navigation-bar">
-            	<h1>目录导航：</h1>
+            	<h2>目录导航：</h2>
 				<li class="nav header nav-bar">
 					<ul class="nav nav-item" th:each="sub: ${category.subCategoryList}">
-						<a th:text="${sub.name}" th:href="@{'/blog/category_detail/' + ${sub.id}}"></a>
+						<th:block th:if="${sub.type == typePrivate}">
+							<a th:text="${sub.name}" th:href="@{'/blog/category_detail/' + ${sub.id}}"
+								rel="nofollow"></a>
+						</th:block>
+						<th:block th:if="${sub.type != typePrivate}">
+							<a th:text="${sub.name}" th:href="@{'/blog/category_detail/' + ${sub.id}}"></a>
+						</th:block>
 					</ul>
 				</li>
             </div>
@@ -30,13 +38,19 @@
 				<span>当前位置：</span>
 				<span class="breadcrumb-item" th:each="i: ${#numbers.sequence(category.pathList.size() - 1, 0, -1)}">
 					<span th:with="path = ${category.pathList[i]}">
-						<a th:text="${path.name}" th:href="@{'/blog/category_detail/' + ${path.id}}"></a>
+						<th:block th:if="${path.type == typePrivate}">
+							<a th:text="${path.name}" th:href="@{'/blog/category_detail/' + ${path.id}}"
+								rel="nofollow"></a>
+						</th:block>
+						<th:block th:if="${path.type != typePrivate}">
+							<a th:text="${path.name}" th:href="@{'/blog/category_detail/' + ${path.id}}"></a>
+						</th:block>
 						<span>/</span>
 					</span>
 				</span>
 			</div>
 			<div id="popular-post-list">
-				<h1>热门帖子：</h1>
+				<h2>热门帖子：</h2>
 				<li class="list post-list content-list" 
 					th:with="popularList = ${postService.readIndexPostList(queryPost, popular, operator).object}">
 					<ul class="post" th:each="post: ${popularList}" th:if="${post} != null">
@@ -48,7 +62,7 @@
 				</li>
 			</div>
 			<div id="latest-post-list">
-				<h1>最新帖子：</h1>
+				<h2>最新帖子：</h2>
 				<li class="list post-list content-list" 
 					th:with="latestList = ${postService.readIndexPostList(queryPost, latest, operator).object}">
 					<ul class="post" th:each="post: ${latestList}" th:if="${post} != null">

@@ -198,7 +198,9 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         Category tmp = category;
         List<Category> pathList = new ArrayList<>();
         while (tmp != null) {
-            pathList.add(new Category(tmp.getId()).setName(tmp.getName()));
+            Category path = new Category(tmp.getId()).setName(tmp.getName());
+            path.setType(tmp.getType());
+            pathList.add(path);
             tmp = tmp.getParent();
         }
         category.setPathList(pathList);
