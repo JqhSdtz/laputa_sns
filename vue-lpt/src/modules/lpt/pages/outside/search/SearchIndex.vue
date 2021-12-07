@@ -80,6 +80,10 @@ export default {
 			const ref = this;
 			const query = this.$route.query;
 			this.preHref = this.$route.fullPath;
+			if (!query.value || !query.mode) {
+				// 直接刷新的页面会导致没有query的值，这个时候不加载
+				return;
+			}
 			lpt.searchServ.search({
 				consumer: this.lptConsumer,
 				param : {
