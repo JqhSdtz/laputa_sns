@@ -8,7 +8,8 @@ import {Button, ConfigProvider, Spin, Row, Col, BackTop, Form, Mentions, Input, 
     Popover, Badge} from 'ant-design-vue';
 import {Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
     Popover as VPopOver, Dialog, Image as VanImage, Uploader, Form as VanForm, Field, Cascader,
-    Button as VanButton, Popup, Switch, Search, Checkbox, Grid, GridItem, DatetimePicker} from 'vant';
+    Button as VanButton, Popup, Switch, Search, Checkbox, Grid, GridItem, DatetimePicker,
+    NavBar} from 'vant';
 import remHelper from '@/lib/js/uitls/rem-helper';
 import global from "@/lib/js/global";
 import globalMixins from '@/lib/js/global/global-mixins';
@@ -53,7 +54,7 @@ antdUseList.forEach(item => {
 
 const vantUseList = [Tab, Tabs, Overlay, List, PullRefresh, Divider, Empty, ActionSheet, Cell, Tag, Icon,
     VPopOver, Dialog, VanImage, Uploader, VanForm, Field, Cascader, VanButton, Popup, Switch, Search,
-    Checkbox, Grid, GridItem, DatetimePicker];
+    Checkbox, Grid, GridItem, DatetimePicker, NavBar];
 vantUseList.forEach(item => {
     app.use(item);
 });

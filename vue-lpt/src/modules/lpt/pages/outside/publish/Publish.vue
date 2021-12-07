@@ -1,16 +1,32 @@
 <template>
-	<div>
+	<text-editor v-show="textEditor.show && textEditor.type === 'abstract'" 
+			v-model:text="form.abstract"
+			title="编辑摘要" 
+			maxlength="40"
+			@close="textEditor.show = false"/>
+	<text-editor v-show="textEditor.show && textEditor.type === 'content'" 
+			v-model:text="form.content"
+			title="编辑内容" 
+			maxlength="100000"
+			@close="textEditor.show = false"/>
+	<div v-show="!textEditor.show">
 		<van-action-sheet v-model:show="showCapturePanel" :actions="actions" @select="onSelect"
-		                  cancel-text="取消" description="请选择上传方式"/>
+		        cancel-text="取消" description="请选择上传方式"/>
 		<van-form ref="form" style="margin-top: 1.5rem">
-			<van-field :rules="rules.title" v-model="form.title" placeholder="输入标题（可选，最多20字符）"/>
-			<van-field :rules="rules.abstract"
-			            v-model="form.abstract" type="textarea" placeholder="输入摘要（可选，最多256字符）"
-			            :autosize="{minHeight: 100, maxHeight: fieldMaxHeight}"/>
-			<van-field :rules="rules.content" v-model="form.content" type="textarea" placeholder="输入内容（必填，最多100000字符）"
-			           :autosize="{minHeight: 100, maxHeight: fieldMaxHeight}"/>
+			<van-field :rules="rules.title" v-model="form.title" 
+					placeholder="输入标题（可选，最多40字符）"/>
+			<van-cell title="编辑摘要" is-link @click="editAbstract"/>
+			<van-field :rules="rules.abstract" v-model="form.abstract" type="textarea" 
+					maxlength="256" 
+					:show-word-limit="true" 
+					placeholder="输入摘要（可选，最多256字符）"/>
+			<van-cell title="编辑内容" is-link @click="editContent"/>
+			<van-field :rules="rules.content" v-model="form.content" type="textarea" 
+					maxlength="100000" 
+					:show-word-limit="true" 
+					placeholder="输入内容（必填，最多100000字符）"/>
 			<van-uploader ref="uploader" class="uploader" v-model="fileList" @click="beforeChoose"
-			              :before-read="parseUpload" multiple :max-count="maxImgCount"/>
+			        :before-read="parseUpload" multiple :max-count="maxImgCount"/>
 			<van-cell center title="是否公开">
 				<template #right-icon>
 					<van-switch v-model="form.isPublic" :disabled="opType !== 'create'" size="24"/>
@@ -27,13 +43,13 @@
 				</template>
 			</van-cell>
 			<van-field v-if="form.isPublic" :disabled="opType !== 'create'" :rules="rules.category"
-			           v-model="selectedCategoryPathText" is-link readonly label="目录"
-			           placeholder="选择发布目录（必填）" @click="showPopover = true" style="margin-top: 1rem"/>
+			        v-model="selectedCategoryPathText" is-link readonly label="目录"
+			        placeholder="选择发布目录（必填）" @click="showPopover = true" style="margin-top: 1rem"/>
 			<van-popup v-if="opType === 'create'" v-model:show="showPopover" round
-			           position="bottom" :style="{width: clientWidth + 'px'}">
+			        position="bottom" :style="{width: clientWidth + 'px'}">
 				<van-cascader v-model="form.categoryId" title="选择发布目录" :options="categoryOptions"
-				              @change="onCategorySelect" @finish="onCategorySelectFinish"
-				              @close="showPopover = false"/>
+				        @change="onCategorySelect" @finish="onCategorySelectFinish"
+				        @close="showPopover = false"/>
 			</van-popup>
 		</van-form>
 		<van-button @click="onSubmit" type="primary" round block style="width: 80%; margin: 1rem 10%">
@@ -44,12 +60,21 @@
 
 <script>
 import {Dialog, Toast} from "vant";
+import TextEditor from './TextEditor';
 import lpt from '@/lib/js/laputa/laputa';
-import uploadRequest from 'ant-design-vue/es/vc-upload/src/request'
+import uploadRequest from 'ant-design-vue/es/vc-upload/src/request';
 import global from '@/lib/js/global';
 
 export default {
 	name: 'Publish',
+	components: {
+		TextEditor
+	},
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
 	data() {
 		return {
 			postId: '',
@@ -83,7 +108,7 @@ export default {
 			rules: {
 				title: [
 					{
-						trigger: 'onBlur',
+						trigger: 'onChange',
 						validator(value) {
 							if (!value) {
 								return true;
@@ -97,7 +122,7 @@ export default {
 				],
 				abstract: [
 					{
-						trigger: 'onBlur',
+						trigger: 'onChange',
 						validator(value) {
 							if (!value) {
 								return true;
@@ -117,7 +142,7 @@ export default {
 						message: '请输入内容'
 					},
 					{
-						trigger: 'onBlur',
+						trigger: 'onChange',
 						validator(value) {
 							if (!value) {
 								return false;
@@ -137,12 +162,13 @@ export default {
 						message: '请选择发布目录'
 					}
 				]
+			},
+			textEditor: {
+				show: false,
+				maxlength: 0,
+				type: '',
+				title: ''
 			}
-		}
-	},
-	inject: {
-		lptContainer: {
-			type: String
 		}
 	},
 	watch: {
@@ -176,10 +202,6 @@ export default {
 			} else {
 				return global.states.style.bodyWidth;
 			}
-		},
-		fieldMaxHeight() {
-			// 输入框最大高度为屏幕高度的80%
-			return global.states.style.bodyHeight * 0.8;
 		}
 	},
 	created() {
@@ -585,6 +607,14 @@ export default {
 			} else {
 				return this.doUpload(obj);
 			}
+		},
+		editAbstract() {
+			this.textEditor.show = true;
+			this.textEditor.type = 'abstract';
+		},
+		editContent() {
+			this.textEditor.show = true;
+			this.textEditor.type = 'content';
 		}
 	}
 }
