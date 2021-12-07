@@ -38,7 +38,7 @@
 			<van-cell v-if="isSuperAdmin" title="刷新缓存数据" is-link @click="flushData"/>
 			<van-cell v-if="isSuperAdmin" title="重载目录" is-link @click="reloadCategory"/>
 			<van-cell v-if="env === 'blog'" title="完整功能请访问社区" is-link to="/lpt_qr_code"/>
-			<van-cell title="注销" is-link @click="signOut"/>
+			<van-cell title="退出登录" is-link @click="signOut"/>
 		</div>
 		<div v-if="!hasSigned && !isLogging" style="width: 90%; margin-left: 5%">
 			<img style="display: block; height: 18rem; margin: 2rem auto;" :src="qqSymbolImg" @click="openQQLogin"/>
@@ -53,7 +53,7 @@
 			</a-button>
 		</div>
 		<div v-if="isLogging" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%)">
-			<a-spin size="large" tip="正在登陆……"/>
+			<a-spin size="large" tip="正在登录……"/>
 		</div>
 	</div>
 </template>
@@ -145,14 +145,14 @@ export default {
 		},
 		signOut() {
 			Dialog.confirm({
-				message: '确认注销？',
+				message: '确认退出登录？',
 				closeOnClickOverlay: true
 			}).then(() => {
 				lpt.operatorServ.signOut({
 					consumer: this.lptConsumer,
 					success() {
 						global.events.emit('signOut');
-						Toast.success('注销成功');
+						Toast.success('退出登录成功');
 					},
 					fail(result) {
 						Toast.fail(result.message);
