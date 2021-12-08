@@ -17,7 +17,7 @@
                     latest = ${T(com.laputa.laputa_sns.service.PostIndexService).LATEST},
                     typePrivate = ${T(com.laputa.laputa_sns.model.entity.Category).TYPE_PRIVATE},
                     tmp = ${queryPost.setQueryParam(new com.laputa.laputa_sns.common.QueryParam())},
-                    tmp = ${queryPost.queryParam.setQueryNum(10)},
+                    tmp = ${queryPost.queryParam.setQueryNum(30)},
                     tmp = ${queryPost.setCategoryId(category.id)}">
             <h1 th:text="${category.name}"></h1>
             <div id="navigation-bar">
@@ -54,10 +54,12 @@
 				<li class="list post-list content-list" 
 					th:with="popularList = ${postService.readIndexPostList(queryPost, popular, operator).object}">
 					<ul class="post" th:each="post: ${popularList}" th:if="${post} != null">
-						<h2 class="title">
-							<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
-						</h2>
-						<p class="brief content" th:text="${post.content}"></p>
+						<article>
+							<h3 class="title">
+								<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
+							</h3>
+							<p class="brief content" th:text="${post.content}"></p>
+						</article>
 					</ul>
 				</li>
 			</div>
@@ -66,10 +68,12 @@
 				<li class="list post-list content-list" 
 					th:with="latestList = ${postService.readIndexPostList(queryPost, latest, operator).object}">
 					<ul class="post" th:each="post: ${latestList}" th:if="${post} != null">
-						<h2 class="title">
-							<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
-						</h2>
-						<p class="brief content" th:text="${post.content}"></p>
+						<article>
+							<h3 class="title">
+								<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
+							</h3>
+							<p class="brief content" th:text="${post.content}"></p>
+						</article>
 					</ul>
 				</li>
 			</div>

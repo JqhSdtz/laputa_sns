@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.laputa.laputa_sns.right.PostRight;
 import com.laputa.laputa_sns.service.CategoryService;
+import com.laputa.laputa_sns.util.ProgOperatorManager;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -347,7 +348,7 @@ public class Post extends AbstractContent<Post> {
     }
 
     @JsonIgnore
-    public boolean isValidReadIndexOfCategoryParam(boolean format) {
+    public boolean isValidReadIndexOfCategoryParam(boolean format, Operator operator) {
         if (format) {
             this.setSupId(null).setOriId(null).setAllowForward(null).setType(null).setState(null);
             this.creator = null;
@@ -357,7 +358,9 @@ public class Post extends AbstractContent<Post> {
         }
         if (category == null || category.getId() == null)
             return false;
-        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)
+        // 用户查询时一次最多查10个，程序本身查询，最多查1000个
+        int maxQueryNum = ProgOperatorManager.isProgOperator(operator) ? 1000 : 10;
+        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > maxQueryNum)
             return false;
         return true;
     }

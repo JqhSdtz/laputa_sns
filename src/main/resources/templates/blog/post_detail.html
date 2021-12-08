@@ -29,12 +29,14 @@
 					</span>
 				</span>
 			</div>
-			<div id="article">
-				<h1 id="title" class="title" th:text="${post.title}"></h1>
-				<p id="post-time">发布时间：<span th:text="${#dates.format(post.createTime,'yyyy年MM月dd日 HH:mm:ss')}"></span></p>
-				<p id="poster-name">发布人：<span th:text="${post.creator.nickName}"></span></p>
+			<article id="article">
+				<header>
+					<h1 id="title" class="title" th:text="${post.title}"></h1>
+					<p id="post-time">发布时间：<span th:text="${#dates.format(post.createTime,'yyyy年MM月dd日 HH:mm:ss')}"></span></p>
+					<p id="poster-name">发布人：<span th:text="${post.creator.nickName}"></span></p>
+				</header>
 				<div id="full-text" class="content post-content full-text" th:text="${post.fullText == null ? post.content : post.fullText}"></div>
-			</div>
+			</article>
 			<div id="comments" th:with="queryEntity = ${new com.laputa.laputa_sns.model.entity.CommentL1()},
                     popular = ${T(com.laputa.laputa_sns.helper.CommentServiceHelper).POPULAR},
                     latest = ${T(com.laputa.laputa_sns.helper.CommentServiceHelper).LATEST},

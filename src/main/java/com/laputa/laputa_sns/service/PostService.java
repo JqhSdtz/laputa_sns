@@ -367,7 +367,7 @@ public class PostService extends BaseService<PostDao, Post> {
      */
     @SneakyThrows
     public Result<List<Post>> readIndexPostList(@NotNull Post paramPost, int type, Operator operator) {
-        if (!paramPost.isValidReadIndexOfCategoryParam(true))
+        if (!paramPost.isValidReadIndexOfCategoryParam(true, operator))
             return new Result<List<Post>>(FAIL).setErrorCode(1010050213).setMessage("操作错误，参数不合法");
         Result<Object> validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(paramPost, type, hmacKey);
         if (validateTokenResult.getState() == FAIL)
