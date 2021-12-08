@@ -2,7 +2,7 @@
 	<text-editor v-show="textEditor.show && textEditor.type === 'abstract'" 
 			v-model:text="form.abstract"
 			title="编辑摘要" 
-			maxlength="40"
+			maxlength="256"
 			@close="textEditor.show = false"/>
 	<text-editor v-show="textEditor.show && textEditor.type === 'content'" 
 			v-model:text="form.content"
