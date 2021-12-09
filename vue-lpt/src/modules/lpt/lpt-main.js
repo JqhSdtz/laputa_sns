@@ -20,8 +20,8 @@ import VMdPreview from '@kangc/v-md-editor/lib/preview';
 import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
 import '@kangc/v-md-editor/lib/style/preview.css';
 import '@kangc/v-md-editor/lib/theme/style/github.css';
-import markdownItKatex from 'markdown-it-katex';
-import 'markdown-it-katex/node_modules/katex/dist/katex.min.css';
+import markdownItKatex from '@iktakahiro/markdown-it-katex';
+import '@iktakahiro/markdown-it-katex/node_modules/katex/dist/katex.min.css';
 // 引入所有语言包
 import hljs from 'highlight.js';
 
