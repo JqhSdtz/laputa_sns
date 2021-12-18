@@ -265,7 +265,7 @@ export default {
 					const comment = {
 						id: parseInt(result.object),
 						creator: global.states.curOperator.user,
-						content: this.commentInput,
+						content: data.content,
 						create_time: new Date().getTime(),
 						like_cnt: 0,
 						rights: {

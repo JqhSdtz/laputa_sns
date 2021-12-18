@@ -4,7 +4,7 @@
 	<th:block th:if="${post} != null">
 		<head>
 			<meta charset="UTF-8">
-			<meta name="Description" th:attr="Content=${post.content}">
+			<meta name="Description" th:attr="Content=${post.content.replaceAll('tp:([a-zA-Z]*)#', '')}">
 			<th:block th:with="keywords = ${new java.lang.StringBuilder()}">
 				<th:block th:each="category: ${post.categoryPath}"
 						  th:with="tmp = ${categoryStat.first ? keywords.append(category.name) : keywords.append(',').append(category.name)}">
@@ -35,7 +35,7 @@
 					<p id="post-time">发布时间：<span th:text="${#dates.format(post.createTime,'yyyy年MM月dd日 HH:mm:ss')}"></span></p>
 					<p id="poster-name">发布人：<span th:text="${post.creator.nickName}"></span></p>
 				</header>
-				<div id="full-text" class="content post-content full-text" th:text="${post.fullText == null ? post.content : post.fullText}"></div>
+				<div id="full-text" class="content post-content full-text" th:text="${post.fullText == null ? post.content.replaceAll('tp:([a-zA-Z]*)#', '') : post.fullText.replaceAll('tp:([a-zA-Z]*)#', '')}"></div>
 			</article>
 			<div id="comments" th:with="queryEntity = ${new com.laputa.laputa_sns.model.entity.CommentL1()},
                     popular = ${T(com.laputa.laputa_sns.helper.CommentServiceHelper).POPULAR},

@@ -460,6 +460,7 @@ export default {
 							data.like_cnt = 0;
 							data.comment_cnt = 0;
 							data.forward_cnt = 0;
+							data.create_time = new Date().getTime();
 							const post = global.states.postManager.add(data);
 							global.events.emit('createPost', post);
 						} else if (this.opType === 'edit') {

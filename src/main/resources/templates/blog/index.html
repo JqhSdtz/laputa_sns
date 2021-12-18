@@ -43,7 +43,7 @@
 						<h3 class="title">
 							<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
 						</h3>
-						<p class="brief content" th:text="${post.content}"></p>
+						<p class="brief content" th:text="${post.content.replaceAll('tp:([a-zA-Z]*)#', '')}"></p>
 					</article>
 				</ul>
 			</li>
@@ -59,7 +59,7 @@
 						<h3 class="title">
 							<a th:href="@{'/blog/post_detail/' + ${post.id}}" th:text="${post.title}"></a>
 						</h3>
-						<p class="brief content" th:text="${post.content}"></p>
+						<p class="brief content" th:text="${post.content.replaceAll('tp:([a-zA-Z]*)#', '')}"></p>
 					</article>
 				</ul>
 			</li>
