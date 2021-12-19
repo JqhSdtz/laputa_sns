@@ -189,7 +189,7 @@
 
 	<update id="deleteOne">
 		update lpt_post
-		set post_del_flag = 1
+		set post_del_flag = 1, post_del_time = now()
 		where post_id = #{id}
 	</update>
 
