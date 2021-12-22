@@ -1,5 +1,5 @@
 <template>
-	<div style="height: 100%">
+	<div class="post-list">
 		<van-empty v-if="hasEverLoad && isEmpty" description="没有帖子"/>
 		<van-pull-refresh ref="pullArea" v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onRefresh"
 		                :disabled="disablePullRefresh" success-text="刷新成功">
@@ -61,7 +61,7 @@ export default {
 		customLoadProcess: Function,
 		onBatchProcessed: Function
 	},
-	emits: ['refresh'],
+	emits: ['refresh', 'finish'],
 	provide() {
 		return {
 			postListEvents: this.postListEvents
@@ -81,6 +81,9 @@ export default {
 		this.querior = lpt.createQuerior();
 		this.postListEvents = createEventBus();
 		const hasPostList = typeof this.postList !== 'undefined';
+		this.querior.onReachBottom = () => {
+			this.$emit('finish');
+		};
 		return {
 			// 如果提前指定了postList，就直接设置为已经加载完成
 			finished: hasPostList ? true : toRef(this.querior, 'hasReachedBottom'),

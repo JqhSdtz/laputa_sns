@@ -1,27 +1,29 @@
 <template>
-	<div class="photo-item" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
-		<img ref="img" :src="coverUrl" v-show="post.settled" @click="showPreview" 
-			:onload="onImgLoaded" :onerror="onImgLoaded" ondragstart="return false"/>
-		<image-box v-if="lptContainer !== 'default'" ref="imageBox" :images="images" :show-image-list="false"
-		    :containerStyle="{width: '67%', marginLeft: '33%'}"/>
-		<bottom-bar class="bottom-bar" v-show="showBottomBar"
-		    :post-id="post.id" :post-of="postOf" :show-actions="true"
-			:on-show-post-detail="onShowPostDetail"
-		    @click.capture.self="showPreview"/>
-		<a-row class="photo-num" v-show="showBottomBar">
-			<a-col>
-				<ri-stack-line class="icon"/>
-			</a-col>
-			<a-col>
-				<p class="num">{{ photoNum }}张</p>
-			</a-col>
-			<a-col v-if="isTopPost" class="topped-tag">
-				<van-tag  type="primary">
-					置顶
-				</van-tag>
-			</a-col>
-		</a-row>
-	</div>
+	<a-col v-show="post.settled">
+		<div class="photo-item" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
+			<img ref="img" :src="coverUrl" @click="showPreview" 
+				:onload="onImgLoaded" :onerror="onImgLoaded" ondragstart="return false"/>
+			<image-box v-if="lptContainer !== 'default'" ref="imageBox" :images="images" :show-image-list="false"
+				:containerStyle="{width: '67%', marginLeft: '33%'}"/>
+			<bottom-bar class="bottom-bar" v-show="showBottomBar"
+				:post-id="post.id" :post-of="postOf" :show-actions="true"
+				:on-show-post-detail="onShowPostDetail"
+				@click.capture.self="showPreview"/>
+			<a-row class="photo-num" v-show="showBottomBar">
+				<a-col>
+					<ri-stack-line class="icon"/>
+				</a-col>
+				<a-col>
+					<p class="num">{{ photoNum }}张</p>
+				</a-col>
+				<a-col v-if="isTopPost" class="topped-tag">
+					<van-tag  type="primary">
+						置顶
+					</van-tag>
+				</a-col>
+			</a-row>
+		</div>
+	</a-col>
 </template>
 
 <script>
@@ -160,7 +162,7 @@ img {
 	width: 100%;
 	background-color: white;
 	position: absolute;
-	bottom: 1rem;
+	bottom: 0;
 }
 
 .photo-num {

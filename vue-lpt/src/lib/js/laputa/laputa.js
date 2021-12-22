@@ -463,6 +463,7 @@ function _initLaputa(option) {
                     const resultLen = result.object.length;
                     if (resultLen === 0) {
                         executor.hasReachedBottom = true;
+                        executor.onReachBottom && executor.onReachBottom();
                     } else {
                         executor.curStartId = result.object[result.object.length - 1].id;
                         executor.curFrom += result.object.length;
@@ -472,6 +473,7 @@ function _initLaputa(option) {
                         const tokenParts = result.attached_token.split('#');
                         if (tokenParts.length !== 0 && '1' === tokenParts[0]) {
                             executor.hasReachedBottom = true;
+                            executor.onReachBottom && executor.onReachBottom();
                         }
                         executor.curQueryToken = result.attached_token;
                     }
