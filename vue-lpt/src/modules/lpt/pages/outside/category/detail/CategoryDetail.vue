@@ -34,7 +34,9 @@
 				                    v-show="curTabKey === 'postList'"
 				                    :button-style="{right: 'auto', left: sortTypeLeft + 'px'}" :auto-hide="isTabFixed" 
 									:offset="categoryDetailType === 'gallery' ? '5.75rem' : '4rem'"
-				                    :hide-offset-base="mainAreaHeight" v-model:sort-type="sortType"/>
+				                    :hide-offset-base="mainAreaHeight" 
+									:scroll-elem="$refs.categoryArea" 
+									v-model:sort-type="sortType"/>
 				<float-publish-button v-if="hasPublishRight && postListLoaded"
 				                      :style="{left: floatPublishLeft + 'px'}" :auto-hide="isTabFixed"
 				                      :category="category" :hide-offset-base="mainAreaHeight"/>
@@ -44,8 +46,9 @@
 					          swipeable sticky lazy-render @scroll="onScroll">
 						<van-tab ref="postListTab" name="postList" title="帖子" :width="clientWidth">
 							<sort-type-selector class="sort-type-selector" v-if="postListLoaded && !isTabFixed"
-							                    :button-style="{right: 'auto', left: insideSortTypeLeft  + 'px'}" :auto-hide="false"
+							                    :button-style="{right: 'auto', left: insideSortTypeLeft  + 'px'}"
 							                    :offset="categoryDetailType === 'gallery' ? '3rem' : '0.75rem'"
+												:auto-hide="false"
 							                    v-model:sort-type="sortType"/>
 							<post-list v-if="categoryDetailType === 'plain'" ref="postList" :category-id="category.id"
 							           :post-of="'category'" :top-post-id="category.top_post_id" :sort-type="sortType"

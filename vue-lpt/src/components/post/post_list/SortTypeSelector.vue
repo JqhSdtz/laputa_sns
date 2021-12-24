@@ -54,6 +54,7 @@ export default {
 			type: Boolean,
 			default: true
 		},
+		scrollElem: Object,
 		buttonStyle: Object,
 		offset: {
 			type: String,
@@ -86,7 +87,7 @@ export default {
 		}
 	},
 	mounted() {
-		const listElem = this.$parent.$el;
+		const listElem = this.scrollElem || this.$parent.$el;
 		let preScrollTop = 0;
 		listElem.addEventListener('scroll', () => {
 			const curScrollTop = listElem.scrollTop;
