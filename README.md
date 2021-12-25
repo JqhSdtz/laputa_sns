@@ -18,3 +18,7 @@
 有一个悬浮球组件，网站功能菜单隐藏在悬浮球中。
 
 有一个左侧抽屉，基于Ant-Design-Vue的抽屉组件，其包含一个路由视图，和主页面路由视图独立，其承载了博客很大一部分功能。
+
+感谢JetBrains对这个0 star项目的肯定！
+
+[![JetBrains](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg?_gl=1*ezhqu3*_ga*MTY3ODAyMTk1LjE2NDAwNjEwNzI.*_ga_V0XZL7QHEB*MTY0MDQyNzQ2My40LjAuMTY0MDQyNzQ3Mi4w&_ga=2.166412990.1081474564.1640347404-167802195.1640061072 "JetBrains")](https://www.jetbrains.com)
