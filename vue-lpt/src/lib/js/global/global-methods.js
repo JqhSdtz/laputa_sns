@@ -19,13 +19,18 @@ function parseOption(opt) {
     }
 }
 
+function cutString(str, length) {
+    let tmp = str;
+    if (tmp.length > length) {
+        tmp = tmp.substring(0, length) + '...';
+    }
+    return tmp;
+}
+
 export default {
     setOption(_option) {
         Object.assign(option, _option);
         parseOption(_option);
-    },
-    prompt() {
-        // 由BlogApp.vue和LptApp.vue中定义具体的prompt实现
     },
     setTitle(param) {
         let title = '';
@@ -36,12 +41,14 @@ export default {
             title = state.curTitle + '-' + param.appendAfter;
         } else {
             if (param.contentDesc) {
-                title += param.contentDesc;
-                tabTitle += param.contentDesc;
+                const desc = cutString(param.contentDesc, 7);
+                title += desc;
+                tabTitle += desc;
             }
             if (param.pageDesc) {
-                title += (title ? '-' : '') + param.pageDesc;
-                tabTitle += (tabTitle ? '-' : '') + param.pageDesc;
+                const desc = cutString(param.pageDesc, 7);
+                title += (title ? '-' : '') + desc;
+                tabTitle += (tabTitle ? '-' : '') + desc;
             }
             if (option.moduleTitle) {
                 title += (title ? '-' : '') + option.moduleTitle;

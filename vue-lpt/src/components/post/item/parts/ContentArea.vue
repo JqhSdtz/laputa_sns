@@ -3,7 +3,9 @@
 		<p class="title" @click="showPostDetail">{{ post.title }}</p>
 		<!-- gallery-item放到外面是为了防止img元素闪烁 -->
 		<gallery-item-content v-if="contentType === 'gallery'" :gallery-item="galleryItem"/>
-		<div v-if="isShowFullText" class="content full-text" :class="{'md-content': fullTextType === 'md'}">
+		<div v-if="isShowFullText" class="content full-text" 
+			:class="{'md-content': fullTextType === 'md'}"
+			 @click="showPostDetail">
 			<p ref="normalFullText" v-if="fullTextType === 'normal'" style="margin-bottom: 0;">{{ fullText }}</p>
 			<admin-ops-record v-if="fullTextType === 'amOps' && payload" :payload="payload"/>
 			<v-md-preview ref="fullTextMd" v-if="fullTextType === 'md'" :text="fullText"/>
@@ -11,7 +13,9 @@
 			<p v-if="fullTextType === 'gallery' && post.customFullText" 
 				style="margin: 1rem 0 0 0;">{{ post.customFullText }}</p>
 		</div>
-		<div v-if="!isShowFullText" class="content abstract" :class="{'md-content': contentType === 'md'}">
+		<div v-if="!isShowFullText" class="content abstract" 
+			:class="{'md-content': contentType === 'md'}"
+			 @click="showPostDetail">
 			<v-md-preview ref="contentMd" v-if="contentType === 'md'" :text="postContent"/>
 			<ellipsis v-if="contentType === 'normal' || contentType === 'amOps'" :content="postContent" :rows="5"/>
 		</div>
