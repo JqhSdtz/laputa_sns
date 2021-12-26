@@ -73,6 +73,9 @@ export default {
 	inject: {
 		lptContainer: {
 			type: String
+		},
+		prompts: {
+			type: Object
 		}
 	},
 	data() {
@@ -227,20 +230,20 @@ export default {
 				this.$nextTick(() => this.parseQueryParam());
 			} else if (this.$route.fullPath !== this.preHref) {
 				// 当前有内容，并且参数有变化
-				Dialog.confirm({
+				this.prompts.confirm({
 					title: '是否清空',
-					message: '当前有未提交内容，是否清空内容？'
-				}).then(() => {
-					this.preHref = this.$route.fullPath;
-					this.form.title = '';
-					this.form.content = '';
-					this.form.abstract = '';
-					this.fileList = [];
-					this.form.categoryId = '';
-					this.selectedCategoryPathText = '';
-					this.selectedCategory = lpt.categoryServ.getDefaultCategory(-1);
-					this.parseQueryParam();
-				}).catch(() => {
+					message: '当前有未提交内容，是否清空内容？',
+					onConfirm: () => {
+						this.preHref = this.$route.fullPath;
+						this.form.title = '';
+						this.form.content = '';
+						this.form.abstract = '';
+						this.fileList = [];
+						this.form.categoryId = '';
+						this.selectedCategoryPathText = '';
+						this.selectedCategory = lpt.categoryServ.getDefaultCategory(-1);
+						this.parseQueryParam();
+					}
 				});
 			}
 		},

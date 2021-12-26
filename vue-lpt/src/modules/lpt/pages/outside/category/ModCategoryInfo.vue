@@ -64,6 +64,9 @@ export default {
 	inject: {
 		lptContainer: {
 			type: String
+		},
+		prompts: {
+			type: Object
 		}
 	},
 	props: {
@@ -181,7 +184,7 @@ export default {
 		saveCategoryInfo() {
 			// 目录设置置顶贴需要输入理由
 			this.$refs.form.validate().then(() => {
-				const prompt = global.methods.getPrompt(this.lptContainer);
+				const prompt = this.prompts.plainPrompt;
 				prompt({
 					onConfirm: (value) => {
 						const isCreate = this.opType === 'create';

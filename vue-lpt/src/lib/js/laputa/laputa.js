@@ -245,7 +245,7 @@ function _initLaputa(option) {
             return lpt.imgBaseUrl + category.cover_img + '!cat.standard';
         }
         lpt.getCategoryIconUrl = function (category) {
-            if (!category.icon_img)
+            if (!category?.icon_img)
                 return lpt.baseStaticUrl + '/img/def_cat.svg';
             return lpt.imgBaseUrl + category.icon_img + '!cat.small/clip/75x75a0a0/gravity/center';
         }

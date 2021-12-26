@@ -1,20 +1,23 @@
 <template>
 	<div style="width: 100%; padding-top: 0.5rem; background-color: white">
 		<div class="bottom-bar">
-			<span class="icon-col" v-check-sign="{click: openForwardPanel}">
+			<span class="icon-col" style="width: 31%" v-check-sign="{click: openForwardPanel}">
 				<share-alt-outlined class="icon"/>
 				<span class="icon-text">转发</span>
 			</span>
-			<span class="icon-col" v-check-sign="{click: openCommentPanel}">
+			<span class="icon-col" style="width: 31%" v-check-sign="{click: openCommentPanel}">
 				<comment-outlined class="icon"/>
 				<span class="icon-text">评论</span>
 			</span>
-			<span class="icon-col" v-check-sign="{click: changeLike}">
+			<span class="icon-col" style="width: 31%" v-check-sign="{click: changeLike}">
 				<span>
 					<like-filled v-if="post.liked_by_viewer" class="icon" style="color: red"/>
 					<like-outlined v-else class="icon"/>
 				</span>
 				<span class="icon-text">点赞</span>
+			</span>
+			<span class="icon-col" style="width: 7%">
+				<post-actions :post-id="post.id" placement="top-end"/>
 			</span>
 		</div>
 	</div>
@@ -22,6 +25,7 @@
 
 <script>
 import {CommentOutlined, LikeFilled, LikeOutlined, ShareAltOutlined} from '@ant-design/icons-vue';
+import PostActions from '@/components/post/item/parts/PostActions';
 import {Toast} from 'vant';
 import lpt from '@/lib/js/laputa/laputa';
 import global from '@/lib/js/global';
@@ -40,7 +44,8 @@ export default {
 		LikeOutlined,
 		LikeFilled,
 		CommentOutlined,
-		ShareAltOutlined
+		ShareAltOutlined,
+		PostActions
 	},
 	data() {
 		return {
@@ -105,7 +110,6 @@ export default {
 
 .icon-col {
 	display: inline-block;
-	width: 33.33%;
 	text-align: center;
 }
 

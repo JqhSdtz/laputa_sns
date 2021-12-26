@@ -13,18 +13,6 @@
 		<van-cell v-if="category.rights.update_parent" class="cell" title="迁移父目录" is-link @click="changeParent"/>
 		<van-cell v-if="category.rights.create" class="cell" title="创建子目录" is-link @click="showCreatePage"/>
 		<van-cell v-if="category.rights.delete" class="cell" title="删除目录" is-link @click="deleteCategory"/>
-		<template v-if="hasMounted">
-			<prompt-dialog ref="userPrompt" :teleport="teleport">
-				<template v-if="showSelectedUser" v-slot:tip>
-					<user-item :show-id="true" :user="curSelectedUser"/>
-				</template>
-			</prompt-dialog>
-			<prompt-dialog ref="categoryPrompt" :teleport="teleport">
-				<template v-if="showSelectedCategory" v-slot:tip>
-					<category-grid-item :category-id="curSelectedCategory.id"/>
-				</template>
-			</prompt-dialog>
-		</template>
 	</div>
 </template>
 
@@ -32,24 +20,19 @@
 import global from '@/lib/js/global';
 import lpt from '@/lib/js/laputa/laputa';
 import {Toast} from "vant";
-import PromptDialog from '@/components/global/PromptDialog';
-import UserItem from '@/components/user/item/UserItem';
-import CategoryGridItem from "@/components/category/item/CategoryGridItem";
 
 export default {
 	name: 'CategorySetting',
-	components: {
-		CategoryGridItem,
-		UserItem,
-		PromptDialog
-	},
 	props: {
 		categoryId: String
 	},
 	inject: {
 		lptContainer: {
 			type: String
-		}
+		},
+		prompts: {
+            type: Object
+        }
 	},
 	data() {
 		const category = global.states.categoryManager.get({
@@ -60,12 +43,6 @@ export default {
 		});
 		return {
 			me: global.states.curOperator,
-			showSelectedUser: false,
-			showSelectedCategory: false,
-			curSelectedCategory: lpt.categoryServ.getDefaultCategory(-1),
-			curSelectedUser: lpt.userServ.getDefaultUser(-1),
-			hasMounted: false,
-			teleport: this.lptContainer === 'blogDrawer' ? '#blog-drawer .ant-drawer-content-wrapper' : undefined,
 			category
 		}
 	},
@@ -82,13 +59,10 @@ export default {
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 	},
-	mounted() {
-		this.hasMounted = true;
-	},
 	methods: {
 		changeDispSeq() {
 			// 修改排序号是父目录权限，能修改该目录的排序号，必然也能修改同级其他目录的排序号
-			const prompt = global.methods.getPrompt(this.lptContainer);
+			const prompt = this.prompts.plainPrompt;
 			prompt({
 				title: '当前目录排序号',
 				focusTitle: '请输入0~99999的数字',
@@ -127,67 +101,45 @@ export default {
 			});
 		},
 		setAdmin() {
-			const prompt = this.$refs.userPrompt.prompt;
-			prompt({
-				title: '输入目标用户的用户名',
-				placeholder: ' ',
-				onValidate: (value) => {
-					return lpt.userServ.getByName({
-						consumer: this.lptConsumer,
-						throwError: true,
-						param: {
-							userName: value
-						},
-						success: (result) => {
-							this.curSelectedUser = result.object;
+			this.prompts.userPrompt((user, plainPrompt) => {
+				return {
+					title: '设置管理等级',
+					placeholder: '设置该用户管理等级（不能大于自身父目录管理等级）',
+					onValidate: (value) => {
+						const intValue = parseInt(value);
+						if (isNaN((intValue))) {
+							return '请输入数字';
+						} else if (intValue > this.category.rights.parent_level) {
+							return '设置管理等级不能高于自身父目录管理等级';
 						}
-					}).catch(() => {
-						return Promise.reject(`用户"${value}"不存在`);
-					});
-				},
-				onConfirm: () => {
-					this.showSelectedUser = true;
-					return prompt({
-						title: '设置管理等级',
-						placeholder: '设置该用户管理等级（不能大于自身父目录管理等级）',
-						onValidate: (value) => {
-							const intValue = parseInt(value);
-							if (isNaN((intValue))) {
-								return '请输入数字';
-							} else if (intValue > this.category.rights.parent_level) {
-								return '设置管理等级不能高于自身父目录管理等级';
+						return true;
+					},
+					onConfirm: (value) => {
+						return plainPrompt({
+							onConfirm: (opComment) => {
+								lpt.permissionServ.setAdmin({
+									consumer: this.lptConsumer,
+									data: {
+										category_id: this.category.id,
+										user_id: user.id,
+										level: value,
+										op_comment: opComment
+									},
+									success: () => {
+										Toast.success('添加管理员成功');
+									},
+									fail(result) {
+										Toast.fail(result.message);
+									}
+								});
 							}
-							return true;
-						},
-						onFinish: () => this.$nextTick(() => this.showSelectedUser = false),
-						onConfirm: (value) => {
-							return prompt({
-								onFinish: () => this.$nextTick(() => this.showSelectedUser = false),
-								onConfirm: (opComment) => {
-									lpt.permissionServ.setAdmin({
-										consumer: this.lptConsumer,
-										data: {
-											category_id: this.category.id,
-											user_id: this.curSelectedUser.id,
-											level: value,
-											op_comment: opComment
-										},
-										success: () => {
-											Toast.success('添加管理员成功');
-										},
-										fail(result) {
-											Toast.fail(result.message);
-										}
-									});
-								}
-							});
-						}
-					});
+						});
+					}
 				}
 			});
 		},
 		setAllowPostLevel() {
-			const prompt = global.methods.getPrompt(this.lptContainer);
+			const prompt = this.prompts.plainPrompt;
 			prompt({
 				title: '当前允许发帖管理等级',
 				focusTitle: '请输入0~99的数字',
@@ -231,99 +183,60 @@ export default {
 			});
 		},
 		changeParent() {
-			const prompt = this.$refs.categoryPrompt.prompt;
-			prompt({
-				title: '输入目标目录的ID',
-				placeholder: ' ',
-				onValidate: (value) => {
-					return global.states.categoryManager.get({
-						itemId: value,
-						getPromise: true
-					}).then((category) => {
-						this.curSelectedCategory = category;
-					}).catch(() => {
-						return Promise.reject(`ID为"${value}"的目录不存在`);
-					});
-				},
-				onConfirm: (value) => {
-					this.showSelectedCategory = true;
-					return prompt({
-						onFinish: () => this.$nextTick(() => this.showSelectedCategory = false),
-						onConfirm: (opComment) => {
-							lpt.categoryServ.setParent({
-								consumer: this.lptConsumer,
-								data: {
-									id: this.category.id,
-									parent_id: value,
-									op_comment: opComment
-								},
-								success: () => {
-									Toast.success('迁移父目录成功');
-								},
-								fail(result) {
-									Toast.fail(result.message);
-								}
-							});
-						}
-					});
+			this.prompts.categoryPrompt(category => {
+				return {
+					onConfirm: (opComment) => {
+						lpt.categoryServ.setParent({
+							consumer: this.lptConsumer,
+							data: {
+								id: this.category.id,
+								parent_id: category.id,
+								op_comment: opComment
+							},
+							success: () => {
+								Toast.success('迁移父目录成功');
+							},
+							fail(result) {
+								Toast.fail(result.message);
+							}
+						});
+					}
 				}
 			});
 		},
 		setTalkBan() {
-			const prompt = this.$refs.userPrompt.prompt;
-			prompt({
-				title: '输入目标用户的用户名',
-				placeholder: ' ',
-				onValidate: (value) => {
-					return lpt.userServ.getByName({
-						consumer: this.lptConsumer,
-						throwError: true,
-						param: {
-							userName: value
-						},
-						success: (result) => {
-							this.curSelectedUser = result.object;
-						}
-					}).catch(() => {
-						return Promise.reject(`用户"${value}"不存在`);
-					});
-				},
-				onConfirm: () => {
-					this.showSelectedUser = true;
-					return prompt({
-						title: '设置禁言截止时间',
-						inputType: 'datePicker',
-						value: new Date(),
-						tipMessage: '选择当前时间即取消禁言',
-						onValidate: () => true,
-						onFinish: () => this.$nextTick(() => this.showSelectedUser = false),
-						onConfirm: (value) => {
-							return prompt({
-								onFinish: () => this.$nextTick(() => this.showSelectedUser = false),
-								onConfirm: (opComment) => {
-									lpt.userServ.setTalkBan({
-										consumer: this.lptConsumer,
-										data: {
-											id: this.curSelectedUser.id,
-											talk_ban_to: value,
-											op_comment: opComment
-										},
-										success: () => {
-											Toast.success('设置禁言成功');
-										},
-										fail(result) {
-											Toast.fail(result.message);
-										}
-									});
-								}
-							});
-						}
-					});
+			this.prompts.userPrompt((user, plainPrompt) => {
+				return {
+					title: '设置禁言截止时间',
+					inputType: 'datePicker',
+					value: new Date(),
+					tipMessage: '选择当前时间即取消禁言',
+					onValidate: () => true,
+					onConfirm: (value) => {
+						return plainPrompt({
+							onConfirm: (opComment) => {
+								lpt.userServ.setTalkBan({
+									consumer: this.lptConsumer,
+									data: {
+										id: user.id,
+										talk_ban_to: value,
+										op_comment: opComment
+									},
+									success: () => {
+										Toast.success('设置禁言成功');
+									},
+									fail(result) {
+										Toast.fail(result.message);
+									}
+								});
+							}
+						});
+					}
 				}
 			});
 		},
 		deleteCategory() {
-			const prompt = global.methods.getPrompt(this.lptContainer);
+			const prompt = this.prompts.plainPrompt;
 			prompt({
 				onConfirm: (opComment) => {
 					lpt.categoryServ.delete({

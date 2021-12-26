@@ -82,6 +82,9 @@ export default {
 	inject: {
 		lptContainer: {
 			type: String
+		},
+		prompts: {
+			type: Object
 		}
 	},
 	created() {
@@ -144,26 +147,26 @@ export default {
 			this.$router.push({path: '/sign_in'});
 		},
 		signOut() {
-			Dialog.confirm({
+			this.prompts.confirm({
+				title: '确认',
 				message: '确认退出登录？',
-				closeOnClickOverlay: true
-			}).then(() => {
-				lpt.operatorServ.signOut({
-					consumer: this.lptConsumer,
-					success() {
-						global.events.emit('signOut');
-						Toast.success('退出登录成功');
-					},
-					fail(result) {
-						Toast.fail(result.message);
-					}
-				}).catch(() => {
-				});
-			}).catch(() => {
+				onConfirm: () => {
+					lpt.operatorServ.signOut({
+						consumer: this.lptConsumer,
+						success() {
+							global.events.emit('signOut');
+							Toast.success('退出登录成功');
+						},
+						fail(result) {
+							Toast.fail(result.message);
+						}
+					}).catch(() => {
+					});
+				}
 			});
 		},
 		changePassword() {
-			const prompt = global.methods.getPrompt(this.lptContainer);
+			const prompt = this.prompts.plainPrompt;
 			prompt({
 				title: '修改密码',
 				focusTitle: '请输入密码',
@@ -247,7 +250,7 @@ export default {
 			window.location.href = url;
 		},
 		correctData() {
-			const prompt = global.methods.getPrompt(this.lptContainer);
+			const prompt = this.prompts.plainPrompt;
 			prompt({
 				title: '输入校正类型',
 				placeholder: '',
@@ -268,35 +271,35 @@ export default {
 			});
 		},
 		flushData() {
-			Dialog.confirm({
+			this.prompts.confirm({
 				title: '确认',
-				message: '是否刷新所有缓存数据到数据库？'
-			}).then(() => {
-				lpt.correctServ.flush({
-					success: (result) => {
-						Toast.success(result);
-					},
-					error: (error) => {
-						console.error(error);
-					}
-				});
-			}).catch(() => {
+				message: '是否刷新所有缓存数据到数据库？',
+				onConfirm: () => {
+					lpt.correctServ.flush({
+						success: (result) => {
+							Toast.success(result);
+						},
+						error: (error) => {
+							console.error(error);
+						}
+					});
+				}
 			});
 		},
 		reloadCategory() {
-			Dialog.confirm({
+			this.prompts.confirm({
 				title: '确认',
-				message: '是否从数据库中重载所有目录？'
-			}).then(() => {
-				lpt.categoryServ.reload({
-					success: () => {
-						Toast.success('重载成功');
-					},
-					fail: () => {
-						Toast.fail('重载失败');
-					}
-				});
-			}).catch(() => {
+				message: '是否从数据库中重载所有目录？',
+				onConfirm: () => {
+					lpt.categoryServ.reload({
+						success: () => {
+							Toast.success('重载成功');
+						},
+						fail: () => {
+							Toast.fail('重载失败');
+						}
+					});
+				}
 			});
 		}
 	}

@@ -34,6 +34,9 @@ export default {
 	inject: {
 		lptContainer: {
 			type: String
+		},
+		prompts: {
+			type: Object
 		}
 	},
 	components: {
@@ -105,7 +108,7 @@ export default {
 			});
 		},
 		updateAdmin(permObj) {
-			const prompt = global.methods.getPrompt(this.lptContainer);
+			const prompt = this.prompts.plainPrompt;
 			prompt({
 				title: '设置管理等级',
 				placeholder: '设置该用户管理等级（不能大于自身父目录管理等级）',
@@ -148,7 +151,7 @@ export default {
 			});
 		},
 		deleteAdmin(permObj) {
-			const prompt = global.methods.getPrompt(this.lptContainer);
+			const prompt = this.prompts.plainPrompt;
 			prompt({
 				onConfirm: (opComment) => {
 					lpt.permissionServ.delAdmin({

@@ -63,6 +63,11 @@ export default {
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 	},
+	inject: {
+		prompts: {
+			type: Object
+		}
+	},
 	data() {
 		const ref = this;
 		return {
@@ -146,53 +151,53 @@ export default {
 			this.$refs.form.validate().then(() => {
 				const ref = this;
 				return new Promise((resolve) => {
-					Dialog.confirm({
+					this.prompts.confirm({
 						title: '将执行工作量证明',
-						message: '为避免直接注册用户过多，注册时采用工作量证明的方式，简单来说，需要您等待浏览器几分钟到十几分钟的时间'
-					}).then(() => {
-						this.isWorkProofing = true;
-						setTimeout(() => {
-							const name64 = Base64.stringify(UTF8.parse(ref.form.username));
-							const extra64 = Base64.stringify(UTF8.parse(ref.form.extra));
-							const nameMd5 = md5(name64).toString();
-							let calRes, rand, count = 0;
-							const countLimit = 10000000000;
-							const checkHead = () => calRes.substring(0, 6) === '000000';
-							console.log('开始时间:' + new Date());
-							do {
-								rand = (++count).toString().padStart(10, '0');
-								calRes = md5(nameMd5 + extra64 + rand).toString();
-							} while (!checkHead() && count < countLimit);
-							this.isWorkProofing = false;
-							if (!checkHead()) {
-								Toast.fail('工作量证明失败，请修改辅助文字后再次尝试');
-							}
-							console.log('名称MD5:' + nameMd5);
-							console.log('辅助文字Base64:' + extra64);
-							console.log('随机数:' + rand);
-							console.log('计算结果:' + calRes);
-							console.log('结束时间:' + new Date());
-							resolve(lpt.operatorServ.signUp({
-								consumer: ref.lptConsumer,
-								param: {
-									extra64,
-									rand,
-									calRes
-								},
-								data: {
-									nick_name: ref.form.username,
-									password: md5(ref.form.password).toString()
-								},
-								success() {
-									global.events.emit('signUp');
-									ref.backToHome();
-								},
-								fail(result) {
-									Toast.fail(result.message);
+						message: '为避免直接注册用户过多，注册时采用工作量证明的方式，简单来说，需要您等待浏览器几分钟到十几分钟的时间',
+						onConfirm: () => {
+							this.isWorkProofing = true;
+							setTimeout(() => {
+								const name64 = Base64.stringify(UTF8.parse(ref.form.username));
+								const extra64 = Base64.stringify(UTF8.parse(ref.form.extra));
+								const nameMd5 = md5(name64).toString();
+								let calRes, rand, count = 0;
+								const countLimit = 10000000000;
+								const checkHead = () => calRes.substring(0, 6) === '000000';
+								console.log('开始时间:' + new Date());
+								do {
+									rand = (++count).toString().padStart(10, '0');
+									calRes = md5(nameMd5 + extra64 + rand).toString();
+								} while (!checkHead() && count < countLimit);
+								this.isWorkProofing = false;
+								if (!checkHead()) {
+									Toast.fail('工作量证明失败，请修改辅助文字后再次尝试');
 								}
-							}));
-						}, 100);
-					}).catch(() => {
+								console.log('名称MD5:' + nameMd5);
+								console.log('辅助文字Base64:' + extra64);
+								console.log('随机数:' + rand);
+								console.log('计算结果:' + calRes);
+								console.log('结束时间:' + new Date());
+								resolve(lpt.operatorServ.signUp({
+									consumer: ref.lptConsumer,
+									param: {
+										extra64,
+										rand,
+										calRes
+									},
+									data: {
+										nick_name: ref.form.username,
+										password: md5(ref.form.password).toString()
+									},
+									success() {
+										global.events.emit('signUp');
+										ref.backToHome();
+									},
+									fail(result) {
+										Toast.fail(result.message);
+									}
+								}));
+							}, 100);
+						}
 					});
 				});
 			})

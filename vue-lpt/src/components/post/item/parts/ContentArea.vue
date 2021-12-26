@@ -32,14 +32,6 @@
 				<image-box :images="imageBoxList" :thumbStyle="{height: '50px', width: '50px'}"/>
 			</div>
 		</div>
-		<a-row tyle="flex" justify="end">
-			<a-col pull="1">
-				<p v-if="post.editable" class="editable-label">可被修改</p>
-			</a-col>
-			<a-col>
-				<category-path v-if="post.type_str === 'public'" :path-list="post.category_path" class="category-path"/>
-			</a-col>
-		</a-row>
 		<slot/>
 	</div>
 </template>
@@ -48,7 +40,6 @@
 import lpt from '@/lib/js/laputa/laputa';
 import global from '@/lib/js/global';
 import {translateMd} from '@/lib/js/markdown/md-translator';
-import CategoryPath from '@/components/category/CategoryPath';
 import {ImagePreview} from 'vant';
 import AdminOpsRecord from '@/components/post/item/parts/AdminOpsRecord';
 import GalleryItemContent from '@/components/post/item/parts/GalleryItemContent';
@@ -66,7 +57,6 @@ export default {
 	components: {
 		AdminOpsRecord,
 		GalleryItemContent,
-		CategoryPath,
 		ImageBox,
 		Ellipsis
 	},
@@ -356,18 +346,6 @@ export default {
 	font-weight: bold;
 	word-wrap: break-word;
 	word-break: normal;
-}
-
-.editable-label {
-	color: #6c757d;
-	margin-left: 1rem;
-	font-size: 0.85rem;
-}
-
-.category-path {
-	color: #6c757d;
-	margin-right: 1rem;
-	font-size: 0.85rem;
 }
 
 .full-text-btn {

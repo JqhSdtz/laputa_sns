@@ -2,19 +2,23 @@
 	<van-dialog class="prompt-dialog" v-model:show="showDialog" :title="curTitle" :before-close="beforeClose" 
 		:teleport="teleport" show-cancel-button>
 		<slot>
-			<p v-if="curTipMessage !== ''" style="text-align: center">{{ curTipMessage }}</p>
+			<p v-if="curTipMessage !== ''" 
+				style="text-align: center; margin-top: 0.5rem"
+				:style="{marginTop: curInputType === 'none' ? '0.5rem' : '0'}">
+				{{ curTipMessage }}
+			</p>
 			<slot name="tip"/>
 			<a-form-item ref="formItemRef" v-if="curInputType === 'textArea'" style="width: 90%;margin-left: 5%;">
 				<a-textarea v-model:value="value" :placeholder="curPlaceHolder"
-				            @change="onInputChange" @focus="onInputFocus" @blur="onInputBlur" auto-size id="text-area"/>
+				    @change="onInputChange" @focus="onInputFocus" @blur="onInputBlur" auto-size id="text-area"/>
 			</a-form-item>
-			<a-form-item ref="formItemRef" v-if="curInputType === 'password'" style="width: 90%;margin-left: 5%;">
+			<a-form-item ref="formItemRef" v-if="curInputType === 'password'" style="width: 90%;margin-left: 5%;margin-top: 1rem;">
 				<a-input-password v-model:value="value" :placeholder="curPlaceHolder"
-				            @change="onInputChange" @focus="onInputFocus" @blur="onInputBlur" auto-size id="password"/>
+				    @change="onInputChange" @focus="onInputFocus" @blur="onInputBlur" auto-size id="password"/>
 			</a-form-item>
 			<a-form-item ref="formItemRef" v-if="curInputType === 'datePicker'" style="width: 90%;margin-left: 5%;">
 				<van-datetime-picker v-model="value" :min-date="minDate" :show-toolbar="false"
-				                     @change="onInputChange" @focus="onInputFocus" @blur="onInputBlur" id="date-picker"/>
+				    @change="onInputChange" @focus="onInputFocus" @blur="onInputBlur" id="date-picker"/>
 			</a-form-item>
 		</slot>
 	</van-dialog>

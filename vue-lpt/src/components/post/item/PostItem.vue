@@ -6,6 +6,14 @@
 				<post-item :show-bottom="false" :post-id="post.ori_post.id"/>
 			</div>
 		</content-area>
+		<a-row tyle="flex" justify="end">
+			<a-col pull="1">
+				<p v-if="post.editable" class="editable-label">可被修改</p>
+			</a-col>
+			<a-col>
+				<category-path v-if="post.type_str === 'public'" :path-list="post.category_path" class="category-path"/>
+			</a-col>
+		</a-row>
 		<bottom-bar v-if="showBottom" class="bottom-bar" :post-id="post.id" :post-of="postOf" :show-actions="true"/>
 	</div>
 </template>
@@ -14,6 +22,7 @@
 import TopBar from './parts/TopBar.vue';
 import ContentArea from './parts/ContentArea';
 import BottomBar from './parts/BottomBar';
+import CategoryPath from '@/components/category/CategoryPath';
 import global from '@/lib/js/global';
 
 export default {
@@ -23,6 +32,7 @@ export default {
 			type: Boolean,
 			default: true
 		},
+		showActionsOnContentArea: Boolean,
 		showFullText: Boolean,
 		postId: Number,
 		postOf: String,
@@ -38,7 +48,8 @@ export default {
 	components: {
 		TopBar,
 		ContentArea,
-		BottomBar
+		BottomBar,
+		CategoryPath
 	},
 }
 </script>
@@ -55,5 +66,17 @@ export default {
 
 .bottom-bar {
 	z-index: 2;
+}
+
+.editable-label {
+	color: #6c757d;
+	margin-left: 1rem;
+	font-size: 0.85rem;
+}
+
+.category-path {
+	color: #6c757d;
+	margin-right: 1rem;
+	font-size: 0.85rem;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
 	<a-config-provider :locale="locale" :getPopupContainer="getPopupContainer">
-		<main-container>
+		<base-container name="blogMain">
 			<div id="main-view" style="position: absolute; height: 98%; top: 2%; width: 80%; left: 10%">
 				<router-view ref="mainView" v-slot="{ Component }">
 					<keep-alive :exclude="noCacheList">
@@ -8,30 +8,28 @@
 					</keep-alive>
 				</router-view>
 			</div>
-		</main-container>
+		</base-container>
 		<div style="position: absolute; top: 100%; width: 100%; padding: 1rem; background-color: white">
 			<p style="text-align: center; font-size: 0.85rem">鲁ICP备19009966号</p>
 			<p style="text-align: center; font-size: 0.85rem">jqhsdtz@foxmail.com</p>
 		</div>
 		<loading-area id="loading-area" :size="showDrawer ? 'default' : 'large'"></loading-area>
-		<drawer-container>
-			<a-drawer id="blog-drawer" :visible="showDrawer" placement="left" :closable="false"
-			          @close="showDrawer = false" :width="drawerWidth">
-				<router-view v-slot="{ Component }" name="leftDrawer">
-					<keep-alive :exclude="noCacheList">
+		<a-drawer id="blog-drawer" :visible="showDrawer" placement="left" :closable="false"
+					@close="showDrawer = false" :width="drawerWidth">
+			<router-view v-slot="{ Component }" name="leftDrawer">
+				<keep-alive :exclude="noCacheList">
+					<base-container name="blogDrawer">
 						<component :is="Component"/>
-					</keep-alive>
-				</router-view>
-				<prompt-dialog v-if="drawerMounted" ref="drawerPrompt" teleport="#blog-drawer .ant-drawer-content-wrapper"/>
-			</a-drawer>
-		</drawer-container>
+					</base-container>
+				</keep-alive>
+			</router-view>
+		</a-drawer>
 		<right-outlined id="drawer-switcher" class="with-transition" ref="drawerSwitcher"
 		                :rotate="drawerWidth === '75%' && showDrawer ? 180 : 0"
 		                @click="onDrawerSwitcherClick" @mouseenter="onDrawerSwitcherMouseEnter" @mouseleave="onDrawerSwitcherMouseLeave"/>
 		<!-- <float-menu/> -->
 		<fixed-menu/>
 		<tab-strip/>
-		<prompt-dialog ref="prompt"/>
 	</a-config-provider>
 </template>
 
@@ -44,8 +42,7 @@ import {
 } from '@ant-design/icons-vue';
 import FixedMenu from '@/modules/blog/components/menu/fixed/FixedMenu';
 import TabStrip from '@/modules/blog/components/tabs/TabStrip';
-import MainContainer from '@/modules/blog/components/container/MainContainer';
-import DrawerContainer from '@/modules/blog/components/container/DrawerContainer';
+import BaseContainer from '@/components/global/container/BaseContainer';
 import LoadingArea from '@/components/global/LoadingArea';
 import PromptDialog from '@/components/global/PromptDialog';
 import {noCacheList} from '@/modules/lpt/router';
@@ -62,8 +59,7 @@ export default {
 		TabStrip,
 		LoadingArea,
 		PromptDialog,
-		MainContainer,
-		DrawerContainer,
+		BaseContainer,
 		RightOutlined
 	},
 	provide: {
@@ -74,7 +70,6 @@ export default {
 			drawerWidth: '33%',
 			backgroundImage: description.backgroundImage,
 			showDrawer: toRef(global.states.blog, 'showDrawer'),
-			drawerMounted: false,
 			locale: zhCN,
 			noCacheList
 		};
@@ -91,7 +86,6 @@ export default {
 					drawerSwitcher.style.left = this.drawerWidth;
 					// setTimeout(() => drawerSwitcher.style.left = this.drawerWidth, 300);
 				}
-				this.drawerMounted = true;
 			});
 		}
 	},
@@ -142,14 +136,6 @@ export default {
 			});
 		}
 		document.body.style.backgroundImage = this.backgroundImage;
-		global.methods.prompt = this.$refs.prompt.prompt;
-		global.methods.getPrompt = (container) => {
-			if (container === 'blogDrawer') {
-				return this.$refs.drawerPrompt.prompt;
-			} else {
-				return this.$refs.prompt.prompt;
-			}
-		};
 		global.methods.setDrawerWidth = this.setDrawerWidth;
 		window.addEventListener('resize', () => {
 			this.onResize();

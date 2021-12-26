@@ -2,24 +2,20 @@
 	<div class="post-list">
 		<van-empty v-if="hasEverLoad && isEmpty" description="没有帖子"/>
 		<van-pull-refresh ref="pullArea" v-show="hasEverLoad && !isEmpty" v-model="isRefreshing" @refresh="onRefresh"
-		                :disabled="disablePullRefresh" success-text="刷新成功">
+		    :disabled="disablePullRefresh" success-text="刷新成功">
 			<van-list ref="list" class="post-list" @load="loadMore" :offset="listOffset"
-			          :fill-parent="$el" v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
+			    :fill-parent="$el" v-model:loading="isBusy" :finished="finished" finished-text="没有更多了">
 				<slot :post-list="list" :top-post-id="topPostId" :post-of="postOf">
-					<post-item class="post-item" v-for="(post, index) in list" :post-id="post.id" :post-of="postOf"
-					           :key="post.id" :is-top-post="post.id === topPostId"
-							   :style="itemStyle && itemStyle(post, index)"
-					           :class="{post, 'last-post': post.last}"/>
+					<post-item class="post-item" v-for="(post, index) in list" 
+						:class="{post, 'last-post': post.last}"
+						:style="itemStyle && itemStyle(post, index)"
+						:post-id="post.id" 
+						:post-of="postOf"
+					    :key="post.id" 
+						:is-top-post="post.id === topPostId"/>
 				</slot>
 			</van-list>
 		</van-pull-refresh>
-		<template v-if="hasMounted">
-			<prompt-dialog ref="categoryPrompt" :teleport="teleport">
-				<template v-if="showSelectedCategory" v-slot:tip>
-					<category-grid-item :category-id="curSelectedCategory.id"/>
-				</template>
-			</prompt-dialog>
-		</template>
 	</div>
 </template>
 
@@ -29,8 +25,6 @@ import global from '@/lib/js/global';
 import {toRef} from "vue";
 import {Toast} from 'vant';
 import PostItem from '../item/PostItem';
-import PromptDialog from '@/components/global/PromptDialog';
-import CategoryGridItem from "@/components/category/item/CategoryGridItem";
 import {createEventBus} from "@/lib/js/global/global-events";
 
 export default {
@@ -73,9 +67,7 @@ export default {
 		}
 	},
 	components: {
-		PostItem,
-		PromptDialog,
-		CategoryGridItem
+		PostItem
 	},
 	data() {
 		this.querior = lpt.createQuerior();
@@ -87,17 +79,13 @@ export default {
 		return {
 			// 如果提前指定了postList，就直接设置为已经加载完成
 			finished: hasPostList ? true : toRef(this.querior, 'hasReachedBottom'),
-			showSelectedCategory: false,
-			curSelectedCategory: lpt.categoryServ.getDefaultCategory(-1),
 			hasEverLoad: hasPostList,
 			disablePullRefresh: hasPostList,
 			isEmpty: false,
 			list: this.postList || [],
 			listOffset: global.vars.style.tabBarHeight + 10,
 			isRefreshing: false,
-			isBusy: false,
-			hasMounted: false,
-			teleport: this.lptContainer === 'blogDrawer' ? '#blog-drawer .ant-drawer-content-wrapper' : undefined
+			isBusy: false
 		}
 	},
 	watch: {
@@ -111,9 +99,6 @@ export default {
 		postList() {
 			this.list = this.postList;
 		}
-	},
-	mounted() {
-		this.hasMounted = true;
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
@@ -163,12 +148,6 @@ export default {
 		if (!this.finished) {
 			this.loadMore(false);
 		}
-		global.events.on(['signIn', 'signOut', 'forceRefresh', 'addFollow'], (obj, name) => {
-			if (name === 'forceRefresh')
-				this.isRefreshing = true;
-			if (name === 'addFollow' && this.postOf !== 'news') return;
-			this.onRefresh();
-		});
 		this.postListEvents.on(['top', 'unTop'], (param, name) => {
 			const isCancel = name === 'unTop';
 			const post = param.post;
@@ -219,80 +198,38 @@ export default {
 				}
 			});
 		});
-		this.postListEvents.on('delete', (param) => {
-			const post = param.post;
-			lpt.contentServ.delete({
-				consumer: this.lptConsumer,
-				param: {
-					type: lpt.contentType.post
-				},
-				data: {
-					id: post.id,
-					op_comment: param.comment
-				},
-				success: () => {
-					Toast.success('删除成功');
-					this.list.splice(this.list.findIndex(_post => _post.id === post.id), 1);
-					this.increasePostCntOfCategory(this.categoryId, -1, true);
-				},
-				fail(result) {
-					Toast.fail(result.message);
-				}
-			});
+		global.events.on(['signIn', 'signOut', 'forceRefresh', 'addFollow'], (obj, name) => {
+			if (name === 'forceRefresh')
+				this.isRefreshing = true;
+			if (name === 'addFollow' && this.postOf !== 'news') return;
+			this.onRefresh();
 		});
-		this.postListEvents.on('updateCategory', (param) => {
-			const prompt = this.$refs.categoryPrompt.prompt;
-			prompt({
-				title: '输入目标目录的ID',
-				placeholder: ' ',
-				onValidate: (value) => {
-					return global.states.categoryManager.get({
-						itemId: value,
-						getPromise: true
-					}).then((category) => {
-						this.curSelectedCategory = category;
-					}).catch(() => {
-						return Promise.reject(`ID为"${value}"的目录不存在`);
-					});
-				},
-				onConfirm: (value) => {
-					this.showSelectedCategory = true;
-					return prompt({
-						inputType: 'none',
-						title: '迁移目录',
-						tipMessage: '确认迁移到该目录？',
-						onFinish: () => this.$nextTick(() => this.showSelectedCategory = false),
-						onValidate: () => true,
-						onConfirm: () => {
-							lpt.postServ.setCategory({
-								consumer: this.lptConsumer,
-								data: {
-									id: param.post.id,
-									category_id: value
-								},
-								success: () => {
-									Toast.success('迁移目录成功');
-									this.list.splice(this.list.findIndex(_post => _post.id === param.post.id), 1);
-									this.increasePostCntOfCategory(this.categoryId, -1, true);
-									this.increasePostCntOfCategory(value, 1, true);
-								},
-								fail(result) {
-									Toast.fail(result.message);
-								}
-							});
-						}
-					});
-				}
-			});
-		});
-		global.events.on('createPost', (post) => {
-			if ((post.type_str === 'public' && this.postOf === 'category'
+		function belongToThisList(post) {
+			return (this.postOf === 'category' && post.type_str === 'public'
 				&& this.categoryId === post.category_id)
-				|| (post.type_str === 'private' && this.postOf === 'creator'
-				&& this.creatorId === post.creator_id)) {
+				|| (this.postOf === 'creator' && this.creatorId === post.creator_id);
+		}
+		global.events.on('createPost', (post) => {
+			if (belongToThisList(post)) {
 				this.isEmpty = false;
 				this.list.unshift(post);
 				this.increasePostCntOfCategory(this.categoryId, 1, true);
+			}
+		});
+		global.events.on('deletePost', (post) => {
+			if (belongToThisList(post)) {
+				this.list.splice(this.list.findIndex(_post => _post.id === post.id), 1);
+				if (this.list.length === 0) {
+					this.isEmpty = true;
+				}
+            	this.increasePostCntOfCategory(this.categoryId, -1, true);
+			}
+		});
+		global.events.on('updateCategory', (param) => {
+			if (belongToThisList(param.post)) {
+				this.list.splice(this.list.findIndex(_post => _post.id === param.post.id), 1);
+				this.increasePostCntOfCategory(this.categoryId, -1, true);
+				this.increasePostCntOfCategory(param.category.id, 1, true);
 			}
 		});
 	},

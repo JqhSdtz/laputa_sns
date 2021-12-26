@@ -1,12 +1,13 @@
 <template>
 	<a-config-provider :locale="locale" :getPopupContainer="getPopupContainer">
-		<router-view v-slot="{ Component }">
-			<keep-alive :exclude="noCacheList">
-				<component :is="Component"/>
-			</keep-alive>
-		</router-view>
-		<loading-area id="loading-area"></loading-area>
-		<prompt-dialog ref="prompt"/>
+		<base-container name="lptMain">
+			<router-view v-slot="{ Component }">
+				<keep-alive :exclude="noCacheList">
+					<component :is="Component"/>
+				</keep-alive>
+			</router-view>
+			<loading-area id="loading-area"></loading-area>
+		</base-container>
 	</a-config-provider>
 </template>
 
@@ -15,15 +16,16 @@ import zhCN from 'ant-design-vue/es/locale/zh_CN';
 import {registerCheckSignFailCallback} from '@/lib/js/laputa/laputa-vue';
 import {Modal} from 'ant-design-vue';
 import LoadingArea from '@/components/global/LoadingArea';
+import BaseContainer from '@/components/global/container/BaseContainer.vue';
 import PromptDialog from '@/components/global/PromptDialog';
 import {noCacheList} from '@/modules/lpt/router';
-import global from '@/lib/js/global';
 
 export default {
 	name: 'App',
 	components: {
 		LoadingArea,
-		PromptDialog
+		PromptDialog,
+		BaseContainer
 	},
 	provide: {
 		lptContainer: 'default'
@@ -47,12 +49,6 @@ export default {
 				}
 			});
 		});
-		global.methods.getPrompt = () => {
-			return this.$refs.prompt.prompt;
-		};
-	},
-	mounted() {
-		global.methods.prompt = this.$refs.prompt.prompt;
 	},
 	methods: {
 		getPopupContainer(el, dialogContext) {

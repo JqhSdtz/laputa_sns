@@ -58,6 +58,9 @@ export default {
 		},
 		lptContainer: {
 			type: String
+		},
+		prompts: {
+			type: String
 		}
 	},
 	components: {
@@ -140,18 +143,18 @@ export default {
 			} else if (action.id === 'delete') {
 				if (this.comment.creator.id === curUserId) {
 					// 删自己的，不需要理由
-					Dialog.confirm({
+					this.prompts.confirm({
 						title: '删评论',
-						message: '确认删除该评论？'
-					}).then(() => {
-						this.commentListEvents.emit(action.id, {
-							comment: this.comment
-						});
-					}).catch(() => {
+						message: '确认删除该评论？',
+						onConfirm: () => {
+							this.commentListEvents.emit(action.id, {
+								comment: this.comment
+							});
+						}
 					});
 				} else {
 					// 否则需要输入理由
-					const prompt = global.methods.getPrompt(this.lptContainer);
+					const prompt = this.prompts.plainPrompt;
 					prompt({
 						onConfirm(value) {
 							ref.commentListEvents.emit(action.id, {
