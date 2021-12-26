@@ -10,7 +10,7 @@
 				<div ref="categoryInfoArea" class="main-area">
 					<div style="width: 100%; background-size: cover;"
 					     :style="{backgroundImage: `linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)), url(${coverImgUrl})`,
-					     height: coverHeight + 'px'}"/>
+					     height: coverHeight}"/>
 					<div style="margin-top: -2rem">
 						<img :src="iconImgUrl" id="icon-img"/>
 						<span style="margin-left: 1rem; display: inline-block">
@@ -129,7 +129,6 @@ export default {
 			}),
 			showDrawer: this.lptContainer === 'blogDrawer' ? toRef(global.states.blog, 'showDrawer') : true,
 			mainAreaHeight: 0,
-			coverHeight: this.lptContainer === 'blogMain' ? 400 : 200,
 			isTabFixed: false,
 			curTabKey: 'postList',
 			sortType: sortType,
@@ -163,6 +162,15 @@ export default {
 		},
 		coverImgUrl() {
 			return lpt.getCategoryCoverUrl(this.category);
+		},
+		coverHeight() {
+			let height;
+			if (this.lptContainer === 'blogMain') {
+				height = global.states.style.mainHeight * 0.8;
+			} else {
+				height = global.states.style.mainHeight * 0.4;
+			}
+			return height + 'px';
 		},
 		scrollHeight() {
 			return global.states.style.mainHeight + 'px';
