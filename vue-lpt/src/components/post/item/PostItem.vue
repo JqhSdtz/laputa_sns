@@ -8,7 +8,10 @@
 		</content-area>
 		<a-row tyle="flex" justify="end">
 			<a-col pull="1">
-				<p v-if="post.editable" class="editable-label">可被修改</p>
+				<p v-if="post.editable" class="editable-label text-link"
+					@click="showEditablePrompt">
+					可被修改
+				</p>
 			</a-col>
 			<a-col>
 				<category-path v-if="post.type_str === 'public'" :path-list="post.category_path" class="category-path"/>
@@ -38,6 +41,11 @@ export default {
 		postOf: String,
 		isTopPost: Boolean
 	},
+	inject: {
+		prompts: {
+			type: Object
+		}
+	},
 	data() {
 		return {
 			post: global.states.postManager.get({
@@ -51,6 +59,14 @@ export default {
 		BottomBar,
 		CategoryPath
 	},
+	methods: {
+		showEditablePrompt() {
+			this.prompts.alert({
+				title: '提示',
+				message: '该帖可能已经过多次修改，并在将来仍可能被修改'
+			});
+		}
+	}
 }
 </script>
 
@@ -78,5 +94,13 @@ export default {
 	color: #6c757d;
 	margin-right: 1rem;
 	font-size: 0.85rem;
+}
+
+.text-link {
+	cursor: pointer;
+}
+
+.text-link:hover {
+	text-decoration: underline;
 }
 </style>

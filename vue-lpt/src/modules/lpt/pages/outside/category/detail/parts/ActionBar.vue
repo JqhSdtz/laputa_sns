@@ -39,6 +39,11 @@ export default {
 		DisconnectOutlined,
 		InfoCircleOutlined
 	},
+	inject: {
+		prompts: {
+			type: Object
+		}
+	},
 	data() {
 		const category = global.states.categoryManager.get({
 			itemId: this.categoryId
@@ -79,7 +84,7 @@ export default {
 			} else if (type === 1) {
 				message = '该目录是私有目录，这意味着该目录的内容不会在其上级目录中显示，即只能在本页面中查看。';
 			}
-			Dialog.alert({
+			this.prompts.alert({
 				title: typeStr,
 				message: message,
 			});

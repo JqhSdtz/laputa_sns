@@ -1,10 +1,10 @@
 <template>
 	<van-dialog class="prompt-dialog" v-model:show="showDialog" :title="curTitle" :before-close="beforeClose" 
-		:teleport="teleport" show-cancel-button>
+		:teleport="teleport" :show-cancel-button="showCancelButton">
 		<slot>
 			<p v-if="curTipMessage !== ''" 
 				style="text-align: center; margin-top: 0.5rem"
-				:style="{marginTop: curInputType === 'none' ? '0.5rem' : '0'}">
+				:style="{marginTop: curInputType === 'none' ? '0.5rem' : '0', ...tipMessageStyle}">
 				{{ curTipMessage }}
 			</p>
 			<slot name="tip"/>
@@ -43,6 +43,9 @@ export default {
 			type: String,
 			default: ''
 		},
+		tipMessageStyle: {
+			type: Object
+		},
 		inputType: {
 			type: String,
 			default: 'textArea'
@@ -60,6 +63,10 @@ export default {
 		errorMessage: {
 			type: String,
 			default: '输入内容长度应在5-256个字之间'
+		},
+		showCancelButton: {
+			type: Boolean,
+			default: true
 		},
 		teleport: {
 			type: String,

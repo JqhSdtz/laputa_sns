@@ -12,6 +12,10 @@
             </template>
         </prompt-dialog>
         <prompt-dialog ref="plainPrompt" :teleport="teleport"/>
+        <prompt-dialog ref="confirmPrompt" :teleport="teleport"/>
+        <prompt-dialog ref="alertPrompt" :teleport="teleport"
+            :tip-message-style="{margin: '1rem'}" 
+            :show-cancel-button="false"/>
     </template>
 </template>
 
@@ -58,11 +62,19 @@ export default {
         bindPrompt() {
             const that = this;
             this.prompts.plainPrompt = this.$refs.plainPrompt.prompt;
-            this.prompts.confirm = function(params) {
+            function paramsProcess(params) {
                 params.title = params.title || '';
                 params.inputType = 'none';
                 params.tipMessage = params.message;
-                that.prompts.plainPrompt.apply(this, arguments);
+                params.onValidate = params.onValidate || (() => true);
+            }
+            this.prompts.alert = function(params) {
+                paramsProcess(params);
+                that.$refs.alertPrompt.prompt.apply(this, arguments);
+            };
+            this.prompts.confirm = function(params) {
+                paramsProcess(params);
+                that.$refs.confirmPrompt.prompt.apply(this, arguments);
             };
             this.prompts.userPrompt = (paramsFun) => {
                 const prompt = this.$refs.userPrompt.prompt;
