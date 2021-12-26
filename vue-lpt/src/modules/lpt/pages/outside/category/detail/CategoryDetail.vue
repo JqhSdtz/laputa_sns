@@ -198,11 +198,7 @@ export default {
 			return this.clientWidth - (this.lptContainer === 'blogMain' ? 130 : 100);
 		},
 		clientWidth() {
-			const curTab = this.$refs[this.curTabKey + 'Tab'];
-			if (curTab) {
-				this.$nextTick(() => curTab.$parent.resize());
-				this.$refs.tabs.resize();
-			}
+			this.resizeTab();
 			if (this.lptContainer === 'blogDrawer') {
 				return global.states.style.drawerWidth;
 			} else if (this.lptContainer === 'blogMain') {
@@ -224,6 +220,9 @@ export default {
 	},
 	created() {
 		this.category = this.init();
+		global.events.on('showDrawer', () => {
+			this.resizeTab();
+		});
 	},
 	mounted() {
 		this.bindScrollTop({
@@ -245,6 +244,13 @@ export default {
 				pageDesc: pageDesc,
 				route: this.$route
 			});
+		},
+		resizeTab() {
+			const curTab = this.$refs[this.curTabKey + 'Tab'];
+			if (curTab) {
+				this.$nextTick(() => curTab.$parent.resize());
+				this.$refs.tabs.resize();
+			}
 		},
 		resolveIntroChange(category) {
 			if (!category.intro || !typeReg.test(category.intro)) {

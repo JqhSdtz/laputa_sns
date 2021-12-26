@@ -86,6 +86,7 @@ export default {
 					drawerSwitcher.style.left = this.drawerWidth;
 					// setTimeout(() => drawerSwitcher.style.left = this.drawerWidth, 300);
 				}
+				global.events.emit('showDrawer');
 			});
 		}
 	},

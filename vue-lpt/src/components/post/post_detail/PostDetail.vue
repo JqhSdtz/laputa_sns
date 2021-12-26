@@ -99,6 +99,9 @@ export default {
 		global.events.on('signIn', () => {
 			this.post = this.init();
 		});
+		global.events.on('showDrawer', () => {
+			this.resizeTab();
+		});
 		this.postDetailEvents.on('openCommentDetail', (param) => {
 			this.curCommentDetailId = param.id;
 			this.showCommentDetail = true;
@@ -122,14 +125,7 @@ export default {
 			}
 		},
 		clientWidth() {
-			// 巨坑，深扒van-tabs组件发现是在swipe组件中获取了一个tabs的宽度
-			// 但是如果tabs组件不占满屏幕，又没有固定的px值，则返回0
-			// tabs组件错乱
-			const curTab = this.$refs[this.curTabKey + 'Tab'];
-			if (curTab) {
-				this.$nextTick(() => curTab.$parent.resize());
-				this.$refs.tabs.resize();
-			}
+			this.resizeTab();
 			if (this.lptContainer === 'blogDrawer') {
 				return global.states.style.drawerWidth;
 			} else if (this.lptContainer === 'blogMain') {
@@ -147,6 +143,16 @@ export default {
 				pageDesc: '帖子',
 				route: this.$route
 			});
+		},
+		resizeTab() {
+			// 巨坑，深扒van-tabs组件发现是在swipe组件中获取了一个tabs的宽度
+			// 但是如果tabs组件不占满屏幕，又没有固定的px值，则返回0
+			// tabs组件错乱
+			const curTab = this.$refs[this.curTabKey + 'Tab'];
+			if (curTab) {
+				this.$nextTick(() => curTab.$parent.resize());
+				this.$refs.tabs.resize();
+			}
 		},
 		parseCommand() {
 			const query = this.$route.query;

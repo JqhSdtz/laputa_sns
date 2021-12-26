@@ -50,11 +50,7 @@ export default {
 	},
 	computed: {
 		clientWidth() {
-			const curTab = this.$refs[this.curTabKey + 'Tab'];
-			if (curTab) {
-				this.$nextTick(() => curTab.$parent.resize());
-				this.$refs.tabs.resize();
-			}
+			this.resizeTab();
 			if (global.vars.env === 'blog') {
 				return global.states.style.drawerWidth;
 			} else {
@@ -65,6 +61,9 @@ export default {
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 		this.init();
+		global.events.on('showDrawer', () => {
+			this.resizeTab();
+		});
 	},
 	activated() {
 		this.onActivated();
@@ -74,6 +73,13 @@ export default {
 			const href = this.$route.fullPath;
 			if (href !== this.preHref) {
 				this.init();
+			}
+		},
+		resizeTab() {
+			const curTab = this.$refs[this.curTabKey + 'Tab'];
+			if (curTab) {
+				this.$nextTick(() => curTab.$parent.resize());
+				this.$refs.tabs.resize();
 			}
 		},
 		init() {
