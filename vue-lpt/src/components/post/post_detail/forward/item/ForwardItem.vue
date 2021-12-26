@@ -66,7 +66,8 @@ export default {
 }
 
 .forward-item .name {
-	font-weight: bold;
+	/* font-weight超过599后，emoji会变成黑白 */
+	font-weight: 599;
 	font-size: 0.85rem;
 }
 
