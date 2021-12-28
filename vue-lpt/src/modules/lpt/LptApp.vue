@@ -27,9 +27,6 @@ export default {
 		PromptDialog,
 		BaseContainer
 	},
-	provide: {
-		lptContainer: 'default'
-	},
 	data() {
 		return {
 			locale: zhCN,

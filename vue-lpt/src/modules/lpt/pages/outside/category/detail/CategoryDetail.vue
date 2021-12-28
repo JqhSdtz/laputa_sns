@@ -8,7 +8,7 @@
 			    :style="{height: scrollHeight, position: 'relative'}" 
 				v-scroll-view>
 				<div ref="categoryInfoArea" class="main-area">
-					<div style="width: 100%; background-size: cover;"
+					<div style="width: 100%; background-size: cover; background-position-x: center;"
 					     :style="{backgroundImage: `linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1)), url(${coverImgUrl})`,
 					     height: coverHeight}"/>
 					<div style="margin-top: -2rem">

@@ -3,7 +3,7 @@
 		<div class="photo-item" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
 			<img ref="img" :src="coverUrl" @click="showPreview" 
 				:onload="onImgLoaded" :onerror="onImgLoaded" ondragstart="return false"/>
-			<image-box v-if="lptContainer !== 'default'" ref="imageBox" :images="images" :show-image-list="false"
+			<image-box v-if="lptContainer !== 'lptMain'" ref="imageBox" :images="images" :show-image-list="false"
 				:containerStyle="{width: '67%', marginLeft: '33%'}"/>
 			<bottom-bar class="bottom-bar" v-show="showBottomBar"
 				:post-id="post.id" :post-of="postOf" :show-actions="true"
@@ -77,7 +77,7 @@ export default {
 		};
 	},
 	mounted() {
-		if (this.lptContainer !== 'default') {
+		if (this.lptContainer !== 'lptMain') {
 			watch(() => this.$refs.imageBox.state.show, (curShow) => {
 				if (!curShow) {
 					global.states.blog.showDrawer = false;
@@ -120,19 +120,19 @@ export default {
 						this.hasLoadedFullText = true;
 						const fullText = result.object;
 						this.images = global.methods.parseGalleryItemFullText(this.post, fullText);
-						if (this.lptContainer === 'default') {
+						if (this.lptContainer === 'lptMain') {
 							this.post.parsedImages = this.images;
 							global.states.postManager.add(this.post);
 						}
 					}
 				});
-				if (this.lptContainer !== 'default') {
+				if (this.lptContainer !== 'lptMain') {
 					this.$refs.imageBox.preShow(promise);
 				} else {
 					this.showVantImagePreview();
 				}
 			} else {
-				if (this.lptContainer !== 'default') {
+				if (this.lptContainer !== 'lptMain') {
 					this.$refs.imageBox.show();
 				} else {
 					this.showVantImagePreview();
