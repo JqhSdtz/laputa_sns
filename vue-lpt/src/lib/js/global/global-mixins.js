@@ -54,7 +54,7 @@ const keepScrollTop = {
                 this._scrollListener = () => {
                     this.curScrollTop = this.$el.scrollTop;
                 };
-                this.$el.addEventListener('scroll', this.scrollListener);
+                this.$el.addEventListener('scroll', this._scrollListener);
             }
         });
     },
