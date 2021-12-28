@@ -1,10 +1,10 @@
 <template>
 	<div style="text-align: center; position: relative">
 		<img style="border-radius: 0.5rem;" :style="{width: size, height: size}" :src="iconImgUrl"
-		     @click="(clickImg || showCategoryDetail)()"/>
+		    @click="(clickImg || showCategoryDetail)()"/>
 		<p :class="{'link-name': isLinkName}" :title="linkTitle" v-clamp="2"
-		   style="white-space: break-spaces;"
-		   @click="(clickName || showCategoryDetail)()">
+		   	style="white-space: break-spaces;"
+		   	@click="(clickName || showCategoryDetail)()">
 			{{ category.name }}
 		</p>
 		<slot/>
