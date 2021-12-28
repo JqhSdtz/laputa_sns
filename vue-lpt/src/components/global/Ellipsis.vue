@@ -16,13 +16,13 @@
 		</div>
 		<div v-if="showFullText" class="ellipsis-content">
 			<span ref="content">{{ content }}</span>
-			<span class="ellipsis-btn" @click="toggle">收起</span>
+			<span class="ellipsis-btn" @click.capture.stop="toggle">收起</span>
 		</div>
 		<div v-else class="real-box">
 			<span ref="content">{{ showContent }}</span>
 			<slot name="ellipsis" v-if="(textLength < content.length) || btnShow">
 				{{ ellipsisText }}
-				<span class="ellipsis-btn" @click="toggle">{{ btnText }}</span>
+				<span class="ellipsis-btn" @click.capture.stop="toggle">{{ btnText }}</span>
 			</slot>
 		</div>
 	</div>
