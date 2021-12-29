@@ -83,9 +83,13 @@ export default {
 			disablePullRefresh: hasPostList,
 			isEmpty: false,
 			list: this.postList || [],
-			listOffset: global.vars.style.tabBarHeight + 10,
 			isRefreshing: false,
 			isBusy: false
+		}
+	},
+	computed: {
+		listOffset() {
+			return global.states.style.tabBarHeight + 10;
 		}
 	},
 	watch: {

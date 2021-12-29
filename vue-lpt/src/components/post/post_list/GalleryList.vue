@@ -74,8 +74,7 @@ export default {
 			curRow: [],
 			finished: false,
 			enableBoolMode: false,
-			searchValue: '',
-			mainBarHeight: global.vars.style.tabBarHeight
+			searchValue: ''
 		}
 	},
 	watch: {

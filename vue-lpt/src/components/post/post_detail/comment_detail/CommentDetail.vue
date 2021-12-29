@@ -19,6 +19,7 @@ import global from "@/lib/js/global";
 import {Toast} from "vant";
 import CommentItem from '../comment/item/CommentItem';
 import SubCommentList from './SubCommentList';
+import {toRef} from 'vue';
 
 export default {
 	name: 'CommentDetail',
@@ -39,7 +40,7 @@ export default {
 	},
 	data() {
 		return {
-			mainBarHeight: global.vars.style.postDetailBarHeight,
+			mainBarHeight: toRef(global.states.style, 'postDetailBarHeight'),
 			comment: global.states.commentL1Manager.get({
 				itemId: this.commentId
 			})

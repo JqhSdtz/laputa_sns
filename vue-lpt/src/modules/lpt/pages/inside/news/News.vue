@@ -8,6 +8,7 @@
 <script>
 import PostList from '@/components/post/post_list/PostList';
 import global from '@/lib/js/global';
+import {toRef} from 'vue';
 
 export default {
 	name: 'News',
@@ -16,7 +17,7 @@ export default {
 	},
 	data() {
 		return {
-			mainBarHeight: global.vars.style.tabBarHeight
+			mainBarHeight: toRef(global.states.style, 'tabBarHeight')
 		}
 	},
 	inject: {

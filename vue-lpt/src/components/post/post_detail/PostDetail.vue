@@ -77,7 +77,7 @@ export default {
 	data() {
 		this.postDetailEvents = createEventBus();
 		return {
-			mainBarHeight: global.vars.style.postDetailBarHeight,
+			mainBarHeight: toRef(global.states.style, 'postDetailBarHeight'),
 			post: this.init(),
 			showDrawer: this.lptContainer === 'blogDrawer' ? toRef(global.states.blog, 'showDrawer') : true,
 			curTabKey: 'comment',
@@ -116,12 +116,10 @@ export default {
 				return global.states.style.mainHeight + 'px';
 			}
 			const mainViewHeight = global.states.style.bodyHeight;
-			// 底部高度加0.5的padding
-			const barHeight = this.mainBarHeight + 10;
 			if (this.showCommentDetail) {
 				return mainViewHeight + 'px';
 			} else {
-				return mainViewHeight - barHeight + 'px';
+				return mainViewHeight - this.mainBarHeight + 'px';
 			}
 		},
 		clientWidth() {

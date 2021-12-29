@@ -22,16 +22,19 @@ export default {
 	},
 	data() {
 		const currentUser = lpt.operatorServ.getCurrent();
-		// 底部固定4rem，mainView现算一个px值
-		const mainViewHeight = (global.states.style.bodyHeight - global.vars.style.tabBarHeight) + 'px';
-		const mainBarHeight = global.vars.style.tabBarHeight + 'px';
 		return {
-			mainViewHeight: mainViewHeight,
-			mainBarHeight: mainBarHeight,
 			hasLoggedIn: typeof global.states.user !== 'undefined',
 			user: currentUser ? currentUser : {
 				nick_name: '点击登录'
 			}
+		}
+	},
+	computed: {
+		mainViewHeight() {
+			return (global.states.style.bodyHeight - global.states.style.tabBarHeight) + 'px';
+		},
+		mainBarHeight() {
+			return global.states.style.tabBarHeight + 'px';
 		}
 	}
 }

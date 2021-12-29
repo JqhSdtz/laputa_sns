@@ -146,9 +146,6 @@ export default {
 	methods: {
 		onResize() {
 			global.states.style.drawerWidth = document.body.clientWidth * this.drawerWidthNum;
-			global.states.style.mainHeight = document.body.clientHeight * 0.98;
-			global.states.style.blogMainWidth = document.body.clientWidth * 0.8;
-			global.states.style.blogMainLeft = document.body.clientWidth * 0.1;
 		},
 		getPopupContainer(el, dialogContext) {
 			if (dialogContext) {

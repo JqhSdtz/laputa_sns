@@ -24,6 +24,7 @@ import lpt from '@/lib/js/laputa/laputa';
 import {Toast} from 'vant';
 import SortTypeSelector from '@/components/post/post_list/SortTypeSelector';
 import remHelper from '@/lib/js/uitls/rem-helper';
+import {toRef} from 'vue';
 
 export default {
 	name: 'Index',
@@ -57,7 +58,7 @@ export default {
 			category,
 			enableBoolMode: false,
 			searchValue: '',
-			mainBarHeight: global.vars.style.tabBarHeight,
+			mainBarHeight: toRef(global.states.style, 'tabBarHeight'),
 			sortType: sortType,
 			postListLoaded: false
 		}

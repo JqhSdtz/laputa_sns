@@ -50,9 +50,13 @@ export default {
 			isEmpty: false,
 			hasEverLoad: false,
 			list: [],
-			listOffset: global.vars.style.postDetailBarHeight + 10,
 			isRefreshing: false,
 			isBusy: false
+		}
+	},
+	computed: {
+		listOffset() {
+			return global.states.style.postDetailBarHeight + 10;
 		}
 	},
 	created() {

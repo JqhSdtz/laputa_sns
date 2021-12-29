@@ -36,8 +36,10 @@ VMdPreview.use(githubTheme, {
 // 设置rem单位的相对大小
 remHelper.initRem({
     pcWidth: 1024,
-    mobWidth: 414
+    mobWidth: 414,
+    responsive: true
 });
+global.events.emit('remInitialized');
 
 globalVariables.env = 'lpt';
 const app = createApp(LptApp);

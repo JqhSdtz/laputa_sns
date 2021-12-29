@@ -1,8 +1,9 @@
 /**全局状态管理，相当于简易的vuex*/
 
-import {reactive, ref, computed} from 'vue';
+import {reactive, ref} from 'vue';
 import lpt from '@/lib/js/laputa/laputa';
 import events from './global-events';
+import remHelper from '@/lib/js/uitls/rem-helper';
 
 function wrap(param) {
     let type, def;
@@ -268,7 +269,9 @@ const states = {
             mainHeight: document.body.clientHeight,
             bodyHeight: document.body.clientHeight,
             blogMainWidth: document.body.clientWidth,
-            blogMainLeft: document.body.clientWidth * 0.1
+            blogMainLeft: document.body.clientWidth * 0.1,
+            tabBarHeight: 0,
+            postDetailBarHeight: 0
         }
     }),
     blog: wrap({
@@ -299,10 +302,18 @@ const states = {
     }
 }
 
-window.addEventListener('resize', () => {
+function setHeightAndWidth() {
     states.style.bodyHeight = document.body.clientHeight;
     states.style.bodyWidth = document.body.clientWidth;
-});
+    states.style.mainHeight = document.body.clientHeight * 0.98;
+    states.style.blogMainWidth = document.body.clientWidth * 0.8;
+    states.style.blogMainLeft = document.body.clientWidth * 0.1;
+    states.style.tabBarHeight = remHelper.remToPx(3.65);
+    states.style.postDetailBarHeight = remHelper.remToPx(3);
+}
+
+window.addEventListener('resize', setHeightAndWidth);
+events.on('remInitialized', setHeightAndWidth);
 
 export default states;
 

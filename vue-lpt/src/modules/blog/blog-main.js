@@ -41,6 +41,7 @@ remHelper.initRem({
     pcOnly: true,
     responsive: true
 });
+global.events.emit('remInitialized');
 
 global.vars.env = 'blog';
 lpt.categoryServ.rootCategoryId = description.rootCategoryId;

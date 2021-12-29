@@ -38,16 +38,21 @@ export default {
 	},
 	data() {
 		this.querior = lpt.createQuerior();
-		const listOffset = this.type === lpt.contentType.post
-			? global.vars.style.postDetailBarHeight + 10 : 10;
+
 		return {
 			finished: toRef(this.querior, 'hasReachedBottom'),
 			hasEverLoad: false,
 			list: [],
 			isEmpty: false,
-			listOffset: listOffset,
 			isRefreshing: false,
 			isBusy: false
+		}
+	},
+	computed: {
+		listOffset() {
+			const listOffset = this.type === lpt.contentType.post
+				? global.states.style.postDetailBarHeight + 10 : 10;
+			return listOffset;
 		}
 	},
 	created() {

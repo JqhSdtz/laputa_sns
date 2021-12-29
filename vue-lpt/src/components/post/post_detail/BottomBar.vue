@@ -1,22 +1,22 @@
 <template>
-	<div style="width: 100%; padding-top: 0.5rem; background-color: white">
-		<div class="bottom-bar">
-			<span class="icon-col" style="width: 31%" v-check-sign="{click: openForwardPanel}">
+	<div style="width: 100%; background-color: white">
+		<div ref="bottomBar" class="bottom-bar" :style="{marginTop: barMarginTop}">
+			<span class="icon-col" style="width: 33%" v-check-sign="{click: openForwardPanel}">
 				<share-alt-outlined class="icon"/>
 				<span class="icon-text">转发</span>
 			</span>
-			<span class="icon-col" style="width: 31%" v-check-sign="{click: openCommentPanel}">
+			<span class="icon-col" style="width: 33%" v-check-sign="{click: openCommentPanel}">
 				<comment-outlined class="icon"/>
 				<span class="icon-text">评论</span>
 			</span>
-			<span class="icon-col" style="width: 31%" v-check-sign="{click: changeLike}">
+			<span class="icon-col" style="width: 33%" v-check-sign="{click: changeLike}">
 				<span>
 					<like-filled v-if="post.liked_by_viewer" class="icon" style="color: red"/>
 					<like-outlined v-else class="icon"/>
 				</span>
 				<span class="icon-text">点赞</span>
 			</span>
-			<span class="icon-col" style="width: 7%">
+			<span class="icon-col" style="width: 6%; margin-left: -6%">
 				<post-actions :post-id="post.id" placement="top-end"/>
 			</span>
 		</div>
@@ -51,13 +51,23 @@ export default {
 		return {
 			post: global.states.postManager.get({
 				itemId: this.postId
-			})
+			}),
+			barMarginTop: 0
 		}
+	},
+	mounted() {
+		const fn = () => this.barMarginTop = this.getBarMaginTop();
+		window.addEventListener('resize', fn);
+		fn();
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 	},
 	methods: {
+		getBarMaginTop() {
+			// 因为外部的position是absolute，所以vertical-align没有作用，通过marginTop来手动保持垂直居中
+			return (this.$el.clientHeight - this.$refs.bottomBar.clientHeight) / 2 + 'px';
+		},
 		openForwardPanel() {
 			this.postDetailEvents.emit('openForwardPanel');
 		},
