@@ -344,6 +344,10 @@ export default {
 	margin-bottom: 1rem;
 }
 
+:global(.github-markdown-body) {
+	font-size: 0.9rem;
+}
+
 .md-content {
 	white-space: normal;
 }
