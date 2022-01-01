@@ -26,16 +26,17 @@ public class OSSController {
     @RequestMapping(value = "/{type}", method = RequestMethod.POST)
     public Result<String> upload(@NotNull MultipartFile file, @PathVariable String type, @RequestAttribute Operator operator) throws IOException {
         int bType;
-        if ("ava".equals(type))
+        if ("ava".equals(type)) {
             bType = OSSService.AVATAR;
-        else if ("cat".equals(type))
+        } else if ("cat".equals(type)) {
             bType = OSSService.CATEGORY;
-        else if ("pst".equals(type))
+        } else if ("pst".equals(type)) {
             bType = OSSService.POST;
-        else if ("com".equals(type))
+        } else if ("com".equals(type)) {
             bType = OSSService.COMMENT;
-        else
+        } else {
             return new Result<String>(Result.FAIL);
+        }
         return ossService.uploadImgSync(file.getBytes(), bType, operator);
     }
 }

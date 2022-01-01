@@ -55,9 +55,17 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
     private final DefaultRedisScript<Long> multiPushNewsScript;
 
     private String hmacKey;
-    @Value("${user-news-out-box-length}")//#用户动态发件箱最大长度
+
+    /**
+     * 用户动态发件箱最大长度
+     */
+    @Value("${user-news-out-box-length}")
     private int userNewsOutBoxLength;
-    @Value("${user-news-in-box-length}")//#用户动态收件箱最大长度
+
+    /**
+     * 用户动态收件箱最大长度
+     */
+    @Value("${user-news-in-box-length}")
     private int userNewsInBoxLength;
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -89,22 +97,26 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
         }
         redisTemplate.opsForValue().set(RedisPrefix.USER_NEWS_OUT_BOX_INIT, "1");
         int queryNum = 5000;
-        int startId = Integer.MAX_VALUE;//倒着加载
+        // 倒着加载
+        int startId = Integer.MAX_VALUE;
         int listLimit = userNewsOutBoxLength * 2;
         long addCnt = 0;
         while (true) {
             List<Post> postList = dao.selectPostListOfAllUser(startId, queryNum);
             HashMap<String, List<String>> userPostMap = new HashMap<>();
-            if (postList == null || postList.size() == 0)
+            if (postList == null || postList.size() == 0) {
                 break;
+            }
             for (int i = 0; i < postList.size(); ++i) {
                 String key = getNewsOutBoxKey(postList.get(i).getCreatorId());
                 List<String> valueStrList = userPostMap.get(key);
                 if (valueStrList == null) {
                     valueStrList = new ArrayList<>();
                     userPostMap.put(key, valueStrList);
-                } else if (valueStrList.size() >= listLimit)//倒着加载，先读出来的肯定是新的
+                // 倒着加载，先读出来的肯定是新的
+                } else if (valueStrList.size() >= listLimit) {
                     continue;
+                }
                 valueStrList.add(String.valueOf(postList.get(i).getCreateTime().getTime()));
                 valueStrList.add(String.valueOf(postList.get(i).getId()));
             }
@@ -145,7 +157,7 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
     }
 
     public long pushNews(Integer userId, Integer postId) {
-        return redisTemplate.execute(pushNewsScript, Collections.singletonList(getNewsOutBoxKey(userId)), String.valueOf(userNewsOutBoxLength), String.valueOf(new Date().getTime()), String.valueOf(postId));
+        return redisTemplate.execute(pushNewsScript, Collections.singletonList(getNewsOutBoxKey(userId)), String.valueOf(userNewsOutBoxLength), String.valueOf(System.currentTimeMillis()), String.valueOf(postId));
     }
 
     @NotNull
@@ -153,8 +165,10 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
         Set<RedisZSetCommands.Tuple> indexSet = new HashSet<>();
         for (int i = 0; i < newsList.size(); ++i) {
             PostNews news = newsList.get(i);
-            if (news == null || news.getId() == null)//如果一条动态重复插入会导致插入失败而使news对象为空
+            // 如果一条动态重复插入会导致插入失败而使news对象为空
+            if (news == null || news.getId() == null) {
                 continue;
+            }
             Integer newsId = i == newsList.size() - 1 ? news.getId() : null;
             indexSet.add(new DefaultTuple(getRedisValue(news.getPostId(), newsId).getBytes(), getInBoxScore(news)));
         }
@@ -162,16 +176,18 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
     }
 
     private String getRedisValue(Integer postId, Integer newsId) {
-        if (newsId == null)
+        if (newsId == null) {
             return String.valueOf(postId);
+        }
         return postId + ":" + newsId;
     }
 
     @NotNull
     private RedisValue parseRedisValue(@NotNull String v) {
         String[] s = v.split(":");
-        if (s.length == 1)
+        if (s.length == 1) {
             return new RedisValue(Integer.valueOf(s[0]), null);
+        }
         return new RedisValue(Integer.valueOf(s[0]), Integer.valueOf(s[1]));
     }
 
@@ -182,14 +198,16 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
     public Result<Integer> readNewsCount(@NotNull Operator operator) {
         Integer followerId = operator.getUserId();
         Result<List<Follow>> targetListResult = followService.readFollowingList(followerId, false, operator);
-        if (targetListResult.getState() == FAIL)
+        if (targetListResult.getState() == FAIL) {
             return new Result<Integer>(targetListResult);
+        }
         List<Follow> targetList = targetListResult.getObject();
         operator.setFollowList(targetList);
         List<String> keys = new ArrayList<>(targetList.size() + 1);
         keys.add(getLastRefreshTimeKey());
-        for (int i = 0; i < targetList.size(); ++i)
+        for (int i = 0; i < targetList.size(); ++i) {
             keys.add(getNewsOutBoxKey(targetList.get(i).getTargetId()));
+        }
         Integer res = (int) (long) redisTemplate.execute(pollNewsCountScript, keys, String.valueOf(followerId));
         return new Result<Integer>(SUCCESS).setObject(res);
     }
@@ -198,8 +216,9 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
     private List<String> pollNews(Integer followerId, @NotNull List<Follow> targetList) {
         List<String> keys = new ArrayList<>(targetList.size() + 1);
         keys.add(getLastRefreshTimeKey());
-        for (int i = 0; i < targetList.size(); ++i)
+        for (int i = 0; i < targetList.size(); ++i) {
             keys.add(getNewsOutBoxKey(targetList.get(i).getTargetId()));
+        }
         return redisTemplate.execute(pollNewsScript, keys, String.valueOf(followerId));
     }
 
@@ -220,32 +239,43 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
         int limit = numLimit == null ? postNewsList.size() : Math.min(numLimit, postNewsList.size());
         List<Integer> postIdList = new ArrayList<>(limit);
         for (int i = 0; i < limit; ++i)
-            if (postNewsList.get(i).getContent() == null)//已经被填上了，不用再填
+            // 已经被填上了，不用再填
+        {
+            if (postNewsList.get(i).getContent() == null) {
                 postIdList.add(postNewsList.get(i).getPostId());
+            }
+        }
         Result<List<Post>> postListResult = postService.multiReadPost(null, postIdList, true, true, true, true, true, true, operator);
-        if (postListResult.getState() == FAIL)
+        if (postListResult.getState() == FAIL) {
             return new Result<List<String>>(postListResult);
+        }
         List<Post> postList = postListResult.getObject();
         postService.multiSetOriPost(postList, operator);
         HashSet<Integer> followingSet = null;
-        if (followingList != null) {//传入的关注列表，用于去掉取关的但还在Redis缓存中的帖子
+        // 传入的关注列表，用于去掉取关的但还在Redis缓存中的帖子
+        if (followingList != null) {
             followingSet = new HashSet<>(followingList.size());
-            for (int i = 0; i < followingList.size(); ++i)
+            for (int i = 0; i < followingList.size(); ++i) {
                 followingSet.add(followingList.get(i).getTargetId());
+            }
         }
         HashMap<Integer, Post> postResultMap = new HashMap<>(postList.size());
-        for (int i = 0; i < postList.size(); ++i)
-            if (postList.get(i) != null)
+        for (int i = 0; i < postList.size(); ++i) {
+            if (postList.get(i) != null) {
                 postResultMap.put(postList.get(i).getId(), postList.get(i));
+            }
+        }
         List<String> remValues = new ArrayList<>();
         for (int i = 0; i < postNewsList.size(); ++i) {
             PostNews news = postNewsList.get(i);
             Post post = postResultMap.get(news.getPostId());
             if (post != null) {
                 if (followingSet != null && !followingSet.contains(post.getCreatorId())) {
-                    remValues.add(getRedisValue(post.getId(), news.getId()));//news.getId()可能为空
-                } else
+                    // news.getId()可能为空
+                    remValues.add(getRedisValue(post.getId(), news.getId()));
+                } else {
                     news.setContent(post);
+                }
             }
         }
         return new Result<List<String>>(SUCCESS).setObject(remValues);
@@ -256,11 +286,13 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
      */
     public Result<List<Integer>> readNewsPostIdListOfCreator(Integer creatorId, QueryParam queryParam) {
         List<String> resList = RedisUtil.zRevRangeUseStartIdFirst(redisTemplate, getNewsOutBoxKey(creatorId), queryParam, false);
-        if (resList == null || (resList.size() == 1 && resList.get(0) == null))
+        if (resList == null || (resList.size() == 1 && resList.get(0) == null)) {
             return new Result<List<Integer>>(SUCCESS).setObject(new ArrayList<>(0));
+        }
         List<Integer> postIdList = new ArrayList<>(resList.size());
-        for (int i = 0; i < resList.size(); ++i)
+        for (int i = 0; i < resList.size(); ++i) {
             postIdList.add(Integer.valueOf(resList.get(i)));
+        }
         return new Result<List<Integer>>(SUCCESS).setObject(postIdList);
     }
 
@@ -281,17 +313,22 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
                     dbList.add(new PostNews().setReceiverId(userId).setPostId(Integer.valueOf(v[0]))
                             .setSenderId(Integer.valueOf(v[1].split(":")[1])));
                 }
-                dbList.sort(Comparator.comparingInt(PostNews::getPostId));//放数据库时ID从小到大
-                int res = insertList(dbList);//将未读的放入数据库
-                if (res != 0)//插入数据库后即为已读
-                    redisTemplate.opsForHash().put(getLastRefreshTimeKey(), String.valueOf(userId), String.valueOf(new Date().getTime()));
+                // 放数据库时ID从小到大
+                dbList.sort(Comparator.comparingInt(PostNews::getPostId));
+                // 将未读的放入数据库
+                int res = insertList(dbList);
+                // 插入数据库后即为已读
+                if (res != 0) {
+                    redisTemplate.opsForHash().put(getLastRefreshTimeKey(), String.valueOf(userId), String.valueOf(System.currentTimeMillis()));
+                }
                 multiSetRedisInBoxIndexAndGetLast(userId, dbList, true);
                 Collections.reverse(dbList);
                 int queryNum = param.paramEntity.getQueryParam().getQueryNum();
                 if (dbList.size() >= queryNum) {
                     param.idList = new ArrayList<>(queryNum);
-                    for (int i = 0; i < queryNum; ++i)
+                    for (int i = 0; i < queryNum; ++i) {
                         param.idList.add(dbList.get(i).getPostId());
+                    }
                     Integer newsId = dbList.size() == queryNum ? dbList.get(queryNum - 1).getId() : null;//请求的个数正好等于获取的个数，那么value中包含newsId
                     executor.param.newStartValue = getRedisValue(dbList.get(queryNum - 1).getPostId(), newsId);
                     executor.param.newStartId = dbList.get(queryNum - 1).getId();
@@ -302,8 +339,9 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
             List<Integer> idList = null;
             if (indexList != null) {
                 idList = new ArrayList<>(indexList.size());
-                for (int i = 0; i < indexList.size(); ++i)
+                for (int i = 0; i < indexList.size(); ++i) {
                     idList.add(parseRedisValue(indexList.get(i).getValue()).postId);
+                }
                 if (indexList.size() != 0) {
                     param.newStartValue = indexList.get(indexList.size() - 1).getValue();
                     param.newStartId = parseRedisValue(param.newStartValue).newsId;
@@ -317,40 +355,50 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
             List<PostNews> newsList = new ArrayList<>(param.idList.size());
             for (int i = 0; i < param.idList.size(); ++i) {
                 Integer newsId = null;
-                if (param.indexSetList != null)
+                if (param.indexSetList != null) {
                     newsId = parseRedisValue(param.indexSetList.get(i).getValue()).newsId;
+                }
                 newsList.add(new PostNews(newsId).setReceiverId(param.operator.getUserId()).setPostId(param.idList.get(i)));
             }
             Result<List<String>> remValuesResult = fillPostNewsWithPost(newsList, param.paramEntity.getQueryParam().getQueryNum(), (List<Follow>) param.addition, param.operator);
             List<String> remValues = remValuesResult.getObject();
-            if (remValuesResult.getState() == SUCCESS && remValues.size() != 0)
+            if (remValuesResult.getState() == SUCCESS && remValues.size() != 0) {
                 redisTemplate.opsForZSet().remove(getNewsInBoxKey(param.operator.getUserId()), remValues.toArray());
+            }
             List<PostNews> tmpList = new ArrayList<>(newsList.size() - remValues.size());
             for (int i = 0; i < newsList.size(); ++i)
-                if (newsList.get(i).getContent() != null)//剔除掉已经取关的内容
+                // 剔除掉已经取关的内容
+            {
+                if (newsList.get(i).getContent() != null) {
                     tmpList.add(newsList.get(i));
+                }
+            }
             return new Result<List<PostNews>>(SUCCESS).setObject(tmpList);
         };
-        callBacks.getDBListCallBack = executor -> {
+        callBacks.getDbListCallBack = executor -> {
             PostNews param = executor.param.paramEntity;
             if (param.getQueryParam().getStartId() == null || param.getQueryParam().getStartId().equals(0)) {
                 RedisValue redisValue = parseRedisValue(param.getQueryParam().getStartValue());
-                if (redisValue.newsId != null)
+                if (redisValue.newsId != null) {
                     param.getQueryParam().setStartId(redisValue.newsId).setUseStartIdAtSql(1);
-                else
+                } else {
                     param.setPostId(redisValue.postId).getQueryParam().setUseStartIdAtSql(0);
-            } else
+                }
+            } else {
                 param.getQueryParam().setUseStartIdAtSql(1);
+            }
             List<PostNews> resList = selectList(param, (List<Follow>) executor.param.addition);
-            if (resList == null)
+            if (resList == null) {
                 return new Result<List<PostNews>>(FAIL).setErrorCode(1010120103).setMessage("数据库操作错误");
+            }
             fillPostNewsWithPost(resList, null, (List<Follow>) executor.param.addition, executor.param.operator);
             return new Result<List<PostNews>>(SUCCESS).setObject(resList);
         };
         callBacks.multiSetRedisIndexCallBack = (entityList, executor) -> {
             Object[] res = multiSetRedisInBoxIndexAndGetLast(executor.param.operator.getUserId(), entityList, false);
-            if (res == null)
+            if (res == null) {
                 return;
+            }
             executor.param.newStartValue = (String) res[0];
             executor.param.newFrom = (int) (long) res[1];
             executor.param.newStartId = entityList.get(entityList.size() - 1).getId();
@@ -360,33 +408,39 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
 
     public Result<List<PostNews>> readNewsList(PostNews param, @NotNull Operator operator) {
         Integer userId = operator.getUserId();
-        if (userId.equals(-1))
+        if (userId.equals(-1)) {
             return new Result<List<PostNews>>(FAIL).setErrorCode(1010120204).setMessage("未登录");
-        if (!param.isValidReadNewsParam())
+        }
+        if (!param.isValidReadNewsParam()) {
             return new Result<List<PostNews>>(FAIL).setErrorCode(1010120205).setMessage("操作错误，参数不合法");
+        }
         param.setReceiverId(userId);
         Result<Object> validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(param, 0, hmacKey);
-        if (validateTokenResult.getState() == FAIL)
+        if (validateTokenResult.getState() == FAIL) {
             return new Result<List<PostNews>>(validateTokenResult);
+        }
         List<Follow> followingList;
-        if (operator.getFollowList() != null)
+        if (operator.getFollowList() != null) {
             followingList = operator.getFollowList();
-        else {
+        } else {
             Result<List<Follow>> followingListResult = followService.readFollowingList(userId, false, operator);
-            if (followingListResult.getState() == FAIL)
+            if (followingListResult.getState() == FAIL) {
                 return new Result<List<PostNews>>(followingListResult);
+            }
             followingList = followingListResult.getObject();
         }
-        if (followingList.size() == 0)
+        if (followingList.size() == 0) {
             return new Result<List<PostNews>>(SUCCESS).setObject(new ArrayList<>(0));
+        }
         PostNews queryEntity = (PostNews) new PostNews().setQueryParam(new QueryParam());
         IndexExecutor<PostNews> indexExecutor = new IndexExecutor<>(param, queryEntity, null, indexExecutorCallBacks, operator);
         indexExecutor.param.addition = followingList;
         indexExecutor.param.initStartId = Integer.MAX_VALUE;
         indexExecutor.param.childNumOfParent = Long.MAX_VALUE;
         Result<List<PostNews>> newsListResult = indexExecutor.doIndex();
-        if (newsListResult.getState() == FAIL)
+        if (newsListResult.getState() == FAIL) {
             return newsListResult;
+        }
         String newToken = QueryTokenUtil.generateQueryToken(param, newsListResult.getObject(), queryEntity.getQueryParam(), 0, hmacKey);
         return newsListResult.setAttachedToken(newToken);
     }
@@ -395,7 +449,8 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
     public void dailyFreshIndex() {
         redisTemplate.delete(RedisUtil.scanAllKeys(redisTemplate, getNewsInBoxKey("*")));
         log.info("用户动态收件箱缓存清除");
-        hmacKey = CryptUtil.randUrlSafeStr(64, true);//更新hmac的key
+        // 更新hmac的key
+        hmacKey = CryptUtil.randUrlSafeStr(64, true);
     }
 
     private class RedisValue {

@@ -20,8 +20,9 @@ public class UserValidator {
     }
 
     public boolean checkSetTalkBanToPermission(@NotNull Operator operator) {
-        if (!operator.isAdmin())
+        if (!operator.isAdmin()) {
             return false;
+        }
         Integer permLevel = operator.getPermissionMap().get(CategoryService.GROUND_ID);
         return permLevel != null && permLevel >= AdminLevel.TALK_BAN;
     }

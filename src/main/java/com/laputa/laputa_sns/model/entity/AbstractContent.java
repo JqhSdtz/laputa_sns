@@ -26,6 +26,7 @@ public abstract class AbstractContent<T> extends AbstractBaseEntity {
     abstract public User getCreator();
     abstract public Boolean getIsTopped();
     abstract public T setIsTopped(Boolean isTopped);
+    @Override
     public Integer getOfId() {
         return getParentId();
     }

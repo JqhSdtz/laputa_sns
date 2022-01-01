@@ -24,7 +24,10 @@ public class CommonService {
 
     private final CommonDao dao;
 
-    @Value("${batch-insert-num-limit}")//#一次最多insert10000条记录
+    /**
+     * 一次最多insert10000条记录
+     */
+    @Value("${batch-insert-num-limit}")
     private int insertNumLimit;
 
     public CommonService(CommonDao dao) {
@@ -35,10 +38,12 @@ public class CommonService {
      * 添加id字段是为了防止安全模式下不包含id字段无法批量更新
      */
     public void clearIndexedFlag(String tableName, String idFieldName, String pFiledName, String lFiledName) {
-        if (pFiledName != null)
+        if (pFiledName != null) {
             dao.clearIndexedFlag(tableName, idFieldName, pFiledName);
-        if (lFiledName != null)
+        }
+        if (lFiledName != null) {
             dao.clearIndexedFlag(tableName, idFieldName, lFiledName);
+        }
     }
 
     /**
@@ -66,14 +71,16 @@ public class CommonService {
      * @return
      */
     public int batchUpdate(String tableName, String idFieldName, String valueFiledName, int ops, @NotNull List<TmpEntry> list) {
-        if (list.size() == 0)
+        if (list.size() == 0) {
             return 0;
+        }
         int cnt = 0;
-        if (list.size() < insertNumLimit)
+        if (list.size() < insertNumLimit) {
             cnt = dao.batchUpdate(list, tableName, idFieldName, valueFiledName, ops);
-        else {
-            for (int from = 0, to = insertNumLimit; from < list.size(); from += insertNumLimit, to += insertNumLimit)
+        } else {
+            for (int from = 0, to = insertNumLimit; from < list.size(); from += insertNumLimit, to += insertNumLimit) {
                 cnt += dao.batchUpdate(list.subList(from, to > list.size() ? list.size() : to), tableName, idFieldName, valueFiledName, ops);
+            }
         }
         return cnt;
     }
@@ -89,14 +96,16 @@ public class CommonService {
      * @return
      */
     public int batchUpdateMulti(String tableName, String idFieldName, List<String> valueFiledNames, int ops, @NotNull List<TmpListEntry> list) {
-        if (list.size() == 0)
+        if (list.size() == 0) {
             return 0;
+        }
         int cnt = 0;
-        if (list.size() < insertNumLimit)
+        if (list.size() < insertNumLimit) {
             cnt = dao.batchUpdateMulti(list, tableName, idFieldName, valueFiledNames, ops);
-        else {
-            for (int from = 0, to = insertNumLimit; from < list.size(); from += insertNumLimit, to += insertNumLimit)
+        } else {
+            for (int from = 0, to = insertNumLimit; from < list.size(); from += insertNumLimit, to += insertNumLimit) {
                 cnt += dao.batchUpdateMulti(list.subList(from, to > list.size() ? list.size() : to), tableName, idFieldName, valueFiledNames, ops);
+            }
         }
         return cnt;
     }

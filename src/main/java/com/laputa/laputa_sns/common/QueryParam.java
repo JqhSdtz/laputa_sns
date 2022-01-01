@@ -64,7 +64,9 @@ public class QueryParam {
 
     private String addition;
 
+    /**
+     * 由页面传入的自定义附加条件
+     */
     @JsonProperty("custom_addition")
-    // 由页面传入的自定义附加条件
     private String customAddition;
 }

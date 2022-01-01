@@ -69,10 +69,12 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
      * @return
      */
     public Result<Integer> createAdminOpsRecord(AdminOpsRecord param, Operator operator) {
-        if (!param.isValidInsertParam())
+        if (!param.isValidInsertParam()) {
             return new Result<Integer>(Result.FAIL).setErrorCode(1010190201).setMessage("操作失败，参数错误");
-        if (!operator.isAdmin())
+        }
+        if (!operator.isAdmin()) {
             return new Result<Integer>(Result.FAIL).setErrorCode(1010190202).setMessage("操作失败，权限错误");
+        }
         Post recordPost = (Post) new Post().setCategoryId(adminOpsRecordCategoryId).setCreatorId(adminOpsRecordUserId)
                 .setType(Post.TYPE_PUBLIC);
         String recordContent = getHead() + "#";
@@ -81,8 +83,9 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
             case AdminOpsRecord.TYPE_DELETE_POST:
                 Post post = ((Post) param.getTarget());
                 String str = post.getTitle();
-                if (str == null)
+                if (str == null) {
                     str = post.getContent();
+                }
                 recordContent += "相关帖子:\"" + str + "\"";
                 break;
             case AdminOpsRecord.TYPE_DELETE_CML1:
@@ -105,6 +108,8 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
             case AdminOpsRecord.TYPE_UPDATE_CATEGORY_PARENT:
                 recordContent += "相关目录:\"" + ((Category) param.getTarget()).getName() + "\"";
                 break;
+            default:
+                break;
         }
         recordContent += "\n操作理由:" + param.getOpComment();
         recordPost.setContent(recordContent);
@@ -125,8 +130,9 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
         }
         param.setCreator(operator.getUser());
         int res = insertOne(param);
-        if (res == -1)
+        if (res == -1) {
             return new Result<Integer>(Result.FAIL).setErrorCode(1010190103).setMessage("数据库操作失败");
+        }
         return postService.createPost(recordPost, new Operator(adminOpsRecordUserId));
     }
 
@@ -138,16 +144,20 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
      * @return
      */
     public Result<AdminOpsRecord> readRecord(Integer id, Operator operator) {
-        if (id == null)
+        if (id == null) {
             return new Result<AdminOpsRecord>(Result.FAIL).setErrorCode(1010190204).setMessage("操作失败，参数错误");
-        if (!operator.isAdmin())
+        }
+        if (!operator.isAdmin()) {
             return new Result<AdminOpsRecord>(Result.FAIL).setErrorCode(1010190205).setMessage("操作失败，权限错误");
+        }
         AdminOpsRecord res = selectOne(id);
-        if (res == null)
+        if (res == null) {
             return new Result<AdminOpsRecord>(Result.FAIL).setErrorCode(1010190106).setMessage("数据库操作失败");
+        }
         Result<User> creatorResult = userService.readUserWithAllFalse(res.getCreatorId(), operator);
-        if (creatorResult.getState() == Result.SUCCESS)
+        if (creatorResult.getState() == Result.SUCCESS) {
             res.setCreator(creatorResult.getObject());
+        }
         return new Result<AdminOpsRecord>(Result.SUCCESS).setObject(res);
     }
 
@@ -160,15 +170,19 @@ public class AdminOpsService extends BaseService<AdminOpsRecordDao, AdminOpsReco
      */
     @SneakyThrows
     public Result<List<AdminOpsRecord>> readRecordList(AdminOpsRecord param, Operator operator) {
-        if (!param.isValidReadIndexParam())
+        if (!param.isValidReadIndexParam()) {
             return new Result<List<AdminOpsRecord>>(Result.FAIL).setErrorCode(1010190207).setMessage("操作失败，参数错误");
-        if (!operator.isAdmin())
+        }
+        if (!operator.isAdmin()) {
             return new Result<List<AdminOpsRecord>>(Result.FAIL).setErrorCode(1010190208).setMessage("操作失败，权限错误");
-        if (param.getQueryParam().getStartId().equals(0))
+        }
+        if (param.getQueryParam().getStartId().equals(0)) {
             param.getQueryParam().setStartId(Integer.MAX_VALUE);
+        }
         List<AdminOpsRecord> resList = selectList(param);
-        if (resList == null)
+        if (resList == null) {
             return new Result<List<AdminOpsRecord>>(Result.FAIL).setErrorCode(1010190109).setMessage("数据库操作失败");
+        }
         userService.multiSetUser(resList, AdminOpsRecord.class.getMethod("getCreatorId"), AdminOpsRecord.class.getMethod("setCreator", User.class));
         return new Result<List<AdminOpsRecord>>(Result.SUCCESS).setObject(resList);
     }

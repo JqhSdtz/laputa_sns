@@ -10,9 +10,14 @@ public enum LimitTimeUnit {
     // 添加的注解的时候不需要注意顺序
     SECOND("s", 1000), MINUTE("m", 60000), HALF_HOUR("hh", 1800000),  HOUR("h", 3600000);
 
-    // 时间单位描述，为了减少Redis存储占用，要尽可能短
+    /**
+     *  时间单位描述，为了减少Redis存储占用，要尽可能短
+     */
     private String value;
-    // 时间间隔，单位毫秒
+
+    /**
+     * 时间间隔，单位毫秒
+     */
     private int timeDiff;
 
     LimitTimeUnit(String value, int timeDiff) {

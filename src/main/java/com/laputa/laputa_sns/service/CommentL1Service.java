@@ -95,10 +95,12 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
      */
     public void updateCounters(Integer commentId, Long l2Delta, Long pcmDelta) {
         Map<String, Long> map = new HashMap<>(2);
-        if (l2Delta != null)
+        if (l2Delta != null) {
             map.put("l2", l2Delta);
-        if (pcmDelta != null)
+        }
+        if (pcmDelta != null) {
             map.put("pcm", pcmDelta);
+        }
         redisHelper.updateCounters(commentId, map);
     }
 
@@ -128,25 +130,31 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
 
     private void setCounter(@NotNull CommentL1 comment) {
         Long[] v = redisHelper.getRedisCounterCnt(comment.getId(), "l2", "pcm");
-        if (v == null)
+        if (v == null) {
             return;
-        if (v[0] != null)
+        }
+        if (v[0] != null) {
             comment.setL2Cnt(comment.getL2Cnt() + v[0]);
-        if (v[1] != null)
+        }
+        if (v[1] != null) {
             comment.setPosterRepCnt(comment.getPosterRepCnt() + v[1]);
+        }
     }
 
     private void multiSetCounter(@NotNull List<CommentL1> commentList) {
         List<List<String>> vList = redisHelper.multiGetRedisCounterCnt(commentList, "l2", "pcm");
         for (int i = 0; i < commentList.size(); ++i) {
             CommentL1 comment = commentList.get(i);
-            if (comment == null)
+            if (comment == null) {
                 continue;
+            }
             List<String> v = vList.get(i);
-            if (v.get(0) != null)
+            if (v.get(0) != null) {
                 comment.setL2Cnt(comment.getL2Cnt() + Integer.valueOf(v.get(0)));
-            if (v.get(1) != null)
+            }
+            if (v.get(1) != null) {
                 comment.setPosterRepCnt(comment.getPosterRepCnt() + Integer.valueOf(v.get(1)));
+            }
         }
     }
 
@@ -156,9 +164,11 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
 
     private void multiSetPreviewL2List(CommentL1 commentL1, @NotNull List<CommentL1> l1List, Operator operator) {
         List<Integer> idList = new ArrayList<>(l1List.size());
-        for (int i = 0; i < l1List.size(); ++i)
-            if (!l1List.get(i).getL2Cnt().equals(0L))
+        for (int i = 0; i < l1List.size(); ++i) {
+            if (!l1List.get(i).getL2Cnt().equals(0L)) {
                 idList.add(l1List.get(i).getId());
+            }
+        }
         List<CommentL2> l2List = commentL2Service.multiReadPreviewIndex(commentL1, idList, operator);
         HashMap<Integer, List<CommentL2>> l2OfL1Map = new HashMap<>(l1List.size());
         for (int i = 0; i < l2List.size(); ++i) {
@@ -167,12 +177,14 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
             if (!l2OfL1Map.containsKey(comment.getL1Id())) {
                 l2Ofl1List = new ArrayList<>();
                 l2OfL1Map.put(comment.getL1Id(), l2Ofl1List);
-            } else
+            } else {
                 l2Ofl1List = l2OfL1Map.get(comment.getL1Id());
+            }
             l2Ofl1List.add(comment);
         }
-        for (int i = 0; i < l1List.size(); ++i)
+        for (int i = 0; i < l1List.size(); ++i) {
             l1List.get(i).setPreviewL2List(l2OfL1Map.get(l1List.get(i).getId()));
+        }
     }
 
     public Result<CommentL1> readCommentWithAllFalse(Integer commentId, Operator operator) {
@@ -198,11 +210,13 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
 
     public Result<CommentL1> readComment(Integer commentId, boolean withCreator, boolean withCounter, boolean withContent, boolean withIsLikedByViewer, Operator operator) {
         Result<CommentL1> commentResult = serviceHelper.readComment(commentId, new CommentL1(), withCreator, withCounter, withContent, withIsLikedByViewer, operator);
-        if (commentResult.getState() == FAIL)
+        if (commentResult.getState() == FAIL) {
             return commentResult;
+        }
         CommentL1 resComment = commentResult.getObject();
-        if (withCounter)
+        if (withCounter) {
             setCounter(resComment);
+        }
         return new Result<CommentL1>(SUCCESS).setObject(resComment);
     }
 
@@ -210,24 +224,29 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
      * 读取指定帖子的评论
      */
     public Result<List<CommentL1>> readIndexCommentL1List(@NotNull CommentL1 comment, int type, boolean withPreviewL2List, Operator operator) {
-        if (!comment.isValidReadIndexParam(true))
+        if (!comment.isValidReadIndexParam(true)) {
             return new Result<List<CommentL1>>(FAIL).setErrorCode(1010080203).setMessage("操作错误，参数不合法");
+        }
         Result<Object> validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(comment, type, hmacKey);
-        if (validateTokenResult.getState() == FAIL)
+        if (validateTokenResult.getState() == FAIL) {
             return new Result<List<CommentL1>>(validateTokenResult);
-        //在serviceHelper.readIndexComment中需要判断post的comment_cnt，所以需要带counter，rights是留给设置置顶权限用的
+        }
+        // 在serviceHelper.readIndexComment中需要判断post的comment_cnt，所以需要带counter，rights是留给设置置顶权限用的
         Result<Post> postResult = postService.readPostWithCounter(comment.getPostId(), operator);
-        if (postResult.getState() == FAIL)
+        if (postResult.getState() == FAIL) {
             return new Result<List<CommentL1>>(postResult);
+        }
         comment.setPost(postResult.getObject());
         CommentL1 queryEntity = (CommentL1) new CommentL1().setQueryParam(new QueryParam());
         Result<List<CommentL1>> commentListResult = serviceHelper.readIndexComment(comment, queryEntity, type, operator);
-        if (commentListResult.getState() == FAIL)
+        if (commentListResult.getState() == FAIL) {
             return commentListResult;
+        }
         List<CommentL1> commentList = commentListResult.getObject();
         multiSetCounter(commentList);
-        if (withPreviewL2List)
+        if (withPreviewL2List) {
             multiSetPreviewL2List(comment, commentList, operator);
+        }
         commentL1Validator.multiSetRights(comment, commentList, operator);
         String newToken = QueryTokenUtil.generateQueryToken(comment, commentList, queryEntity.getQueryParam(), type, hmacKey);
         return new Result<List<CommentL1>>(SUCCESS).setObject(commentList).setAttachedToken(newToken);
@@ -237,23 +256,29 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
      * 发表评论
      */
     public Result<Integer> createComment(@NotNull CommentL1 comment, Operator operator) {
-        if (!comment.isValidInsertParam())
+        if (!comment.isValidInsertParam()) {
             return new Result<Integer>(FAIL).setErrorCode(1010080204).setMessage("操作错误，参数不合法");
-        if (!commentL1Validator.checkCreatePermission(comment, operator))
+        }
+        if (!commentL1Validator.checkCreatePermission(comment, operator)) {
             return new Result<Integer>(FAIL).setErrorCode(1010080205).setMessage("操作失败，权限错误");
+        }
         Result<Post> postResult = postService.readPostWithAllFalse(comment.getPostId(), operator);
-        if (postResult.getState() == FAIL)
+        if (postResult.getState() == FAIL) {
             return new Result<Integer>(postResult);
+        }
         Post post = postResult.getObject();
         comment.setCreator(operator.getUser()).setLIndexedFlag(true);
         int res = insertOne(comment);
-        if (res == -1)
+        if (res == -1) {
             return new Result<Integer>(FAIL).setErrorCode(1010080106).setMessage("数据库操作失败");
+        }
         comment.setLikeCnt(0L).setL2Cnt(0L);
         postService.updateCommentCnt(comment.getPostId(), 1L);
-        serviceHelper.addNewToRedisIndex(comment, LATEST);//新添加的comment，latest索引的标志默认为1，当然这也要求新创建的comment必须加入latest索引中
-        if (!post.getCreatorId().equals(operator.getUserId()))
+        // 新添加的comment，latest索引的标志默认为1，当然这也要求新创建的comment必须加入latest索引中
+        serviceHelper.addNewToRedisIndex(comment, LATEST);
+        if (!post.getCreatorId().equals(operator.getUserId())) {
             noticeService.pushNotice(post.getId(), Notice.TYPE_CML1_OF_POST, post.getCreatorId());
+        }
         return new Result<Integer>(SUCCESS).setObject(comment.getId());
     }
 
@@ -262,24 +287,30 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
      */
     @SneakyThrows
     public Result<Object> deleteComment(@NotNull CommentL1 param, Operator operator) {
-        if (!param.isValidDeleteParam())
+        if (!param.isValidDeleteParam()) {
             return new Result<Object>(FAIL).setErrorCode(1010080207).setMessage("操作错误，参数不合法");
+        }
         Result<CommentL1> commentResult = readCommentWithContent(param.getId(), operator);
-        if (commentResult.getState() == FAIL)
+        if (commentResult.getState() == FAIL) {
             return new Result<Object>(commentResult);
+        }
         CommentL1 comment = commentResult.getObject();
         Result<Post> postResult = postService.readPostWithAllFalse(comment.getPostId(), operator);
-        if (postResult.getState() == FAIL)
+        if (postResult.getState() == FAIL) {
             return new Result<Object>(postResult);
+        }
         comment.setPost(postResult.getObject());
-        if (!commentL1Validator.checkDeletePermission(comment, operator))
+        if (!commentL1Validator.checkDeletePermission(comment, operator)) {
             return new Result<Object>(FAIL).setErrorCode(1010080208).setMessage("操作失败，权限错误");
+        }
         boolean isAdminOp = !comment.getCreatorId().equals(operator.getUserId());
-        if (isAdminOp && !param.isValidOpComment())
+        if (isAdminOp && !param.isValidOpComment()) {
             return new Result<Object>(FAIL).setErrorCode(1010080210).setMessage("操作错误，操作原因字数在5-256");
+        }
         int res = deleteOne(comment);
-        if (res == 0)
+        if (res == 0) {
             return new Result<Object>(FAIL).setErrorCode(1010080209).setMessage("数据库操作失败");
+        }
         serviceHelper.removeRedisComment(comment.getPostId(), comment.getId());
         postService.updateCommentCnt(comment.getPostId(), -1L);
         if (isAdminOp) {
@@ -293,14 +324,17 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
     public String correctCounters() {
         redisTemplate.delete(RedisUtil.scanAllKeys(redisTemplate, redisHelper.getCounterKey("*")));
         int r1 = dao.correctL2Cnt();
-        if (r1 == 0)
+        if (r1 == 0) {
             return "一级评论数据校正错误，请重新校正";
+        }
         int r2 = dao.correctPosterRepCnt();
-        if (r2 == 0)
+        if (r2 == 0) {
             return "一级评论数据校正错误，请重新校正";
+        }
         int r3 = dao.correctLikeCnt();
-        if (r3 == 0)
+        if (r3 == 0) {
             return "一级评论数据校正错误，请重新校正";
+        }
         return "一级评论的二级评论数校正" + r1 + "条数据;一级评论的发帖人回复数" + r2 + "条数据;一级评论的点赞数" + r3 + "条数据";
     }
 
@@ -308,7 +342,7 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
      * 每天将Redis中的一级评论的二级评论的数量记录刷入数据库
      */
     @Scheduled(cron = "0 30 3 * * ?")
-    public void dailyFlushRedisToDB() {
+    public void dailyFlushRedisToDb() {
         List<TmpEntry>[] cntLists = redisHelper.flushRedisCounter("l2", "pcm");
         redisTemplate.delete(RedisUtil.scanAllKeys(redisTemplate, redisHelper.getBasicKey("*")));
         redisTemplate.delete(RedisUtil.scanAllKeys(redisTemplate, redisHelper.getContentKey("*")));
@@ -319,7 +353,8 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
         redisTemplate.delete(RedisUtil.scanAllKeys(redisTemplate, serviceHelper.getRedisIndexZSetKey("*", POPULAR)));
         redisTemplate.delete(RedisUtil.scanAllKeys(redisTemplate, serviceHelper.getRedisIndexZSetKey("*", LATEST)));
         log.info("帖子的一级评论索引清除");
-        hmacKey = CryptUtil.randUrlSafeStr(64, true);//更新hmac的key
+        // 更新hmac的key
+        hmacKey = CryptUtil.randUrlSafeStr(64, true);
     }
 
 }

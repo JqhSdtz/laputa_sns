@@ -37,10 +37,10 @@ public class Operator extends AbstractBaseEntity {
     private User user;
 
     /**
-     * 用户权限信息
+     * 用户权限信息，Key是categoryId
      */
     @JsonProperty("permission_map")
-    private Map<Integer, Integer> permissionMap;//Key是categoryId
+    private Map<Integer, Integer> permissionMap;
 
     /**
      * 用户关注列表
@@ -103,18 +103,21 @@ public class Operator extends AbstractBaseEntity {
 
     @JsonProperty("user_id")
     public Operator setUserId(Integer id) {
-        if(user == null)
+        if(user == null) {
             user = new User(id);
-        else
+        } else {
             user.setId(id);
+        }
         return this;
     }
 
+    @Override
     @JsonIgnore
     public Integer getId() {
         return getUserId();
     }
 
+    @Override
     public Operator setId(Integer id) {
         return setUserId(id);
     }

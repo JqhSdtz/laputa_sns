@@ -25,7 +25,6 @@ import java.util.Date;
 @Accessors(chain = true)
 @JsonFilter("UserFilter")
 public class User extends AbstractBaseEntity {
-    //private static Pattern userNamePattern = Pattern.compile("^[^<>()\\[\\]\\\\.,;:\\s@\"]{2,12}$");
     private static char[] invalidChar = {'@', '#', '$', '.', ';', ':', '<', '>', '(', ')', '[', ']', '\\', ' ', '\0', '\n', '\t'};
 
     private String entityType = "USER";
@@ -155,47 +154,57 @@ public class User extends AbstractBaseEntity {
 
     @JsonIgnore
     private boolean validateNickName(boolean format) {
-        if (nickName == null || nickName.length() < 2)
+        if (nickName == null || nickName.length() < 2) {
             return false;
+        }
         if (nickName.length() > 40) {
-            if (!format)
+            if (!format) {
                 return false;
+            }
             nickName = nickName.substring(0, 40);
         }
         StringBuilder builder = null;
-        if (format)
+        if (format) {
             builder = new StringBuilder();
+        }
         for (int i = 0; i < nickName.length(); ++i) {
             char ch = nickName.charAt(i);
             boolean valid = true;
             for (int j = 0; j < invalidChar.length; ++j) {
                 if (ch == invalidChar[j]) {
-                    if (!format)
+                    if (!format) {
                         return false;
+                    }
                     valid = false;
                     break;
                 }
             }
-            if (format && valid)
+            if (format && valid) {
                 builder.append(ch);
+            }
         }
-        if (format)
+        if (format) {
             nickName = builder.toString();
+        }
         return true;
     }
 
     @JsonIgnore
     public boolean isValidUpdateInfoParam(boolean format) {
-        if (id == null)
+        if (id == null) {
             return false;
+        }
         if (format) {
             this.setNickName(null).setFollowersCnt(null).setFollowingCnt(null).setPostCnt(null);
         } else {
-            if (nickName != null || followersCnt != null || followingCnt != null || postCnt != null)
-                return false;//这些需特殊判断
+            if (nickName != null || followersCnt != null || followingCnt != null || postCnt != null) {
+                // 这些需特殊判断
+                return false;
+            }
         }
-        if (wxUnionId == null && email == null && schInfo == null && phone == null && intro == null && rawAvatar == null)
+        if (wxUnionId == null && email == null && schInfo == null && phone == null && intro == null && rawAvatar == null) {
             return false;
+        }
         return true;
     }
 

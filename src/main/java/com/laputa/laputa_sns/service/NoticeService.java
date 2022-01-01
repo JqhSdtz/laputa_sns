@@ -32,7 +32,11 @@ public class NoticeService {
     private final StringRedisTemplate redisTemplate;
     private final DefaultRedisScript<Long> pushNoticeScript;
     private final DefaultRedisScript<List<String>> pullNoticeScript;
-    @Value("${user-notice-box-length}")//用户消息接收箱最大长度
+
+    /**
+     * 用户消息接收箱最大长度
+     */
+    @Value("${user-notice-box-length}")
     private int userNoticeBoxLength;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -74,7 +78,7 @@ public class NoticeService {
     }
 
     public long pushNotice(int contentId, int type, int receiverId) {
-        return executePushScript(getRedisTimeKey(receiverId), getRedisInitTimeKey(receiverId), getRedisCntKey(receiverId), type + ":" + contentId, 1, new Date().getTime(), userNoticeBoxLength);
+        return executePushScript(getRedisTimeKey(receiverId), getRedisInitTimeKey(receiverId), getRedisCntKey(receiverId), type + ":" + contentId, 1, System.currentTimeMillis(), userNoticeBoxLength);
     }
 
     @SuppressWarnings("unchecked")
@@ -88,16 +92,18 @@ public class NoticeService {
         Map<String, String> cntMap = (Map<String, String>) resList.get(1);
         long cnt = 0;
         for (Map.Entry<String, String> entry : initTimeMap.entrySet()) {
-            if ("0".equals(entry.getValue()))
+            if ("0".equals(entry.getValue())) {
                 continue;
+            }
             cnt += Long.valueOf(cntMap.get(entry.getKey()));
         }
         return cnt;
     }
 
     public Result<List<Notice>> pullNotice(@NotNull Notice paramNotice, @NotNull Operator operator) {
-        if (!paramNotice.isValidPullNoticeParam())
+        if (!paramNotice.isValidPullNoticeParam()) {
             return new Result<List<Notice>>(Result.FAIL).setErrorCode(1010160201).setMessage("操作错误，参数不合法");
+        }
         int receiverId = operator.getUserId();
         QueryParam queryParam = paramNotice.getQueryParam();
         List<String> resList = redisTemplate.execute(pullNoticeScript, Arrays.asList(getRedisTimeKey(receiverId), getRedisInitTimeKey(receiverId), getRedisCntKey(receiverId)),
@@ -118,8 +124,9 @@ public class NoticeService {
     }
 
     public Result<Object> markNoticeAsRead(@NotNull Notice notice, @NotNull Operator operator) {
-        if (notice.getContentId() == null || notice.getType() == null)
+        if (notice.getContentId() == null || notice.getType() == null) {
             return new Result<Object>(Result.FAIL).setErrorCode(1010160202).setMessage("操作失败，参数错误");
+        }
         redisTemplate.opsForHash().put(getRedisInitTimeKey(operator.getUserId()), notice.getType() + ":" + notice.getContentId(), "0");
         return new Result<Object>(Result.SUCCESS);
     }
@@ -131,12 +138,13 @@ public class NoticeService {
         for (int i = 0; i < noticeList.size(); ++i) {
             Notice notice = noticeList.get(i);
             int type = notice.getType(), id = notice.getContentId();
-            if (type == Notice.TYPE_LIKE_POST || type == Notice.TYPE_CML1_OF_POST || type == Notice.TYPE_FW_POST)
+            if (type == Notice.TYPE_LIKE_POST || type == Notice.TYPE_CML1_OF_POST || type == Notice.TYPE_FW_POST) {
                 postMap.put(id, null);
-            else if (type == Notice.TYPE_LIKE_CML1 || type == Notice.TYPE_CML2_OF_CML1)
+            } else if (type == Notice.TYPE_LIKE_CML1 || type == Notice.TYPE_CML2_OF_CML1) {
                 cml1Map.put(id, null);
-            else if (type == Notice.TYPE_LIKE_CML2 || type == Notice.TYPE_REPLY_OF_CML2)
+            } else if (type == Notice.TYPE_LIKE_CML2 || type == Notice.TYPE_REPLY_OF_CML2) {
                 cml2Map.put(id, null);
+            }
         }
         if (postMap.size() != 0) {
             List<Integer> postIdList = new ArrayList<>(postMap.keySet());
@@ -183,12 +191,13 @@ public class NoticeService {
         for (int i = 0; i < noticeList.size(); ++i) {
             Notice notice = noticeList.get(i);
             int type = notice.getType(), id = notice.getContentId();
-            if (type == Notice.TYPE_LIKE_POST || type == Notice.TYPE_CML1_OF_POST || type == Notice.TYPE_FW_POST)
+            if (type == Notice.TYPE_LIKE_POST || type == Notice.TYPE_CML1_OF_POST || type == Notice.TYPE_FW_POST) {
                 notice.setContent(postMap.get(id));
-            else if (type == Notice.TYPE_LIKE_CML1 || type == Notice.TYPE_CML2_OF_CML1)
+            } else if (type == Notice.TYPE_LIKE_CML1 || type == Notice.TYPE_CML2_OF_CML1) {
                 notice.setContent(cml1Map.get(id));
-            else if (type == Notice.TYPE_LIKE_CML2 || type == Notice.TYPE_REPLY_OF_CML2)
+            } else if (type == Notice.TYPE_LIKE_CML2 || type == Notice.TYPE_REPLY_OF_CML2) {
                 notice.setContent(cml2Map.get(id));
+            }
         }
     }
 }

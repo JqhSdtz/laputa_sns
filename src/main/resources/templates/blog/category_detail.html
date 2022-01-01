@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--suppress ALL -->
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
 	  th:with="category = ${categoryService.readCategory(categoryId, false, operator).object}">
 	<th:block th:if="${category} != null">

@@ -46,7 +46,7 @@ public class Result<ResultType> implements Serializable {
 
     /**
      * <b>该构造函数忽略object</b>，用于复制一个FAIL的Result对象，并且可以返回指定类型的Result
-     * @param original
+     * @param failResult 被复制的Result对象
      */
     public Result(Result<?> failResult) {
         this.state = failResult.state;
@@ -55,6 +55,7 @@ public class Result<ResultType> implements Serializable {
         this.operator = failResult.operator;
     }
 
+    @Override
     public String toString() {
         return " 错误码:" + errorCode + " 错误信息:" + message;
     }

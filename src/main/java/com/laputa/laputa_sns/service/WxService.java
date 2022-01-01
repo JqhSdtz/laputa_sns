@@ -27,12 +27,13 @@ public class WxService {
 
     private final RestTemplate restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory());
     private final String code2SessionUrl = "https://api.weixin.qq.com/sns/jscode2session" +
-            "?appid=" + Secrets.WxAppId + "&secret=" + Secrets.WxAppSecret + "&grant_type=authorization_code&js_code=";
+            "?appid=" + Secrets.WX_APP_ID + "&secret=" + Secrets.WX_APP_SECRET + "&grant_type=authorization_code&js_code=";
 
     public WxService() {
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
         converter.setSupportedMediaTypes(Collections.singletonList(MediaType.TEXT_PLAIN));
-        restTemplate.getMessageConverters().add(converter);//设置支持Content-Type为text/plain的json内容
+        // 设置支持Content-Type为text/plain的json内容
+        restTemplate.getMessageConverters().add(converter);
     }
 
     public Result<Object> login(CodeAndUserInfo codeAndUserInfo) {
@@ -40,8 +41,9 @@ public class WxService {
         UserInfoRes userInfoRes = codeAndUserInfo.getUserInfo();
         String sessionKey = responseEntity.getBody().getSessionKey();
         String rawData = userInfoRes.getRawData();
-        if (!userInfoRes.getSignature().equals(CryptUtil.sha1(rawData + sessionKey)))
+        if (!userInfoRes.getSignature().equals(CryptUtil.sha1(rawData + sessionKey))) {
             return new Result<Object>(Result.FAIL).setErrorCode(1010210201).setMessage("登录信息签名错误");
+        }
 
         return new Result<Object>(Result.SUCCESS);
     }

@@ -68,10 +68,12 @@ public class PostController {
 
     @RequestMapping(value = "/top_comment/{action}", method = RequestMethod.PATCH)
     public Result<Object> setTopComment(@RequestBody Post post, @PathVariable String action, @RequestAttribute Operator operator) {
-        if ("create".equals(action))
+        if ("create".equals(action)) {
             return postService.setTopComment(post, false, operator).setOperator(operator);
-        if ("cancel".equals(action))
+        }
+        if ("cancel".equals(action)) {
             return postService.setTopComment(post, true, operator).setOperator(operator);
+        }
         return new Result<Object>(Result.FAIL);
     }
 

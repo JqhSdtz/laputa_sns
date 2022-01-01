@@ -54,39 +54,41 @@ public class ValidateInterceptor implements HandlerInterceptor {
             cookieStr = request.getHeader("X-LPT-USER-TOKEN");
         }
         String message = null;
-        if (cookieStr != null && cookieStr != "") loadOperator:{
-            String[] str = cookieStr.split("@");
-            if (str.length < 2) {
-                message = "Token格式错误";
-                break loadOperator;
+        if (cookieStr != null && cookieStr != "") {
+            loadOperator:{
+                String[] str = cookieStr.split("@");
+                if (str.length < 2) {
+                    message = "Token格式错误";
+                    break loadOperator;
+                }
+                Integer userId;
+                try {
+                    userId = Integer.valueOf(str[0]);
+                } catch (NumberFormatException e) {
+                    message = "用户ID格式错误";
+                    break loadOperator;
+                }
+                Operator operator = operatorService.readOperatorWithToken(userId, response);
+                if (operator == null) {
+                    message = "登录已过期，请重新登陆";
+                    break loadOperator;
+                }
+                if (!str[1].equals(operator.getToken())) {
+                    message = "Token不正确";
+                    break loadOperator;
+                }
+                Result<Operator> operatorResult = operatorService.loadOperator(userId, operator, request, response);
+                if (operatorResult.getState() == Result.FAIL) {
+                    message = operatorResult.getMessage();
+                    break loadOperator;
+                }
+    //            if (operator.getLastAccessTime() != null && System.currentTimeMillis() - operator.getLastAccessTime() < 200) {
+    //                message = "操作过于频繁";
+    //                break loadOperator;
+    //            }
+                request.setAttribute("operator", operatorResult.getObject());
+                return true;
             }
-            Integer userId;
-            try {
-                userId = Integer.valueOf(str[0]);
-            } catch (NumberFormatException e) {
-                message = "用户ID格式错误";
-                break loadOperator;
-            }
-            Operator operator = operatorService.readOperatorWithToken(userId, response);
-            if (operator == null) {
-                message = "登录已过期，请重新登陆";
-                break loadOperator;
-            }
-            if (!str[1].equals(operator.getToken())) {
-                message = "Token不正确";
-                break loadOperator;
-            }
-            Result<Operator> operatorResult = operatorService.loadOperator(userId, operator, request, response);
-            if (operatorResult.getState() == Result.FAIL) {
-                message = operatorResult.getMessage();
-                break loadOperator;
-            }
-//            if (operator.getLastAccessTime() != null && new Date().getTime() - operator.getLastAccessTime() < 200) {
-//                message = "操作过于频繁";
-//                break loadOperator;
-//            }
-            request.setAttribute("operator", operatorResult.getObject());
-            return true;
         }
         request.setAttribute("operator", new Operator(-1).setLogMessage(message));
         return true;
@@ -95,12 +97,14 @@ public class ValidateInterceptor implements HandlerInterceptor {
     @Nullable
     private String getTokenFromCookie(@NotNull Cookie[] cookies) {
         // 注意，cookie中可能包含多个token，以最后一个为准
-        if (cookies == null || cookies.length == 0)
+        if (cookies == null || cookies.length == 0) {
             return null;
+        }
         String token = null;
         for (int i = 0; i < cookies.length; ++i) {
-            if (cookies[i].getName().equals("token"))
+            if ("token".equals(cookies[i].getName())) {
                 token = cookies[i].getValue();
+            }
         }
         return token;
     }

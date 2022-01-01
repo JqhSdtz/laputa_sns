@@ -27,6 +27,8 @@ import static com.laputa.laputa_sns.common.Result.FAIL;
  * @since 下午 5:31 20/02/21
  */
 
+// Category的父类AbstractBaseEntity中已经重写了hashCode和equals，所以这里没有问题
+@SuppressWarnings("MapOrSetKeyShouldOverrideHashCodeEquals")
 @Slf4j
 @Service
 @EnableScheduling
@@ -63,13 +65,15 @@ public class PostIndexService implements ApplicationRunner {
         // 加载索引前，先清除数据库的索引标记，若采用多个实例，当前的实例不包含全部的帖子时，要改一下代码，加上条件
         commonService.clearIndexedFlag("lpt_post", "post_id", "post_p_indexed_flag", "post_l_indexed_flag");
         for (Category category : leafCategorySet) {
-            if (category.getCacheNum() == null || category.getCacheNum() == 0)
+            if (category.getCacheNum() == null || category.getCacheNum() == 0) {
                 continue;
+            }
             // 加载新帖索引
             param.setCategory(category).getQueryParam().setQueryNum(category.getCacheNum());
-            Result<List<Post>> latestPostListResult = postService.readDBPostList(param, LATEST, true, false, true, progOperator);
-            if (latestPostListResult.getState() == FAIL)
+            Result<List<Post>> latestPostListResult = postService.readDbPostList(param, LATEST, true, false, true, progOperator);
+            if (latestPostListResult.getState() == FAIL) {
                 continue;
+            }
             List<Post> latestPostList = latestPostListResult.getObject();
             postService.multiSetIndexedFlag(latestPostList, LATEST, 1);
             for (int i = 0; i < latestPostList.size(); ++i) {
@@ -77,9 +81,10 @@ public class PostIndexService implements ApplicationRunner {
                 category.getLatestPostList().addLast(new Index(post.getId(), post.getCreateTime().getTime()), false);
             }
             // 加载热帖索引
-            Result<List<Post>> popularPostListResult = postService.readDBPostList(param, POPULAR, true, false, true, progOperator);
-            if (popularPostListResult.getState() == FAIL)
+            Result<List<Post>> popularPostListResult = postService.readDbPostList(param, POPULAR, true, false, true, progOperator);
+            if (popularPostListResult.getState() == FAIL) {
                 continue;
+            }
             List<Post> popularPostList = popularPostListResult.getObject();
             postService.multiSetIndexedFlag(popularPostList, POPULAR, 1);
             for (int i = 0; i < popularPostList.size(); ++i) {
@@ -102,10 +107,12 @@ public class PostIndexService implements ApplicationRunner {
      */
     private IndexList loadSubPostIndexList(@NotNull Category root, int type) {
         if (root.getIsLeaf() == null || root.getIsLeaf()) {
-            if (type == LATEST)
+            if (type == LATEST) {
                 return root.getLatestPostList();
-            if (type == POPULAR)
+            }
+            if (type == POPULAR) {
                 return root.getPopularPostList();
+            }
         }
         List<Category> subCategoryList = root.getSubCategoryList();
         List<Index> totalList = new ArrayList<>();
@@ -113,20 +120,24 @@ public class PostIndexService implements ApplicationRunner {
             Category category = subCategoryList.get(i);
             IndexList subList = loadSubPostIndexList(category, type);
             // 私有目录，不向上展示，但也需要加载
-            if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE))
+            if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE)) {
                 continue;
-            for (Iterator<Index> iter = subList.iterator(); iter.hasNext(); )
+            }
+            for (Iterator<Index> iter = subList.iterator(); iter.hasNext(); ) {
                 totalList.add(iter.next());
+            }
         }
         Collections.sort(totalList);
         IndexList rootList = null;
-        if (type == LATEST)
+        if (type == LATEST) {
             rootList = root.getLatestPostList();
-        else if (type == POPULAR)
+        } else if (type == POPULAR) {
             rootList = root.getPopularPostList();
+        }
         int limit = Math.min(totalList.size(), postIndexMaxCacheNum);
-        for (int i = 0; i < limit; ++i)
+        for (int i = 0; i < limit; ++i) {
             rootList.addLast(totalList.get(i), false);
+        }
         return rootList;
     }
 
@@ -142,14 +153,17 @@ public class PostIndexService implements ApplicationRunner {
      */
     public List<Integer> getPostIndexList(Category category, int type, Integer startId, Integer from, int num) {
         IndexList indexList = type == LATEST ? category.getLatestPostList() : category.getPopularPostList();
-        if (indexList == null)
+        if (indexList == null) {
             return null;
-        if (indexList.size() == 0)
+        }
+        if (indexList.size() == 0) {
             return new ArrayList<>(0);
+        }
         List<Integer> postIdList = new ArrayList<>(num);
         Iterator<Index> iter = indexList.iterator(startId, from);
-        for (int cnt = 0; iter.hasNext() && cnt < num; ++cnt)
+        for (int cnt = 0; iter.hasNext() && cnt < num; ++cnt) {
             postIdList.add(iter.next().getId());
+        }
         return postIdList;
     }
 
@@ -164,8 +178,9 @@ public class PostIndexService implements ApplicationRunner {
     public int[] addPostIndex(@NotNull List<Post> postList, Category category, int type) {
         // 用map是为了防止id重复，把有改动的记录到changeMap中
         Map<Integer, TmpEntry> changeMap = new HashMap<>(postList.size());
-        for (int i = 0; i < postList.size(); ++i)
+        for (int i = 0; i < postList.size(); ++i) {
             addPostIndex(postList.get(i), null, type, false, changeMap);
+        }
         postService.multiSetIndexedFlag(new ArrayList<>(changeMap.values()), type);
         int[] res = new int[2];
         // 确保category是完整的对象，以获取索引列表
@@ -194,11 +209,12 @@ public class PostIndexService implements ApplicationRunner {
             category = categoryService.readCategory(post.getCategoryId(), false, progOperator).getObject();
         }
         if (type == LATEST) {
-            long date = isNew ? new Date().getTime() : post.getCreateTime().getTime();
+            long date = isNew ? System.currentTimeMillis() : post.getCreateTime().getTime();
             Index index = new Index(post.getId(), date);
             doUpdateLatestIndex(index, category, isNew, changeMap);
-        } else if (type == POPULAR)
+        } else if (type == POPULAR) {
             updatePostPopIndex(post, category,true, false, changeMap);
+        }
     }
 
     private void doUpdateLatestIndex(Index index, Category category, boolean isNew, Map<Integer, TmpEntry> changeMap) {
@@ -208,20 +224,25 @@ public class PostIndexService implements ApplicationRunner {
                 // 没有该节点才放入
                 if (indexList.size() >= postIndexMaxCacheNum) {
                     Index last = indexList.popLast();
-                    if (last != null && changeMap != null)
+                    if (last != null && changeMap != null) {
                         changeMap.put(last.getId(), new TmpEntry(last.getId(), 0));
+                    }
                 }
                 if (isNew)
                     // 新加入的latest索引不需要设置index_flag，见PostService.createComment
+                {
                     indexList.addFirst(index, false);
-                else {
+                } else {
                     Index last = indexList.addLast(index, true);
-                    if (last != null && changeMap != null)
+                    if (last != null && changeMap != null) {
                         changeMap.put(last.getId(), new TmpEntry(last.getId(), 1));
+                    }
                 }
             }
-            if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE))//私有目录，不向上展示
+            // 私有目录，不向上展示
+            if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE)) {
                 break;
+            }
             category = category.getParent();
         }
     }
@@ -264,20 +285,23 @@ public class PostIndexService implements ApplicationRunner {
                         Index last = indexList.addLast(index, true);
                         if (last != null) {
                             success = true;
-                            if (changeMap != null)
+                            if (changeMap != null) {
                                 changeMap.put(last.getId(), new TmpEntry(last.getId(), 1));
+                            }
                         }
                     } else {
                         if (greaterThanLast) {
                             // 不在列表中且没有空间，判断要不要换掉末端帖子
                             Index popped = indexList.popLast();
-                            if (popped != null && changeMap != null)
+                            if (popped != null && changeMap != null) {
                                 changeMap.put(popped.getId(), new TmpEntry(popped.getId(), 0));
+                            }
                             Index added = indexList.addLast(index, true);
                             if (added != null) {
                                 success = true;
-                                if (changeMap != null)
+                                if (changeMap != null) {
                                     changeMap.put(added.getId(), new TmpEntry(added.getId(), 1));
+                                }
                             }
                         }
 //                        下层的没有是否代表上层也没有？目前来说，如果下层长度限制小，上层长度限制大，下层没有的也可能到上层
@@ -297,8 +321,10 @@ public class PostIndexService implements ApplicationRunner {
 //                else
 //                   break;
             }
-            if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE))//私有目录，不向上展示
+            // 私有目录，不向上展示
+            if (category.getType() != null && category.getType().equals(Category.TYPE_PRIVATE)) {
                 break;
+            }
             category = category.getParent();
         }
         return success;
@@ -308,15 +334,16 @@ public class PostIndexService implements ApplicationRunner {
      * 在指定目录中删除帖子的索引
      *
      * @param postList 待删除的帖子列表
-     * @param type     索引类型（POPULAR, LATEST）
      */
     public void deletePostIndex(@NotNull List<Post> postList) {
         Map<Integer, TmpEntry> latestChangeMap = new HashMap<>(postList.size());
         Map<Integer, TmpEntry> popularChangeMap = new HashMap<>(postList.size());
-        for (int i = 0; i < postList.size(); ++i)
+        for (int i = 0; i < postList.size(); ++i) {
             deletePostIndex(postList.get(i), null, LATEST, latestChangeMap);
-        for (int i = 0; i < postList.size(); ++i)
+        }
+        for (int i = 0; i < postList.size(); ++i) {
             deletePostIndex(postList.get(i), null, POPULAR, popularChangeMap);
+        }
         postService.multiSetIndexedFlag(new ArrayList<>(latestChangeMap.values()), LATEST);
         postService.multiSetIndexedFlag(new ArrayList<>(popularChangeMap.values()), POPULAR);
     }
@@ -327,12 +354,14 @@ public class PostIndexService implements ApplicationRunner {
         }
         while (category != null) {
             Index removedIndex = null;
-            if (type == LATEST)
+            if (type == LATEST) {
                 removedIndex = category.getLatestPostList().remove(post.getId());
-            else if (type == POPULAR)
+            } else if (type == POPULAR) {
                 removedIndex = category.getPopularPostList().remove(post.getId());
-            if (changeMap != null && removedIndex != null)
+            }
+            if (changeMap != null && removedIndex != null) {
                 changeMap.put(post.getId(), new TmpEntry(post.getId(), 0));
+            }
 // 目录迁移的情况下，上级目录可能是空的，但再上级可能包含需要删除的索引，这里为了简便，一律找到最上层
 //            if (res == null)
 //                // 子目录索引没有的，父目录索引必定没有，不用再往上找了
@@ -374,8 +403,9 @@ public class PostIndexService implements ApplicationRunner {
      * @param add 是否在上级目录添加本目录的索引
      */
     public void moveCategoryIndexList(Category category, boolean delete, boolean add) {
-        if (category.getType().equals(Category.TYPE_PRIVATE))
+        if (category.getType().equals(Category.TYPE_PRIVATE)) {
             return;
+        }
         IndexList latestList = category.getLatestPostList();
         IndexList popularList = category.getPopularPostList();
         Map<Integer, TmpEntry> latestChangeMap = new HashMap<>(latestList.size());
@@ -424,10 +454,12 @@ public class PostIndexService implements ApplicationRunner {
             // 此种设计仍有待验证
             List<Index> remainedPopList = category.getPopularPostList().trim(10, true);
             List<Index> remainedLatList = category.getLatestPostList().trim(10, true);
-            for (int i = 0; i < remainedPopList.size(); ++i)
+            for (int i = 0; i < remainedPopList.size(); ++i) {
                 remainedPopEntryList.add(new TmpEntry(remainedPopList.get(i).getId(), 1));
-            for (int i = 0; i < remainedLatList.size(); ++i)
+            }
+            for (int i = 0; i < remainedLatList.size(); ++i) {
                 remainedLatEntryList.add(new TmpEntry(remainedLatList.get(i).getId(), 1));
+            }
         }
         commonService.clearIndexedFlag("lpt_post", "post_id", "post_p_indexed_flag", "post_l_indexed_flag");
         postService.multiSetIndexedFlag(remainedPopEntryList, POPULAR);

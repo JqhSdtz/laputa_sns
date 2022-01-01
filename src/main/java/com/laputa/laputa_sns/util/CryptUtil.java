@@ -28,15 +28,18 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Slf4j
 public class CryptUtil {
 
-    private static final String DEFAULT_CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";//默认的AES加密算法
+    /**
+     * 默认的AES加密算法
+     */
+    private static final String DEFAULT_CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
 
     private static final String HMAC_MD5_NAME = "HmacMD5";
 
-    private static final Queue<SecureRandom> randoms = new ConcurrentLinkedQueue<>();
+    private static final Queue<SecureRandom> RANDOMS = new ConcurrentLinkedQueue<>();
 
-    private static final Random notSecRand = new Random();
+    private static final Random NOT_SEC_RAND = new Random();
 
-    private static final char[] charSet = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a',
+    private static final char[] CHAR_SET = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a',
             'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
             's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I',
             'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-', '_'};
@@ -44,23 +47,10 @@ public class CryptUtil {
     private static int[] revPosSet = new int[128];
 
     static {
-        for (int i = 0; i < charSet.length; ++i)
-            revPosSet[charSet[i]] = i;
+        for (int i = 0; i < CHAR_SET.length; ++i) {
+            revPosSet[CHAR_SET[i]] = i;
+        }
     }
-
-//    @Nullable
-//    public static String aesEncrypt(String key, String content, String iv) {
-//        try {
-//            Cipher cipher = Cipher.getInstance(DEFAULT_CIPHER_ALGORITHM);
-//            byte[] byteContent = content.getBytes("utf-8");
-//            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key.getBytes("UTF-8"), "AES"), new IvParameterSpec(iv.getBytes()));// 初始化为加密模式的密码器
-//            byte[] result = cipher.doFinal(byteContent);
-//            return Base64.encodeBase64String(result);
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//        }
-//        return null;
-//    }
 
     @Nullable
     public static String aesDecrypt(String key, String content, String iv) {
@@ -69,9 +59,7 @@ public class CryptUtil {
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(Base64.decodeBase64(key), "AES"), new IvParameterSpec(Base64.decodeBase64(iv)));
             byte[] result = cipher.doFinal(Base64.decodeBase64(content));
             return new String(result, "utf-8");
-        } catch (Exception e) {
-            //e.printStackTrace();
-        }
+        } catch (Exception e) {}
         return null;
     }
 
@@ -113,7 +101,7 @@ public class CryptUtil {
     private static SecureRandom getSecureRandom() {
         //参考org.apache.catalina.util.SessionIdGeneratorBase.getRandomBytes
         //对tomcat中产生随机数代码的拙劣模仿...
-        SecureRandom random = randoms.poll();
+        SecureRandom random = RANDOMS.poll();
         if (random == null) {
             try {
                 random = SecureRandom.getInstance("SHA1PRNG");
@@ -123,18 +111,19 @@ public class CryptUtil {
             }
             random.nextInt();
         }
-        randoms.add(random);
+        RANDOMS.add(random);
         return random;
     }
 
     @NotNull
     public static String randUrlSafeStr(int length, boolean secure) {
-        Random random = secure ? getSecureRandom() : notSecRand;
-        byte randBytes[] = new byte[length];
+        Random random = secure ? getSecureRandom() : NOT_SEC_RAND;
+        byte[] randBytes = new byte[length];
         random.nextBytes(randBytes);
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < length; ++i)
-            builder.append(charSet[randBytes[i] & 0x3f]);
+        for (int i = 0; i < length; ++i) {
+            builder.append(CHAR_SET[randBytes[i] & 0x3f]);
+        }
         return builder.toString();
     }
 
@@ -142,18 +131,20 @@ public class CryptUtil {
     public static String longToStr(long l) {
         StringBuilder stringBuilder = new StringBuilder();
         while(l >= 64) {
-            stringBuilder.append(charSet[(int) (l % 64)]);
+            stringBuilder.append(CHAR_SET[(int) (l % 64)]);
             l >>= 6;
         }
-        if (l > 0)
-            stringBuilder.append(charSet[(int) l]);
+        if (l > 0) {
+            stringBuilder.append(CHAR_SET[(int) l]);
+        }
         return stringBuilder.toString();
     }
 
     public static long strToLong(@NotNull String str) {
         long res = 0;
-        for (int i = str.length() - 1; i >= 0; --i)
+        for (int i = str.length() - 1; i >= 0; --i) {
             res = (res << 6) + revPosSet[str.charAt(i)];
+        }
         return res;
     }
 

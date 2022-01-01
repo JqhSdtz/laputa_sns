@@ -49,14 +49,16 @@ public class PostNews extends AbstractBaseEntity {
         this.id = id;
     }
 
+    @Override
     public Integer getOfId() {
         return receiverId;
     }
 
     @JsonIgnore
     public boolean isValidReadNewsParam() {
-        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)
+        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10) {
             return false;
+        }
         return true;
     }
 }

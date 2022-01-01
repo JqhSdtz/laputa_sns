@@ -41,6 +41,8 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
  * @since 下午 8:17 20/02/06
  */
 
+// Category的父类AbstractBaseEntity中已经重写了hashCode和equals，所以这里没有问题
+@SuppressWarnings("MapOrSetKeyShouldOverrideHashCodeEquals")
 @Slf4j
 @Service
 @Order(0)
@@ -77,10 +79,10 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     @Override
     /**加载目录树*/
     public void run(ApplicationArguments args) {
-        loadCategoryFromDB(false);
+        loadCategoryFromDb(false);
     }
 
-    private void loadCategoryFromDB(boolean fromReload) {
+    private void loadCategoryFromDb(boolean fromReload) {
         List<Category> categoryList = dao.selectList(new Category());
         Map<Integer, Category> newCategoryMap = new ConcurrentHashMap<>();
         for (int i = 0; i < categoryList.size(); ++i) {
@@ -105,24 +107,29 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             groundCategory = (Category) new Category().setName("根目录").setIsLeaf(true).setType(Category.TYPE_COMMON);
             categoryMap.put(GROUND_ID, groundCategory);
             int res = insertOne(groundCategory);
-            if (res == -1)
+            if (res == -1) {
                 log.error("添加缺省目录失败，请检查数据库并手动添加");
-            else
+            } else {
                 log.info("缺省基础目录添加成功");
+            }
             return;
         }
         leafCategorySet = Collections.newSetFromMap(new ConcurrentHashMap<>());
         for (int i = 0; i < categoryList.size(); ++i) {
             Category category = categoryList.get(i);
-            if (category.getParent() != null)//groundCategory的parent为null
+            if (category.getParent() != null) {
+                // groundCategory的parent为null
                 setAsParent(category, category.getParentId());
+            }
         }
         for (int i = 0; i < categoryList.size(); ++i) {
             Category category = categoryList.get(i);
-            if (category.getSubCategoryList().isEmpty())
+            if (category.getSubCategoryList().isEmpty()) {
                 setLeaf(category, true);
-            else//只有叶子节点的帖子计数值可以保证准确，因为校对时只校对叶子节点
+            } else {
+                // 只有叶子节点的帖子计数值可以保证准确，因为校对时只校对叶子节点
                 category.setIsLeaf(false).setOriPostCnt(0L);
+            }
             //设置路径
             setPathList(category);
         }
@@ -142,11 +149,13 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * @return
      */
     private long cascadeSetOriPostCnt(@NotNull Category root) {
-        if (root.getIsLeaf() == null || root.getIsLeaf())
+        if (root.getIsLeaf() == null || root.getIsLeaf()) {
             return root.getOriPostCnt();
+        }
         List<Category> subList = root.getSubCategoryList();
-        for (int i = 0; i < subList.size(); ++i)
+        for (int i = 0; i < subList.size(); ++i) {
             root.setOriPostCnt(root.getOriPostCnt() + cascadeSetOriPostCnt(subList.get(i)));
+        }
         return root.getOriPostCnt();
     }
 
@@ -183,9 +192,13 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * 级联获取允许发帖等级
      */
     private Integer cascadeGetAllowPostLevel(Category category) {
-        if (GROUND_ID.equals(category.getId())) return category.getAllowPostLevel();
+        if (GROUND_ID.equals(category.getId())) {
+            return category.getAllowPostLevel();
+        }
         Integer level = category.getAllowPostLevel();
-        if (level != null) return level;
+        if (level != null) {
+            return level;
+        }
         return cascadeGetAllowPostLevel(category.getParent());
     }
 
@@ -211,19 +224,22 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     private void setPathListOfCascadeSub(Category category) {
         setPathList(category);
         List<Category> subs = category.getSubCategoryList();
-        for (int i = 0; i < subs.size(); ++i)
+        for (int i = 0; i < subs.size(); ++i) {
             setPathListOfCascadeSub(subs.get(i));
+        }
     }
 
     /**
      * 深度优先搜索将该目录节点的所有级联的子节点都放到结果列表中
      */
     private void deepFirstSearchLeavesToList(@NotNull Category category, List<Category> resultList, boolean preventPrivate) {
-        if (category.getIsLeaf() == null || category.getIsLeaf())
+        if (category.getIsLeaf() == null || category.getIsLeaf()) {
             resultList.add(category);
+        }
         List<Category> curSubCategories = category.getSubCategoryList();
-        if (curSubCategories.size() == 0)
+        if (curSubCategories.size() == 0) {
             return;
+        }
         for (int i = 0; i < curSubCategories.size(); ++i) {
             Category subCategory = curSubCategories.get(i);
             if (preventPrivate && subCategory.getType() != null && subCategory.getType().equals(Category.TYPE_PRIVATE)) {
@@ -238,19 +254,22 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * 深搜生成目录树的字符串
      */
     private void getSubTreeString(Category category, StringBuilder stringBuilder, int depth) {
-        for (int i = 0; i < depth; ++i)
+        for (int i = 0; i < depth; ++i) {
             stringBuilder.append("   ");
+        }
         String type = "";
-        if (category.getType() == null || category.getType().equals(Category.TYPE_COMMON))
+        if (category.getType() == null || category.getType().equals(Category.TYPE_COMMON)) {
             type = "common";
-        else if (category.getType().equals(Category.TYPE_DEF_SUB))
+        } else if (category.getType().equals(Category.TYPE_DEF_SUB)) {
             type = "def_sub";
-        else if (category.getType().equals(Category.TYPE_PRIVATE))
+        } else if (category.getType().equals(Category.TYPE_PRIVATE)) {
             type = "private";
+        }
         stringBuilder.append(String.format("|----id:%04d name:%s type:%s psCnt:%d\n", category.getId(), category.getName(), type, category.getPostCnt()));
         List<Category> subCategoryList = category.getSubCategoryList();
-        for (int i = 0; i < subCategoryList.size(); ++i)
+        for (int i = 0; i < subCategoryList.size(); ++i) {
             getSubTreeString(subCategoryList.get(i), stringBuilder, depth + 1);
+        }
     }
 
     /**
@@ -272,13 +291,15 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     @Nullable
     private Category setAsParent(Category category, Integer parentId) {
         Category parent = categoryMap.get(parentId);
-        if (parent == null)
+        if (parent == null) {
             return null;
+        }
         parent.getSubCategoryList().add(category);
         category.setParent(parent);
         //若父目录之前是叶目录，则添加节点后不再是叶目录
-        if (parent.getIsLeaf() == null || parent.getIsLeaf())
+        if (parent.getIsLeaf() == null || parent.getIsLeaf()) {
             setLeaf(parent, false);
+        }
         return parent;
     }
 
@@ -294,8 +315,10 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
                 break;
             }
         }
-        if (subCategoryList.size() == 0)//移除后原父目录变为叶目录
+        if (subCategoryList.size() == 0) {
+            // 移除后原父目录变为叶目录
             setLeaf(parent, true);
+        }
         cascadeUpdatePostCnt(parent.getId(), category.getPostCnt() * -1);
     }
 
@@ -341,8 +364,9 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      */
     public Result<List<Category>> readLeavesOfRoot(Integer categoryId, boolean preventPrivate, Operator operator) {
         Result<Category> result = readCategory(categoryId, false, operator);
-        if (result.getState() == FAIL)
+        if (result.getState() == FAIL) {
             return new Result<List<Category>>(result);
+        }
         List<Category> resultList = new ArrayList<>();
         deepFirstSearchLeavesToList(result.getObject(), resultList, preventPrivate);
         return new Result<List<Category>>(SUCCESS).setObject(resultList);
@@ -353,8 +377,9 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      */
     public Result<List<Category>> readDirectSubCategories(Integer categoryId, Operator operator) {
         Result<Category> result = readCategory(categoryId, false, operator);
-        if (result.getState() == FAIL)
+        if (result.getState() == FAIL) {
             return new Result<List<Category>>(result);
+        }
         return new Result<List<Category>>(SUCCESS).setObject(result.getObject().getSubCategoryList());
     }
 
@@ -374,32 +399,40 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      */
     private Result<Category> checkCategoryStructure(@NotNull Category category, int type) {
         Category paramCategory = category;
-        if (type == UPDATE) {//对象是参数对象，根据Id获取完整对象
+        // 对象是参数对象，根据Id获取完整对象
+        if (type == UPDATE) {
             Result<Category> categoryResult = readCategory(category.getId(), false, progOperator);
-            if (categoryResult.getState() == FAIL)
+            if (categoryResult.getState() == FAIL) {
                 return categoryResult.setMessage("参数对象检查失败，id错误");
+            }
             category = categoryResult.getObject();
         }
-        if (paramCategory.getParent() != null && paramCategory.getParent().getId() != null) {//包含父目录更新操作
+        // 包含父目录更新操作
+        if (paramCategory.getParent() != null && paramCategory.getParent().getId() != null) {
             Result<Category> parentResult = readCategory(paramCategory.getParent().getId(), true, progOperator);
-            if (parentResult.getState() == FAIL)
+            if (parentResult.getState() == FAIL) {
                 return parentResult.setMessage("操作失败，父目录id错误");
+            }
             Category parent = parentResult.getObject();
             if (type == UPDATE) {
                 // 更新父目录的情况，parent为要移向的父目录
                 // parentId是要修改的父目录Id，category是完整的原目录
-                if (parent.getId().equals(category.getId()))
+                if (parent.getId().equals(category.getId())) {
                     return new Result<Category>(FAIL).setErrorCode(1010010203).setMessage("操作失败，子目录不能和父目录相同");
+                }
                 // 更新父目录的情况，新的父目录和原目录的父目录相同
-                if (parent.getId().equals(category.getParent().getId()))
+                if (parent.getId().equals(category.getParent().getId())) {
                     return new Result<Category>(FAIL).setErrorCode(1010010204).setMessage("操作失败，新的父目录不能和原有的父目录相同");
+                }
                 // 新的父目录是原目录的子目录
-                if (category.isParentOf(parent))
+                if (category.isParentOf(parent)) {
                     return new Result<Category>(FAIL).setErrorCode(1010010205).setMessage("操作失败，新的父目录不能是原目录的子目录");
+                }
             }
             // 要移向或在此创建的父目录是叶子节点且有内容
-            if (parent.getIsLeaf() && !parent.getPostCnt().equals(0L))
+            if (parent.getIsLeaf() && !parent.getPostCnt().equals(0L)) {
                 return new Result<Category>(FAIL).setErrorCode(1010010206).setMessage("操作失败，新的父目录不能包含帖子");
+            }
         }
         return new Result<Category>(Result.SUCCESS);
     }
@@ -414,8 +447,9 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         List<List<String>> vList = redisHelper.multiGetRedisCounterCnt(categoryList, "pst");
         for (int i = 0; i < categoryList.size(); ++i) {
             Category category = categoryList.get(i);
-            if (category == null)
+            if (category == null) {
                 continue;
+            }
             long cnt = vList.get(i).get(0) != null ? Long.valueOf(vList.get(i).get(0)) : 0;
             category.setPostCnt(category.getOriPostCnt() + cnt);
         }
@@ -426,24 +460,29 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      */
     public Result<Category> readCategoryWithAllCounters(Integer categoryId, Operator operator) {
         Result<Category> result = readCategory(categoryId, true, operator);
-        if (result.getState() == FAIL)
+        if (result.getState() == FAIL) {
             return result;
+        }
         List<Category> oriSubList = result.getObject().getSubCategoryList();
         List<Category> subListClone = new ArrayList<>(oriSubList.size());
-        for (int i = 0; i < oriSubList.size(); ++i)
+        for (int i = 0; i < oriSubList.size(); ++i) {
             subListClone.add(oriSubList.get(i).clone());
+        }
         result.getObject().setSubCategoryList(subListClone);
-        if (result.getState() == SUCCESS)
+        if (result.getState() == SUCCESS) {
             multiSetCounter(subListClone);
+        }
         return result;
     }
 
     private Result<Category> getCategory(Integer categoryId, Operator operator) {
-        if (categoryId == null)
+        if (categoryId == null) {
             return new Result<Category>(FAIL).setErrorCode(1010010201).setMessage("查询失败，id不能为空");
+        }
         Category resCategory = categoryMap.get(categoryId);
-        if (resCategory == null)
+        if (resCategory == null) {
             return new Result<Category>(FAIL).setErrorCode(1010010205).setMessage("查询失败，id错误");
+        }
         return new Result<Category>(SUCCESS).setObject(resCategory);
     }
 
@@ -454,8 +493,9 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         Result<Category> result = getCategory(categoryId, operator);
         if (result.getState() == SUCCESS) {
             result.setObject(result.getObject().clone());
-            if (withCounter)
+            if (withCounter) {
                 setCounter(result.getObject());
+            }
         }
         return result;
     }
@@ -473,11 +513,13 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     @SneakyThrows
     public <T> Result<Object> multiSetCategory(List<T> entityList, Method getCategoryIdMethod, Method setCategoryMethod, Operator operator) {
         for (int i = 0; i < entityList.size(); ++i) {
-            if (entityList.get(i) == null)
+            if (entityList.get(i) == null) {
                 continue;
+            }
             Category category = readCategory((Integer) getCategoryIdMethod.invoke(entityList.get(i)), false, operator).getObject();
-            if (category != null)
+            if (category != null) {
                 setCategoryMethod.invoke(entityList.get(i), category);
+            }
         }
         return new Result<Object>(Result.SUCCESS);
     }
@@ -487,8 +529,9 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      */
     public Result<List<Category>> readParentCategories(Integer categoryId, Operator operator) {
         Result<Category> result = readCategory(categoryId, false, operator);
-        if (result.getState() == FAIL)
+        if (result.getState() == FAIL) {
             return new Result<List<Category>>(result);
+        }
         Category category = result.getObject();
         List<Category> categoryList = new ArrayList<>();
         while (category.getParentId() != null) {
@@ -517,19 +560,25 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * 添加目录，返回结果中包含新添加目录的id
      */
     public synchronized Result<Integer> createCategory(@NotNull Category category, Operator operator) {
-        if (!category.isValidInsertParam(true) || !category.isValidOpComment())
+        if (!category.isValidInsertParam(true) || !category.isValidOpComment()) {
             return new Result<Integer>(FAIL).setErrorCode(1010010207).setMessage("操作失败，参数不合法");
-        if (!categoryValidator.checkCreatePermission(category, operator))
+        }
+        if (!categoryValidator.checkCreatePermission(category, operator)) {
             return new Result<Integer>(FAIL).setErrorCode(1010010208).setMessage("操作失败，权限错误");
+        }
         //检查目录结构是否合法
         Result<Category> checkResult = checkCategoryStructure(category, CREATE);
-        if (checkResult.getState() == FAIL)
+        if (checkResult.getState() == FAIL) {
             return new Result<Integer>(checkResult);
+        }
         //设置创建者及预缓存数量初始值
         category.setCreator(operator.getUser()).setCacheNum(20).setOriPostCnt(0L).setAllowUserPost(true);
-        int res = insertOne(category);//数据库操作
-        if (res == -1)//数据库操作失败
+        // 数据库操作
+        int res = insertOne(category);
+        if (res == -1) {
+            // 数据库操作失败
             return new Result<Integer>(FAIL).setErrorCode(1010010109).setMessage("数据库操作失败");
+        }
         //数据库操作成功后才修改内存数据
         //设置父目录
         setAsParent(category, category.getParentId());
@@ -557,8 +606,9 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     private Result<Category> readOriginalCategory(Integer categoryId, boolean withCounter, Operator operator) {
         Result<Category> result = getCategory(categoryId, operator);
         if (result.getState() == SUCCESS) {
-            if (withCounter)
+            if (withCounter) {
                 setCounter(result.getObject());
+            }
         }
         return result;
     }
@@ -567,20 +617,30 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * 更换目录的父目录
      */
     public synchronized Result<Category> updateCategoryParent(@NotNull Category paramObject, Operator operator) {
-        if (!paramObject.isValidUpdateParentParam() || !paramObject.isValidOpComment())
+        if (!paramObject.isValidUpdateParentParam() || !paramObject.isValidOpComment()) {
             return new Result<Category>(FAIL).setErrorCode(1010010210).setMessage("操作失败，参数不合法");
-        if (!categoryValidator.checkUpdateParentPermission(paramObject, paramObject.getParentId(), operator))
+        }
+        if (!categoryValidator.checkUpdateParentPermission(paramObject, paramObject.getParentId(), operator)) {
             return new Result<Category>(FAIL).setErrorCode(1010010211).setMessage("操作失败，权限错误");
+        }
         Result<Category> categoryResult = readOriginalCategory(paramObject.getId(), true, operator);
-        if (categoryResult.getState() == FAIL)//id错误
+        // id错误
+        if (categoryResult.getState() == FAIL) {
             return categoryResult;
-        Result<Category> checkResult = checkCategoryStructure(paramObject, UPDATE);//检查目录结构是否合法
-        if (checkResult.getState() == FAIL)//参数检查失败
+        }
+        // 检查目录结构是否合法
+        Result<Category> checkResult = checkCategoryStructure(paramObject, UPDATE);
+        // 参数检查失败
+        if (checkResult.getState() == FAIL) {
             return checkResult;
+        }
         Category opParam = new Category(paramObject.getId()).setParentId(paramObject.getParentId());
-        int res = updateOne(opParam);//数据库操作
-        if (res == 0)//数据库操作失败
+        // 数据库操作
+        int res = updateOne(opParam);
+        // 数据库操作失败
+        if (res == 0) {
             return new Result<Category>(FAIL).setErrorCode(1010010112).setMessage("数据库操作失败");
+        }
         Category resCategory = categoryResult.getObject();
         Integer oriParentId = resCategory.getParentId();
         Integer newParentId = paramObject.getParentId();
@@ -598,20 +658,25 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * 根据参数更新父目录
      */
     private void applyUpdateParentParam(Category category, @NotNull int newParentId) {
-        removeFromParent(category);//从父目录中移除
-        setAsParent(category, newParentId);//设置新的父目录
+        // 从父目录中移除
+        removeFromParent(category);
+        // 设置新的父目录
+        setAsParent(category, newParentId);
         cascadeUpdatePostCnt(newParentId, category.getPostCnt());
-        setPathListOfCascadeSub(category);//重置该目录及其所有子目录的目录路径
+        // 重置该目录及其所有子目录的目录路径
+        setPathListOfCascadeSub(category);
     }
 
     /**
      * 更新目录信息
      */
     public synchronized Result<Category> updateCategoryInfo(@NotNull Category paramObject, Operator operator) {
-        if (!paramObject.isValidUpdateInfoParam(true) || !paramObject.isValidOpComment())
+        if (!paramObject.isValidUpdateInfoParam(true) || !paramObject.isValidOpComment()) {
             return new Result<Category>(FAIL).setErrorCode(1010010213).setMessage("操作失败，参数不合法");
-        if (!categoryValidator.checkUpdateInfoPermission(paramObject, operator))
+        }
+        if (!categoryValidator.checkUpdateInfoPermission(paramObject, operator)) {
             return new Result<Category>(FAIL).setErrorCode(1010010214).setMessage("操作失败，权限错误");
+        }
         Result<Category> categoryResult = readOriginalCategory(paramObject.getId(), false, operator);
         if (categoryResult.getState() == FAIL) {
             // id错误
@@ -619,8 +684,9 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         }
         Category opParam = new Category(paramObject.getId()).copyUpdateInfoParam(paramObject);
         int res = updateOne(opParam);
-        if (res == 0)
+        if (res == 0) {
             return new Result<Category>(FAIL).setErrorCode(1010010115).setMessage("数据库操作失败");
+        }
         // 数据库操作成功后才修改内存数据
         Category resCategory = categoryResult.getObject();
         Integer oriType = resCategory.getType();
@@ -653,18 +719,22 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * @return
      */
     public synchronized Result<Category> updateCategoryDispSeq(@NotNull Category paramObject, Operator operator) {
-        if (!paramObject.isValidUpdateDispSeqParam() || !paramObject.isValidOpComment())
+        if (!paramObject.isValidUpdateDispSeqParam() || !paramObject.isValidOpComment()) {
             return new Result<Category>(FAIL).setErrorCode(1010010229).setMessage("操作失败，参数不合法");
+        }
         Result<Category> categoryResult = readOriginalCategory(paramObject.getId(), false, operator);
-        if (categoryResult.getState() == FAIL)
+        if (categoryResult.getState() == FAIL) {
             return categoryResult;
+        }
         Category resCategory = categoryResult.getObject();
-        if (!categoryValidator.checkUpdateDispSeqPermission(resCategory, operator))
+        if (!categoryValidator.checkUpdateDispSeqPermission(resCategory, operator)) {
             return new Result<Category>(FAIL).setErrorCode(1010010230).setMessage("操作失败，权限错误");
+        }
         Category opParam = new Category(paramObject.getId()).setDispSeq(paramObject.getDispSeq());
         int res = updateOne(opParam);
-        if (res == 0)
+        if (res == 0) {
             return new Result<Category>(FAIL).setErrorCode(1010010131).setMessage("数据库操作失败");
+        }
         resCategory.setDispSeq(paramObject.getDispSeq());
         opParam.setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
         writeToAdminOpsRecord((Category) opParam.setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_DISP_SEQ, operator);
@@ -679,18 +749,22 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * @return
      */
     public synchronized Result<Category> updateCategoryCacheNum(@NotNull Category paramObject, Operator operator) {
-        if (!paramObject.isValidUpdateCacheNumParam() || !paramObject.isValidOpComment())
+        if (!paramObject.isValidUpdateCacheNumParam() || !paramObject.isValidOpComment()) {
             return new Result<Category>(FAIL).setErrorCode(1010010232).setMessage("操作失败，参数不合法");
+        }
         Result<Category> categoryResult = readOriginalCategory(paramObject.getId(), false, operator);
-        if (categoryResult.getState() == FAIL)
+        if (categoryResult.getState() == FAIL) {
             return categoryResult;
+        }
         Category resCategory = categoryResult.getObject();
-        if (!categoryValidator.checkUpdateCacheNumPermission(resCategory, operator))
+        if (!categoryValidator.checkUpdateCacheNumPermission(resCategory, operator)) {
             return new Result<Category>(FAIL).setErrorCode(1010010233).setMessage("操作失败，权限错误");
+        }
         Category opParam = new Category(paramObject.getId()).setCacheNum(paramObject.getCacheNum());
         int res = updateOne(opParam);
-        if (res == 0)
+        if (res == 0) {
             return new Result<Category>(FAIL).setErrorCode(1010010134).setMessage("数据库操作失败");
+        }
         resCategory.setCacheNum(paramObject.getCacheNum());
         opParam.setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
         writeToAdminOpsRecord((Category) opParam.setOpComment(paramObject.getOpComment()), AdminOpsRecord.TYPE_UPDATE_CATEGORY_CACHE_NUM, operator);
@@ -701,33 +775,42 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * 设置置顶帖
      */
     public synchronized Result<Category> setCategoryTopPost(@NotNull Category param, boolean isCancel, Operator operator) {
-        if (!isCancel && !param.isValidSetTopPostParam())
+        if (!isCancel && !param.isValidSetTopPostParam()) {
             return new Result<Category>(FAIL).setErrorCode(1010010222).setMessage("操作失败，参数不合法");
+        }
         if (isCancel) {
-            if (param.getId() == null)
+            if (param.getId() == null) {
                 return new Result<Category>(FAIL).setErrorCode(1010010223).setMessage("操作失败，参数不合法");
+            }
             param.setTopPostId(null);
         }
-        if (!param.isValidOpComment())
+        if (!param.isValidOpComment()) {
             return new Result<Category>(FAIL).setErrorCode(1010010235).setMessage("操作失败，参数不合法");
+        }
         Result<Category> categoryResult = readOriginalCategory(param.getId(), false, operator);
-        if (categoryResult.getState() == FAIL)
+        if (categoryResult.getState() == FAIL) {
             return categoryResult;
-        if (!categoryValidator.checkUpdateTopPostPermission(param, operator))
+        }
+        if (!categoryValidator.checkUpdateTopPostPermission(param, operator)) {
             return new Result<Category>(FAIL).setErrorCode(1010010221).setMessage("操作失败，权限错误");
+        }
         Category resCategory = categoryResult.getObject();
         if (!isCancel) {
             Result<Post> postResult = postService.readPostWithCategoryInfo(param.getTopPostId(), operator);
-            if (postResult.getState() == FAIL)
+            if (postResult.getState() == FAIL) {
                 return new Result<Category>(postResult);
+            }
             Post post = postResult.getObject();
             if (!resCategory.getId().equals(post.getCategoryId()) &&
-                    !resCategory.isParentOf(post.getCategory()))
+                    !resCategory.isParentOf(post.getCategory())) {
                 return new Result<Category>(FAIL).setErrorCode(1010010220).setMessage("操作失败，置顶目标不在本目录");
+            }
         }
         int res = dao.updateTopPost(param.getId(), param.getTopPostId());
-        if (res == 0)//数据库操作失败
+        // 数据库操作失败
+        if (res == 0) {
             return new Result<Category>(FAIL).setErrorCode(1010010127).setMessage("数据库操作失败");
+        }
         resCategory.setTopPostId(param.getTopPostId());
         int type = isCancel ? AdminOpsRecord.TYPE_CANCEL_CATEGORY_TOP_POST : AdminOpsRecord.TYPE_SET_CATEGORY_TOP_POST;
         Category opParam = new Category(param.getId()).setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
@@ -739,28 +822,35 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * 设置允许发帖管理等级
      */
     public synchronized Result<Category> setAllowPostLevel(@NotNull Category param, boolean isCancel, Operator operator) {
-        if (!isCancel && !param.isValidSetAllowPostLevelParam())
+        if (!isCancel && !param.isValidSetAllowPostLevelParam()) {
             return new Result<Category>(FAIL).setErrorCode(1010010238).setMessage("操作失败，参数不合法");
+        }
         if (isCancel) {
-            if (param.getId() == null)
+            if (param.getId() == null) {
                 return new Result<Category>(FAIL).setErrorCode(1010010239).setMessage("操作失败，参数不合法");
+            }
             param.setAllowPostLevel(null);
         }
-        if (!param.isValidOpComment())
+        if (!param.isValidOpComment()) {
             return new Result<Category>(FAIL).setErrorCode(1010010240).setMessage("操作失败，参数不合法");
+        }
         Result<Category> categoryResult = readOriginalCategory(param.getId(), false, operator);
-        if (categoryResult.getState() == FAIL)
+        if (categoryResult.getState() == FAIL) {
             return categoryResult;
+        }
         Category resCategory = categoryResult.getObject();
         Integer parentLevel = resCategory.getParent().getAllowPostLevel();
         if (parentLevel != null && parentLevel > param.getAllowPostLevel()) {
             return new Result<Category>(FAIL).setErrorCode(1010010241).setMessage("操作失败，子目录等级不能低于父目录");
         }
-        if (!categoryValidator.checkUpdateAllowPostLevelPermission(resCategory, param, operator))
+        if (!categoryValidator.checkUpdateAllowPostLevelPermission(resCategory, param, operator)) {
             return new Result<Category>(FAIL).setErrorCode(1010010242).setMessage("操作失败，权限错误");
+        }
         int res = dao.updateAllowPostLevel(param.getId(), param.getAllowPostLevel());
-        if (res == 0)//数据库操作失败
+        // 数据库操作失败
+        if (res == 0) {
             return new Result<Category>(FAIL).setErrorCode(1010010143).setMessage("数据库操作失败");
+        }
         resCategory.setOriAllowPostLevel(param.getAllowPostLevel()).setAllowPostLevel(param.getAllowPostLevel());
         // 级联更新子节点
         cascadeSetAllowPostLevel(resCategory);
@@ -774,32 +864,42 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * 设置默认子目录
      */
     public synchronized Result<Category> setDefaultSubCategory(@NotNull Category param, boolean isCancel, Operator operator) {
-        if (!isCancel && !param.isValidSetDefSubParam())
+        if (!isCancel && !param.isValidSetDefSubParam()) {
             return new Result<Category>(FAIL).setErrorCode(1010010224).setMessage("操作失败，参数不合法");
+        }
         if (isCancel) {
-            if (param.getId() == null)
+            if (param.getId() == null) {
                 return new Result<Category>(FAIL).setErrorCode(1010010225).setMessage("操作失败，参数不合法");
+            }
             param.setDefSubId(null);
         }
-        if (!param.isValidOpComment())
+        if (!param.isValidOpComment()) {
             return new Result<Category>(FAIL).setErrorCode(1010010236).setMessage("操作失败，参数不合法");
+        }
         Result<Category> categoryResult = readOriginalCategory(param.getId(), false, operator);
-        if (categoryResult.getState() == FAIL)
+        if (categoryResult.getState() == FAIL) {
             return categoryResult;
-        if (!categoryValidator.checkUpdateDefSubPermission(param, operator))
+        }
+        if (!categoryValidator.checkUpdateDefSubPermission(param, operator)) {
             return new Result<Category>(FAIL).setErrorCode(1010010221).setMessage("操作失败，权限错误");
+        }
         Category resCategory = categoryResult.getObject();
         if (!isCancel) {
             Result<Category> subCategoryResult = readOriginalCategory(param.getDefSubId(), false, operator);
-            if (subCategoryResult.getState() == FAIL)
+            if (subCategoryResult.getState() == FAIL) {
                 return subCategoryResult;
+            }
             Category subCategory = subCategoryResult.getObject();
-            if (subCategory.getParent() == null || !subCategory.getParent().getId().equals(resCategory.getId()))
+            if (subCategory.getParent() == null || !subCategory.getParent().getId().equals(resCategory.getId())) {
                 return new Result<Category>(FAIL).setErrorCode(1010010226).setMessage("默认子目录不在本目录");
+            }
         }
-        int res = dao.updateDefSub(param.getId(), param.getDefSubId());//数据库操作
-        if (res == 0)//数据库操作失败
+        // 数据库操作
+        int res = dao.updateDefSub(param.getId(), param.getDefSubId());
+        // 数据库操作失败
+        if (res == 0) {
             return new Result<Category>(FAIL).setErrorCode(1010010128).setMessage("数据库操作失败");
+        }
         resCategory.setDefSubId(param.getDefSubId());
         int type = isCancel ? AdminOpsRecord.TYPE_CANCEL_CATEGORY_DEF_SUB : AdminOpsRecord.TYPE_SET_CATEGORY_DEF_SUB;
         Category opParam = new Category(param.getId()).setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
@@ -811,8 +911,10 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * 重新加载数据库目录信息，超级管理员操作
      */
     public synchronized Result<Object> reloadCategory(Operator operator) {
-        if (!operator.isSuperAdmin()) return new Result<Object>(Result.FAIL);
-        loadCategoryFromDB(true);
+        if (!operator.isSuperAdmin()) {
+            return new Result<Object>(Result.FAIL);
+        }
+        loadCategoryFromDb(true);
         return new Result<Object>(Result.SUCCESS);
     }
 
@@ -820,29 +922,40 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      * 删除目录
      */
     public synchronized Result<Object> deleteCategory(Category param, Operator operator, boolean forcibly) {
-        if (param.getId() == null || !param.isValidOpComment())
+        if (param.getId() == null || !param.isValidOpComment()) {
             return new Result<Object>(FAIL).setErrorCode(1010010237).setMessage("操作失败，参数不合法");
+        }
         Result<Category> result = readOriginalCategory(param.getId(), true, operator);
-        if (result.getState() == FAIL)
+        if (result.getState() == FAIL) {
             return new Result<Object>(result);
+        }
         Category category = result.getObject();
-        if (!categoryValidator.checkDeletePermission(category, operator, forcibly))
+        if (!categoryValidator.checkDeletePermission(category, operator, forcibly)) {
             return new Result<Object>(FAIL).setErrorCode(1010010216).setMessage("操作失败，权限错误");
+        }
         if (!forcibly) {
-            if (category.getIsLeaf() != null && !category.getIsLeaf())//非强制且该目录有子目录，则删除失败
+            // 非强制且该目录有子目录，则删除失败
+            if (category.getIsLeaf() != null && !category.getIsLeaf()) {
                 return new Result<Object>(FAIL).setErrorCode(1010010217)
                         .setMessage("非强制模式下不能删除有子目录的目录");
-            if (category.getPostCnt() != 0)//非强制且该目录有内容，则删除失败
+            }
+            // 非强制且该目录有内容，则删除失败
+            if (category.getPostCnt() != 0) {
                 return new Result<Object>(FAIL).setErrorCode(1010010218)
                         .setMessage("非强制模式下不能删除有内容的目录");
+            }
         }
-        int res = deleteOne(param.getId());//数据库操作
-        if (res == 0)//数据库操作失败
+        // 数据库操作
+        int res = deleteOne(param.getId());
+        // 数据库操作失败
+        if (res == 0) {
             return new Result<Object>(FAIL).setErrorCode(1010010119).setMessage("数据库操作失败");
+        }
         //数据库操作成功后才修改内存数据
-        categoryMap.remove(param.getId());//更新内存数据
-        if (category.getIsLeaf() == null || category.getIsLeaf())
+        categoryMap.remove(param.getId());
+        if (category.getIsLeaf() == null || category.getIsLeaf()) {
             leafCategorySet.remove(category);
+        }
         removeFromParent(category);
         writeToAdminOpsRecord((Category) category.setOpComment(param.getOpComment()), AdminOpsRecord.TYPE_DELETE_CATEGORY, operator);
         return new Result<Object>(Result.SUCCESS);
@@ -855,31 +968,36 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
      */
     public synchronized String correctCounters() {
         int r = dao.correctPostCnt(new ArrayList<>(leafCategorySet));
-        if (r == 0)
+        if (r == 0) {
             return "目录数据校正错误，请重新校正";
+        }
         redisTemplate.delete(RedisUtil.scanAllKeys(redisTemplate, redisHelper.getCounterKey("*")));
         List<Category> categoryList = dao.selectList(new Category());
         for (int i = 0; i < categoryList.size(); ++i) {
             Category tmp = categoryList.get(i);
             Category ori = categoryMap.get(tmp.getId());
-            if (ori.getIsLeaf())//只设置叶子
+            // 只设置叶子
+            if (ori.getIsLeaf()) {
                 ori.setOriPostCnt(tmp.getOriPostCnt());
-            else
+            } else {
                 ori.setOriPostCnt(0L);
+            }
         }
-        cascadeSetOriPostCnt(groundCategory);//设置帖子数
+        // 设置帖子数
+        cascadeSetOriPostCnt(groundCategory);
         return "目录的帖子数校正" + r + "条数据";
     }
 
     @Scheduled(cron = "0 00 4 * * ?")
-    public synchronized void dailyFlushRedisToDB() {
+    public synchronized void dailyFlushRedisToDb() {
         List<TmpEntry>[] cntLists = redisHelper.flushRedisCounter("pst");
         commonService.batchUpdate("lpt_category", "category_id", "category_post_cnt", CommonService.OPS_INCR_BY, cntLists[0]);
         for (int i = 0; i < cntLists[0].size(); ++i) {
             TmpEntry entry = cntLists[0].get(i);
             Category category = readOriginalCategory(entry.getId(), false, progOperator).getObject();
-            if (category != null)
+            if (category != null) {
                 category.setOriPostCnt(category.getOriPostCnt() + (int) entry.getValue());
+            }
         }
         log.info("目录的帖子数量写入数据库");
     }

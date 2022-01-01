@@ -19,6 +19,9 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
+/**
+ * @author JQH
+ */
 @Configuration
 public class WebApplicationContextAware implements ApplicationContextAware {
 
@@ -28,7 +31,7 @@ public class WebApplicationContextAware implements ApplicationContextAware {
         this.operatorService = operatorService;
     }
 
-    /*
+    /**
      * 注册到容器,采用这种注册方式的目的: 自定义的HandlerMethodReturnValueHandler放在默认实现的前面,从而优先采用自定义处理策略
      * 否则,无法覆盖@ResponseBody处理机制,
      * 且String类型的返回值将默认由ViewNameMethodReturnValueHandler处理而映射为视图名
@@ -48,7 +51,7 @@ public class WebApplicationContextAware implements ApplicationContextAware {
                 .addFilter("CommentL1Filter", SimpleBeanPropertyFilter.serializeAll())
                 .addFilter("CommentL2Filter", SimpleBeanPropertyFilter.serializeAll())
                 .addFilter("PermissionFilter", SimpleBeanPropertyFilter.serializeAll()));
-        //true表示转json时时间转化为一个长整型数，false则转化为字符串
+        // true表示转json时时间转化为一个长整型数，false则转化为字符串
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true);
         RequestMappingHandlerAdapter handlerAdapter = applicationContext.getBean(RequestMappingHandlerAdapter.class);
         List<HandlerMethodReturnValueHandler> handlers = new ArrayList<>();

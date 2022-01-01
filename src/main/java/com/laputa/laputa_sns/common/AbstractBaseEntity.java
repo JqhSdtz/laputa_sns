@@ -31,9 +31,12 @@ public abstract class AbstractBaseEntity implements Comparable<AbstractBaseEntit
 
     protected Integer state;
 
-    protected Integer ofId;//从属于指定ID的对象
+    /**
+     * 从属于指定ID的对象
+     */
+    protected Integer ofId;
 
-    protected Boolean fromDB;
+    protected Boolean fromDb;
 
     @JsonProperty(value = "op_comment", access = JsonProperty.Access.WRITE_ONLY)
     protected String opComment;
@@ -53,8 +56,10 @@ public abstract class AbstractBaseEntity implements Comparable<AbstractBaseEntit
 
     @Override
     public boolean equals(@NotNull Object o) {
-        if(!(o instanceof AbstractBaseEntity))//判断是否是子类
+        if(!(o instanceof AbstractBaseEntity)) {
+            // 判断是否是子类
             return false;
+        }
         return this.id.equals(((AbstractBaseEntity)o).id);
     }
 

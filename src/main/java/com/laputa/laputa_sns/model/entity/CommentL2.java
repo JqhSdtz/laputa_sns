@@ -60,6 +60,7 @@ public class CommentL2 extends AbstractContent<CommentL2> {
         this.id = id;
     }
 
+    @Override
     @JsonProperty("creator_id")
     public Integer getCreatorId() {
         return creator == null ? null : creator.getId();
@@ -67,8 +68,9 @@ public class CommentL2 extends AbstractContent<CommentL2> {
 
     @JsonProperty("creator_id")
     public CommentL2 setCreatorId(Integer id) {
-        if (creator == null)
+        if (creator == null) {
             creator = new User();
+        }
         creator.setId(id);
         return this;
     }
@@ -80,8 +82,9 @@ public class CommentL2 extends AbstractContent<CommentL2> {
 
     @JsonProperty("reply_to_user_id")
     public CommentL2 setReplyToUserId(Integer id) {
-        if (replyToUser == null)
+        if (replyToUser == null) {
             replyToUser = new User();
+        }
         replyToUser.setId(id);
         return this;
     }
@@ -93,8 +96,9 @@ public class CommentL2 extends AbstractContent<CommentL2> {
 
     @JsonProperty("l1_id")
     public CommentL2 setL1Id(Integer id) {
-        if (l1 == null)
+        if (l1 == null) {
             l1 = new CommentL1();
+        }
         l1.setId(id);
         return this;
     }
@@ -104,25 +108,31 @@ public class CommentL2 extends AbstractContent<CommentL2> {
         return setL1Id(id);
     }
 
+    @Override
     @JsonProperty("parent_id")
     public Integer getParentId() {
         return getL1Id();
     }
 
+    @Override
     @JsonIgnore
     public CommentL1 getParent() {
         return getL1();
     }
 
+    @Override
     @JsonIgnore
     public Long getChildNum() {
         return 0L;
     }
 
+    @Override
     public CommentL2 setIsTopped(Boolean isTopped){return this;}
 
+    @Override
     public Boolean getIsTopped() {return false;}
 
+    @Override
     @JsonIgnore
     public CommentL2 setEntityContent(@NotNull CommentL2 comment) {
         this.rawImg = comment.rawImg;
@@ -135,23 +145,29 @@ public class CommentL2 extends AbstractContent<CommentL2> {
         if (format) {
             this.setPostId(null).setCreator(null);
         } else {
-            if (postId != null || creator != null)//避免污染选择条件
+            // 避免污染选择条件
+            if (postId != null || creator != null) {
                 return false;
+            }
         }
-        if (l1 == null || l1.getId() == null)
+        if (l1 == null || l1.getId() == null) {
             return false;
+        }
         if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10
-                || queryParam.getQueryNum() < previewCml2Num)
+                || queryParam.getQueryNum() < previewCml2Num) {
             return false;
+        }
         return true;
     }
 
     @JsonIgnore
     public boolean validateContent() {
-        if (content == null || content.length() == 0 || content.length() > 256)
+        if (content == null || content.length() == 0 || content.length() > 256) {
             return false;
-        if (rawImg != null && rawImg.length() > 256)
+        }
+        if (rawImg != null && rawImg.length() > 256) {
             return false;
+        }
         return true;
     }
 

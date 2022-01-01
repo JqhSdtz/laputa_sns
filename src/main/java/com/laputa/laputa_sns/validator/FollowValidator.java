@@ -14,20 +14,23 @@ import org.springframework.stereotype.Component;
 public class FollowValidator {
 
     public boolean checkCreatePermission(@NotNull Follow follow, Operator operator) {
-        if(operator .getId().equals(-1))
+        if(operator .getId().equals(-1)) {
             return false;
+        }
         return true;
     }
 
     public boolean checkUpdatePermission(@NotNull Follow follow, Operator operator) {
-        if(operator .getId().equals(-1))
+        if(operator .getId().equals(-1)) {
             return false;
+        }
         return true;
     }
 
     public boolean checkDeletePermission(@NotNull Follow follow, Operator operator) {
-        if(operator .getId().equals(-1))
+        if(operator .getId().equals(-1)) {
             return false;
+        }
         return true;
     }
 }

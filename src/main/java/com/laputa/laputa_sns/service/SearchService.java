@@ -25,7 +25,11 @@ public class SearchService {
     private final SearchDao dao;
     private final CategoryService categoryService;
     private final UserService userService;
-    @Value("${search-result-limit}")//搜索结果只返回20个
+
+    /**
+     * 搜索结果只返回20个
+     */
+    @Value("${search-result-limit}")
     private int searchResultLimit;
 
     public SearchService(SearchDao dao, CategoryService categoryService, UserService userService) {
@@ -37,17 +41,20 @@ public class SearchService {
     private String processWords(String words) {//删除通配符
         words = words.trim();
         StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < words.length(); ++i)
-            if (words.charAt(i) != '*')
+        for (int i = 0; i < words.length(); ++i) {
+            if (words.charAt(i) != '*') {
                 stringBuilder.append(words.charAt(i));
+            }
+        }
         return stringBuilder.toString();
     }
 
     @SneakyThrows
     public Result<List<Post>> searchPost(String words, String mode, Operator operator) {
         int len = words.length();
-        if (len < 1 || len > 40)
+        if (len < 1 || len > 40) {
             return new Result<List<Post>>(Result.FAIL).setErrorCode(1010200201).setMessage("搜索内容长度应在1-40之间");
+        }
         words = processWords(words);
         List<Post> postList = dao.searchPost(words, mode, searchResultLimit);
         userService.multiSetUser(postList, Post.class.getMethod("getCreatorId"), Post.class.getMethod("setCreator", User.class));
@@ -57,19 +64,22 @@ public class SearchService {
 
     public Result<List<Category>> searchCategory(String words, String mode, Operator operator) {
         int len = words.length();
-        if (len < 1 || len > 40)
+        if (len < 1 || len > 40) {
             return new Result<List<Category>>(Result.FAIL).setErrorCode(1010200201).setMessage("搜索内容长度应在1-40之间");
+        }
         words = processWords(words);
         List<Category> categoryList = dao.searchCategory(words, mode, searchResultLimit);
-        for (int i = 0; i < categoryList.size(); ++i)
+        for (int i = 0; i < categoryList.size(); ++i) {
             categoryList.set(i, categoryService.readCategory(categoryList.get(i).getId(), false, operator).getObject());
+        }
         return new Result<List<Category>>(Result.SUCCESS).setObject(categoryList);
     }
 
     public Result<List<User>> searchUser(String words, String mode, Operator operator) {
         int len = words.length();
-        if (len < 1 || len > 40)
+        if (len < 1 || len > 40) {
             return new Result<List<User>>(Result.FAIL).setErrorCode(1010200201).setMessage("搜索内容长度应在1-40之间");
+        }
         words = processWords(words);
         return new Result<List<User>>(Result.SUCCESS).setObject(dao.searchUser(words, mode, searchResultLimit));
     }

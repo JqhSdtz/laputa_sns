@@ -61,21 +61,25 @@ public class ForwardService extends BaseService<PostDao, Post> {
         this.hmacKey = CryptUtil.randUrlSafeStr(64, true);
     }
 
+    @SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
     @NotNull
     private String getForwardZSetKey(Integer supId) {
         return RedisPrefix.FORWARD_RECORD_SET + ":" + supId;
     }
 
+    @SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
     @NotNull
     private String getForwardZSetKeyPrefix() {
         return RedisPrefix.FORWARD_RECORD_SET + ":*";
     }
 
+    @SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
     private void addToForwardZSet(Integer supId, Integer forwardId) {
         String key = getForwardZSetKey(supId);
-        redisTemplate.opsForZSet().add(key, String.valueOf(forwardId), new Date().getTime());
+        redisTemplate.opsForZSet().add(key, String.valueOf(forwardId), System.currentTimeMillis());
     }
 
+    @SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
     @NotNull
     private void addToForwardZSet(Integer supId, @NotNull List<Post> forwardList, IndexExecutor<Post>.Param param) {
         Set<Tuple> indexSet = new HashSet<>();
@@ -84,8 +88,9 @@ public class ForwardService extends BaseService<PostDao, Post> {
             indexSet.add(new DefaultTuple(String.valueOf(forward.getId()).getBytes(), (double) (forward.getCreateTime().getTime())));
         }
         Object[] res = RedisUtil.addToZSetAndGetLastAndLength(redisTemplate, getForwardZSetKey(supId), indexSet, Integer.MAX_VALUE, false);
-        if (res == null)
+        if (res == null) {
             return;
+        }
         param.newStartId = Integer.valueOf((String) res[0]);
         param.newFrom = (int) (long) res[1];
     }
@@ -94,19 +99,21 @@ public class ForwardService extends BaseService<PostDao, Post> {
     private List<String> getRedisForwardIndex(@NotNull Post post) {
         String key = getForwardZSetKey(post.getSupId());
         List<String> resList = RedisUtil.zRevRangeUseStartIdFirst(redisTemplate, key, post.getQueryParam(), false);
-        if (resList == null || (resList.size() == 1 && resList.get(0) == null))
+        if (resList == null || (resList.size() == 1 && resList.get(0) == null)) {
             return null;
+        }
         return resList;
     }
 
+    @SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
     public void removeFromForwardZSet(Integer supId, Integer forwardId) {
         String key = getForwardZSetKey(supId);
         redisTemplate.opsForZSet().remove(key, String.valueOf(forwardId));
     }
 
     @Nullable
-    private Result<List<Post>> getDBForwardList(@NotNull Post post, Operator operator) {
-        return postService.readDBPostList(post, PostIndexService.LATEST, false, false, false, operator);
+    private Result<List<Post>> getDbForwardList(@NotNull Post post, Operator operator) {
+        return postService.readDbPostList(post, PostIndexService.LATEST, false, false, false, operator);
     }
 
     @NotNull
@@ -114,16 +121,17 @@ public class ForwardService extends BaseService<PostDao, Post> {
         IndexExecutor.CallBacks<Post> callBacks = new IndexExecutor.CallBacks<>();
         callBacks.getIdListCallBack = executor -> {
             List<String> indexList = getRedisForwardIndex(executor.param.paramEntity);
-            if (indexList == null)
+            if (indexList == null) {
                 executor.param.idList = null;
-            else {
+            } else {
                 executor.param.idList = new ArrayList<>(indexList.size());
-                for (int i = 0; i < indexList.size(); ++i)
+                for (int i = 0; i < indexList.size(); ++i) {
                     executor.param.idList.add(Integer.valueOf(indexList.get(i)));
+                }
             }
         };
         callBacks.multiReadEntityCallBack = executor -> postService.multiReadPost(executor.param.paramEntity, executor.param.idList, true, false, false, false, false, false, executor.param.operator);
-        callBacks.getDBListCallBack = executor -> getDBForwardList(executor.param.paramEntity, executor.param.operator);
+        callBacks.getDbListCallBack = executor -> getDbForwardList(executor.param.paramEntity, executor.param.operator);
         callBacks.multiSetRedisIndexCallBack = (entityList, executor) -> addToForwardZSet(executor.param.paramEntity.getSupId(), entityList, executor.param);
         return callBacks;
     }
@@ -132,20 +140,24 @@ public class ForwardService extends BaseService<PostDao, Post> {
     public Result<List<Post>> readForwardList(@NotNull Post post, Operator operator) {
         post.setOfType(Post.OF_SUP_POST);
         post.setType(Post.TYPE_FORWARD);
-        if (!post.isValidReadForwardListParam())
+        if (!post.isValidReadForwardListParam()) {
             return new Result<List<Post>>(FAIL).setErrorCode(1010100204).setMessage("操作错误，参数不合法");
+        }
         Result<Object> validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(post, PostIndexService.SUP_POST, hmacKey);
-        if (validateTokenResult.getState() == FAIL)
+        if (validateTokenResult.getState() == FAIL) {
             return new Result<List<Post>>(validateTokenResult);
+        }
         Result<Post> supPostResult = postService.readPostWithCounter(post.getSupId(), operator);
-        if (supPostResult.getState() == FAIL)
+        if (supPostResult.getState() == FAIL) {
             return new Result<List<Post>>(supPostResult);
+        }
         Post queryEntity = (Post) new Post().setQueryParam(new QueryParam());
         IndexExecutor<Post> indexExecutor = new IndexExecutor<Post>(post, queryEntity, null, indexExecutorCallBacks, operator);
         indexExecutor.param.childNumOfParent = supPostResult.getObject().getForwardCnt();
         Result<List<Post>> forwardListResult = indexExecutor.doIndex();
-        if (forwardListResult.getState() == FAIL)
+        if (forwardListResult.getState() == FAIL) {
             return forwardListResult;
+        }
         List<Post> forwardList = forwardListResult.getObject();
         userService.multiSetUser(forwardList, Post.class.getMethod("getCreatorId"), Post.class.getMethod("setCreator", User.class));
         String newToken = QueryTokenUtil.generateQueryToken(post, forwardList, queryEntity.getQueryParam(), PostIndexService.SUP_POST, hmacKey);
@@ -156,26 +168,31 @@ public class ForwardService extends BaseService<PostDao, Post> {
      * 创建转发，删除转发见PostService.deletePost
      */
     public Result<Integer> createForward(@NotNull Post post, Operator operator) {
-        if (!post.isValidInsertForwardParam())
+        if (!post.isValidInsertForwardParam()) {
             return new Result<Integer>(FAIL).setErrorCode(1010100201).setMessage("操作错误，参数不合法");
+        }
         Result<Post> supPostResult = postService.readPostWithAllFalse(post.getSupId(), operator);
-        if (supPostResult.getState() == FAIL)
+        if (supPostResult.getState() == FAIL) {
             return new Result<Integer>(supPostResult);
+        }
         Post supPost = supPostResult.getObject();
-        if (!postValidator.checkCreateForwardPermission(supPost, operator))
+        if (!postValidator.checkCreateForwardPermission(supPost, operator)) {
             return new Result<Integer>(FAIL).setErrorCode(1010100202).setMessage("操作失败，权限错误");
+        }
         post.setOriId(supPost.getOriId() == null ? supPost.getId() : supPost.getOriId())
                 .setCategory(supPost.getCategory()).setLength(post.getContent().length())
                 .setCreator(operator.getUser()).setType(Post.TYPE_FORWARD);
         int res = insertOne(post);
-        if (res == -1)
+        if (res == -1) {
             return new Result<Integer>(FAIL).setErrorCode(1010050103).setMessage("数据库操作失败");
+        }
         addToForwardZSet(post.getSupId(), post.getId());
         postService.updateForwardCnt(post.getSupId(), 1L);
         userService.updatePostCnt(post.getCreatorId(), 1L);
         postNewsService.pushNews(post.getCreatorId(), post.getId());
-        if (!supPost.getCreatorId().equals(operator.getUserId()))
+        if (!supPost.getCreatorId().equals(operator.getUserId())) {
             noticeService.pushNotice(supPost.getId(), Notice.TYPE_FW_POST, supPost.getCreatorId());
+        }
         return new Result<Integer>(SUCCESS).setObject(post.getId());
     }
 
@@ -183,9 +200,10 @@ public class ForwardService extends BaseService<PostDao, Post> {
      * 每天将Redis中的转发记录索引删除
      */
     @Scheduled(cron = "0 00 3 * * ?")
-    public void dailyFlushRedisForwardRecordToDB() {
+    public void dailyFlushRedisForwardRecordToDb() {
         redisTemplate.delete(RedisUtil.scanAllKeys(redisTemplate, getForwardZSetKeyPrefix()));
-        hmacKey = CryptUtil.randUrlSafeStr(64, true);//更新hmac的key
+        // 更新hmac的key
+        hmacKey = CryptUtil.randUrlSafeStr(64, true);
     }
 
 }

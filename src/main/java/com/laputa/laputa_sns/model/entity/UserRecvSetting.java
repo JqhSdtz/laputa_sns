@@ -46,16 +46,19 @@ public class UserRecvSetting  extends AbstractBaseEntity {
         this.user = new User(id);
     }
 
+    @Override
     public Integer getId() {
         return user == null ? null : user.getId();
     }
 
     @JsonIgnore
     public boolean isValidUpdateParam() {
-        if (user == null || user.getId() == null)
+        if (user == null || user.getId() == null) {
             return false;
-        if (recvLike == null && recvEmail == null && recvWx == null)
+        }
+        if (recvLike == null && recvEmail == null && recvWx == null) {
             return false;
+        }
         return true;
     }
 }

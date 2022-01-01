@@ -17,10 +17,14 @@ public class BaseService<DaoType extends BaseDao<EntityType>, EntityType extends
     public static final int UPDATE = 3;
     public static final int DELETE = 4;
 
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     protected DaoType dao;
 
-    @Value("${batch-insert-num-limit}")//#一次最多insert10000条记录
+    /**
+     * 一次最多insert10000条记录
+     */
+    @Value("${batch-insert-num-limit}")
     private int insertNumLimit;
 
     /**
@@ -57,14 +61,16 @@ public class BaseService<DaoType extends BaseDao<EntityType>, EntityType extends
      * 插入多条数据，返回插入成功的条数
      */
     public int insertList(@NotNull List<EntityType> entityList) {
-        if (entityList.isEmpty())
+        if (entityList.isEmpty()) {
             return 0;
+        }
         int res = 0;
-        if (entityList.size() < insertNumLimit)
+        if (entityList.size() < insertNumLimit) {
             res = dao.insertList(entityList);
-        else {
-            for (int from = 0, to = insertNumLimit; from < entityList.size(); from += insertNumLimit, to += insertNumLimit)
+        } else {
+            for (int from = 0, to = insertNumLimit; from < entityList.size(); from += insertNumLimit, to += insertNumLimit) {
                 res += dao.insertList(entityList.subList(from, to > entityList.size() ? entityList.size() : to));
+            }
         }
         return res;
     }

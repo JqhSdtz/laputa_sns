@@ -58,8 +58,9 @@ public class Permission extends AbstractBaseEntity {
 
     @JsonProperty("category_id")
     public Permission setCategoryId(Integer id) {
-        if (category == null)
+        if (category == null) {
             category = new Category();
+        }
         category.setId(id);
         return this;
     }
@@ -71,8 +72,9 @@ public class Permission extends AbstractBaseEntity {
 
     @JsonProperty("user_id")
     public Permission setUserId(Integer id) {
-        if (user == null)
+        if (user == null) {
             user = new User();
+        }
         user.setId(id);
         return this;
     }
@@ -84,7 +86,8 @@ public class Permission extends AbstractBaseEntity {
     @JsonIgnore
     /**用于在Permission对象作为参数对象的时候判断是否合法*/
     public boolean isValidUpdateParam() {
-        return hasBasic() && level != 0;//更新权限不能为0
+        // 更新权限不能为0
+        return hasBasic() && level != 0;
     }
 
     @JsonIgnore

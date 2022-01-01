@@ -115,6 +115,7 @@ public class CommentL1 extends AbstractContent<CommentL1> {
         this.id = id;
     }
 
+    @Override
     @JsonProperty("creator_id")
     public Integer getCreatorId() {
         return creator == null ? null : creator.getId();
@@ -122,8 +123,9 @@ public class CommentL1 extends AbstractContent<CommentL1> {
 
     @JsonProperty("creator_id")
     public CommentL1 setCreatorId(Integer id) {
-        if (creator == null)
+        if (creator == null) {
             creator = new User();
+        }
         creator.setId(id);
         return this;
     }
@@ -135,12 +137,14 @@ public class CommentL1 extends AbstractContent<CommentL1> {
 
     @JsonProperty("post_id")
     public CommentL1 setPostId(Integer id) {
-        if (post == null)
+        if (post == null) {
             post = new Post();
+        }
         post.setId(id);
         return this;
     }
 
+    @Override
     @JsonIgnore
     public CommentL1 setEntityContent(@NotNull CommentL1 comment) {
         this.rawImg = comment.rawImg;
@@ -153,16 +157,19 @@ public class CommentL1 extends AbstractContent<CommentL1> {
         return setPostId(id);
     }
 
+    @Override
     @JsonProperty("parent_id")
     public Integer getParentId() {
         return getPostId();
     }
 
+    @Override
     @JsonIgnore
     public Post getParent() {
         return getPost();
     }
 
+    @Override
     @JsonIgnore
     public Long getChildNum() {
         return getL2Cnt();
@@ -173,22 +180,28 @@ public class CommentL1 extends AbstractContent<CommentL1> {
         if (format) {
             this.setCreator(null);
         } else {
-            if (creator != null)//避免污染选择条件
+            // 避免污染选择条件
+            if (creator != null) {
                 return false;
+            }
         }
-        if (post == null || post.getId() == null)
+        if (post == null || post.getId() == null) {
             return false;
-        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)
+        }
+        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10) {
             return false;
+        }
         return true;
     }
 
     @JsonIgnore
     public boolean validateContent() {
-        if (content == null || content.length() == 0 || content.length() > 256)
+        if (content == null || content.length() == 0 || content.length() > 256) {
             return false;
-        if (rawImg != null && rawImg.length() > 256)
+        }
+        if (rawImg != null && rawImg.length() > 256) {
             return false;
+        }
         return true;
     }
 

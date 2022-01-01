@@ -26,8 +26,9 @@ public class DruidStatController {
     public Result<List<Map<String, Object>>> druidStat(@RequestAttribute Operator operator){
         Map<Integer, Integer> permissionMap = operator.getPermissionMap();
         Integer rootPermLevel  = permissionMap == null ? null : (Integer) permissionMap.get(CategoryService.GROUND_ID);
-        if (rootPermLevel == null || rootPermLevel != 99)
+        if (rootPermLevel == null || rootPermLevel != 99) {
             return new Result<List<Map<String, Object>>>(Result.FAIL);
+        }
         // DruidStatManagerFacade#getDataSourceStatDataList 该方法可以获取所有数据源的监控数据，
         // 除此之外 DruidStatManagerFacade 还提供了一些其他方法，你可以按需选择使用。
         List<Map<String, Object>> dataList = DruidStatManagerFacade.getInstance().getDataSourceStatDataList();

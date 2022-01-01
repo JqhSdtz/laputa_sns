@@ -159,8 +159,9 @@ public class Category extends AbstractBaseEntity implements Cloneable {
 
     @JsonProperty("parent_id")
     public Category setParentId(Integer id) {
-        if (parent == null)
+        if (parent == null) {
             parent = new Category();
+        }
         parent.id = id;
         return this;
     }
@@ -178,18 +179,24 @@ public class Category extends AbstractBaseEntity implements Cloneable {
     @JsonIgnore
     /**用于在Category对象作为参数对象的时候判断是否合法*/
     public boolean isValidUpdateInfoParam(boolean format) {
-        if (id == null)
-            return false;//id不能为空
+        if (id == null) {
+            // id不能为空
+            return false;
+        }
         if (format) {
             this.setPostCnt(null).setParent(null).setTopPostId(null).setDefSubId(null).setDispSeq(null)
                     .setCacheNum(null);
         } else {
             if (postCnt != null || parent != null || topPostId != null || defSubId != null || dispSeq != null
-                    || cacheNum != null)//这些不属于info的范畴，需特殊判断
+                    || cacheNum != null) {
+                // 这些不属于info的范畴，需特殊判断
                 return false;
+            }
         }
-        if (name == null && intro == null && coverImg == null && iconImg == null && type == null && state == null)
-            return false;//这些不能全空
+        if (name == null && intro == null && coverImg == null && iconImg == null && type == null && state == null) {
+            // 这些不能全空
+            return false;
+        }
         return true;
     }
 
@@ -228,14 +235,16 @@ public class Category extends AbstractBaseEntity implements Cloneable {
     @JsonIgnore
     /**用于在Category对象作为新添加对象的时候判断是否合法*/
     public boolean isValidInsertParam(boolean format) {
-        if (name == null || parent == null || parent.id == null)
+        if (name == null || parent == null || parent.id == null) {
             return false;
+        }
         if (format) {
             this.setPostCnt(null).setTopPostId(null).setDefSubId(null).setDispSeq(null).setAllowPostLevel(null);
         } else {
-            //过滤掉新添加数据不应该出现的字段
-            if (postCnt != null || topPostId != null || defSubId != null || dispSeq != null || allowPostLevel != null)
+            // 过滤掉新添加数据不应该出现的字段
+            if (postCnt != null || topPostId != null || defSubId != null || dispSeq != null || allowPostLevel != null) {
                 return false;
+            }
         }
         return true;
     }
@@ -245,7 +254,8 @@ public class Category extends AbstractBaseEntity implements Cloneable {
         do {
             sub = sub.parent;
         } while (sub != null && !this.id.equals(sub.id));
-        return sub != null;//sub != null 说明 this.id.equals(sub.id)
+        // sub != null 说明 this.id.equals(sub.id)
+        return sub != null;
     }
 
     public Category copyUpdateInfoParam(@NotNull Category param) {

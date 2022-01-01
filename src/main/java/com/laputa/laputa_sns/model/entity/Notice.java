@@ -29,7 +29,7 @@ public class Notice extends AbstractBaseEntity {
     public static final int TYPE_FOLLOWER = 6;
     public static final int TYPE_REPLY_OF_CML2 = 7;
 
-    private static final String[] typeStr = {"like_post", "like_cml1", "like_cml2", "cml1_of_post", "cml2_of_cml1",
+    private static final String[] TYPE_STR = {"like_post", "like_cml1", "like_cml2", "cml1_of_post", "cml2_of_cml1",
             "fw_post", "follower", "reply_of_cml2"};
 
     /**
@@ -68,13 +68,14 @@ public class Notice extends AbstractBaseEntity {
 
     @JsonProperty("type_str")
     public String getTypeStr() {
-        return type == null ? "unknown" : typeStr[type];
+        return type == null ? "unknown" : TYPE_STR[type];
     }
 
     @JsonIgnore
     public boolean isValidPullNoticeParam() {
-        if (queryParam.getFrom() == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)
+        if (queryParam.getFrom() == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10) {
             return false;
+        }
         return true;
     }
 }

@@ -9,14 +9,13 @@ import lombok.experimental.Accessors;
 
 /**
  * 点赞记录
+ * type为0表示对帖子的赞，1表示一级评论，2表示二级评论
  * @author JQH
  * @since 下午 3:08 20/02/24
  */
-
 @Getter
 @Setter
 @Accessors(chain = true)
-/**type为0表示对帖子的赞，1表示一级评论，2表示二级评论*/
 public class LikeRecord extends AbstractBaseEntity {
 
     public static final int TYPE_POST = 0;
@@ -43,18 +42,21 @@ public class LikeRecord extends AbstractBaseEntity {
 
     @JsonProperty("creator_id")
     public LikeRecord setCreatorId(Integer id) {
-        if (creator == null)
+        if (creator == null) {
             creator = new User();
+        }
         creator.setId(id);
         return this;
     }
 
     @JsonIgnore
     public boolean isValidTargetListSelectParam() {
-         if(targetId == null || type == null)
+         if(targetId == null || type == null) {
              return false;
-        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)
+         }
+        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10) {
             return false;
+        }
         return true;
     }
 

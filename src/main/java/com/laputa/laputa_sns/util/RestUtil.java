@@ -17,14 +17,14 @@ import java.util.Map;
  * @since 上午 10:17 21/03/13
  */
 public class RestUtil {
-    private static final RestTemplate restTemplate =
+    private static final RestTemplate REST_TEMPLATE =
             new RestTemplate(new HttpComponentsClientHttpRequestFactory());
 
     public static ResponseEntity<String> post(String url, MultiValueMap<String, String> data) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(data, headers);
-        ResponseEntity<String> entity = restTemplate.postForEntity(url, request, String.class);
+        ResponseEntity<String> entity = REST_TEMPLATE.postForEntity(url, request, String.class);
         return entity;
     }
 
@@ -43,7 +43,7 @@ public class RestUtil {
                     .append(entry.getKey()).append('}');
             dataMap.put(entry.getKey(), entry.getValue().get(0));
         }
-        ResponseEntity<String> entity = restTemplate
+        ResponseEntity<String> entity = REST_TEMPLATE
                 .getForEntity(urlBuilder.toString(), String.class, dataMap);
         return entity;
     }

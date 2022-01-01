@@ -34,8 +34,8 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
         Result<List<T>> multiReadEntity(IndexExecutor<T> executor);
     }
 
-    public interface GetDBListCallBack<T extends AbstractBaseEntity> {
-        Result<List<T>> getDBList(IndexExecutor<T> executor) throws NoSuchMethodException;
+    public interface GetDbListCallBack<T extends AbstractBaseEntity> {
+        Result<List<T>> getDbList(IndexExecutor<T> executor) throws NoSuchMethodException;
     }
 
     public interface MultiSetRedisIndexCallBack<T extends AbstractBaseEntity> {
@@ -58,7 +58,7 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
         /**
          * 从数据库中加载索引列表，加载完整对象
          */
-        public GetDBListCallBack<T> getDBListCallBack;
+        public GetDbListCallBack<T> getDbListCallBack;
         /**
          * 将数据库中获取的索引列表添加到redis中
          */
@@ -119,7 +119,7 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
          * 若从redis中查出来的索引列表长度不够，是否去数据库查询并补充到redis的索引列表中
          * 若该值为true，则会从数据库查询并补充，否则不会
          */
-        public boolean disablePatchFromDB;
+        public boolean disablePatchFromDb;
         /**
          * 查询的操作者
          */
@@ -146,18 +146,20 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
     @SneakyThrows
     public Result<List<T>> doIndex() {
         if (param.childNumOfParent != null && (param.childNumOfParent == 0
-                || param.childNumOfParent <= param.paramEntity.getQueryParam().getFrom()))
+                || param.childNumOfParent <= param.paramEntity.getQueryParam().getFrom())) {
             return new Result<List<T>>(SUCCESS).setObject(new ArrayList<>(0));
+        }
         int queryNum = param.paramEntity.getQueryParam().getQueryNum();
         param.queryEntity.getQueryParam().setAddition(param.paramEntity.getQueryParam().getAddition());
         callBacks.getIdListCallBack.getIdList(this);
         QueryParam queryParam = param.paramEntity.getQueryParam();
         if (param.idList != null && param.idList.size() != 0) {
             Result<List<T>> entityListResult = callBacks.multiReadEntityCallBack.multiReadEntity(this);
-            if (entityListResult.getState() == Result.FAIL)
+            if (entityListResult.getState() == Result.FAIL) {
                 return entityListResult;
+            }
             param.entityList = entityListResult.getObject();
-            if (!param.disablePatchFromDB && param.entityList.size() < queryNum) {
+            if (!param.disablePatchFromDb && param.entityList.size() < queryNum) {
                 Integer oriFrom = queryParam.getFrom();
                 // 暂时改变原有参数，以便数据库查询
                 Integer dbQueryNum = queryNum - param.entityList.size();
@@ -165,24 +167,29 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
                         .setQueryNum(dbQueryNum);
                 Integer oriStartId = queryParam.getStartId();
                 String oriStartValue = queryParam.getStartValue();
-                if (param.newStartValue != null)
+                if (param.newStartValue != null) {
                     queryParam.setStartValue(param.newStartValue);
+                }
                 if (param.newStartId != null) {
                     queryParam.setStartId(param.newStartId);
-                } else if (param.newStartValue == null && param.entityList.size() != 0)
+                } else if (param.newStartValue == null && param.entityList.size() != 0) {
                     queryParam.setStartId(param.entityList.get(param.entityList.size() - 1).getId());
+                }
                 if (param.childNumOfParent != null) {
                     if (queryParam.getFrom() < param.childNumOfParent) {
-                        List<T> dbList = callBacks.getDBListCallBack.getDBList(this).getObject();
+                        List<T> dbList = callBacks.getDbListCallBack.getDbList(this).getObject();
                         if (dbList != null) {
                             if (dbList.size() < dbQueryNum) {
                                 // 数据库查出来的数量比limit的数量少，说明已经到头了
                                 param.queryEntity.getQueryParam().setEndOfQuery(true);
                             }
-                            for (int i = 0; i < dbList.size(); ++i)
+                            for (int i = 0; i < dbList.size(); ++i) {
                                 param.entityList.add(dbList.get(i));
-                            if (dbList.size() != 0 && callBacks.multiSetRedisIndexCallBack != null)//Redis中没有，则放入Redis
+                            }
+                            // Redis中没有，则放入Redis
+                            if (dbList.size() != 0 && callBacks.multiSetRedisIndexCallBack != null) {
                                 callBacks.multiSetRedisIndexCallBack.multiSetRedisIndex(dbList, this);
+                            }
                         }
                     } else {
                         param.queryEntity.getQueryParam().setEndOfQuery(true);
@@ -192,31 +199,39 @@ public class IndexExecutor<T extends AbstractBaseEntity> {
                 queryParam.setFrom(oriFrom).setStartId(oriStartId).setStartValue(oriStartValue);
             }
         } else {
-            if (param.idList == null)
+            if (param.idList == null) {
                 param.paramEntity.getQueryParam().setStartId(param.initStartId).setFrom(param.initFrom);
-            Result<List<T>> entityListResult = callBacks.getDBListCallBack.getDBList(this);
-            if (entityListResult.getState() == Result.FAIL)
+            }
+            Result<List<T>> entityListResult = callBacks.getDbListCallBack.getDbList(this);
+            if (entityListResult.getState() == Result.FAIL) {
                 return entityListResult;
+            }
             param.entityList = entityListResult.getObject();
-            if (param.entityList.size() != 0 && callBacks.multiSetRedisIndexCallBack != null)
+            if (param.entityList.size() != 0 && callBacks.multiSetRedisIndexCallBack != null) {
                 callBacks.multiSetRedisIndexCallBack.multiSetRedisIndex(param.entityList, this);
+            }
         }
         if (param.topId != null) {
             boolean set = queryParam.getStartId().equals(0) && queryParam.getFrom().equals(0);
             List<T> tmpList = new ArrayList<>(param.entityList.size() + 1);
-            if (set)
-                tmpList.add(null);
-            T topEntity = null;
-            for (int i = 0; i < param.entityList.size(); ++i)
-                if (!param.topId.equals(param.entityList.get(i).getId()))
-                    tmpList.add(param.entityList.get(i));
-                else
-                    topEntity = param.entityList.get(i);
             if (set) {
-                if (topEntity == null)
+                tmpList.add(null);
+            }
+            T topEntity = null;
+            for (int i = 0; i < param.entityList.size(); ++i) {
+                if (!param.topId.equals(param.entityList.get(i).getId())) {
+                    tmpList.add(param.entityList.get(i));
+                } else {
+                    topEntity = param.entityList.get(i);
+                }
+            }
+            if (set) {
+                if (topEntity == null) {
                     topEntity = callBacks.readOneEntityCallBack.readOneEntity(param.topId, this).getObject();
-                if (topEntity != null && topEntity instanceof AbstractContent<?>)
+                }
+                if (topEntity != null && topEntity instanceof AbstractContent<?>) {
                     ((AbstractContent<?>) topEntity).setIsTopped(true);
+                }
                 tmpList.set(0, topEntity);
             }
             //topEntity另外读取的，是顺序之外的内容，不能影响正常顺序，所以设置考虑置顶之后的顺序前确定from的值

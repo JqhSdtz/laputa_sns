@@ -13,7 +13,6 @@ import org.springframework.util.Base64Utils;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,9 +42,10 @@ public class OSSService {
         } else {
             hasSigned = !operator.getUserId().equals(-1) || operator.getUser().getQqOpenId() != null;
         }
-        if (!hasSigned)
+        if (!hasSigned) {
             return new Result<String>(Result.FAIL).setErrorCode(1010150201).setMessage("未登录");
-        FormUploader uploader = new FormUploader(BUCKET_NAME, Secrets.OSS_Operator_Name, Secrets.OSS_Operator_Pwd);
+        }
+        FormUploader uploader = new FormUploader(BUCKET_NAME, Secrets.OSS_OPERATOR_NAME, Secrets.OSS_OPERATOR_PWD);
         final Map<String, Object> paramsMap = new HashMap<>();
         String path = getPath(fileType, operator);
         paramsMap.put(Params.SAVE_KEY, path);
@@ -57,8 +57,9 @@ public class OSSService {
         paramsMap.put(Params.X_GMKERL_THUMB, style);
         try {
             com.upyun.Result result = uploader.upload(paramsMap, file);
-            if (!result.isSucceed())
+            if (!result.isSucceed()) {
                 return new Result<String>(Result.FAIL).setErrorCode(1010150202).setMessage(result.toString());
+            }
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (SignatureException e) {
@@ -75,7 +76,7 @@ public class OSSService {
             return FILENAME_PREFIX[fileType] + "-" + CryptUtil.randUrlSafeStr(5, false)
                     + operator.getUser().getQqOpenId();
         } else {
-            return FILENAME_PREFIX[fileType] + "-" + CryptUtil.longToStr(new Date().getTime()) + CryptUtil.randUrlSafeStr(5, false)
+            return FILENAME_PREFIX[fileType] + "-" + CryptUtil.longToStr(System.currentTimeMillis()) + CryptUtil.randUrlSafeStr(5, false)
                     + CryptUtil.longToStr(operator.getUserId());
         }
     }

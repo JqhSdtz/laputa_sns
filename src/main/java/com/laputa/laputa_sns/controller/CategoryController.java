@@ -72,19 +72,23 @@ public class CategoryController {
 
     @RequestMapping(value = "/top_post/{action}", method = RequestMethod.PATCH)
     public Result<Category> setCategoryTopPost(@RequestBody Category category, @PathVariable String action, @RequestAttribute Operator operator) {
-        if ("create".equals(action))
+        if ("create".equals(action)) {
             return categoryService.setCategoryTopPost(category, false, operator).setOperator(operator);
-        if ("cancel".equals(action))
+        }
+        if ("cancel".equals(action)) {
             return categoryService.setCategoryTopPost(category, true, operator).setOperator(operator);
+        }
         return new Result<Category>(Result.FAIL);
     }
 
     @RequestMapping(value = "/allow_post_level/{action}", method = RequestMethod.PATCH)
     public Result<Category> setAllowPostLevel(@RequestBody Category category, @PathVariable String action, @RequestAttribute Operator operator) {
-        if ("create".equals(action))
+        if ("create".equals(action)) {
             return categoryService.setAllowPostLevel(category, false, operator).setOperator(operator);
-        if ("cancel".equals(action))
+        }
+        if ("cancel".equals(action)) {
             return categoryService.setAllowPostLevel(category, true, operator).setOperator(operator);
+        }
         return new Result<Category>(Result.FAIL);
     }
 

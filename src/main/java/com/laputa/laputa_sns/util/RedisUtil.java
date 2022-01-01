@@ -32,32 +32,35 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RedisUtil {
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static final DefaultRedisScript<List<String>> zRevRangeUseStartIdFirstScript =
+    private static final DefaultRedisScript<List<String>> Z_REV_RANGE_USE_START_ID_FIRST_SCRIPT =
             new DefaultRedisScript(ResourceUtil.getString("/lua/index/zRevRangeUseStartIdFirst.lua"), List.class);
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static final DefaultRedisScript<List<String>> zRevRangeUseFromFirstScript =
+    private static final DefaultRedisScript<List<String>> Z_REV_RANGE_USE_FROM_FIRST_SCRIPT =
             new DefaultRedisScript(ResourceUtil.getString("/lua/index/zRevRangeUseFromFirst.lua"), List.class);
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static final DefaultRedisScript<List<Object>> zAddAndGetLastScript =
+    private static final DefaultRedisScript<List<Object>> Z_ADD_AND_GET_LAST_SCRIPT =
             new DefaultRedisScript(ResourceUtil.getString("/lua/index/zAddAndGetLast.lua"), List.class);
 
-    private static final DefaultRedisScript<Long> zRemRangeByLex = new DefaultRedisScript<>("return redis.call('zremrangebylex', KEYS[1], ARGV[1], ARGV[2])", Long.class);
+    private static final DefaultRedisScript<Long> Z_REM_RANGE_BY_LEX = new DefaultRedisScript<>("return redis.call('zremrangebylex', KEYS[1], ARGV[1], ARGV[2])", Long.class);
 
+    @SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
     @NotNull
     /**返回object数组result[]，长度为2，result[0]为zSet最后一个值，result[1]为zSet长度*/
     public static Object[] addToZSetAndGetLastAndLength(@NotNull StringRedisTemplate redisTemplate, String key, @NotNull Set<Tuple> valueSet, int limit, boolean replaceWhenFull) {
-        if (valueSet == null || valueSet.size() == 0)
+        if (valueSet == null || valueSet.size() == 0) {
             return null;
+        }
         List<String> argv = new ArrayList<>(valueSet.size() * 2);
         for (Tuple tuple : valueSet) {
             argv.add(String.valueOf(tuple.getScore()));
             argv.add(new String(tuple.getValue()));
         }
-        List<Object> resList = redisTemplate.execute(zAddAndGetLastScript, Arrays.asList(key, String.valueOf(limit), replaceWhenFull ? "1" : "0"), argv.toArray());
-        if (resList.get(0) instanceof String && "f".equals(resList.get(0)))
+        List<Object> resList = redisTemplate.execute(Z_ADD_AND_GET_LAST_SCRIPT, Arrays.asList(key, String.valueOf(limit), replaceWhenFull ? "1" : "0"), argv.toArray());
+        if (resList.get(0) instanceof String && "f".equals(resList.get(0))) {
             return null;
+        }
         Object[] result = new Object[2];
         result[0] = ((List<?>) resList.get(0)).get(0);
         result[1] = resList.get(1);
@@ -66,34 +69,38 @@ public class RedisUtil {
 
     public static List<String> zRevRangeUseStartIdFirst(@NotNull StringRedisTemplate redisTemplate, String key, @NotNull QueryParam queryParam, boolean withScores) {
         String start = queryParam.getStartValue() == null ? String.valueOf(queryParam.getStartId()) : queryParam.getStartValue();
-        return redisTemplate.execute(zRevRangeUseStartIdFirstScript, Collections.singletonList(key), start, String.valueOf(queryParam.getFrom()),
+        return redisTemplate.execute(Z_REV_RANGE_USE_START_ID_FIRST_SCRIPT, Collections.singletonList(key), start, String.valueOf(queryParam.getFrom()),
                 String.valueOf(queryParam.getQueryNum()), withScores ? "1" : "0");
     }
 
     public static List<String> zRevRangeUseFromFirst(@NotNull StringRedisTemplate redisTemplate, String key, @NotNull QueryParam queryParam, boolean withScores) {
         String start = queryParam.getStartValue() == null ? String.valueOf(queryParam.getStartId()) : queryParam.getStartValue();
-        return redisTemplate.execute(zRevRangeUseFromFirstScript, Collections.singletonList(key), String.valueOf(queryParam.getFrom()), start,
+        return redisTemplate.execute(Z_REV_RANGE_USE_FROM_FIRST_SCRIPT, Collections.singletonList(key), String.valueOf(queryParam.getFrom()), start,
                 String.valueOf(queryParam.getQueryNum()), withScores ? "1" : "0");
     }
 
     @Nullable
     public static List<ZSetOperations.TypedTuple<String>> readIndex(@NotNull StringRedisTemplate redisTemplate, String indexSetKey, @NotNull QueryParam queryParam, boolean startIdFirst, boolean withScore) {
         List<String> resList;
-        if (startIdFirst)
+        if (startIdFirst) {
             resList = RedisUtil.zRevRangeUseStartIdFirst(redisTemplate, indexSetKey, queryParam, withScore);
-        else
+        } else {
             resList = RedisUtil.zRevRangeUseFromFirst(redisTemplate, indexSetKey, queryParam, withScore);
-        if (resList == null || (resList.size() == 1 && resList.get(0) == null))
+        }
+        if (resList == null || (resList.size() == 1 && resList.get(0) == null)) {
             return null;
+        }
         if (withScore) {
             List<ZSetOperations.TypedTuple<String>> tupleList = new ArrayList<>(resList.size() / 2);
-            for (int i = 0; i < resList.size(); i += 2)
+            for (int i = 0; i < resList.size(); i += 2) {
                 tupleList.add(new DefaultTypedTuple<>(resList.get(i), Double.valueOf(resList.get(i + 1))));
+            }
             return tupleList;
         } else {
             List<ZSetOperations.TypedTuple<String>> tupleList = new ArrayList<>(resList.size());
-            for (int i = 0; i < resList.size(); ++i)
+            for (int i = 0; i < resList.size(); ++i) {
                 tupleList.add(new DefaultTypedTuple<>(resList.get(i), 0.0));
+            }
             return tupleList;
         }
     }
@@ -104,12 +111,13 @@ public class RedisUtil {
             ++cnt;
             id /= 10;
         }
-        id = (cnt + id) * (cnt > 9 ? 0.01 : 0.1);//id长度不可能是三位数，只考虑两位和一位数的情况
+        // id长度不可能是三位数，只考虑两位和一位数的情况
+        id = (cnt + id) * (cnt > 9 ? 0.01 : 0.1);
         return value + id;
     }
 
     public static long zRemRangeByLex(@NotNull StringRedisTemplate redisTemplate, String key, String min, String max) {
-        return redisTemplate.execute(zRemRangeByLex, Collections.singletonList(key), min, max);
+        return redisTemplate.execute(Z_REM_RANGE_BY_LEX, Collections.singletonList(key), min, max);
     }
 
     public static Set<String> scanAllKeys(@NotNull StringRedisTemplate redisTemplate, String pattern) {
@@ -120,8 +128,9 @@ public class RedisUtil {
                 try {
                     Set<String> keysTmp = new HashSet<>();
                     Cursor<byte[]> cursor = connection.scan(options);
-                    while (cursor.hasNext())
+                    while (cursor.hasNext()) {
                         keysTmp.add(new String(cursor.next()));
+                    }
                     cursor.close();
                     return keysTmp;
                 } catch (Exception e) {

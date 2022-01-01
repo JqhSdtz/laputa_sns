@@ -63,16 +63,24 @@ public class PostService extends BaseService<PostDao, Post> {
     private final ObjectMapper fullObjectMapper = new ObjectMapper();
 
     private String hmacKey;
-    // 超过此长度的帖子会被当作长文章，这个值最大不能超过数据库lpt_post表的content字段的长度
+    /**
+     * 超过此长度的帖子会被当作长文章，这个值最大不能超过数据库lpt_post表的content字段的长度
+     */
     @Value("${brief-post-length-limit}")
     private int briefPostLengthLimit;
-    // 用户动态发件箱最大长度
+    /**
+     * 用户动态发件箱最大长度
+     */
     @Value("${user-news-out-box-length}")
     private int userNewsOutBoxLength;
-    // 管理员操作公开目录
+    /**
+     * 管理员操作公开目录
+     */
     @Value("${admin-ops-record-category}")
     private int adminOpsRecordCategoryId;
-    // 管理员操作发布用户
+    /**
+     * 管理员操作发布用户
+     */
     @Value("${admin-ops-record-user}")
     private int adminOpsRecordUserId;
 
@@ -117,20 +125,24 @@ public class PostService extends BaseService<PostDao, Post> {
         if (delta >= 0) {
             Map<Integer, TmpEntry> tmpMap = new HashMap<>(1);
             postIndexService.updatePostPopIndex(post, null, true, true, tmpMap);
-            if (tmpMap.size() == 1)
+            if (tmpMap.size() == 1) {
                 setPopularIndexFlag(post.getId(), 1);
-        } else
+            }
+        } else {
             postIndexService.updatePostPopIndex(post, null, false, true, null);
+        }
     }
 
     private int setPopularIndexFlag(int id, int value) {
         return dao.setPopularIndexFlag(id, value);
     }
 
+    @Override
     public Post selectOne(Post post) {
         Post res = dao.selectOne(post);
-        if (res != null && res.getFullText() != null)
+        if (res != null && res.getFullText() != null) {
             fullTextQueryHelper.setRedisValue(post.getFullTextId(), res.getFullText());
+        }
         return res;
     }
 
@@ -140,8 +152,9 @@ public class PostService extends BaseService<PostDao, Post> {
             // 手动设置全文
             TmpEntry fullText = new TmpEntry(null, post.getFullText());
             row = dao.insertFullText(fullText);
-            if (row == 0)
+            if (row == 0) {
                 return -1;
+            }
             // 新的fulltext插入成功，如果之前有fulltext，则删掉
             if (oriPost != null && oriPost.getFullTextId() != null) {
                 dao.deleteFullText(oriPost.getFullTextId());
@@ -155,8 +168,9 @@ public class PostService extends BaseService<PostDao, Post> {
             // 自动设置全文
             TmpEntry fullText = new TmpEntry(null, post.getContent());
             row = dao.insertFullText(fullText);
-            if (row == 0)
+            if (row == 0) {
                 return -1;
+            }
             // 新的fulltext插入成功，如果之前有fulltext，则删掉
             if (oriPost != null && oriPost.getFullTextId() != null) {
                 dao.deleteFullText(oriPost.getFullTextId());
@@ -171,6 +185,7 @@ public class PostService extends BaseService<PostDao, Post> {
         return row;
     }
 
+    @Override
     public int insertOne(@NotNull Post post) {
         setPostFullText(post, null);
         int res = dao.insertOne(post);
@@ -219,12 +234,15 @@ public class PostService extends BaseService<PostDao, Post> {
     private void setCounter(@NotNull Post post) {
         likeRecordService.setLikeCnt(post, LikeRecord.TYPE_POST);
         Long[] v = redisHelper.getRedisCounterCnt(post.getId(), "cm", "fw");
-        if (v == null)
+        if (v == null) {
             return;
-        if (v[0] != null)
+        }
+        if (v[0] != null) {
             post.setCommentCnt(post.getCommentCnt() + v[0]);
-        if (v[1] != null)
+        }
+        if (v[1] != null) {
             post.setForwardCnt(post.getForwardCnt() + v[1]);
+        }
     }
 
     private void multiSetCounter(@NotNull List<Post> postList) {
@@ -232,13 +250,16 @@ public class PostService extends BaseService<PostDao, Post> {
         List<List<String>> vList = redisHelper.multiGetRedisCounterCnt(postList, "cm", "fw");
         for (int i = 0; i < postList.size(); ++i) {
             Post post = postList.get(i);
-            if (post == null)
+            if (post == null) {
                 continue;
+            }
             List<String> v = vList.get(i);
-            if (v.get(0) != null)
+            if (v.get(0) != null) {
                 post.setCommentCnt(post.getCommentCnt() + Integer.valueOf(v.get(0)));
-            if (v.get(1) != null)
+            }
+            if (v.get(1) != null) {
                 post.setForwardCnt(post.getForwardCnt() + Integer.valueOf(v.get(1)));
+            }
         }
     }
 
@@ -247,8 +268,9 @@ public class PostService extends BaseService<PostDao, Post> {
      */
     private void setPostCreator(@NotNull Post post, Operator operator) {
         Result<User> userResult = userService.readUserWithAllFalse(post.getCreator().getId(), operator);
-        if (userResult.getState() == SUCCESS)
+        if (userResult.getState() == SUCCESS) {
             post.setCreator(userResult.getObject());
+        }
     }
 
     @SneakyThrows
@@ -269,38 +291,47 @@ public class PostService extends BaseService<PostDao, Post> {
         return queryHelper.existEntity(new Post(id));
     }
 
-    public Result<List<Post>> readDBPostList(@NotNull Post post, Integer type, boolean isFull, boolean useIndexFlag, boolean withCounter, Operator operator) {
+    public Result<List<Post>> readDbPostList(@NotNull Post post, Integer type, boolean isFull, boolean useIndexFlag, boolean withCounter, Operator operator) {
         List<Category> categoryIdList = null;
         if (post.getType() != null && post.getType().equals(Post.TYPE_PUBLIC) && post.getCategoryId() != null
                 && !post.getCategory().getIsLeaf()) {
             categoryIdList = categoryService.readLeavesOfRoot(post.getCategoryId(), true, operator).getObject();
-            if (categoryIdList.size() == 0)
+            if (categoryIdList.size() == 0) {
                 categoryIdList = null;
+            }
         }
-        if (isFull)
+        if (isFull) {
             post.getQueryParam().setQueryType(QueryParam.FULL);
+        }
         if (type != null) {
             String orderBy;
-            if (type.equals(CREATOR))
+            if (type.equals(CREATOR)) {
                 orderBy = "id";
-            else
+            } else {
                 orderBy = type.equals(LATEST) ? "create_time" : "like_cnt";
+            }
             post.getQueryParam().setIsPaged(1).setOrderBy(orderBy).setOrderDir("desc");
         }
         int oriFrom = post.getQueryParam().getFrom();
-        if (useIndexFlag)
+        if (useIndexFlag) {
             post.getQueryParam().setQueryNotIndexed(type == POPULAR ? 'p' : 'l').setFrom(0);
-        if (!useIndexFlag && "id".equals(post.getQueryParam().getOrderBy()) && !post.getQueryParam().getStartId().equals(0))
+        }
+        if (!useIndexFlag && "id".equals(post.getQueryParam().getOrderBy()) && !post.getQueryParam().getStartId().equals(0)) {
             post.getQueryParam().setUseStartIdAtSql(1);
+        }
         List<Post> postList = selectList(post, categoryIdList);
-        if (useIndexFlag)
+        if (useIndexFlag) {
             post.getQueryParam().setFrom(oriFrom);
-        if (postList == null)
+        }
+        if (postList == null) {
             return new Result<List<Post>>(FAIL).setErrorCode(1010050101).setMessage("数据库操作失败");
+        }
         redisHelper.multiSetAndRefreshEntity(postList, null, isFull);
         postList.forEach(this::processPayload);
-        if (withCounter)//redis中存的对象是不带counter的，所以要在放入Redis之后设置counter
+        // redis中存的对象是不带counter的，所以要在放入Redis之后设置counter
+        if (withCounter) {
             multiSetCounter(postList);
+        }
         return new Result<List<Post>>(SUCCESS).setObject(postList);
     }
 
@@ -315,12 +346,13 @@ public class PostService extends BaseService<PostDao, Post> {
         };
         callBacks.multiReadEntityCallBack = (executor) -> {
             Result<List<Post>> postListResult = queryHelper.multiReadEntity(executor.param.idList, true, new Post());
-            if (postListResult.getState() == FAIL)
+            if (postListResult.getState() == FAIL) {
                 return postListResult;
+            }
             multiSetCounter(postListResult.getObject());//设置counter
             return postListResult;
         };
-        callBacks.getDBListCallBack = (executor) -> readDBPostList(executor.param.paramEntity, executor.param.type, true, true, true, executor.param.operator);
+        callBacks.getDbListCallBack = (executor) -> readDbPostList(executor.param.paramEntity, executor.param.type, true, true, true, executor.param.operator);
         callBacks.multiSetRedisIndexCallBack = (entityList, executor) -> {
             int[] res = postIndexService.addPostIndex(entityList, executor.param.paramEntity.getCategory(), executor.param.type);
             executor.param.newStartId = res[0];
@@ -337,22 +369,25 @@ public class PostService extends BaseService<PostDao, Post> {
         IndexExecutor.CallBacks<Post> callBacks = new IndexExecutor.CallBacks<>();
         callBacks.getIdListCallBack = executor -> {
             Post param = executor.param.paramEntity;
-            if (param.getQueryParam().getFrom() >= userNewsOutBoxLength)
+            if (param.getQueryParam().getFrom() >= userNewsOutBoxLength) {
                 executor.param.idList = new ArrayList<>(0);
-            else
+            } else {
                 executor.param.idList = postNewsService.readNewsPostIdListOfCreator(param.getCreatorId(), param.getQueryParam()).getObject();
+            }
         };
         callBacks.multiReadEntityCallBack = (executor) -> {
             Result<List<Post>> postListResult = queryHelper.multiReadEntity(executor.param.idList, true, executor.param.queryEntity);
-            if (postListResult.getState() == FAIL)
+            if (postListResult.getState() == FAIL) {
                 return postListResult;
+            }
             multiSetCounter(postListResult.getObject());
             return postListResult;
         };
-        callBacks.getDBListCallBack = executor -> {
-            Result<List<Post>> dbListResult = readDBPostList(executor.param.paramEntity, CREATOR, true, false, true, executor.param.operator);
-            if (dbListResult.getState() == FAIL)
+        callBacks.getDbListCallBack = executor -> {
+            Result<List<Post>> dbListResult = readDbPostList(executor.param.paramEntity, CREATOR, true, false, true, executor.param.operator);
+            if (dbListResult.getState() == FAIL) {
                 return dbListResult;
+            }
             return dbListResult;
         };
         callBacks.readOneEntityCallBack = (id, executor) -> readPostWithCounterAndContent(id, executor.param.operator);
@@ -364,25 +399,30 @@ public class PostService extends BaseService<PostDao, Post> {
      */
     @SneakyThrows
     public Result<List<Post>> readIndexPostList(@NotNull Post paramPost, int type, Operator operator) {
-        if (!paramPost.isValidReadIndexOfCategoryParam(true, operator))
+        if (!paramPost.isValidReadIndexOfCategoryParam(true, operator)) {
             return new Result<List<Post>>(FAIL).setErrorCode(1010050213).setMessage("操作错误，参数不合法");
+        }
         Result<Object> validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(paramPost, type, hmacKey);
-        if (validateTokenResult.getState() == FAIL)
+        if (validateTokenResult.getState() == FAIL) {
             return new Result<List<Post>>(validateTokenResult);
+        }
         Result<Category> categoryResult = categoryService.readCategory(paramPost.getCategoryId(), true, operator);
-        if (categoryResult.getState() == FAIL)
+        if (categoryResult.getState() == FAIL) {
             return new Result<List<Post>>(categoryResult);
+        }
         //第一次获取该目录的帖子列表，并且该目录不是首页，则将该目录推入用户最近访问列表
-        if (paramPost.getQueryParam().getFrom().equals(0) && !paramPost.getCategoryId().equals(CategoryService.GROUND_ID))
+        if (paramPost.getQueryParam().getFrom().equals(0) && !paramPost.getCategoryId().equals(CategoryService.GROUND_ID)) {
             userService.pushUserRecentVisitCategory(operator.getUserId(), paramPost.getCategoryId());
+        }
         paramPost.setCategory(categoryResult.getObject()).setOfType(Post.OF_CATEGORY).setType(Post.TYPE_PUBLIC);
         Post queryEntity = (Post) new Post().setQueryParam(new QueryParam());
         IndexExecutor<Post> indexExecutor = new IndexExecutor<>(paramPost, queryEntity, type, indexOfCategoryExecutorCallBacks, operator);
         indexExecutor.param.childNumOfParent = categoryResult.getObject().getPostCnt();
         indexExecutor.param.topId = categoryResult.getObject().getTopPostId();
         Result<List<Post>> postListResult = indexExecutor.doIndex();
-        if (postListResult.getState() == FAIL)
+        if (postListResult.getState() == FAIL) {
             return postListResult;
+        }
         List<Post> postList = postListResult.getObject();
         userService.multiSetUser(postList, Post.class.getMethod("getCreatorId"), Post.class.getMethod("setCreator", User.class));
         multiSetPostCategoryInfo(postList, operator);
@@ -395,26 +435,32 @@ public class PostService extends BaseService<PostDao, Post> {
 
     public Result<List<Post>> readPostListOfCreator(@NotNull Post param, Operator operator) {
         param.setOfType(Post.OF_CREATOR);
-        if (!param.isValidReadIndexOfCreatorParam(true))
+        if (!param.isValidReadIndexOfCreatorParam(true)) {
             return new Result<List<Post>>(FAIL).setErrorCode(1010050221).setMessage("操作错误，参数不合法");
+        }
         Result<Object> validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(param, CREATOR, hmacKey);
-        if (validateTokenResult.getState() == FAIL)
+        if (validateTokenResult.getState() == FAIL) {
             return new Result<List<Post>>(validateTokenResult);
+        }
         Result<User> creatorResult = userService.readUserWithCounter(param.getCreatorId(), operator);
-        if (creatorResult.getState() == FAIL)
+        if (creatorResult.getState() == FAIL) {
             return new Result<List<Post>>(creatorResult);
+        }
         Post queryEntity = (Post) new Post().setQueryParam(new QueryParam());
         IndexExecutor<Post> indexExecutor = new IndexExecutor<>(param, queryEntity, CREATOR, indexOfCreatorExecutorCallBacks, operator);
         //indexExecutor.param.disablePatchFromDB = true;
         indexExecutor.param.childNumOfParent = creatorResult.getObject().getPostCnt();
         indexExecutor.param.topId = creatorResult.getObject().getTopPostId();
         Result<List<Post>> postListResult = indexExecutor.doIndex();
-        if (postListResult.getState() == FAIL)
+        if (postListResult.getState() == FAIL) {
             return postListResult;
+        }
         List<Post> postList = postListResult.getObject();
-        for (int i = 0; i < postList.size(); ++i)
-            if (postList.get(i) != null)
+        for (int i = 0; i < postList.size(); ++i) {
+            if (postList.get(i) != null) {
                 postList.get(i).setCreator(creatorResult.getObject());
+            }
+        }
         multiSetPostCategoryInfo(postList, operator);
         likeRecordService.multiSetIsLikedByViewer(postList, LikeRecord.TYPE_POST, operator.getUserId());
         postValidator.multiSetRights(param, postList, operator);
@@ -425,8 +471,9 @@ public class PostService extends BaseService<PostDao, Post> {
 
     public void multiSetIndexedFlag(@NotNull List<Post> postList, int type, Integer flag) {
         List<TmpEntry> entryList = new ArrayList<>(postList.size());
-        for (int i = 0; i < postList.size(); ++i)
+        for (int i = 0; i < postList.size(); ++i) {
             entryList.add(new TmpEntry(postList.get(i).getId(), flag));
+        }
         commonService.batchUpdate("lpt_post", "post_id", "post_" + (type == POPULAR ? "p" : "l") + "_indexed_flag", CommonService.OPS_COPY, entryList);
     }
 
@@ -437,29 +484,38 @@ public class PostService extends BaseService<PostDao, Post> {
     @NotNull
     private Result<Post> readOnePost(Integer postId, boolean withCreator, boolean withCounter, boolean withCategoryInfo, boolean withContent, boolean withFullText, Operator operator) {
         Post queryEntity = (Post) new Post(postId).setQueryParam(new QueryParam());
-        if (withFullText)
+        if (withFullText) {
             queryEntity.setQueryFullText(1);
+        }
         Result<Post> postResult = queryHelper.readEntity(queryEntity, withContent);
-        if (postResult.getState() == FAIL)
+        if (postResult.getState() == FAIL) {
             return postResult;
+        }
         Post resPost = postResult.getObject();
-        if (withFullText && resPost.getFullTextId() != null && (resPost.getFromDB() == null || !resPost.getFromDB()))//从Redis中取出来的且需要全文
+        // 从Redis中取出来的且需要全文
+        if (withFullText && resPost.getFullTextId() != null && (resPost.getFromDb() == null || !resPost.getFromDb())) {
             resPost.setFullText(fullTextQueryHelper.readValue(resPost.getFullTextId()).getObject());
-        if (withCreator)
+        }
+        if (withCreator) {
             setPostCreator(resPost, operator);
+        }
         if (withCategoryInfo && resPost.getCategoryId() != null) {
             Result<Category> categoryResult = categoryService.readCategory(resPost.getCategoryId(), false, operator);
-            if (categoryResult.getState() == SUCCESS)
+            if (categoryResult.getState() == SUCCESS) {
                 resPost.setCategory(categoryResult.getObject());
-            else//没获取到目录信息，可能该目录已删除
+            } else {
+                // 没获取到目录信息，可能该目录已删除
                 resPost.getCategory().setIsLeaf(true);
+            }
         }
-        if (withCounter)
+        if (withCounter) {
             setCounter(resPost);
+        }
         if (resPost.getType().equals(Post.TYPE_FORWARD) && resPost.getOriId() != null && withContent) {
             Post ori = queryHelper.readEntity(new Post(resPost.getOriId()), true).getObject();
-            if (ori != null)
+            if (ori != null) {
                 resPost.setOriPost(ori);
+            }
         }
         processPayload(resPost);
         return postResult;
@@ -489,11 +545,13 @@ public class PostService extends BaseService<PostDao, Post> {
      * 获取帖子
      */
     public Result<Post> readPost(Integer postId, boolean withCreator, boolean withCounter, boolean withCategoryInfo, boolean withContent, boolean withFullText, boolean withIsLikedByViewer, Integer withPreviewCommentNum, boolean withRightInfo, Operator operator) {
-        if (postId == null)
+        if (postId == null) {
             return new Result<Post>(FAIL).setErrorCode(1010050219).setMessage("ID不能为空");
+        }
         Result<Post> result = readOnePost(postId, withCreator, withCounter, withCategoryInfo, withContent, withFullText, operator);
-        if (result.getState() == FAIL)
+        if (result.getState() == FAIL) {
             return result;
+        }
         Post post = result.getObject();
         if (post.getType() != null && post.getType().equals(Post.TYPE_FORWARD) && withContent) {
             Result<Post> oriResult = readOnePost(post.getOriId(), withCreator, withCounter, withCategoryInfo, true, withFullText, operator);
@@ -508,8 +566,9 @@ public class PostService extends BaseService<PostDao, Post> {
             boolean res = likeRecordService.existLikeRecordInRedis((LikeRecord) new LikeRecord().setTargetId(postId).setCreatorId(operator.getUserId()).setType(LikeRecord.TYPE_POST));
             post.setLikedByViewer(res);
         }
-        if (withRightInfo)
+        if (withRightInfo) {
             postValidator.setRights(post, operator, null);
+        }
         return result;
     }
 
@@ -520,19 +579,25 @@ public class PostService extends BaseService<PostDao, Post> {
     @SneakyThrows
     public Result<List<Post>> multiReadPost(Post param, List<Integer> postIdList, boolean withCreator, boolean withCounter, boolean withCategoryInfo, boolean withContent, boolean withIsLikedByViewer, boolean withRightInfo, Operator operator) {
         Result<List<Post>> postListResult = queryHelper.multiReadEntity(postIdList, withContent, new Post());
-        if (postListResult.getState() == FAIL)
+        if (postListResult.getState() == FAIL) {
             return postListResult;
+        }
         List<Post> postList = postListResult.getObject();
-        if (withCreator)
+        if (withCreator) {
             userService.multiSetUser(postList, Post.class.getMethod("getCreatorId"), Post.class.getMethod("setCreator", User.class));
-        if (withCounter)
+        }
+        if (withCounter) {
             multiSetCounter(postList);
-        if (withCategoryInfo)
+        }
+        if (withCategoryInfo) {
             multiSetPostCategoryInfo(postList, operator);
-        if (withIsLikedByViewer)
+        }
+        if (withIsLikedByViewer) {
             likeRecordService.multiSetIsLikedByViewer(postList, LikeRecord.TYPE_POST, operator.getUserId());
-        if (withRightInfo)
+        }
+        if (withRightInfo) {
             postValidator.multiSetRights(param, postList, operator);
+        }
         return postListResult;
     }
 
@@ -543,28 +608,35 @@ public class PostService extends BaseService<PostDao, Post> {
      * @param operator
      */
     public void multiSetOriPost(@NotNull List<Post> postList, Operator operator) {
-        if (postList.size() == 0)
+        if (postList.size() == 0) {
             return;
+        }
         Map<Integer, Post> oriMap = new HashMap<>();
         List<Integer> oriIdList = new ArrayList<>();
         for (int i = 0; i < postList.size(); ++i) {
             Post post = postList.get(i);
-            if (post == null)
+            if (post == null) {
                 continue;
-            if (post.getType().equals(Post.TYPE_FORWARD) && post.getOriId() != null)
+            }
+            if (post.getType().equals(Post.TYPE_FORWARD) && post.getOriId() != null) {
                 oriIdList.add(post.getOriId());
+            }
         }
         List<Post> oriList = multiReadPost(null, oriIdList, true, false, true, true, false, false, operator).getObject();
-        if (oriList == null)
+        if (oriList == null) {
             return;
-        for (int i = 0; i < oriList.size(); ++i)
+        }
+        for (int i = 0; i < oriList.size(); ++i) {
             oriMap.put(oriList.get(i).getId(), oriList.get(i));
+        }
         for (int i = 0; i < postList.size(); ++i) {
             Post post = postList.get(i);
-            if (post == null)
+            if (post == null) {
                 continue;
-            if (post.getType().equals(Post.TYPE_FORWARD) && post.getOriId() != null)
+            }
+            if (post.getType().equals(Post.TYPE_FORWARD) && post.getOriId() != null) {
                 post.setOriPost(oriMap.get(post.getOriId()));
+            }
         }
     }
 
@@ -578,11 +650,13 @@ public class PostService extends BaseService<PostDao, Post> {
                 return new Result<Object>(FAIL).setErrorCode(1010050223).setMessage("该目录禁止发帖");
             }
             Result<Category> categoryResult = categoryService.readCategory(post.getCategoryId(), false, operator);
-            if (categoryResult.getState() == FAIL)
+            if (categoryResult.getState() == FAIL) {
                 return new Result<Object>(categoryResult);
+            }
             Category category = categoryResult.getObject();
-            if (category.getIsLeaf() != null && !category.getIsLeaf())
+            if (category.getIsLeaf() != null && !category.getIsLeaf()) {
                 return new Result<Object>(FAIL).setErrorCode(1010050211).setMessage("只能在叶目录发帖");
+            }
             post.setCategory(category);
         }
         return new Result<Object>(Result.SUCCESS);
@@ -592,19 +666,25 @@ public class PostService extends BaseService<PostDao, Post> {
      * 创建帖子
      */
     public Result<Integer> createPost(@NotNull Post post, Operator operator) {
-        if (!post.isValidInsertParam())
+        if (!post.isValidInsertParam()) {
             return new Result<Integer>(FAIL).setErrorCode(1010050202).setMessage("操作错误，参数不合法");
+        }
         Result<Object> checkCategoryResult = checkCategoryOfPost(post, operator);
-        if (checkCategoryResult.getState() == FAIL)
+        if (checkCategoryResult.getState() == FAIL) {
             return new Result<Integer>(checkCategoryResult);
+        }
         post.setLength(post.getContent().length()).setCreator(operator.getUser());
-        if (!postValidator.checkCreatePermission(post, operator))
+        if (!postValidator.checkCreatePermission(post, operator)) {
             return new Result<Integer>(FAIL).setErrorCode(1010050205).setMessage("操作失败，权限错误");
-        if (post.getType().equals(Post.TYPE_PUBLIC))//与下面的addPostIndex对应
+        }
+        // 与下面的addPostIndex对应
+        if (post.getType().equals(Post.TYPE_PUBLIC)) {
             post.setLIndexedFlag(true);
+        }
         int res = insertOne(post);
-        if (res == -1)
+        if (res == -1) {
             return new Result<Integer>(FAIL).setErrorCode(1010050103).setMessage("数据库操作失败");
+        }
         post.setLikeCnt(0L).setCommentCnt(0L).setViewCnt(0L).setForwardCnt(0L);
         if (post.getType().equals(Post.TYPE_PUBLIC)) {
             //修改目录的帖子数
@@ -622,15 +702,18 @@ public class PostService extends BaseService<PostDao, Post> {
      * 该操作需要管理等级，但不算做管理员操作，不记录到管理员操作公开中
      */
     public Result<Object> setCategory(@NotNull Post param, Operator operator) {
-        if (!param.isValidSetCategoryParam())
+        if (!param.isValidSetCategoryParam()) {
             return new Result<Object>(FAIL).setErrorCode(1010050228).setMessage("操作错误，参数不合法");
+        }
         // 设置帖子目录需要判断帖子的创建者，更新索引的时候需要点赞数
         Result<Post> postResult = readPostWithCounter(param.getId(), operator);
-        if (postResult.getState() == FAIL)
+        if (postResult.getState() == FAIL) {
             return new Result<Object>(postResult);
+        }
         Post resPost = postResult.getObject();
-        if (!resPost.getType().equals(Post.TYPE_PUBLIC))
+        if (!resPost.getType().equals(Post.TYPE_PUBLIC)) {
             return new Result<Object>(FAIL).setErrorCode(1010050232).setMessage("操作失败，帖子类型错误");
+        }
         Integer oriCategoryId = resPost.getCategoryId();
         resPost.setCategoryId(param.getCategoryId());
         // checkCategoryOfPost的过程中会设置post的category
@@ -645,8 +728,9 @@ public class PostService extends BaseService<PostDao, Post> {
             return new Result<Object>(FAIL).setErrorCode(1010050233).setMessage("操作失败，目标目录不能是原目录");
         }
         int res = updateCategory(param.getId(), param.getCategoryId());
-        if (res == 0)
+        if (res == 0) {
             return new Result<Object>(FAIL).setErrorCode(1010050131).setMessage("数据库操作失败");
+        }
         redisHelper.removeEntity(param.getId());
         // 修改原目录的帖子数
         categoryService.cascadeUpdatePostCnt(oriCategoryId, -1L);
@@ -661,30 +745,37 @@ public class PostService extends BaseService<PostDao, Post> {
      * 设置置顶评论
      */
     public Result<Object> setTopComment(@NotNull Post param, boolean isCancel, Operator operator) {
-        if (!isCancel && !param.isValidSetTopCommentParam())
+        if (!isCancel && !param.isValidSetTopCommentParam()) {
             return new Result<Object>(FAIL).setErrorCode(1010050214).setMessage("操作错误，参数不合法");
-        if (!isCancel && !param.isValidCancelTopCommentParam())
+        }
+        if (!isCancel && !param.isValidCancelTopCommentParam()) {
             return new Result<Object>(FAIL).setErrorCode(1010050217).setMessage("操作错误，参数不合法");
+        }
         //设置帖子置顶评论需要判断帖子的创建者
         Result<Post> postResult = readPostWithAllFalse(param.getId(), operator);
-        if (postResult.getState() == FAIL)
+        if (postResult.getState() == FAIL) {
             return new Result<Object>(postResult);
+        }
         Post resPost = postResult.getObject();
-        if (!postValidator.checkSetTopCommentPermission(resPost, operator))
+        if (!postValidator.checkSetTopCommentPermission(resPost, operator)) {
             return new Result<Object>(FAIL).setErrorCode(1010050215).setMessage("操作失败，权限错误");
+        }
         //取消置顶则将commentId设为空
         Integer newCommentId = null;
         if (!isCancel) {
             Result<CommentL1> commentL1Result = commentL1Service.readCommentWithAllFalse(param.getTopCommentId(), operator);
-            if (commentL1Result.getState() == FAIL)
+            if (commentL1Result.getState() == FAIL) {
                 return new Result<Object>(commentL1Result);
-            if (!resPost.getId().equals(commentL1Result.getObject().getPostId()))
+            }
+            if (!resPost.getId().equals(commentL1Result.getObject().getPostId())) {
                 return new Result<Object>(FAIL).setErrorCode(1010050218).setMessage("目标评论不在本帖");
+            }
             newCommentId = param.getTopCommentId();
         }
         int res = updateTopComment(resPost.getId(), newCommentId);
-        if (res == 0)
+        if (res == 0) {
             return new Result<Object>(FAIL).setErrorCode(1010050116).setMessage("数据库操作失败");
+        }
         resPost.setTopCommentId(newCommentId);
         redisHelper.removeEntity(param.getId());
         return new Result<Object>(Result.SUCCESS);
@@ -694,21 +785,26 @@ public class PostService extends BaseService<PostDao, Post> {
      * 更新贴子内容
      */
     public Result<Object> updateContent(@NotNull Post param, Operator operator) {
-        if (!param.isValidUpdateContentParam())
+        if (!param.isValidUpdateContentParam()) {
             return new Result<Object>(FAIL).setErrorCode(1010050224).setMessage("操作错误，参数不合法");
+        }
         Result<Post> postResult = readPostWithAllFalse(param.getId(), operator);
-        if (postResult.getState() == FAIL)
+        if (postResult.getState() == FAIL) {
             return new Result<Object>(postResult);
+        }
         Post resPost = postResult.getObject();
-        if (resPost.getEditable() == null || resPost.getEditable() == false)
+        if (resPost.getEditable() == null || resPost.getEditable() == false) {
             return new Result<Object>(FAIL).setErrorCode(1010050225).setMessage("操作失败，该帖不允许编辑");
-        if (!postValidator.checkUpdateContentPermission(resPost, operator))
+        }
+        if (!postValidator.checkUpdateContentPermission(resPost, operator)) {
             return new Result<Object>(FAIL).setErrorCode(1010050226).setMessage("操作失败，权限错误");
+        }
         param.setLength(param.getContent().length());
         setPostFullText(param, resPost);
         int res = updateContent(param);
-        if (res == 0)
+        if (res == 0) {
             return new Result<Object>(FAIL).setErrorCode(1010050127).setMessage("数据库操作失败");
+        }
         redisHelper.removeEntity(param.getId());
         return new Result<Object>(Result.SUCCESS);
     }
@@ -718,30 +814,37 @@ public class PostService extends BaseService<PostDao, Post> {
      */
     @SneakyThrows
     public Result<Object> deletePost(@NotNull Post param, Operator operator) {
-        if (!param.isValidDeleteParam())
+        if (!param.isValidDeleteParam()) {
             return new Result<Object>(FAIL).setErrorCode(1010050208).setMessage("操作错误，参数不合法");
+        }
         //删除帖子需要获取帖子的目录以判断权限
         Result<Post> postResult = readPostWithCategoryInfoAndContent(param.getId(), operator);
-        if (postResult.getState() == FAIL)
+        if (postResult.getState() == FAIL) {
             return new Result<Object>(postResult);
+        }
         Post post = postResult.getObject();
         Category category = post.getCategory();
-        if (post.getType().equals(Post.TYPE_PUBLIC) && category.getIsLeaf() != null && !category.getIsLeaf())
+        if (post.getType().equals(Post.TYPE_PUBLIC) && category.getIsLeaf() != null && !category.getIsLeaf()) {
             return new Result<Object>(FAIL).setErrorCode(1010050212).setMessage("只能在叶目录删帖");
-        if (!postValidator.checkDeletePermission(post, operator))
+        }
+        if (!postValidator.checkDeletePermission(post, operator)) {
             return new Result<Object>(FAIL).setErrorCode(1010050209).setMessage("操作失败，权限错误");
+        }
         //删帖人不是发帖人，则是管理员删帖
         boolean isAdminOp = !post.getCreatorId().equals(operator.getUserId());
         //管理员操作，且填写删除原因小于5个字
-        if (isAdminOp && !param.isValidOpComment())
+        if (isAdminOp && !param.isValidOpComment()) {
             return new Result<Object>(FAIL).setErrorCode(1010050222).setMessage("操作错误，操作原因字数在5-256");
+        }
         int res = deleteOne(post);
-        if (res == 0)
+        if (res == 0) {
             return new Result<Object>(FAIL).setErrorCode(1010050110).setMessage("数据库操作失败");
+        }
         redisHelper.removeEntity(post.getId());
         if (post.getType().equals(Post.TYPE_PUBLIC)) {
-            categoryService.cascadeUpdatePostCnt(category.getId(), -1L);//修改目录的帖子数
-            //删除帖子不需要修改indexed_flag，删除的帖子不影响数据库查询结果，评论数据同理
+            // 修改目录的帖子数
+            categoryService.cascadeUpdatePostCnt(category.getId(), -1L);
+            // 删除帖子不需要修改indexed_flag，删除的帖子不影响数据库查询结果，评论数据同理
             postIndexService.deletePostIndex(Arrays.asList(post));
         } else if (post.getType().equals(Post.TYPE_FORWARD)) {
             forwardService.removeFromForwardZSet(post.getSupId(), post.getId());
@@ -759,14 +862,18 @@ public class PostService extends BaseService<PostDao, Post> {
 
     public String correctCounters() {
         int r1 = dao.correctCommentCnt();
-        if (r1 == 0)
+        if (r1 == 0) {
             return "帖子数据校正错误，请重新校正";
+        }
         int r2 = dao.correctForwardCnt();
-        if (r2 == 0)
+        if (r2 == 0) {
             return "帖子数据校正错误，请重新校正";
-        int r3 = dao.correctLikeCnt();//不需要删redis中的点赞记录，因为还没刷到数据库中，不会被统计
-        if (r3 == 0)
+        }
+        // 不需要删redis中的点赞记录，因为还没刷到数据库中，不会被统计
+        int r3 = dao.correctLikeCnt();
+        if (r3 == 0) {
             return "帖子数据校正错误，请重新校正";
+        }
         redisTemplate.delete(RedisUtil.scanAllKeys(redisTemplate, redisHelper.getCounterKey("*")));
         return "帖子的一级评论数校正" + r1 + "条数据;帖子的转发数校正" + r2 + "条数据;帖子的点赞数校正" + r3 + "条数据";
     }
@@ -775,14 +882,15 @@ public class PostService extends BaseService<PostDao, Post> {
      * 每天将Redis中的帖子的评论数量记录刷入数据库
      */
     @Scheduled(cron = "0 30 2 * * ?")
-    public void dailyFlushRedisToDB() {
+    public void dailyFlushRedisToDb() {
         List<TmpEntry>[] cntLists = redisHelper.flushRedisCounter("cm", "fw");
         redisTemplate.delete(RedisUtil.scanAllKeys(redisTemplate, redisHelper.getBasicKey("*")));
         redisTemplate.delete(RedisUtil.scanAllKeys(redisTemplate, redisHelper.getContentKey("*")));
         commonService.batchUpdate("lpt_post", "post_id", "post_comment_cnt", CommonService.OPS_INCR_BY, cntLists[0]);
         commonService.batchUpdate("lpt_post", "post_id", "post_forward_cnt", CommonService.OPS_INCR_BY, cntLists[1]);
         log.info("帖子的一级评论数量写入数据库");
-        hmacKey = CryptUtil.randUrlSafeStr(64, true);//更新hmac的key
+        // 更新hmac的key
+        hmacKey = CryptUtil.randUrlSafeStr(64, true);
     }
 
 }

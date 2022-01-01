@@ -81,10 +81,12 @@ public class UserController {
     @AccessLimit(value = 10, per = LimitTimeUnit.HALF_HOUR)
     @RequestMapping(value = "/top_post/{action}", method = RequestMethod.PATCH)
     public Result<Object> setUserTopPost(@RequestBody User user, @PathVariable String action, @RequestAttribute Operator operator) {
-        if ("create".equals(action))
+        if ("create".equals(action)) {
             return userService.setTopPost(user, false, operator).setOperator(operator);
-        if ("cancel".equals(action))
+        }
+        if ("cancel".equals(action)) {
             return userService.setTopPost(user, true, operator).setOperator(operator);
+        }
         return new Result<Object>(Result.FAIL);
     }
 

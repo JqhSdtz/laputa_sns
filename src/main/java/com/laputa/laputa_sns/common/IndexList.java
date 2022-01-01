@@ -36,16 +36,24 @@ public class IndexList {
         rPole.isLinked = true;
     }
 
-    private Node lPole, rPole;//左右两极
+    /**
+     * 左右两极
+     */
+    private Node lPole, rPole;
     private Map<Integer, Node> nodeMap;
     private int size = 0;
 
+    /**
+     * 里不能删除后把node设为null，因为遍历的时候还会用到node，等gc回收即可
+     * @param node
+     * @return
+     */
     @NotNull
     @Contract("_ -> param1")
-    //这里不能删除后把node设为null，因为遍历的时候还会用到node，等gc回收即可
     private Node unlink(@NotNull Node node) {
-        if (!node.isLinked || node == lPole || node == rPole)
+        if (!node.isLinked || node == lPole || node == rPole) {
             return null;
+        }
         node.isLinked = false;
         Node leftNode = node.left;
         Node rightNode = node.right;
@@ -55,42 +63,62 @@ public class IndexList {
     }
 
     private boolean unlinkAndLink(Node node, Node des, int dir) {
-        if (unlink(node) == null)
+        if (unlink(node) == null) {
             return false;
+        }
         return dir == LEFT ? linkAfter(node, des) : linkBefore(node, des);
     }
 
-    //从左到右，由大到小
+    /**
+     * 排序，从左到右，由大到小
+     * @param node
+     * @param dir
+     * @param isSync
+     * @return
+     */
     private boolean sort(Node node, int dir, boolean isSync) {
-        if (dir == LEFT) {//值增长，向左比较
+        // 值增长，向左比较
+        if (dir == LEFT) {
             Node des = node.left;
-            while (des != lPole && node.data.compareTo(des.data) < 0)//compareTo小于0表示大于参数，遇到大于或等于当前值的则停止
+            // compareTo小于0表示大于参数，遇到大于或等于当前值的则停止
+            while (des != lPole && node.data.compareTo(des.data) < 0) {
                 des = des.left;
-            if (des == node.left)
+            }
+            if (des == node.left) {
                 return node.isLinked;
-            if (isSync)//调用时已经是同步
+            }
+            // 调用时已经是同步
+            if (isSync) {
                 return unlinkAndLink(node, des, dir);
+            }
             synchronized (this) {
                 return unlinkAndLink(node, des, dir);
             }
-        } else if (dir == RIGHT) {//值减小，向右比较
+        } else if (dir == RIGHT) {
+            // 值减小，向右比较
             Node des = node.right;
-            while (des != rPole && node.data.compareTo(des.data) > 0)//compareTo大于0表示小于参数，遇到小于或等于当前值的则停止
+            // compareTo大于0表示小于参数，遇到小于或等于当前值的则停止
+            while (des != rPole && node.data.compareTo(des.data) > 0) {
                 des = des.right;
-            if (des == node.right)
+            }
+            if (des == node.right) {
                 return node.isLinked;
-            if (isSync)
+            }
+            if (isSync) {
                 return unlinkAndLink(node, des, dir);
+            }
             synchronized (this) {
                 return unlinkAndLink(node, des, dir);
             }
-        } else
+        } else {
             return false;
+        }
     }
 
     private boolean linkAfter(@NotNull Node node, @NotNull Node left) {
-        if (node.isLinked || !left.isLinked || left == rPole)
+        if (node.isLinked || !left.isLinked || left == rPole) {
             return false;
+        }
         node.right = left.right;
         node.left = left;
         left.right.left = node;
@@ -100,8 +128,9 @@ public class IndexList {
     }
 
     private boolean linkBefore(@NotNull Node node, @NotNull Node right) {
-        if (node.isLinked || !right.isLinked || right == lPole)
+        if (node.isLinked || !right.isLinked || right == lPole) {
             return false;
+        }
         node.left = right.left;
         node.right = right;
         right.left.right = node;
@@ -112,32 +141,40 @@ public class IndexList {
 
 
     public synchronized Index addLast(@NotNull Index data, boolean reqSort) {
-        if (nodeMap.containsKey(data.getId()))//已经有这个索引了
+        // 已经有这个索引了
+        if (nodeMap.containsKey(data.getId())) {
             return data;
+        }
         Node node = new Node(data);
         linkBefore(node, rPole);
-        if (reqSort && !sort(node, LEFT, true))
-            return null;//插入后被另一线程删除
+        // 插入后被另一线程删除
+        if (reqSort && !sort(node, LEFT, true)) {
+            return null;
+        }
         nodeMap.put(node.data.getId(), node);
         ++size;
         return node.data;
     }
 
     public synchronized Index addFirst(@NotNull Index data, boolean reqSort) {
-        if (nodeMap.containsKey(data.getId()))//已经有这个索引了
+        // 已经有这个索引了
+        if (nodeMap.containsKey(data.getId())) {
             return data;
+        }
         Node node = new Node(data);
         linkAfter(node, lPole);
-        if (reqSort && !sort(node, RIGHT, true))
+        if (reqSort && !sort(node, RIGHT, true)) {
             return null;
+        }
         nodeMap.put(node.data.getId(), node);
         ++size;
         return node.data;
     }
 
     public synchronized Index popLast() {
-        if (size == 0)
+        if (size == 0) {
             return null;
+        }
         Index tmp = unlink(rPole.left).data;
         nodeMap.remove(tmp.getId());
         --size;
@@ -145,8 +182,9 @@ public class IndexList {
     }
 
     public synchronized Index remove(int id) {
-        if (!nodeMap.containsKey(id))
+        if (!nodeMap.containsKey(id)) {
             return null;
+        }
         Index tmp = unlink(nodeMap.get(id)).data;
         nodeMap.remove(tmp.getId());
         --size;
@@ -155,11 +193,13 @@ public class IndexList {
 
     public boolean update(@NotNull Index index, boolean reqSort, int dir) {
         Node node = nodeMap.get(index.getId());
-        if (node == null)
+        if (node == null) {
             return false;
+        }
         node.data.setValue(index.getValue());
-        if (reqSort)
+        if (reqSort) {
             return sort(node, dir, false);
+        }
         return true;
     }
 
@@ -188,24 +228,30 @@ public class IndexList {
     public synchronized List<Index> trim(int size, boolean getRemained) {
         Node node = lPole;
         List<Index> remainedList = getRemained ? new ArrayList<>() : null;
-        for (int i = 0; i < size; ++i) {//定位到要保留的最后一个节点
+        // 定位到要保留的最后一个节点
+        for (int i = 0; i < size; ++i) {
             node = node.right;
-            if (node == null || node == rPole)
+            if (node == null || node == rPole) {
                 break;
-            if (getRemained)
+            }
+            if (getRemained) {
                 remainedList.add(node.data);
+            }
         }
-        if (node == null || node == rPole)
+        if (node == null || node == rPole) {
             return getRemained ? remainedList : new ArrayList<>(0);
-        Node trimNode = node.right;//记录下最后一个节点的下一个
-        //把最后一个节点连到右端点上
+        }
+        // 记录下最后一个节点的下一个
+        Node trimNode = node.right;
+        // 把最后一个节点连到右端点上
         node.right = rPole;
         rPole.left = node;
-        //删除掉最后一个节点之后的所有节点
+        // 删除掉最后一个节点之后的所有节点
         List<Index> removedList = getRemained ? null : new ArrayList<>();
         while(trimNode != null && trimNode.data != null) {
-            if (!getRemained)
+            if (!getRemained) {
                 removedList.add(trimNode.data);
+            }
             nodeMap.remove(trimNode.data.getId());
             trimNode = trimNode.right;
         }
@@ -234,28 +280,34 @@ public class IndexList {
 
         public IndexIterator(Integer startId, Integer from) {//优先根据startId获取迭代器，若结果为null，再尝试根据from参数获取
             Node node = null;
-            if (startId != null)
+            if (startId != null) {
                 node = startId.equals(0) ? lPole : nodeMap.get(startId);
+            }
             if (node == null && from != null && from < size) {
                 node = lPole;
-                for (int i = 0; i < from && node != null; ++i)//from等于1的话,node是第一个帖子
+                // from等于1的话,node是第一个帖子
+                for (int i = 0; i < from && node != null; ++i) {
                     node = node.right;
+                }
             }
             cur = node == null ? rPole : node.right;//若startId和from都找不到节点，则返回rPole，即末尾，调用方得不到任何数据
         }
 
+        @Override
         public boolean hasNext() {
             return cur != rPole;
         }
 
         //这种方式有一定隐患，如果在遍历的过程中当前节点被移动到另一个位置，则原位置和新位置之间的节点将被忽略
         //可以使用CAS操作判断当前节点是否被移动，若被移动则返回空，告诉调用方重新遍历，但目前的并发量没有这个必要
+        @Override
         public Index next() {
             Index data = cur.data;
             cur = cur.right;
             return data;
         }
 
+        @Override
         public void remove() {
             IndexList.this.remove(cur.data.getId());
         }

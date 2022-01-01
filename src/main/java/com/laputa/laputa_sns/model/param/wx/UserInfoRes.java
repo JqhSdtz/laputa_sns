@@ -16,5 +16,5 @@ public class UserInfoRes {
     private String signature;
     private String encryptedData;
     private String iv;
-    private String cloudID;
+    private String cloudId;
 }

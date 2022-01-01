@@ -24,7 +24,10 @@ public class SimpleQueryHelper {
     public SelectOneCallBack selectOneCallBack;
 
     private final Random random = new Random();
-    private final int refreshProbability = 100;//1%的概率刷新key
+    /**
+     * 1%的概率刷新key
+     */
+    private final int refreshProbability = 100;
 
     public SimpleQueryHelper(StringRedisTemplate redisTemplate, String keyPrefix, int timeOut) {
         this.redisTemplate = redisTemplate;
@@ -41,11 +44,13 @@ public class SimpleQueryHelper {
         String value = redisTemplate.opsForValue().get(key);
         if (value == null) {
             value = selectOneCallBack.selectOne(id);
-            if (value == null)
+            if (value == null) {
                 return new Result<String>(Result.FAIL).setErrorCode(1010180101).setMessage("数据库操作失败");
+            }
             redisTemplate.opsForValue().set(key, value, timeOut, TimeUnit.MINUTES);
-        } else if (random.nextInt() % refreshProbability == 0)
+        } else if (random.nextInt() % refreshProbability == 0) {
             redisTemplate.expire(key, timeOut, TimeUnit.MINUTES);
+        }
         return new Result<String>(Result.SUCCESS).setObject(value);
     }
 

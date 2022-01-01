@@ -18,13 +18,16 @@ public class TmpEntry {
         this.value = value;
     }
 
+    @Override
     public int hashCode() {
         return id;
     }
 
+    @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof TmpEntry))
+        if (!(obj instanceof TmpEntry)) {
             return false;
+        }
         return this.id.equals(((TmpEntry) obj).id);
     }
 }

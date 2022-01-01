@@ -6,6 +6,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.ApplicationPidFileWriter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+/**
+ * @author jqh
+ */
 @SpringBootApplication
 @EnableTransactionManagement
 @MapperScan(basePackages={"com.laputa.laputa_sns.dao"})

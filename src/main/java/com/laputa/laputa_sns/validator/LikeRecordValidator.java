@@ -14,14 +14,16 @@ import org.springframework.stereotype.Component;
 public class LikeRecordValidator {
 
     public boolean checkCreatePermission(LikeRecord likeRecord, @NotNull Operator operator) {
-        if(operator .getId().equals(-1))
+        if(operator .getId().equals(-1)) {
             return false;
+        }
         return true;
     }
 
     public boolean checkDeletePermission(LikeRecord likeRecord, @NotNull Operator operator) {
-        if(operator .getId().equals(-1))
+        if(operator .getId().equals(-1)) {
             return false;
+        }
         return true;
     }
 

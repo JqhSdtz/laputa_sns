@@ -21,8 +21,8 @@ public class CommentL2Controller {
 
     private final CommentL2Service commentL2Service;
 
-    public CommentL2Controller(CommentL2Service CommentL2Service) {
-        this.commentL2Service = CommentL2Service;
+    public CommentL2Controller(CommentL2Service commentL2Service) {
+        this.commentL2Service = commentL2Service;
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)

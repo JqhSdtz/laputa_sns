@@ -33,16 +33,18 @@ public class Follow extends AbstractBaseEntity {
 
     @JsonProperty("follower_id")
     public Follow setFollowerId(Integer id) {
-        if (follower == null)
+        if (follower == null) {
             follower = new User();
+        }
         follower.setId(id);
         return this;
     }
 
     @JsonProperty("target_id")
     public Follow setTargetId(Integer id) {
-        if (target == null)
+        if (target == null) {
             target = new User();
+        }
         target.setId(id);
         return this;
     }
@@ -63,33 +65,39 @@ public class Follow extends AbstractBaseEntity {
 
     @JsonIgnore
     public boolean isValidUpdateParam() {
-        if(id == null && target == null)
+        if(id == null && target == null) {
             return false;
-        if(type == null)
+        }
+        if(type == null) {
             return false;
+        }
         return true;
     }
 
     @JsonIgnore
     public boolean isValidInsertParam() {
-        if(target == null || type == null)
+        if(target == null || type == null) {
             return false;
+        }
         return true;
     }
 
     @JsonIgnore
     public boolean isValidDeleteParam() {
-        if(id == null && target == null)
+        if(id == null && target == null) {
             return false;
+        }
         return true;
     }
 
     @JsonIgnore
     public boolean isValidReadIndexOfTargetParam() {
-        if (target == null || target.getId() == null)
+        if (target == null || target.getId() == null) {
             return false;
-        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)
+        }
+        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10) {
             return false;
+        }
         return true;
     }
 }

@@ -29,24 +29,29 @@ public class CommentL1Validator {
     public void multiSetRights(@NotNull CommentL1 comment, @NotNull List<CommentL1> list, Operator operator) {
         boolean delete = checkDeletePermission(comment, operator);
         boolean beTopped = comment.getPost().getCreatorId().equals(operator.getUserId());
-        for (int i = 0; i < list.size(); ++i)
+        for (int i = 0; i < list.size(); ++i) {
             list.get(i).setRights(new CommentRight().setDelete(delete || list.get(i).getCreatorId().equals(operator.getUserId())).setBeTopped(beTopped));
+        }
     }
 
     public boolean checkCreatePermission(CommentL1 comment, @NotNull Operator operator) {
-        if (operator.getId().equals(-1))
+        if (operator.getId().equals(-1)) {
             return false;
+        }
         Date talkBanTo = operator.getUser().getTalkBanTo();
-        if (talkBanTo != null && talkBanTo.after(new Date()))
+        if (talkBanTo != null && talkBanTo.after(new Date())) {
             return false;
+        }
         return true;
     }
 
     public boolean checkDeletePermission(@NotNull CommentL1 comment, @NotNull Operator operator) {
-        if (operator.getId().equals(-1))
+        if (operator.getId().equals(-1)) {
             return false;
-        if (operator.getUserId().equals(comment.getCreatorId()))
+        }
+        if (operator.getUserId().equals(comment.getCreatorId())) {
             return true;
+        }
         Integer categoryId = comment.getPost().getCategoryIdForRight();
         Integer permissionLevel = permissionService.readPermissionLevel(categoryId, operator).getObject();
         return permissionLevel != null && permissionLevel >= DEL_LEVEL;

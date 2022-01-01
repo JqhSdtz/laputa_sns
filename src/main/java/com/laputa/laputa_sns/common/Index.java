@@ -32,10 +32,12 @@ public class Index implements Comparable<Index> {
     /**
      * this.value < o.value 或 this.id < o.id返回正数，在一些容器中即从大到小排序
      */
+    @Override
     public int compareTo(@NotNull Index o) {
         //不管是按时间排序还是热度排序，都是值大的排前面
-        if (this.value == o.value)
+        if (this.value == o.value) {
             return o.id - this.id;
+        }
         return o.value > this.value ? 1 : -1;
     }
 }

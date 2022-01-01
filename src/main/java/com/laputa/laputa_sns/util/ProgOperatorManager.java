@@ -27,8 +27,9 @@ public class ProgOperatorManager {
     }
 
     public static boolean isProgOperatorOfClass(@NotNull Operator progOperator, Class<?> progClass) {
-        if (!progOperatorMap.containsKey(progOperator.getUserId()))
+        if (!progOperatorMap.containsKey(progOperator.getUserId())) {
             return false;
+        }
         return progOperatorMap.get(progOperator.getUserId()).equals(progClass);
     }
 

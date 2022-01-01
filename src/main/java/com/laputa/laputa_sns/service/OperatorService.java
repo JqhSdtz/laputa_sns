@@ -89,15 +89,16 @@ public class OperatorService {
         }
         // 一个月
         cookie.setMaxAge(2592000);
-        //cookie.setSecure(true);
+        // cookie.setSecure(true);
         response.addCookie(cookie);
     }
 
     private void setToken(@NotNull Operator operator, @NotNull HttpServletRequest request, @NotNull HttpServletResponse response) {
         String token = CryptUtil.randUrlSafeStr(32, true);
         operator.setToken(token);
-        if (operator.getUser() != null)
+        if (operator.getUser() != null) {
             operator.getUser().setToken(token);
+        }
         String cookieToken = operator.getUserId() + "@" + token;
         setCookie(request, response, "token", cookieToken);
         if (passTokenThroughHeader) {
@@ -111,13 +112,15 @@ public class OperatorService {
         if (operator == null) {
             //缓存中没有该用户，从数据库中读取
             Result<User> userResult = userService.readUserWithToken(userId);
-            if (userResult.getState() == FAIL)
+            if (userResult.getState() == FAIL) {
                 return null;
+            }
             Operator resOperator = new Operator().setUser(userResult.getObject()).setToken(userResult.getObject().getToken());
             //返回的是包含旧的token的operator
             return resOperator.setFromLogin(true);
-        } else
+        } else {
             return operator;
+        }
     }
 
     public Result<Operator> login(@NotNull User paramUser, HttpServletRequest request, HttpServletResponse response) {
@@ -127,8 +130,9 @@ public class OperatorService {
             resUser = paramUser;
         } else {
             Result<User> loginResult = userService.login(paramUser);
-            if (loginResult.getState() == FAIL)
+            if (loginResult.getState() == FAIL) {
                 return new Result<Operator>(loginResult);
+            }
             resUser = loginResult.getObject();
         }
         Operator operator = new Operator();
@@ -165,8 +169,9 @@ public class OperatorService {
         operator.setUser(paramUser);
         setToken(operator, request, response);
         Result<Integer> registerResult = userService.createUser(paramUser);
-        if (registerResult.getState() == FAIL)
+        if (registerResult.getState() == FAIL) {
             return new Result<Operator>(registerResult);
+        }
         operator.setUserId(registerResult.getObject()).setFromLogin(true);
         afterLogin(operator, request, response, false, true);
         return new Result<Operator>(SUCCESS).setObject(operator);
@@ -193,11 +198,12 @@ public class OperatorService {
             operator.setPermissionMap(permissionMapResult.getObject());
         }
         setToken(operator, request, response);
-        //operator.setLastAccessTime(new Date().getTime()).setFromLogin(null);
-        //更新数据库，增加登录次数
+        // operator.setLastAccessTime(System.currentTimeMillis()).setFromLogin(null);
+        // 更新数据库，增加登录次数
         Result<Object> afterLogin = userService.afterLogin(user, operator.getToken(), fromRegister);
-        if (afterLogin.getState() == FAIL)
+        if (afterLogin.getState() == FAIL) {
             return afterLogin;
+        }
         if (!fromLoad) {
             pullNewsAndNoticeCnt(operator);
             redisHelper.setEntity(operator, false);
@@ -206,18 +212,21 @@ public class OperatorService {
     }
 
     public Result<Operator> loadOperator(Integer userId, Operator operator, HttpServletRequest request, HttpServletResponse response) {
-        if (operator == null)
+        if (operator == null) {
             operator = getOnlineOperator(userId);
-        if (operator == null)
+        }
+        if (operator == null) {
             return new Result<Operator>(FAIL).setErrorCode(1010130201).setMessage("用户离线");
+        }
         boolean fromLogin = operator.getFromLogin() != null && operator.getFromLogin();
         if (fromLogin) {
             afterLogin(operator, request, response, true, false);
         } else {
             //获取用户基本信息
             Result<User> userResult = userService.readUserWithCounter(userId, operator);
-            if (userResult.getState() == FAIL)
+            if (userResult.getState() == FAIL) {
                 return new Result<Operator>(userResult.setMessage("ID错误"));
+            }
             operator.setUser(userResult.getObject());
         }
         return new Result<Operator>(SUCCESS).setObject(operator);
@@ -227,12 +236,13 @@ public class OperatorService {
      * 获取操作者的动态和通知数量
      */
     public void pullNewsAndNoticeCnt(Operator operator) {
-        long curTime = new Date().getTime();
+        long curTime = System.currentTimeMillis();
         if (operator.getLastAccessTime() == null || curTime - operator.getLastAccessTime() > 500) {
             // 距上一次访问大于500毫秒秒，重新读取未读动态数
             Result<Integer> cntResult = postNewsService.readNewsCount(operator);
-            if (cntResult.getState() == SUCCESS)
+            if (cntResult.getState() == SUCCESS) {
                 operator.setUnreadNewsCnt(cntResult.getObject());
+            }
             operator.setUnreadNoticeCnt(noticeService.pullNoticeCnt(operator.getUserId()));
         }
         operator.setLastAccessTime(curTime);

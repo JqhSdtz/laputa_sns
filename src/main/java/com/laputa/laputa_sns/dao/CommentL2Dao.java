@@ -15,7 +15,9 @@ import java.util.List;
 
 @Repository
 public interface CommentL2Dao extends BaseDao<CommentL2> {
+    @SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
     List<TmpEntry> selectTopNL2OfL1StrByMultiId(List<Integer> idList);
+    @SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
     int updateTopNL2IdStr(@Param("l1Id") int l1Id, @Param("l2Cnt") long l2Cnt, @Param("str") String str);
     int correctLikeCnt();
     int setPopularIndexFlag(@Param("id") int id, @Param("value") int value);

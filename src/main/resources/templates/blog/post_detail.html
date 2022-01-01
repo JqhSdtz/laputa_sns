@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--suppress ALL -->
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
 	  th:with="post = ${postService.readPost(postId, true, false, true, true, true, false, 0, false, operator).object}">
 	<th:block th:if="${post} != null">
@@ -48,8 +49,8 @@
 					<li class="list comment-list content-list" 
 						th:with="popularList = ${commentL1Service.readIndexCommentL1List(queryEntity, popular, false, operator).object}">
 						<ul class="commentl1" th:each="commentl1: ${popularList}">
-							<p id="comment-time">发布时间：<span th:text="${#dates.format(commentl1.createTime,'yyyy年MM月dd日 HH:mm:ss')}"></span></p>
-							<p id="comment-user-name">发布人：<span th:text="${commentl1.creator.nickName}"></span></p>
+							<p class="comment-time">发布时间：<span th:text="${#dates.format(commentl1.createTime,'yyyy年MM月dd日 HH:mm:ss')}"></span></p>
+							<p class="comment-user-name">发布人：<span th:text="${commentl1.creator.nickName}"></span></p>
 							<p class="content comment-content">内容：<span th:text="${commentl1.content}"></span></p>
 						</ul>
 					</li>
@@ -59,8 +60,8 @@
 					<li class="list comment-list content-list" 
 						th:with="latestList = ${commentL1Service.readIndexCommentL1List(queryEntity, latest, false, operator).object}">
 						<ul class="commentl1" th:each="commentl1: ${latestList}">
-							<p id="comment-time">发布时间：<span th:text="${#dates.format(commentl1.createTime,'yyyy年MM月dd日 HH:mm:ss')}"></span></p>
-							<p id="comment-user-name">发布人：<span th:text="${commentl1.creator.nickName}"></span></p>
+							<p class="comment-time">发布时间：<span th:text="${#dates.format(commentl1.createTime,'yyyy年MM月dd日 HH:mm:ss')}"></span></p>
+							<p class="comment-user-name">发布人：<span th:text="${commentl1.creator.nickName}"></span></p>
 							<p class="content comment-content">内容：<span th:text="${commentl1.content}"></span></p>
 						</ul>
 					</li>

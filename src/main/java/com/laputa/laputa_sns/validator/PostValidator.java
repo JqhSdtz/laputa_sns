@@ -31,8 +31,9 @@ public class PostValidator {
 
     public void setRights(@NotNull Post post, @NotNull Operator operator, Integer level) {
         post.setRights(new PostRight());
-        if (operator.getUserId().equals(-1))
+        if (operator.getUserId().equals(-1)) {
             return;
+        }
         if (post.getCreatorId().equals(operator.getUserId())) {
             post.getRights().setTopComment(true).setDelete(true);
             if (post.getEditable() != null && post.getEditable()) {
@@ -40,19 +41,24 @@ public class PostValidator {
             }
         }
         //非公开的帖子删除需要根目录权限
-        if (level == null)
+        if (level == null) {
             level = permissionService.readPermissionLevel(post.getCategoryIdForRight(), operator).getObject();
-        if (level == null)
+        }
+        if (level == null) {
             return;
-        if (level >= AdminLevel.DELETE_CATEGORY_POST)
+        }
+        if (level >= AdminLevel.DELETE_CATEGORY_POST) {
             post.getRights().setDelete(true);
-        if (level >= AdminLevel.UPDATE_POST_CATEGORY)
+        }
+        if (level >= AdminLevel.UPDATE_POST_CATEGORY) {
             post.getRights().setUpdateCategory(true);
+        }
     }
 
     public void multiSetRights(Post param, @NotNull List<Post> postList, @NotNull Operator operator) {
-        if (operator.getUserId().equals(-1))
+        if (operator.getUserId().equals(-1)) {
             return;
+        }
         Integer level = null;
         Boolean beTopped = null;
         if (param != null && param.getOfType() != null) {
@@ -60,25 +66,29 @@ public class PostValidator {
                 level = permissionService.readPermissionLevel(param.getCategoryId(), operator).getObject();
                 level = level == null ? 0 : level;
                 beTopped = level == null ? null : level >= AdminLevel.SET_CATEGORY_TOP_POST;
-            } else if (param.getOfType().equals(Post.OF_CREATOR))
+            } else if (param.getOfType().equals(Post.OF_CREATOR)) {
                 beTopped = param.getCreatorId().equals(operator.getUserId());
+            }
         }
-        for (int i = 0; i < postList.size(); ++i)
+        for (int i = 0; i < postList.size(); ++i) {
             if (postList.get(i) != null) {
                 setRights(postList.get(i), operator, level);
                 postList.get(i).getRights().setBeTopped(beTopped);
             }
+        }
     }
 
     public boolean checkCreatePermission(Post post, @NotNull Operator operator) {
         if (isDebug) {
             return true;
         }
-        if (operator.getId().equals(-1))
+        if (operator.getId().equals(-1)) {
             return false;
+        }
         Date talkBanTo = operator.getUser().getTalkBanTo();
-        if (talkBanTo != null && talkBanTo.after(new Date()))
+        if (talkBanTo != null && talkBanTo.after(new Date())) {
             return false;
+        }
         Integer permissionLevel = permissionService.readPermissionLevel(post.getCategoryId(), operator).getObject();
         if (post.getType().equals(Post.TYPE_PUBLIC)) {
             Integer allowPostLevel = post.getCategory().getAllowPostLevel();
@@ -87,29 +97,35 @@ public class PostValidator {
             }
         }
         if (post.getEditable() != null && post.getEditable()) {
-            if (!operator.isAdmin())
+            if (!operator.isAdmin()) {
                 return false;
+            }
             return permissionLevel != null && permissionLevel >= AdminLevel.CREATE_EDITABLE_POST;
         }
         return true;
     }
 
     public boolean checkCreateForwardPermission(Post sup, @NotNull Operator operator) {
-        if (operator .getId().equals(-1))
+        if (operator .getId().equals(-1)) {
             return false;
-        if (sup.getAllowForward().equals(0) && !sup.getCreatorId().equals(operator.getUserId()))
+        }
+        if (sup.getAllowForward().equals(0) && !sup.getCreatorId().equals(operator.getUserId())) {
             return false;
+        }
         Date talkBanTo = operator.getUser().getTalkBanTo();
-        if (talkBanTo != null && talkBanTo.before(new Date()))
+        if (talkBanTo != null && talkBanTo.before(new Date())) {
             return false;
+        }
         return true;
     }
 
     public boolean checkDeletePermission(@NotNull Post post, @NotNull Operator operator) {
-        if (operator .getId().equals(-1))
+        if (operator .getId().equals(-1)) {
             return false;
-        if (post.getCreatorId().equals(operator.getUserId()))
+        }
+        if (post.getCreatorId().equals(operator.getUserId())) {
             return true;
+        }
         if (post.getType().equals(Post.TYPE_PUBLIC) && operator.isAdmin()) {
             Integer permissionLevel = permissionService.readPermissionLevel(post.getCategoryId(), operator).getObject();
             return permissionLevel != null && permissionLevel >= AdminLevel.DELETE_CATEGORY_POST;
@@ -118,14 +134,16 @@ public class PostValidator {
     }
 
     public boolean checkSetTopCommentPermission(@NotNull Post post, @NotNull Operator operator) {
-        if (operator .getId().equals(-1))
+        if (operator .getId().equals(-1)) {
             return false;
+        }
         return post.getCreatorId().equals(operator.getUserId());
     }
 
     public boolean checkSetCategoryPermission(@NotNull Post oriPost, @NotNull Operator operator) {
-        if (operator .getId().equals(-1))
+        if (operator .getId().equals(-1)) {
             return false;
+        }
         if (oriPost.getCreatorId().equals(operator.getUserId())) {
             // 自己发的帖子，可以迁移
             return true;
@@ -137,8 +155,9 @@ public class PostValidator {
     }
 
     public boolean checkUpdateContentPermission(@NotNull Post post, @NotNull Operator operator) {
-        if (operator .getId().equals(-1))
+        if (operator .getId().equals(-1)) {
             return false;
+        }
         return post.getCreatorId().equals(operator.getUserId());
     }
 

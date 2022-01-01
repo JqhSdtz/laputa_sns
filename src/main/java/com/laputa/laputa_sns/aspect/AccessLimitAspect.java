@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AccessLimitAspect implements ApplicationRunner {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static final DefaultRedisScript<List<List<Object>>> globalTargetRegisterScript =
+    private static final DefaultRedisScript<List<List<Object>>> GLOBAL_TARGET_REGISTER_SCRIPT =
             new DefaultRedisScript(ResourceUtil.getString("/lua/access_limit/globalTargetRegister.lua"), List.class);
     private String methodRegisterKey = "METHOD";
     private Map<String, Long> methodRegisterMap = new HashMap<>();
@@ -69,7 +69,7 @@ public class AccessLimitAspect implements ApplicationRunner {
             String methodName = method.getClass().getName() + ":" + method.getName();
             methodNameList.add(methodName);
         }
-        List<List<Object>> resList = redisTemplate.execute(globalTargetRegisterScript, Arrays.asList(methodRegisterKey), methodNameList.toArray());
+        List<List<Object>> resList = redisTemplate.execute(GLOBAL_TARGET_REGISTER_SCRIPT, Arrays.asList(methodRegisterKey), methodNameList.toArray());
         int successCnt = 0;
         for (List<Object> res : resList) {
             if (res.size() == 2) {
@@ -180,13 +180,14 @@ public class AccessLimitAspect implements ApplicationRunner {
             for (String str : accessStrParts) {
                 // 对于每个时间单位，获取时间单位标志、已访问次数和计数开始时间戳
                 String[] parts = str.split("@");
-                if (parts.length < 3)
+                if (parts.length < 3) {
                     continue;
+                }
                 // 将对于该时间单位的已访问次数和计数开始时间戳放到map中
                 accessMap.put(parts[0], new Long[]{Long.valueOf(parts[1]), Long.valueOf(parts[2])});
             }
         }
-        long now = new Date().getTime();
+        long now = System.currentTimeMillis();
         boolean result = true;
         for (AccessLimit limit : limits.value()) {
             String limitTimeUnit = limit.per().getValue();

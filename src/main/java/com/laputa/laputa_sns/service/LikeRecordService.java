@@ -115,11 +115,13 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
     @SuppressWarnings("unchecked")
     private List<Long> multiGetRedisLikeSetSize(@NotNull List<Integer> targetIdList, int type) {
         List<String> keys = new ArrayList<>(targetIdList.size());
-        for (int i = 0; i < targetIdList.size(); ++i)
+        for (int i = 0; i < targetIdList.size(); ++i) {
             keys.add(getNewRedisSetKey(targetIdList.get(i), type));
+        }
         List<Object> resList = redisTemplate.executePipelined((RedisCallback<?>) connection -> {
-            for (int i = 0; i < keys.size(); ++i)
+            for (int i = 0; i < keys.size(); ++i) {
                 connection.zCard(keys.get(i).getBytes());
+            }
             return null;
         });
         return (List<Long>) (List<?>) resList;
@@ -144,28 +146,32 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
      */
     public <T extends AbstractContent<T>> void multiSetLikeCnt(@NotNull List<T> entityList, int type) {
         List<Integer> idList = new ArrayList<>(entityList.size());
-        for (int i = 0; i < entityList.size(); ++i)
+        for (int i = 0; i < entityList.size(); ++i) {
             idList.add(entityList.get(i) == null ? -1 : entityList.get(i).getId());
+        }
         List<Long> likeCntList = multiGetRedisLikeSetSize(idList, type);
         for (int i = 0; i < likeCntList.size(); ++i) {
             AbstractContent<T> entity = entityList.get(i);
-            if (entity != null)
+            if (entity != null) {
                 entity.setLikeCnt(entity.getLikeCnt() + likeCntList.get(i));
+            }
         }
     }
 
     @NotNull
     private String getRedisValue(Integer creatorId, Integer likeRecordId) {
-        if (likeRecordId == null)
+        if (likeRecordId == null) {
             return String.valueOf(creatorId);
+        }
         return creatorId + ":" + likeRecordId;
     }
 
     @NotNull
     private RedisValue parseRedisValue(@NotNull String v) {
         String[] s = v.split(":");
-        if (s.length == 1)
+        if (s.length == 1) {
             return new RedisValue(Integer.valueOf(s[0]), null);
+        }
         return new RedisValue(Integer.valueOf(s[0]), Integer.valueOf(s[1]));
     }
 
@@ -174,7 +180,7 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
      */
     private boolean addNewLikeRecord(@NotNull LikeRecord likeRecord) {
         String v = getRedisValue(likeRecord.getCreatorId(), null);
-        return redisTemplate.opsForZSet().add(getNewRedisSetKey(likeRecord.getTargetId(), likeRecord.getType()), v, new Date().getTime());
+        return redisTemplate.opsForZSet().add(getNewRedisSetKey(likeRecord.getTargetId(), likeRecord.getType()), v, System.currentTimeMillis());
     }
 
     /**
@@ -208,21 +214,23 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
     public <T extends AbstractContent<T>> void multiSetIsLikedByViewer(@NotNull List<T> targetList, int type, Integer userId) {
         byte[] creatorKey = getRedisValue(userId, null).getBytes();
         List<Object> resList = redisTemplate.executePipelined((RedisCallback<?>) connection -> {
-            for (int i = 0; i < targetList.size(); ++i)
+            for (int i = 0; i < targetList.size(); ++i) {
                 connection.zScore(getNewRedisSetKey(targetList.get(i) == null ? -1 : targetList.get(i).getId(), type).getBytes(), creatorKey);
+            }
             return null;
         });
         for (int i = 0; i < targetList.size(); ++i) {
-            if (targetList.get(i) == null)
+            if (targetList.get(i) == null) {
                 continue;
+            }
             Object resObj = resList.get(i);
-            if (resObj == null)
+            if (resObj == null) {
                 targetList.get(i).setLikedByViewer(false);
-            else if (resObj instanceof Boolean)
+            } else if (resObj instanceof Boolean) {
                 targetList.get(i).setLikedByViewer((Boolean) resObj);
-            else if (resObj instanceof Double)
+            } else if (resObj instanceof Double) {
                 targetList.get(i).setLikedByViewer(((Double) resObj) != 0);
-            else {
+            } else {
                 log.warn("类型" + resObj.getClass().getName() + "无法判断点赞");
                 targetList.get(i).setLikedByViewer(false);
             }
@@ -236,18 +244,23 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
         AbstractContent<?> target = null;
         if (likeRecord.getType().equals(LikeRecord.TYPE_POST)) {
             Result<Post> postResult = postService.readPostWithCounter(likeRecord.getTargetId(), operator);
-            if (postResult.getState() == FAIL)//没有该帖
-                return postResult;//返回错误
+            // 没有该帖，返回错误
+            if (postResult.getState() == FAIL) {
+                return postResult;
+            }
             target = postResult.getObject();
         } else if (likeRecord.getType().equals(LikeRecord.TYPE_CML1)) {
             Result<CommentL1> commentResult = withCounterOfComment ? commentL1Service.readCommentWithCounter(likeRecord.getTargetId(), operator) : commentL1Service.readCommentWithAllFalse(likeRecord.getTargetId(), operator);
-            if (commentResult.getState() == FAIL)//没有该帖
-                return commentResult;//返回错误
+            // 没有该帖，返回错误
+            if (commentResult.getState() == FAIL) {
+                return commentResult;
+            }
             target = commentResult.getObject();
         } else if (likeRecord.getType().equals(LikeRecord.TYPE_CML2)) {
             Result<CommentL2> commentResult = withCounterOfComment ? commentL2Service.readCommentWithCounter(likeRecord.getTargetId(), operator) : commentL2Service.readCommentWithAllFalse(likeRecord.getTargetId(), operator);
-            if (commentResult.getState() == FAIL)
+            if (commentResult.getState() == FAIL) {
                 return commentResult;
+            }
             target = commentResult.getObject();
         }
         return new Result<AbstractContent<?>>(SUCCESS).setObject(target);
@@ -260,30 +273,32 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
             LikeRecord param = executor.param.paramEntity;
             int queryNum = param.getQueryParam().getQueryNum();
             // 是否从新的点赞列表中获取，新的点赞列表指还未刷入数据库的，一个用户在某个对象的新的点赞列表中不会重复出现
-            boolean fromNewZSet = param.getQueryParam().getAddition() == null || !"1".equals(param.getQueryParam().getAddition());
-            executor.param.addition = fromNewZSet;
-            String key = fromNewZSet ? getNewRedisSetKey(param.getTargetId(), param.getType()) : getFormerRedisSetKey(param.getTargetId(), param.getType());
+            boolean fromNewZset = param.getQueryParam().getAddition() == null || !"1".equals(param.getQueryParam().getAddition());
+            executor.param.addition = fromNewZset;
+            String key = fromNewZset ? getNewRedisSetKey(param.getTargetId(), param.getType()) : getFormerRedisSetKey(param.getTargetId(), param.getType());
             List<TypedTuple<String>> indexList = RedisUtil.readIndex(redisTemplate, key, param.getQueryParam(), true, true);
             // 当前是从新的点赞列表获取，但新的不够了，就再从redis中旧的点赞列表中获取
             // 但要注意这和从数据库中补充不是一回事
-            if (fromNewZSet && (indexList == null || indexList.size() < queryNum)) {
+            if (fromNewZset && (indexList == null || indexList.size() < queryNum)) {
                 executor.param.queryEntity.getQueryParam().setAddition("1");
                 int dim = indexList == null ? 0 : indexList.size();
                 param.getQueryParam().setQueryNum(queryNum - dim).setFrom(0).setStartId(0).setStartValue(null);
                 String key2 = getFormerRedisSetKey(param.getTargetId(), param.getType());
                 List<TypedTuple<String>> indexList2 = RedisUtil.readIndex(redisTemplate, key2, param.getQueryParam(), true, true);
                 if (indexList2 != null && indexList2.size() != 0) {
-                    if (indexList == null)
+                    if (indexList == null) {
                         indexList = indexList2;
-                    else
+                    } else {
                         indexList.addAll(indexList2);
+                    }
                 }
             }
             List<Integer> idList = null;
             if (indexList != null) {
                 idList = new ArrayList<>(indexList.size());
-                for (int i = 0; i < indexList.size(); ++i)
+                for (int i = 0; i < indexList.size(); ++i) {
                     idList.add(parseRedisValue(indexList.get(i).getValue()).creatorId);
+                }
                 if (indexList.size() != 0) {
                     executor.param.newStartValue = indexList.get(indexList.size() - 1).getValue();
                     executor.param.newStartId = parseRedisValue(executor.param.newStartValue).likeRecordId;
@@ -295,8 +310,9 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
         callBacks.multiReadEntityCallBack = executor -> {
             IndexExecutor<LikeRecord>.Param param = executor.param;
             Result<List<User>> creatorListResult = userService.multiReadUser(param.idList);
-            if (creatorListResult.getState() == FAIL)
+            if (creatorListResult.getState() == FAIL) {
                 return new Result<List<LikeRecord>>(creatorListResult);
+            }
             List<User> creatorList = creatorListResult.getObject();
             List<LikeRecord> likeRecordList = new ArrayList<>(param.idList.size());
             for (int i = 0; i < param.idList.size(); ++i) {
@@ -305,24 +321,27 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
             }
             return new Result<List<LikeRecord>>(SUCCESS).setObject(likeRecordList);
         };
-        callBacks.getDBListCallBack = executor -> {
+        callBacks.getDbListCallBack = executor -> {
             LikeRecord param = executor.param.paramEntity;
-            boolean fromNewZSet = (boolean) executor.param.addition;
+            boolean fromNewZset = (boolean) executor.param.addition;
             if (param.getQueryParam().getStartId() == null || param.getQueryParam().getStartId().equals(0)) {
                 RedisValue redisValue = parseRedisValue(param.getQueryParam().getStartValue());
-                if (redisValue.likeRecordId != null)
+                if (redisValue.likeRecordId != null) {
                     param.getQueryParam().setStartId(redisValue.likeRecordId).setUseStartIdAtSql(1);
-                else {
-                    if (fromNewZSet)
+                } else {
+                    if (fromNewZset) {
                         param.getQueryParam().setStartId(executor.param.initStartId).setUseStartIdAtSql(1);
-                    else
+                    } else {
                         param.setCreatorId(redisValue.creatorId).getQueryParam().setUseStartIdAtSql(0);
+                    }
                 }
-            } else
+            } else {
                 param.getQueryParam().setUseStartIdAtSql(1);
+            }
             List<LikeRecord> resList = selectList(param);
-            if (resList == null)
+            if (resList == null) {
                 return new Result<List<LikeRecord>>(FAIL).setErrorCode(1010070104).setMessage("数据库操作错误");
+            }
             userService.multiSetUser(resList, LikeRecord.class.getMethod("getCreatorId"), LikeRecord.class.getMethod("setCreator", User.class));
             return new Result<List<LikeRecord>>(SUCCESS).setObject(resList);
         };
@@ -337,8 +356,9 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
             }
             String key = getFormerRedisSetKey(param.getTargetId(), param.getType());
             Object[] result = RedisUtil.addToZSetAndGetLastAndLength(redisTemplate, key, indexSet, Integer.MAX_VALUE, false);
-            if (result == null)
+            if (result == null) {
                 return;
+            }
             executor.param.newStartValue = (String) result[0];
             executor.param.newFrom = (int) (long) result[1];
             executor.param.newStartId = entityList.get(entityList.size() - 1).getId();
@@ -354,14 +374,17 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
      * @return
      */
     public Result<List<LikeRecord>> readTargetLikeList(@NotNull LikeRecord param, Operator operator) {
-        if (!param.isValidTargetListSelectParam())
+        if (!param.isValidTargetListSelectParam()) {
             return new Result<List<LikeRecord>>(FAIL).setErrorCode(1010070202).setMessage("读取点赞列表失败，参数错误");
+        }
         Result<Object> validateTokenResult = QueryTokenUtil.validateTokenAndSetQueryParam(param, 0, hmacKey);
-        if (validateTokenResult.getState() == FAIL)
+        if (validateTokenResult.getState() == FAIL) {
             return new Result<List<LikeRecord>>(validateTokenResult);
+        }
         Result<?> targetResult = getTarget(param, true, operator);
-        if (targetResult.getState() == FAIL)
+        if (targetResult.getState() == FAIL) {
             return new Result<List<LikeRecord>>(targetResult);
+        }
         LikeRecord queryEntity = (LikeRecord) new LikeRecord().setQueryParam(new QueryParam());
         IndexExecutor<LikeRecord> indexExecutor = new IndexExecutor<>(param, queryEntity, null, indexExecutorCallBacks, operator);
         indexExecutor.param.initStartId = Integer.MAX_VALUE;
@@ -375,33 +398,40 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
      * 点赞
      */
     public Result<Object> createLikeRecord(@NotNull LikeRecord likeRecord, Operator operator) {
-        if (!likeRecord.isValidInsertParam())
+        if (!likeRecord.isValidInsertParam()) {
             return new Result<Object>(FAIL).setErrorCode(1010070206).setMessage("点赞失败，参数错误");
-        if (!likeRecordValidator.checkCreatePermission(likeRecord, operator))
+        }
+        if (!likeRecordValidator.checkCreatePermission(likeRecord, operator)) {
             return new Result<Object>(FAIL).setErrorCode(1010070212).setMessage("操作失败，权限错误");
+        }
         likeRecord.setCreatorId(operator.getUserId());
         Result<?> targetResult = getTarget(likeRecord, false, operator);
-        if (targetResult.getState() == FAIL)
+        if (targetResult.getState() == FAIL) {
             return new Result<Object>(targetResult);
-        if (!addNewLikeRecord(likeRecord))
+        }
+        if (!addNewLikeRecord(likeRecord)) {
             return new Result<Object>(FAIL).setErrorCode(1010070209).setMessage("不能重复点赞");
+        }
         if (likeRecord.getType().equals(LikeRecord.TYPE_POST)) {
             Post post = (Post) targetResult.getObject();
             postService.incrLikeCnt(post, 1);
-            if (!post.getCreatorId().equals(operator.getUserId()))
+            if (!post.getCreatorId().equals(operator.getUserId())) {
                 noticeService.pushNotice(post.getId(), Notice.TYPE_LIKE_POST, post.getCreatorId());
+            }
         } else if (likeRecord.getType().equals(LikeRecord.TYPE_CML1)) {
             CommentL1 comment = (CommentL1) targetResult.getObject();
             String likeSetKey = getNewRedisSetKey(comment.getId(), LikeRecord.TYPE_CML1);
             commentL1Service.incrLikeCnt(comment.getPostId(), comment.getId(), likeSetKey, comment.getLikeCnt(), 1);
-            if (!comment.getCreatorId().equals(operator.getUserId()))
+            if (!comment.getCreatorId().equals(operator.getUserId())) {
                 noticeService.pushNotice(comment.getId(), Notice.TYPE_LIKE_CML1, comment.getCreatorId());
+            }
         } else if (likeRecord.getType().equals(LikeRecord.TYPE_CML2)) {
             CommentL2 comment = (CommentL2) targetResult.getObject();
             String likeSetKey = getNewRedisSetKey(comment.getId(), LikeRecord.TYPE_CML2);
             commentL2Service.incrLikeCnt(comment.getL1Id(), comment.getId(), likeSetKey, comment.getLikeCnt(), 1);
-            if (!comment.getCreatorId().equals(operator.getUserId()))
+            if (!comment.getCreatorId().equals(operator.getUserId())) {
                 noticeService.pushNotice(comment.getId(), Notice.TYPE_LIKE_CML2, comment.getCreatorId());
+            }
         }
         return new Result<Object>(Result.SUCCESS);
     }
@@ -410,16 +440,20 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
      * 取消点赞
      */
     public Result<Object> deleteLikeRecord(@NotNull LikeRecord likeRecord, Operator operator) {
-        if (!likeRecord.isValidDeleteParam())
+        if (!likeRecord.isValidDeleteParam()) {
             return new Result<Object>(FAIL).setErrorCode(1010070207).setMessage("取消点赞失败，参数错误");
-        if (!likeRecordValidator.checkDeletePermission(likeRecord, operator))
+        }
+        if (!likeRecordValidator.checkDeletePermission(likeRecord, operator)) {
             return new Result<Object>(FAIL).setErrorCode(1010070211).setMessage("操作失败，权限错误");
+        }
         likeRecord.setCreatorId(operator.getUserId());
         Result<?> targetResult = getTarget(likeRecord, false, operator);
-        if (targetResult.getState() == FAIL)
+        if (targetResult.getState() == FAIL) {
             return new Result<Object>(targetResult);
-        if (!removeLikeRecord(likeRecord))
+        }
+        if (!removeLikeRecord(likeRecord)) {
             return new Result<Object>(FAIL).setErrorCode(1010070210).setMessage("没有该条点赞记录");
+        }
         if (likeRecord.getType().equals(LikeRecord.TYPE_POST)) {
             Post post = (Post) targetResult.getObject();
             postService.incrLikeCnt(post, -1);
@@ -438,7 +472,7 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
      */
     @SuppressWarnings("unchecked")
     @Scheduled(cron = "0 50 2 * * ?")
-    public void dailyFlushRedisLikeRecordToDB() {
+    public void dailyFlushRedisLikeRecordToDb() {
         List<TmpEntry>[] tmpEntryList = new ArrayList[3];
         List<LikeRecord> likeRecordList = new ArrayList<>();
         for (int type = 0; type <= 2; ++type) {

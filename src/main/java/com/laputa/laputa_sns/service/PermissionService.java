@@ -108,8 +108,9 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
      */
     public Result<Integer> readPermissionLevel(Integer categoryId, @NotNull Operator operator) {
         Map<Integer, Integer> permissionMap = operator.getPermissionMap();
-        if (permissionMap == null || permissionMap.size() == 0)
+        if (permissionMap == null || permissionMap.size() == 0) {
             return new Result<Integer>(Result.FAIL);
+        }
         if (permissionMap.containsKey(categoryId)) {
             // 操作者有该目录权限
             return new Result<Integer>(SUCCESS).setObject(permissionMap.get(categoryId));
@@ -126,9 +127,11 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
             }
         }
         List<Category> categoryList = result.getObject();
-        for (int i = 0; i < categoryList.size(); ++i)
-            if (permissionMap.containsKey(categoryList.get(i).getId()))
+        for (int i = 0; i < categoryList.size(); ++i) {
+            if (permissionMap.containsKey(categoryList.get(i).getId())) {
                 return new Result<Integer>(SUCCESS).setObject(permissionMap.get(categoryList.get(i).getId()));
+            }
+        }
         return new Result<Integer>(Result.FAIL);
     }
 
@@ -136,13 +139,16 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
      * 从数据库读取一个完整的权限对象
      */
     private Result<Permission> readPermission(@NotNull Permission permission, Operator operator) {
-        if (!permissionValidator.checkReadPermission(permission, operator))
+        if (!permissionValidator.checkReadPermission(permission, operator)) {
             return new Result<Permission>(FAIL).setErrorCode(1010030209).setMessage("操作失败，权限错误");
-        if (permission.getId() == null && (permission.getCategoryId() == null || permission.getUserId() == null))
+        }
+        if (permission.getId() == null && (permission.getCategoryId() == null || permission.getUserId() == null)) {
             return new Result<Permission>(FAIL).setErrorCode(1010030210).setMessage("操作失败，参数错误");
+        }
         Permission resPermission = selectOne(permission);
-        if (resPermission == null)
+        if (resPermission == null) {
             return new Result<Permission>(FAIL).setErrorCode(1010030106).setMessage("数据库操作失败");
+        }
         return new Result<Permission>(SUCCESS).setObject(resPermission);
     }
 
@@ -150,13 +156,16 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
      * 从数据库读取某个用户的权限表
      */
     public Result<Map<Integer, Integer>> readPermissionMapOfUser(@NotNull Integer userId, Operator operator) {
-        if (userId == null)
+        if (userId == null) {
             return new Result<Map<Integer, Integer>>(FAIL).setErrorCode(1010030216).setMessage("操作错误，参数不合法");
-        if (!permissionValidator.checkReadOfUserPermission(operator))
+        }
+        if (!permissionValidator.checkReadOfUserPermission(operator)) {
             return new Result<Map<Integer, Integer>>(FAIL).setErrorCode(1010030212).setMessage("操作失败，权限错误");
+        }
         List<Permission> permissionList = selectList(new Permission().setUserId(userId));
-        if (permissionList == null)
+        if (permissionList == null) {
             return new Result<Map<Integer, Integer>>(FAIL).setErrorCode(1010030105).setMessage("数据库操作失败");
+        }
         Map<Integer, Integer> permissionMap = convertToPermissionMap(permissionList);
         return new Result<Map<Integer, Integer>>(SUCCESS).setObject(permissionMap);
     }
@@ -164,17 +173,22 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
     @SneakyThrows
     public Result<List<Permission>> readPermissionList(Permission param, Operator operator) {
         if (param.getOfType() == null || (param.getOfType() == Permission.OF_CATEGORY && param.getCategoryId() == null)
-                || (param.getOfType() == Permission.OF_USER && param.getUserId() == null))
+                || (param.getOfType() == Permission.OF_USER && param.getUserId() == null)) {
             return new Result<List<Permission>>(FAIL).setErrorCode(1010030211).setMessage("操作错误，参数不合法");
-        if (!operator.isAdmin())//只有管理员能查看目录的管理员列表和用户的管理员等级
+        }
+        // 只有管理员能查看目录的管理员列表和用户的管理员等级
+        if (!operator.isAdmin()) {
             return new Result<List<Permission>>(FAIL).setErrorCode(1010030214).setMessage("操作失败，权限错误");
+        }
         List<Permission> permissionList = selectList((Permission) param.setQueryParam(new QueryParam().setQueryType(QueryParam.FULL)));
-        if (permissionList == null)
+        if (permissionList == null) {
             return new Result<List<Permission>>(FAIL).setErrorCode(1010030115).setMessage("数据库操作失败");
-        if (param.getOfType() == Permission.OF_CATEGORY)
+        }
+        if (param.getOfType() == Permission.OF_CATEGORY) {
             userService.multiSetUser(permissionList, Permission.class.getMethod("getUserId"), Permission.class.getMethod("setUser", User.class));
-        else if (param.getOfType() == Permission.OF_USER)
+        } else if (param.getOfType() == Permission.OF_USER) {
             categoryService.multiSetCategory(permissionList, Permission.class.getMethod("getCategoryId"), Permission.class.getMethod("setCategory", Category.class), operator);
+        }
         return new Result<List<Permission>>(SUCCESS).setObject(permissionList);
     }
 
@@ -182,26 +196,33 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
      * 创建权限
      */
     @SneakyThrows
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public Result<Object> createPermission(@NotNull Permission permission, Operator operator) {
-        if (!permission.isValidInsertParam() || !permission.isValidOpComment())
+        if (!permission.isValidInsertParam() || !permission.isValidOpComment()) {
             return new Result<Object>(FAIL).setErrorCode(1010030201).setMessage("操作错误，参数不合法");
-        if (!permissionValidator.checkCreatePermission(permission, operator))
+        }
+        if (!permissionValidator.checkCreatePermission(permission, operator)) {
             return new Result<Object>(FAIL).setErrorCode(1010030208).setMessage("操作失败，权限错误");
+        }
         Result<Permission> checkExistResult = readPermission(permission, operator);
-        if (checkExistResult.getState() == SUCCESS)
+        if (checkExistResult.getState() == SUCCESS) {
             return new Result<Object>(FAIL).setErrorCode(1010030213).setMessage("该用户已经存在权限");
+        }
         Result<User> userResult = userService.readUserWithAllFalse(permission.getUserId(), operator);
-        if (userResult.getState() == FAIL)
+        if (userResult.getState() == FAIL) {
             return new Result<Object>(userResult);
+        }
         permission.setUser(userResult.getObject());
         permission.setCategory(categoryService.readCategory(permission.getCategoryId(), false, operator).getObject());
-        permission.setCreator(operator.getUser());//设置创建者
+        // 设置创建者
+        permission.setCreator(operator.getUser());
         int res = insertOne(permission);
-        if (res == -1)
+        if (res == -1) {
             return new Result<Object>(FAIL).setErrorCode(1010030102).setMessage("数据库操作失败");
+        }
         Result<Object> redefineResult = userService.redefineUserState(permission.getUserId(), progOperator);
-        if (redefineResult.getState() == FAIL) {//更新用户状态失败，回滚
+        // 更新用户状态失败，回滚
+        if (redefineResult.getState() == FAIL) {
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return redefineResult;
         }
@@ -217,16 +238,21 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
      */
     @SneakyThrows
     public Result<Object> updatePermission(@NotNull Permission newPerm, Operator operator) {
-        if (!newPerm.isValidUpdateParam() || !newPerm.isValidOpComment())
+        if (!newPerm.isValidUpdateParam() || !newPerm.isValidOpComment()) {
             return new Result<Object>(FAIL).setErrorCode(1010030202).setMessage("操作错误，参数不合法");
+        }
         Result<Permission> oldResult = readPermission(newPerm, operator);
-        if (oldResult.getState() == FAIL)
+        if (oldResult.getState() == FAIL) {
             return new Result<Object>(oldResult);
-        Permission oldPerm = oldResult.getObject();//更新权限前必须获取原有权限以比较是否有更新的权限
-        if (!permissionValidator.checkUpdatePermission(oldPerm, newPerm, operator))
+        }
+        // 更新权限前必须获取原有权限以比较是否有更新的权限
+        Permission oldPerm = oldResult.getObject();
+        if (!permissionValidator.checkUpdatePermission(oldPerm, newPerm, operator)) {
             return new Result<Object>(FAIL).setErrorCode(1010030207).setMessage("操作失败，权限错误");
-        if (updateOne(newPerm) == 0)
+        }
+        if (updateOne(newPerm) == 0) {
             return new Result<Object>(FAIL).setErrorCode(1010030103).setMessage("数据库操作失败");
+        }
         newPerm.setUser(userService.readUserWithAllFalse(newPerm.getUserId(), operator).getObject());
         newPerm.setCategory(categoryService.readCategory(newPerm.getCategoryId(), false, operator).getObject());
         updateRedisPermissionMap(newPerm.getUserId(), newPerm);
@@ -240,18 +266,23 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
      * 删除权限
      */
     @SneakyThrows
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public Result<Object> deletePermission(@NotNull Permission paramPermission, Operator operator) {
-        if (!paramPermission.isValidDeleteParam() || !paramPermission.isValidOpComment())
+        if (!paramPermission.isValidDeleteParam() || !paramPermission.isValidOpComment()) {
             return new Result<Object>(FAIL).setErrorCode(1010030203).setMessage("操作错误，参数不合法");
+        }
         Result<Permission> oriResult = readPermission(paramPermission, operator);
-        if (oriResult.getState() == FAIL)
+        if (oriResult.getState() == FAIL) {
             return new Result<Object>(oriResult);
-        Permission permission = oriResult.getObject();//要判断是否有删除权限，必须和要删除的权限比较
-        if (!permissionValidator.checkDeletePermission(permission, operator))
+        }
+        // 要判断是否有删除权限，必须和要删除的权限比较
+        Permission permission = oriResult.getObject();
+        if (!permissionValidator.checkDeletePermission(permission, operator)) {
             return new Result<Object>(FAIL).setErrorCode(1010030206).setMessage("操作失败，权限错误");
-        if (deleteOne(paramPermission) == 0)
+        }
+        if (deleteOne(paramPermission) == 0) {
             return new Result<Object>(FAIL).setErrorCode(1010030104).setMessage("数据库操作失败");
+        }
         Result<User> userResult = userService.readUserWithAllFalse(permission.getUserId(), operator);
         if (userResult.getState() == FAIL) {
             return new Result<Object>(userResult);
@@ -260,7 +291,8 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
         }
         permission.setCategory(categoryService.readCategory(permission.getCategoryId(), false, operator).getObject());
         Result<Object> redefineResult = userService.redefineUserState(permission.getUserId(), progOperator);
-        if (redefineResult.getState() == FAIL) {//更新用户状态失败，回滚
+        // 更新用户状态失败，回滚
+        if (redefineResult.getState() == FAIL) {
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return redefineResult;
         }

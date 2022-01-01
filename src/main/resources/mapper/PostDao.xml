@@ -26,6 +26,7 @@
 		<result column="post_create_time" property="createTime"/>
 	</resultMap>
 
+	<!--suppress SyntaxError -->
 	<sql id="basicColumns">
 		post_id, post_full_text_id, post_allow_forward, post_sup_id, post_ori_id, post_type, post_editable, post_state, post_category_id,
 		post_like_cnt, post_comment_cnt, post_view_cnt, post_top_comment_id, post_creator_id, post_create_time

@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(value = "/api/correct_data")
 public class CorrectDataController {
-//$.post(baseUrl + '/correct_data/all',function(data){console.log(data)})
     private final UserService userService;
     private final CategoryService categoryService;
     private final PostService postService;
@@ -40,38 +39,45 @@ public class CorrectDataController {
 
     @RequestMapping(value = "/{type}", method = RequestMethod.POST)
     public String correctUserCnt(@PathVariable String type, @RequestAttribute Operator operator) {
-        if (!operator.isSuperAdmin())
+        if (!operator.isSuperAdmin()) {
             return "无权限";
-        if ("user".equals(type))
+        }
+        if ("user".equals(type)) {
             return userService.correctCounters();
-        if ("category".equals(type))
+        }
+        if ("category".equals(type)) {
             return categoryService.correctCounters();
-        if ("post".equals(type))
+        }
+        if ("post".equals(type)) {
             return postService.correctCounters();
-        if ("cml1".equals(type))
+        }
+        if ("cml1".equals(type)) {
             return commentL1Service.correctCounters();
-        if ("cml2".equals(type))
+        }
+        if ("cml2".equals(type)) {
             return commentL2Service.correctCounters();
-        if ("all".equals(type))
+        }
+        if ("all".equals(type)) {
             return userService.correctCounters() + "\n" + categoryService.correctCounters() + "\n" + postService.correctCounters() + "\n" + commentL1Service.correctCounters() + "\n" + commentL2Service.correctCounters();
+        }
         return "参数错误";
     }
 
     @RequestMapping(value = "/flush")
     public String write(@RequestAttribute Operator operator) {
-        if (!operator.isSuperAdmin())
+        if (!operator.isSuperAdmin()) {
             return "无权限";
-        //categoryService.dailyFlushPostCntToDB();
-        likeRecordService.dailyFlushRedisLikeRecordToDB();
-        postService.dailyFlushRedisToDB();
-        commentL1Service.dailyFlushRedisToDB();
-        commentL2Service.dailyFlushRedisToDB();
-        forwardService.dailyFlushRedisForwardRecordToDB();
-        userService.dailyFlushRedisToDB();
-        followService.dailyFlushRedisToDB();
+        }
+        likeRecordService.dailyFlushRedisLikeRecordToDb();
+        postService.dailyFlushRedisToDb();
+        commentL1Service.dailyFlushRedisToDb();
+        commentL2Service.dailyFlushRedisToDb();
+        forwardService.dailyFlushRedisForwardRecordToDb();
+        userService.dailyFlushRedisToDb();
+        followService.dailyFlushRedisToDb();
         postNewsService.dailyFreshIndex();
         postIndexService.dailyFlushPostIndex();
-        categoryService.dailyFlushRedisToDB();
+        categoryService.dailyFlushRedisToDb();
         return "刷新成功";
     }
 }

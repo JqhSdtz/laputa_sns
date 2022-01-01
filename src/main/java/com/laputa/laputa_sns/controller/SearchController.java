@@ -22,13 +22,14 @@ public class SearchController {
 
     @RequestMapping(value = "/{type}/{words}/{mode}", method = RequestMethod.GET)
     public Result<?> search(@PathVariable("type") String type, @PathVariable("words") String words, @PathVariable("mode") String mode, @RequestAttribute Operator operator) {
-        if ("post".equals(type))
+        if ("post".equals(type)) {
             return searchService.searchPost(words, mode, operator);
-        else if ("category".equals(type))
+        } else if ("category".equals(type)) {
             return searchService.searchCategory(words, mode, operator);
-        else if ("user".equals(type))
+        } else if ("user".equals(type)) {
             return searchService.searchUser(words, mode, operator);
-        else
+        } else {
             return new Result<Object>(Result.FAIL);
+        }
     }
 }

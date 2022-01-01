@@ -208,12 +208,15 @@ public class Post extends AbstractContent<Post> {
 
     @JsonProperty("type_str")
     public String getTypeStr() {
-        if (Post.TYPE_PUBLIC.equals(type))
+        if (Post.TYPE_PUBLIC.equals(type)) {
             return "public";
-        if (Post.TYPE_FORWARD.equals(type))
+        }
+        if (Post.TYPE_FORWARD.equals(type)) {
             return "forward";
-        if (Post.TYPE_PRIVATE.equals(type))
+        }
+        if (Post.TYPE_PRIVATE.equals(type)) {
             return "private";
+        }
         return "unknown";
     }
 
@@ -231,38 +234,48 @@ public class Post extends AbstractContent<Post> {
         return category == null ? null : category.getPathList();
     }
 
+    @Override
     @JsonProperty("parent_id")
     public Integer getParentId() {
-        if (ofType == null || ofType == OF_CATEGORY)
+        if (ofType == null || ofType == OF_CATEGORY) {
             return getCategoryId();
-        if (ofType == OF_CREATOR)
+        }
+        if (ofType == OF_CREATOR) {
             return getCreatorId();
-        if (ofType == OF_SUP_POST)
+        }
+        if (ofType == OF_SUP_POST) {
             return getSupId();
+        }
         return null;
     }
 
     @JsonProperty("parent_id")
     public Post setParentId(Integer id) {
-        if (ofType == null || ofType == OF_CATEGORY)
+        if (ofType == null || ofType == OF_CATEGORY) {
             return setCategoryId(id);
-        if (ofType == OF_CREATOR)
+        }
+        if (ofType == OF_CREATOR) {
             return setCreatorId(id);
-        if (ofType == OF_SUP_POST)
+        }
+        if (ofType == OF_SUP_POST) {
             return setSupId(id);
+        }
         return this;
     }
 
+    @Override
     @JsonIgnore
     public AbstractContent<Post> getParent() {
         return null;
     }
 
+    @Override
     @JsonIgnore
     public Long getChildNum() {
         return getCommentCnt();
     }
 
+    @Override
     @JsonProperty("creator_id")
     public Integer getCreatorId() {
         return creator == null ? null : creator.getId();
@@ -270,20 +283,23 @@ public class Post extends AbstractContent<Post> {
 
     @JsonProperty("category_id")
     public Post setCategoryId(Integer id) {
-        if (category == null)
+        if (category == null) {
             category = new Category();
+        }
         category.setId(id);
         return this;
     }
 
     @JsonProperty("creator_id")
     public Post setCreatorId(Integer id) {
-        if (creator == null)
+        if (creator == null) {
             creator = new User();
+        }
         creator.setId(id);
         return this;
     }
 
+    @Override
     @JsonIgnore
     public Post setEntityContent(@NotNull Post post) {
         this.title = post.title;
@@ -294,31 +310,38 @@ public class Post extends AbstractContent<Post> {
 
     @JsonIgnore
     public boolean validatePostContent() {
-        if (title != null && title.length() > 40)
+        if (title != null && title.length() > 40) {
             return false;
-        if (content == null || content.length() < 10 || content.length() > 100000)
+        }
+        if (content == null || content.length() < 10 || content.length() > 100000) {
             return false;
+        }
         // 允许手动设置全文
-        if (fullText != null && (fullText.length() < 10 || fullText.length() > 100000))
+        if (fullText != null && (fullText.length() < 10 || fullText.length() > 100000)) {
             return false;
-        if (rawImg != null && rawImg.length() > 256)
+        }
+        if (rawImg != null && rawImg.length() > 256) {
             return false;
+        }
         return true;
     }
 
     @JsonIgnore
     public boolean isValidInsertParam() {
-        if (type == null)
+        if (type == null) {
             return false;
-        if (type.equals(TYPE_PUBLIC) && (category == null || category.getId() == null))
+        }
+        if (type.equals(TYPE_PUBLIC) && (category == null || category.getId() == null)) {
             return false;
+        }
         return validatePostContent();
     }
 
     @JsonIgnore
     public boolean isValidInsertForwardParam() {
-        if (content == null || supId == null)
+        if (content == null || supId == null) {
             return false;
+        }
         return true;
     }
 
@@ -353,15 +376,18 @@ public class Post extends AbstractContent<Post> {
             this.setSupId(null).setOriId(null).setAllowForward(null).setType(null).setState(null);
             this.creator = null;
         } else {
-            if (supId != null || oriId != null || allowForward != null || type != null || state != null || creator != null)
+            if (supId != null || oriId != null || allowForward != null || type != null || state != null || creator != null) {
                 return false;
+            }
         }
-        if (category == null || category.getId() == null)
+        if (category == null || category.getId() == null) {
             return false;
+        }
         // 用户查询时一次最多查10个，程序本身查询，最多查1000个
         int maxQueryNum = ProgOperatorManager.isProgOperator(operator) ? 1000 : 10;
-        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > maxQueryNum)
+        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > maxQueryNum) {
             return false;
+        }
         return true;
     }
 
@@ -371,22 +397,27 @@ public class Post extends AbstractContent<Post> {
             this.setSupId(null).setOriId(null).setAllowForward(null).setType(null).setState(null);
             this.category = null;
         } else {
-            if (supId != null || oriId != null || allowForward != null || type != null || state != null || category != null)
+            if (supId != null || oriId != null || allowForward != null || type != null || state != null || category != null) {
                 return false;
+            }
         }
-        if (creator == null || creator.getId() == null)
+        if (creator == null || creator.getId() == null) {
             return false;
-        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)
+        }
+        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10) {
             return false;
+        }
         return true;
     }
 
     @JsonIgnore
     public boolean isValidReadForwardListParam() {
-        if (supId == null)
+        if (supId == null) {
             return false;
-        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10)
+        }
+        if (queryParam == null || queryParam.getQueryNum() == null || queryParam.getQueryNum() > 10) {
             return false;
+        }
         return true;
     }
 
