@@ -585,7 +585,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         Integer oriParentId = resCategory.getParentId();
         Integer newParentId = paramObject.getParentId();
         applyUpdateParentParam(resCategory, newParentId);
-        postIndexService.transferCategoryIndexList(resCategory);
+        postIndexService.moveCategoryIndexList(resCategory, true, true);
         // 处理新旧父目录的贴子数的变更
         cascadeUpdatePostCnt(oriParentId, resCategory.getPostCnt() * -1L);
         cascadeUpdatePostCnt(newParentId, resCategory.getPostCnt());
@@ -623,7 +623,19 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
             return new Result<Category>(FAIL).setErrorCode(1010010115).setMessage("数据库操作失败");
         // 数据库操作成功后才修改内存数据
         Category resCategory = categoryResult.getObject();
+        Integer oriType = resCategory.getType();
+        Integer newType = paramObject.getType();
         resCategory.copyUpdateInfoParam(paramObject);
+        if (newType != null && !newType.equals(oriType) && !GROUND_ID.equals(resCategory.getId())) {
+            // 修改了目录类型，需要更改帖子索引（根目录不需要修改）
+            if (newType.equals(Category.TYPE_PRIVATE)) {
+                // 修改为私有目录，则删除其在上级目录的索引
+                postIndexService.moveCategoryIndexList(resCategory, true, false);
+            } else {
+                // 修改为公开目录，则在上级目录中添加本目录的索引
+                postIndexService.moveCategoryIndexList(resCategory, false, true);
+            }
+        }
         if (paramObject.getName() != null) {
             // 更改名字，要级联更新该目录及子目录的路径信息
             setPathListOfCascadeSub(resCategory);

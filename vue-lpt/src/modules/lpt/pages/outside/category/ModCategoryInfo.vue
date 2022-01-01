@@ -22,9 +22,9 @@
 					点击修改图标
 				</p>
 			</div>
-			<div v-if="opType === 'create'" style="display: inline-block; margin-left: 2rem">
+			<div style="display: inline-block; margin-left: 2rem">
 				<p style="margin-bottom: 0.5rem; font-size: 1.25rem;">公开</p>
-				<van-switch v-model="form.isPublic" size="24" style="margin-bottom: 1.25rem"/>
+				<van-switch v-model="form.isPublic" size="24" style="margin-bottom: 1.25rem" @change="onIsPublicChange"/>
 			</div>
 		</div>
 		<a-button style="width: 50%; margin-left: 25%" @click="saveCategoryInfo">
@@ -78,16 +78,19 @@ export default {
 		if (opType === 'create') {
 			category = lpt.categoryServ.getDefaultCategory(-1);
 			category.parent_id = this.$route.query.parentId;
+			category.isPublic = true;
 		} else if (this.categoryId) {
-			// 直接从url中获取的cateogoryId可能为空，为空的话请求会报错
+			// 直接从url中获取的categoryId可能为空，为空的话请求会报错
 			category = global.states.categoryManager.get({
 				itemId: this.categoryId,
+				success: (item) => {
+					this.$nextTick(() => category.isPublic = item.type === lpt.categoryServ.type.common);
+				},
 				fail(result) {
 					Toast.fail(result.message);
 				}
 			});
 		}
-		category.isPublic = true;
 		return {
 			opType,
 			category,
@@ -181,6 +184,30 @@ export default {
 			}
 			this.uploadHeader["x-lpt-user-token"] = lpt.getCurUserToken();
 		},
+		onIsPublicChange(isPublic) {
+			let alertMessage;
+			if (isPublic) {
+				alertMessage = '将目录设为公开，则本目录的内容会按照规则向上级目录推送并参与排序';
+			} else {
+				alertMessage = '将目录设为非公开，则上级目录中不会展示本目录的内容，若上级目录已有本目录的内容，则将全部移除！';
+			}
+			const confirm = this.prompts.confirm;
+			// 取消之后再改回原来的isPublic
+			const onCancel = () => {this.form.isPublic = !isPublic};
+			const params = {
+				message: alertMessage,
+				onCancel
+			};
+			if (this.opType !== 'create') {
+				params.onConfirm = value => {
+					return confirm({
+						message: '修改目录类型将会对本目录全部帖子造成影响，是否修改？',
+						onCancel
+					});
+				}
+			}
+			confirm(params);
+		},
 		saveCategoryInfo() {
 			// 目录设置置顶贴需要输入理由
 			this.$refs.form.validate().then(() => {
@@ -188,12 +215,11 @@ export default {
 				prompt({
 					onConfirm: (value) => {
 						const isCreate = this.opType === 'create';
-						if (isCreate) {
-							this.category.parent = {
-								id: this.category.parent_id
-							};
-							this.category.type = this.category.isPublic ? 0 : 1;
-						}
+						this.category.parent = {
+							id: this.category.parent_id
+						};
+						const categoryType = lpt.categoryServ.type;
+						this.category.type = this.form.isPublic ? categoryType.common : categoryType.private;
 						const fun = isCreate ? lpt.categoryServ.create : lpt.categoryServ.setInfo;
 						fun({
 							consumer: this.lptConsumer,

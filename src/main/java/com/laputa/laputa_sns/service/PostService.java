@@ -116,11 +116,11 @@ public class PostService extends BaseService<PostDao, Post> {
         post.setLikeCnt(post.getLikeCnt() + delta);
         if (delta >= 0) {
             Map<Integer, TmpEntry> tmpMap = new HashMap<>(1);
-            postIndexService.updatePostPopIndex(post, true, true, tmpMap);
+            postIndexService.updatePostPopIndex(post, null, true, true, tmpMap);
             if (tmpMap.size() == 1)
                 setPopularIndexFlag(post.getId(), 1);
         } else
-            postIndexService.updatePostPopIndex(post, false, true, null);
+            postIndexService.updatePostPopIndex(post, null, false, true, null);
     }
 
     private int setPopularIndexFlag(int id, int value) {
@@ -610,7 +610,7 @@ public class PostService extends BaseService<PostDao, Post> {
             //修改目录的帖子数
             categoryService.cascadeUpdatePostCnt(post.getCategoryId(), 1L);
             //新创建的post的latest索引标志默认为1
-            postIndexService.addPostIndex(post, LATEST, true, null);
+            postIndexService.addPostIndex(post, null, LATEST, true, null);
         }
         userService.updatePostCnt(post.getCreatorId(), 1L);
         postNewsService.pushNews(post.getCreatorId(), post.getId());

@@ -165,7 +165,7 @@ public class PostIndexService implements ApplicationRunner {
         // 用map是为了防止id重复，把有改动的记录到changeMap中
         Map<Integer, TmpEntry> changeMap = new HashMap<>(postList.size());
         for (int i = 0; i < postList.size(); ++i)
-            addPostIndex(postList.get(i), type, false, changeMap);
+            addPostIndex(postList.get(i), null, type, false, changeMap);
         postService.multiSetIndexedFlag(new ArrayList<>(changeMap.values()), type);
         int[] res = new int[2];
         // 确保category是完整的对象，以获取索引列表
@@ -184,18 +184,21 @@ public class PostIndexService implements ApplicationRunner {
      * 添加帖子索引，但不会修改数据库的索引字段
      *
      * @param post
+     * @param category 定义添加索引的起点，如果是null表示从发帖目录开始添加
      * @param type      索引类型（POPULAR, LATEST)
      * @param isNew     是否是新创建的帖子
      * @param changeMap 用于记录在此过程中改变了索引状态的帖子（不只包括目标帖子），如果不需要获取索引状态的改变，则可传入null
      */
-    public void addPostIndex(Post post, int type, boolean isNew, Map<Integer, TmpEntry> changeMap) {
+    public void addPostIndex(Post post, Category category, int type, boolean isNew, Map<Integer, TmpEntry> changeMap) {
+        if (category == null) {
+            category = categoryService.readCategory(post.getCategoryId(), false, progOperator).getObject();
+        }
         if (type == LATEST) {
             long date = isNew ? new Date().getTime() : post.getCreateTime().getTime();
             Index index = new Index(post.getId(), date);
-            Category category = categoryService.readCategory(post.getCategoryId(), false, progOperator).getObject();
             doUpdateLatestIndex(index, category, isNew, changeMap);
         } else if (type == POPULAR)
-            updatePostPopIndex(post, true, false, changeMap);
+            updatePostPopIndex(post, category,true, false, changeMap);
     }
 
     private void doUpdateLatestIndex(Index index, Category category, boolean isNew, Map<Integer, TmpEntry> changeMap) {
@@ -227,7 +230,8 @@ public class PostIndexService implements ApplicationRunner {
      * 更新帖子的POPULAR索引，用于点赞或取消点赞时更新索引
      *
      * @param post
-     * @param incr                          true表示点赞，false表示取消点赞
+     * @param category 定义索引更新的起点，如果是null表示从发帖目录开始更新
+     * @param incr true表示点赞，false表示取消点赞
      * @param onlyIfExistsOrGreaterThanLast 是否只在索引列表中已存在该帖子的索引，
      *                                      或者该帖子的索引值（点赞数）大于索引列表末尾的索引的索引值时才添加该索引。
      *                                      在添加从数据库获取的帖子列表时，需要添加索引中不存在的帖子，此时可以保证索引的顺序是正确的；
@@ -235,9 +239,11 @@ public class PostIndexService implements ApplicationRunner {
      * @param changeMap                     用于记录在此过程中改变了索引状态的帖子（不只包括目标帖子），如果不需要获取索引状态的改变，则可传入null
      * @return 该帖子是否加入到了索引中
      */
-    public boolean updatePostPopIndex(@NotNull Post post, boolean incr, boolean onlyIfExistsOrGreaterThanLast, Map<Integer, TmpEntry> changeMap) {
+    public boolean updatePostPopIndex(@NotNull Post post, Category category, boolean incr, boolean onlyIfExistsOrGreaterThanLast, Map<Integer, TmpEntry> changeMap) {
         Index index = new Index(post.getId(), post.getLikeCnt());
-        Category category = categoryService.readCategory(post.getCategoryId(), false, progOperator).getObject();
+        if (category == null) {
+            category = categoryService.readCategory(post.getCategoryId(), false, progOperator).getObject();
+        }
         return doUpdatePopularIndex(index, category, incr, onlyIfExistsOrGreaterThanLast, changeMap);
     }
 
@@ -308,15 +314,17 @@ public class PostIndexService implements ApplicationRunner {
         Map<Integer, TmpEntry> latestChangeMap = new HashMap<>(postList.size());
         Map<Integer, TmpEntry> popularChangeMap = new HashMap<>(postList.size());
         for (int i = 0; i < postList.size(); ++i)
-            deletePostIndex(postList.get(i), LATEST, latestChangeMap);
+            deletePostIndex(postList.get(i), null, LATEST, latestChangeMap);
         for (int i = 0; i < postList.size(); ++i)
-            deletePostIndex(postList.get(i), POPULAR, popularChangeMap);
+            deletePostIndex(postList.get(i), null, POPULAR, popularChangeMap);
         postService.multiSetIndexedFlag(new ArrayList<>(latestChangeMap.values()), LATEST);
         postService.multiSetIndexedFlag(new ArrayList<>(popularChangeMap.values()), POPULAR);
     }
 
-    public void deletePostIndex(@NotNull Post post, int type, Map<Integer, TmpEntry> changeMap) {
-        Category category = categoryService.readCategory(post.getCategoryId(), false, progOperator).getObject();
+    public void deletePostIndex(@NotNull Post post, Category category, int type, Map<Integer, TmpEntry> changeMap) {
+        if (category == null) {
+            category = categoryService.readCategory(post.getCategoryId(), false, progOperator).getObject();
+        }
         while (category != null) {
             Index removedIndex = null;
             if (type == LATEST)
@@ -349,22 +357,23 @@ public class PostIndexService implements ApplicationRunner {
         Map<Integer, TmpEntry> popularChangeMap = new HashMap<>(1);
         // 删除索引是删除的原目录的索引
         post.setCategory(original);
-        deletePostIndex(post, LATEST, latestChangeMap);
-        deletePostIndex(post, POPULAR, popularChangeMap);
+        deletePostIndex(post, null, LATEST, latestChangeMap);
+        deletePostIndex(post, null, POPULAR, popularChangeMap);
         // 添加索引时添加的目标目录的索引
         post.setCategory(target);
-        addPostIndex(post, LATEST, false, latestChangeMap);
-        addPostIndex(post, POPULAR, false, popularChangeMap);
+        addPostIndex(post, null, LATEST, false, latestChangeMap);
+        addPostIndex(post, null, POPULAR, false, popularChangeMap);
         postService.multiSetIndexedFlag(new ArrayList<>(latestChangeMap.values()), LATEST);
         postService.multiSetIndexedFlag(new ArrayList<>(popularChangeMap.values()), POPULAR);
     }
 
     /**
-     * 更新父目录后按照新的目录结构刷新本目录的索引列表
-     *
-     * @param category
+     * 更新父目录后或修改目录类型后，按照新的目录结构刷新本目录的索引列表
+     * @param category 要修改的目录
+     * @param delete 是否删除本目录在上级目录的索引
+     * @param add 是否在上级目录添加本目录的索引
      */
-    public void transferCategoryIndexList(Category category) {
+    public void moveCategoryIndexList(Category category, boolean delete, boolean add) {
         if (category.getType().equals(Category.TYPE_PRIVATE))
             return;
         IndexList latestList = category.getLatestPostList();
@@ -382,17 +391,23 @@ public class PostIndexService implements ApplicationRunner {
             Index index = iter.next();
             popularPostList.add(new Post(index.getId()).setCategory(category).setLikeCnt(index.getValue()));
         }
-        for (int i = 0; i < latestPostList.size(); ++i) {
-            deletePostIndex(latestPostList.get(i), LATEST, latestChangeMap);
+        // 本目录及以下的索引结构不会发生改变，以父目录作为起点修改目录索引
+        Category parentCategory = category.getParent();
+        if (delete) {
+            for (int i = 0; i < latestPostList.size(); ++i) {
+                deletePostIndex(latestPostList.get(i), parentCategory, LATEST, latestChangeMap);
+            }
+            for (int i = 0; i < popularPostList.size(); ++i) {
+                deletePostIndex(popularPostList.get(i), parentCategory, POPULAR, popularChangeMap);
+            }
         }
-        for (int i = 0; i < popularPostList.size(); ++i) {
-            deletePostIndex(popularPostList.get(i), POPULAR, popularChangeMap);
-        }
-        for (int i = 0; i < latestPostList.size(); ++i) {
-            addPostIndex(latestPostList.get(i), LATEST, false, latestChangeMap);
-        }
-        for (int i = 0; i < popularPostList.size(); ++i) {
-            addPostIndex(popularPostList.get(i), POPULAR, false, popularChangeMap);
+        if (add) {
+            for (int i = 0; i < latestPostList.size(); ++i) {
+                addPostIndex(latestPostList.get(i), parentCategory, LATEST, false, latestChangeMap);
+            }
+            for (int i = 0; i < popularPostList.size(); ++i) {
+                addPostIndex(popularPostList.get(i), parentCategory, POPULAR, false, popularChangeMap);
+            }
         }
         postService.multiSetIndexedFlag(new ArrayList<>(latestChangeMap.values()), LATEST);
         postService.multiSetIndexedFlag(new ArrayList<>(popularChangeMap.values()), POPULAR);

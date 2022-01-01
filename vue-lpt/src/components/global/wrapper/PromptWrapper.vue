@@ -12,7 +12,8 @@
             </template>
         </prompt-dialog>
         <prompt-dialog ref="plainPrompt" :teleport="teleport"/>
-        <prompt-dialog ref="confirmPrompt" :teleport="teleport"/>
+        <prompt-dialog ref="confirmPrompt" :teleport="teleport"
+            :tip-message-style="{margin: '1rem'}" />
         <prompt-dialog ref="alertPrompt" :teleport="teleport"
             :tip-message-style="{margin: '1rem'}" 
             :show-cancel-button="false"/>
@@ -70,11 +71,12 @@ export default {
             }
             this.prompts.alert = function(params) {
                 paramsProcess(params);
-                that.$refs.alertPrompt.prompt.apply(this, arguments);
+                return that.$refs.alertPrompt.prompt.apply(this, arguments);
             };
             this.prompts.confirm = function(params) {
                 paramsProcess(params);
-                that.$refs.confirmPrompt.prompt.apply(this, arguments);
+	            params.title = params.title || '确认';
+                return that.$refs.confirmPrompt.prompt.apply(this, arguments);
             };
             this.prompts.userPrompt = (paramsFun) => {
                 const prompt = this.$refs.userPrompt.prompt;
