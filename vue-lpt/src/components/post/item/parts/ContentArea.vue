@@ -40,7 +40,7 @@
 		<p v-if="hasFullText && isShowFullText" class="full-text-btn" @click.stop="hideFullText">
 			收起全文
 		</p>
-		<div v-if="imgList.length > 0">
+		<div v-if="imgList.length > 0" style="margin-bottom: 1rem">
 			<div v-if="env === 'lpt'">
 				<a v-for="(img, idx) in imgList" :key="img" @click="showImgPreview(idx)"
 				   style="display: inline; margin-right: 1rem;">
