@@ -250,7 +250,7 @@ function _initLaputa(option) {
             return lpt.imgBaseUrl + category.icon_img + '!cat.small/clip/75x75a0a0/gravity/center';
         }
         lpt.getPostThumbUrl = function (rawUrl) {
-            return lpt.imgBaseUrl + rawUrl + '!/both/50x50';
+            return lpt.imgBaseUrl + rawUrl + '!/both/75x75';
         }
         lpt.getFullImgUrl = function (rawUrl, width) {
             if (width) {

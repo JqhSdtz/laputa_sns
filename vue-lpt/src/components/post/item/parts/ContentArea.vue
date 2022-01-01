@@ -40,17 +40,9 @@
 		<p v-if="hasFullText && isShowFullText" class="full-text-btn" @click.stop="hideFullText">
 			收起全文
 		</p>
-		<div v-if="imgList.length > 0" style="margin-bottom: 1rem">
-			<div v-if="env === 'lpt'">
-				<a v-for="(img, idx) in imgList" :key="img" @click="showImgPreview(idx)"
-				   style="display: inline; margin-right: 1rem;">
-					<van-image :src="img" fit="cover" width="50" height="50"/>
-				</a>
-			</div>
-			<div v-if="env === 'blog'" class="image-box-list">
-				<image-box :images="imageBoxList" :thumbStyle="{height: '50px', width: '50px'}"/>
-			</div>
-		</div>
+		<post-image-list v-if="imgUrlList.length > 0" style="margin-bottom: 1rem"
+             :img-url-list="imgUrlList"
+             :image-box-list="imageBoxList"/>
 		<slot/>
 	</div>
 </template>
@@ -59,10 +51,9 @@
 import lpt from '@/lib/js/laputa/laputa';
 import global from '@/lib/js/global';
 import {translateMd} from '@/lib/js/markdown/md-translator';
-import {ImagePreview} from 'vant';
-import AdminOpsRecord from '@/components/post/item/parts/AdminOpsRecord';
-import GalleryItemContent from '@/components/post/item/parts/GalleryItemContent';
-import ImageBox from '@/components/global/ImageBox';
+import AdminOpsRecord from './AdminOpsRecord';
+import GalleryItemContent from './GalleryItemContent';
+import PostImageList from './PostImageList';
 import Ellipsis from '@/components/global/Ellipsis';
 
 const typeReg = /tp:([a-zA-Z]*)#/;
@@ -76,7 +67,7 @@ export default {
 	components: {
 		AdminOpsRecord,
 		GalleryItemContent,
-		ImageBox,
+		PostImageList,
 		Ellipsis
 	},
 	inject: {
@@ -90,9 +81,8 @@ export default {
 		});
 		return {
 			post,
-			env: global.vars.env,
 			fullUrlList: [],
-			imgList: [],
+			imgUrlList: [],
 			imageBoxList: [],
 			postContent: post.customContent || post.content,
 			payload: '',
@@ -131,12 +121,12 @@ export default {
 				// 已经有解析过的图片列表，则将其加入帖子的图片列表中
 				// 此种情况是相册目录在移动端打开时先进入帖子详情，然后再打开图片列表
 				if (this.post.parsedImages) {
-					this.imgList = [];
+					this.imgUrlList = [];
 					this.fullUrlList = [];
 					this.imageBoxList = [];
 					this.parseRawImg();
 					this.post.parsedImages.forEach(img => {
-						this.imgList.push(img.thumb);
+						this.imgUrlList.push(img.thumb);
 						this.fullUrlList.push(img.src);
 						this.imageBoxList.push(img)
 					});
@@ -150,9 +140,6 @@ export default {
 					this.fullTextType = 'gallery';
 					if (isShow) {
 						this.post.parsedImages = global.methods.parseGalleryItemFullText(this.post, this.post.full_text);
-						// if (this.env === 'blog' && !this.post.customFullText) {
-						// 	this.post.noFullText = true;
-						// }
 					} else {
 						this.post.parsedImages = [];
 					}
@@ -161,12 +148,6 @@ export default {
 		}
 	},
 	computed: {
-		categoryPath() {
-			if (!this.post.category_path) {
-				return '';
-			}
-			return lpt.categoryServ.getPathStr(this.post.category_path);
-		},
 		hasFullText() {
 			return (this.post.full_text_id || this.post.full_text) && !this.post.noFullText;
 		},
@@ -174,7 +155,7 @@ export default {
 			// 巨坑，深扒van-tabs组件发现是在swipe组件中获取了一个tabs的宽度
 			// 但是如果tabs组件不占满屏幕，又没有固定的px值，则返回0
 			// tabs组件错乱
-			if (global.vars.env === 'blog' && this.lptContainer === 'blogDrawer') {
+			if (this.lptContainer === 'blogDrawer') {
 				return global.states.style.drawerWidth;
 			} else {
 				return global.states.style.bodyWidth;
@@ -207,31 +188,12 @@ export default {
 			imgListStr.forEach(img => {
 				if (!img) return;
 				const fullImgUrl = lpt.getFullImgUrl(img, Math.floor(this.clientWidth));
-				this.imgList.push(lpt.getPostThumbUrl(img));
+				this.imgUrlList.push(lpt.getPostThumbUrl(img));
 				this.fullUrlList.push(fullImgUrl);
 				this.imageBoxList.push({
 					thumb: lpt.getPostThumbUrl(img),
 					src: fullImgUrl
 				});
-			});
-		},
-		showImgPreview(index) {
-			ImagePreview({
-				images: this.fullUrlList,
-				startPosition: index,
-				overlayStyle: {
-					backgroundColor: 'rgba(0, 0, 0, 0.75)',
-					backdropFilter: 'blur(20px)'
-				}
-			});
-		},
-		showSingleImg(url) {
-			ImagePreview({
-				images: [url],
-				overlayStyle: {
-					backgroundColor: 'rgba(0, 0, 0, 0.75)',
-					backdropFilter: 'blur(20px)'
-				}
 			});
 		},
 		processAmOps(oriText) {
@@ -380,15 +342,6 @@ export default {
 	cursor: pointer;
 	color: #007bff;
 	font-size: 0.9rem;
-}
-
-:global(.image-box-list img) {
-	display: inline;
-	margin-right: 1rem;
-}
-
-:global(.image-box-list>div>div) {
-	display: inline-block;
 }
 
 :global(.vue-lb-info) {

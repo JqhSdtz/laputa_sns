@@ -1,11 +1,11 @@
 <template>
-	<div v-if="showImageList" :class="imagesListClass">
-		<div v-for="(img, i) in images" :key="i">
+	<a-row v-if="showImageList" :class="imagesListClass">
+		<a-col :span="8" v-for="(img, i) in images" :key="i">
 			<img :src="img.thumb" style="object-fit: cover;" :style="thumbStyle" 
 				@click="selected(i, img.src, img.caption)" 
 				ondragstart="return false"/>
-		</div>
-	</div>
+		</a-col>
+	</a-row>
 	<teleport to="body">
 		<div ref="fullScreenContainer">
 			<div v-if="state.show && state.isFullScreen" @mousemove="mouseMove"

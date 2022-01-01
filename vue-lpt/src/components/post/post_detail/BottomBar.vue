@@ -56,15 +56,16 @@ export default {
 		}
 	},
 	mounted() {
-		const fn = () => this.barMarginTop = this.getBarMaginTop();
+		const fn = () => this.barMarginTop = this.getBarMarginTop();
 		window.addEventListener('resize', fn);
-		fn();
+		// 不明白为啥要两次nextTick...
+		this.$nextTick(() => this.$nextTick(fn));
 	},
 	created() {
 		this.lptConsumer = lpt.createConsumer();
 	},
 	methods: {
-		getBarMaginTop() {
+		getBarMarginTop() {
 			// 因为外部的position是absolute，所以vertical-align没有作用，通过marginTop来手动保持垂直居中
 			return (this.$el.clientHeight - this.$refs.bottomBar.clientHeight) / 2 + 'px';
 		},
