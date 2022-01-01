@@ -1,14 +1,11 @@
 package com.laputa.laputa_sns.service;
 
-import java.util.Collections;
-
 import com.laputa.laputa_sns.common.Result;
 import com.laputa.laputa_sns.common.Secrets;
 import com.laputa.laputa_sns.model.param.wx.Code2SessionResult;
 import com.laputa.laputa_sns.model.param.wx.CodeAndUserInfo;
 import com.laputa.laputa_sns.model.param.wx.UserInfoRes;
 import com.laputa.laputa_sns.util.CryptUtil;
-
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -16,8 +13,11 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Collections;
+
 /**
  * 微信相关的服务
+ *
  * @author JQH
  * @since 下午 7:37 20/06/11
  */

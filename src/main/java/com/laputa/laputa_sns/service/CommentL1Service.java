@@ -30,11 +30,12 @@ import java.util.Map;
 
 import static com.laputa.laputa_sns.common.Result.FAIL;
 import static com.laputa.laputa_sns.common.Result.SUCCESS;
-import static com.laputa.laputa_sns.helper.CommentServiceHelper.POPULAR;
 import static com.laputa.laputa_sns.helper.CommentServiceHelper.LATEST;
+import static com.laputa.laputa_sns.helper.CommentServiceHelper.POPULAR;
 
 /**
  * 一级评论服务
+ *
  * @author JQH
  * @since 下午 12:25 20/02/27
  */
@@ -87,9 +88,10 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
 
     /**
      * 更新一级评论的数量相关的信息
+     *
      * @param commentId 评论ID
-     * @param l2Delta 二级评论的增量
-     * @param pcmDelta 二级评论中发帖人评论的增量
+     * @param l2Delta   二级评论的增量
+     * @param pcmDelta  二级评论中发帖人评论的增量
      */
     public void updateCounters(Integer commentId, Long l2Delta, Long pcmDelta) {
         Map<String, Long> map = new HashMap<>(2);
@@ -102,6 +104,7 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
 
     /**
      * 增加点赞数量
+     *
      * @param parentId
      * @param commentId
      * @param likeSetKey redis中该评论点赞记录集合的key
@@ -114,6 +117,7 @@ public class CommentL1Service extends BaseService<CommentL1Dao, CommentL1> {
 
     /**
      * 设置一级评论表中的热门索引标志字段，即是否已经处于热门索引，防止从数据库中选取热门索引时重复选取
+     *
      * @param id
      * @param value
      * @return

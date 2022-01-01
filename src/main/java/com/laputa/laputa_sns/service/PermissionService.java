@@ -28,6 +28,7 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
  * 权限服务
+ *
  * @author JQH
  * @since 下午 11:11 20/02/12
  */
@@ -194,7 +195,7 @@ public class PermissionService extends BaseService<PermissionDao, Permission> {
         if (userResult.getState() == FAIL)
             return new Result<Object>(userResult);
         permission.setUser(userResult.getObject());
-        permission.setCategory(categoryService.readCategory(permission.getCategoryId(),false, operator).getObject());
+        permission.setCategory(categoryService.readCategory(permission.getCategoryId(), false, operator).getObject());
         permission.setCreator(operator.getUser());//设置创建者
         int res = insertOne(permission);
         if (res == -1)

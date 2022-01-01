@@ -63,6 +63,18 @@ public class PostService extends BaseService<PostDao, Post> {
     private final ObjectMapper fullObjectMapper = new ObjectMapper();
 
     private String hmacKey;
+    // 超过此长度的帖子会被当作长文章，这个值最大不能超过数据库lpt_post表的content字段的长度
+    @Value("${brief-post-length-limit}")
+    private int briefPostLengthLimit;
+    // 用户动态发件箱最大长度
+    @Value("${user-news-out-box-length}")
+    private int userNewsOutBoxLength;
+    // 管理员操作公开目录
+    @Value("${admin-ops-record-category}")
+    private int adminOpsRecordCategoryId;
+    // 管理员操作发布用户
+    @Value("${admin-ops-record-user}")
+    private int adminOpsRecordUserId;
 
     public PostService(@Lazy PostIndexService postIndexService, @Lazy CategoryService categoryService, @Lazy LikeRecordService likeRecordService, @Lazy ForwardService forwardService, @Lazy CommentL1Service commentL1Service, @Lazy UserService userService, @Lazy PostNewsService postNewsService, AdminOpsService adminOpsService, StringRedisTemplate redisTemplate, PostValidator postValidator, @NotNull Environment environment, CommonService commonService) {
         this.postIndexService = postIndexService;
@@ -95,22 +107,6 @@ public class PostService extends BaseService<PostDao, Post> {
         this.indexOfCategoryExecutorCallBacks = initIndexOfCategoryExecutorCallBacks();
         this.indexOfCreatorExecutorCallBacks = initIndexOfCreatorExecutorCallBacks();
     }
-
-    // 超过此长度的帖子会被当作长文章，这个值最大不能超过数据库lpt_post表的content字段的长度
-    @Value("${brief-post-length-limit}")
-    private int briefPostLengthLimit;
-
-    // 用户动态发件箱最大长度
-    @Value("${user-news-out-box-length}")
-    private int userNewsOutBoxLength;
-
-    // 管理员操作公开目录
-    @Value("${admin-ops-record-category}")
-    private int adminOpsRecordCategoryId;
-
-    // 管理员操作发布用户
-    @Value("${admin-ops-record-user}")
-    private int adminOpsRecordUserId;
 
     private List<Post> selectList(Post post, List<Category> categoryList) {
         return dao.selectList(post, categoryList);
@@ -197,6 +193,7 @@ public class PostService extends BaseService<PostDao, Post> {
 
     /**
      * 修改帖子内容
+     *
      * @param post
      * @return
      */
@@ -313,7 +310,7 @@ public class PostService extends BaseService<PostDao, Post> {
         callBacks.getIdListCallBack = (executor) -> {
             IndexExecutor<Post>.Param param = executor.param;
             QueryParam queryParam = param.paramEntity.getQueryParam();
-            param.idList = postIndexService.getPostIndexList(((Post) param.paramEntity).getCategory(), param.type,
+            param.idList = postIndexService.getPostIndexList(param.paramEntity.getCategory(), param.type,
                     queryParam.getStartId(), queryParam.getFrom(), queryParam.getQueryNum());
         };
         callBacks.multiReadEntityCallBack = (executor) -> {
@@ -323,9 +320,9 @@ public class PostService extends BaseService<PostDao, Post> {
             multiSetCounter(postListResult.getObject());//设置counter
             return postListResult;
         };
-        callBacks.getDBListCallBack = (executor) -> readDBPostList((Post) executor.param.paramEntity, executor.param.type, true, true, true, executor.param.operator);
+        callBacks.getDBListCallBack = (executor) -> readDBPostList(executor.param.paramEntity, executor.param.type, true, true, true, executor.param.operator);
         callBacks.multiSetRedisIndexCallBack = (entityList, executor) -> {
-            int[] res = postIndexService.addPostIndex(entityList, ((Post) executor.param.paramEntity).getCategory(), executor.param.type);
+            int[] res = postIndexService.addPostIndex(entityList, executor.param.paramEntity.getCategory(), executor.param.type);
             executor.param.newStartId = res[0];
             executor.param.newFrom = res[1];
             //帖子加入索引后可能发生排序，加入时的最后一个不一定是排序后的最后一个，所以需要单独取出来最后一个
@@ -339,21 +336,21 @@ public class PostService extends BaseService<PostDao, Post> {
     private IndexExecutor.CallBacks<Post> initIndexOfCreatorExecutorCallBacks() {
         IndexExecutor.CallBacks<Post> callBacks = new IndexExecutor.CallBacks<>();
         callBacks.getIdListCallBack = executor -> {
-            Post param = (Post) executor.param.paramEntity;
+            Post param = executor.param.paramEntity;
             if (param.getQueryParam().getFrom() >= userNewsOutBoxLength)
                 executor.param.idList = new ArrayList<>(0);
             else
                 executor.param.idList = postNewsService.readNewsPostIdListOfCreator(param.getCreatorId(), param.getQueryParam()).getObject();
         };
         callBacks.multiReadEntityCallBack = (executor) -> {
-            Result<List<Post>> postListResult = queryHelper.multiReadEntity(executor.param.idList, true, (Post) executor.param.queryEntity);
+            Result<List<Post>> postListResult = queryHelper.multiReadEntity(executor.param.idList, true, executor.param.queryEntity);
             if (postListResult.getState() == FAIL)
                 return postListResult;
             multiSetCounter(postListResult.getObject());
             return postListResult;
         };
         callBacks.getDBListCallBack = executor -> {
-            Result<List<Post>> dbListResult = readDBPostList((Post) executor.param.paramEntity, CREATOR, true, false, true, executor.param.operator);
+            Result<List<Post>> dbListResult = readDBPostList(executor.param.paramEntity, CREATOR, true, false, true, executor.param.operator);
             if (dbListResult.getState() == FAIL)
                 return dbListResult;
             return dbListResult;
@@ -624,7 +621,7 @@ public class PostService extends BaseService<PostDao, Post> {
      * 修改帖子所在目录
      * 该操作需要管理等级，但不算做管理员操作，不记录到管理员操作公开中
      */
-    public Result<Object> setCategory(@NotNull Post param,  Operator operator) {
+    public Result<Object> setCategory(@NotNull Post param, Operator operator) {
         if (!param.isValidSetCategoryParam())
             return new Result<Object>(FAIL).setErrorCode(1010050228).setMessage("操作错误，参数不合法");
         // 设置帖子目录需要判断帖子的创建者，更新索引的时候需要点赞数
@@ -694,7 +691,7 @@ public class PostService extends BaseService<PostDao, Post> {
     }
 
     /**
-     *  更新贴子内容
+     * 更新贴子内容
      */
     public Result<Object> updateContent(@NotNull Post param, Operator operator) {
         if (!param.isValidUpdateContentParam())

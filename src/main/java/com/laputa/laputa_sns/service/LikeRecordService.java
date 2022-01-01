@@ -27,6 +27,7 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
  * 点赞记录相关的服务
+ *
  * @author JQH
  * @since 下午 2:11 20/02/24
  */
@@ -45,7 +46,7 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
     private final IndexExecutor.CallBacks<LikeRecord> indexExecutorCallBacks;
     private final StringRedisTemplate redisTemplate;
     private final LikeRecordValidator likeRecordValidator;
-
+    private final String[] typeStr = {"PS", "C1", "C2"};
     private String hmacKey;
 
     public LikeRecordService(PostService postService, @Lazy CommentL1Service commentL1Service, @Lazy CommentL2Service commentL2Service, UserService userService, NoticeService noticeService, CommonService commonService, @NotNull StringRedisTemplate redisTemplate, LikeRecordValidator likeRecordValidator) {
@@ -61,10 +62,9 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
         this.indexExecutorCallBacks = initIndexExecutorCallBacks();
     }
 
-    private final String[] typeStr = {"PS", "C1", "C2"};
-
     /**
      * 获取redis中新点赞列表的key，新点赞列表是指没有被刷入数据库的，会被用作重复校验的点赞列表
+     *
      * @param targetId
      * @param type
      * @return
@@ -82,6 +82,7 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
     /**
      * 获取redis中旧点赞列表的key，旧点赞列表是指已经被刷入数据库后又被取出来的，仅用于展示的
      * 点赞列表，一般不会用于重复校验
+     *
      * @param targetId
      * @param type
      * @return
@@ -105,6 +106,7 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
 
     /**
      * 从redis中获取多个被点赞对象的点赞数量
+     *
      * @param targetIdList
      * @param type
      * @return
@@ -125,6 +127,7 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
 
     /**
      * 给某个内容对象设置点赞数量
+     *
      * @param entity
      * @param type
      */
@@ -134,6 +137,7 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
 
     /**
      * 给多个内容对象设置点赞数量
+     *
      * @param entityList
      * @param type
      * @param <T>
@@ -147,22 +151,6 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
             AbstractContent<T> entity = entityList.get(i);
             if (entity != null)
                 entity.setLikeCnt(entity.getLikeCnt() + likeCntList.get(i));
-        }
-    }
-
-    private class RedisValue {
-        /**
-         * 点赞者ID(用户ID)
-         */
-        Integer creatorId;
-        /**
-         * 数据库点赞记录ID，无业务含义
-         */
-        Integer likeRecordId;
-
-        RedisValue(Integer creatorId, Integer likeRecordId) {
-            this.creatorId = creatorId;
-            this.likeRecordId = likeRecordId;
         }
     }
 
@@ -211,6 +199,7 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
      * 给多个内容对象设置是否被某个用户点过赞
      * 这里仅判断是否在新的点赞列表中，即还未刷入数据库的记录
      * 已刷入数据库的记录不会用来判断是否点赞
+     *
      * @param targetList
      * @param type
      * @param userId
@@ -268,7 +257,7 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
     private IndexExecutor.CallBacks<LikeRecord> initIndexExecutorCallBacks() {
         IndexExecutor.CallBacks<LikeRecord> callBacks = new IndexExecutor.CallBacks<>();
         callBacks.getIdListCallBack = executor -> {
-            LikeRecord param = (LikeRecord) executor.param.paramEntity;
+            LikeRecord param = executor.param.paramEntity;
             int queryNum = param.getQueryParam().getQueryNum();
             // 是否从新的点赞列表中获取，新的点赞列表指还未刷入数据库的，一个用户在某个对象的新的点赞列表中不会重复出现
             boolean fromNewZSet = param.getQueryParam().getAddition() == null || !"1".equals(param.getQueryParam().getAddition());
@@ -311,13 +300,13 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
             List<User> creatorList = creatorListResult.getObject();
             List<LikeRecord> likeRecordList = new ArrayList<>(param.idList.size());
             for (int i = 0; i < param.idList.size(); ++i) {
-                TypedTuple<String> tuple = ((List<TypedTuple<String>>) param.indexSetList).get(i);
+                TypedTuple<String> tuple = param.indexSetList.get(i);
                 likeRecordList.add((LikeRecord) new LikeRecord().setCreator(creatorList.get(i)).setCreateTime(new Date(Math.round(tuple.getScore()))));
             }
             return new Result<List<LikeRecord>>(SUCCESS).setObject(likeRecordList);
         };
         callBacks.getDBListCallBack = executor -> {
-            LikeRecord param = (LikeRecord) executor.param.paramEntity;
+            LikeRecord param = executor.param.paramEntity;
             boolean fromNewZSet = (boolean) executor.param.addition;
             if (param.getQueryParam().getStartId() == null || param.getQueryParam().getStartId().equals(0)) {
                 RedisValue redisValue = parseRedisValue(param.getQueryParam().getStartValue());
@@ -338,10 +327,10 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
             return new Result<List<LikeRecord>>(SUCCESS).setObject(resList);
         };
         callBacks.multiSetRedisIndexCallBack = (entityList, executor) -> {
-            LikeRecord param = (LikeRecord) executor.param.paramEntity;
+            LikeRecord param = executor.param.paramEntity;
             Set<Tuple> indexSet = new HashSet<>();
             for (int i = 0; i < entityList.size(); ++i) {
-                LikeRecord likeRecord = (LikeRecord) entityList.get(i);
+                LikeRecord likeRecord = entityList.get(i);
                 //formerSet里所有的value都加上likeRecordId，因为在允许newSet清空后再次点赞的情况下
                 //对于同一个targetId可能有多个相同的creatorId，所以需要额外加上likeRecordId防止重复的被算作一条
                 indexSet.add(new DefaultTuple(getRedisValue(likeRecord.getCreatorId(), likeRecord.getId()).getBytes(), (double) likeRecord.getCreateTime().getTime()));
@@ -352,13 +341,14 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
                 return;
             executor.param.newStartValue = (String) result[0];
             executor.param.newFrom = (int) (long) result[1];
-            executor.param.newStartId = ((LikeRecord) entityList.get(entityList.size() - 1)).getId();
+            executor.param.newStartId = entityList.get(entityList.size() - 1).getId();
         };
         return callBacks;
     }
 
     /**
      * 获取某个目标对象的点赞列表
+     *
      * @param param
      * @param operator
      * @return
@@ -483,6 +473,22 @@ public class LikeRecordService extends BaseService<LikeRecordDao, LikeRecord> {
         log.info("所有对象的点赞记录写入数据库");
         // 更新hmac的key
         hmacKey = CryptUtil.randUrlSafeStr(64, true);
+    }
+
+    private class RedisValue {
+        /**
+         * 点赞者ID(用户ID)
+         */
+        Integer creatorId;
+        /**
+         * 数据库点赞记录ID，无业务含义
+         */
+        Integer likeRecordId;
+
+        RedisValue(Integer creatorId, Integer likeRecordId) {
+            this.creatorId = creatorId;
+            this.likeRecordId = likeRecordId;
+        }
     }
 
 }

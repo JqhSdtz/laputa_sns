@@ -23,11 +23,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
-import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.DefaultTypedTuple;
-import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.ScanOptions;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -43,6 +39,7 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
  * 用户服务，包括用户的增加、修改等
+ *
  * @author JQH
  * @since 下午 11:09 20/02/12
  */
@@ -73,6 +70,12 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
                     "\tlocal maxScore = redis.call('zrangebyscore', KEYS[1], 9000000000000, 9999999999999, 'WITHSCORES', 'LIMIT', 0, 1)\n" +
                     "\tlocal setScore = 9999999999999\n" + "\tif (#maxScore ~= 0) then\n" + "\t\tsetScore = tonumber(maxScore[2]) - 1\n" + "\tend\n" +
                     "\treturn redis.call('zadd', KEYS[1], setScore, ARGV[1])\n" + "end", Long.class);
+    // 记录用户最近访问的15个目录
+    @Value("${user-recent-visit-category-num}")
+    private int userRecentVisitCategoryNum;
+    // 在@操作时根据用户名匹配到的用户数限制
+    @Value("${user-name-match-limit}")
+    private int userNameMatchLimit;
 
     public UserService(UserValidator userValidator, @NotNull StringRedisTemplate redisTemplate, @NotNull Environment environment, CommonService commonService, FollowService followService, PostService postService, CategoryService categoryService, OperatorService operatorService) {
         this.redisTemplate = redisTemplate;
@@ -96,14 +99,6 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
         this.recvSettingQueryHelper = new QueryHelper<>(null, recvSettingRedisHelper);
         this.recvSettingQueryHelper.selectOneCallBack = param -> dao.selectRecvSetting(param.getId());
     }
-
-    // 记录用户最近访问的15个目录
-    @Value("${user-recent-visit-category-num}")
-    private int userRecentVisitCategoryNum;
-
-    // 在@操作时根据用户名匹配到的用户数限制
-    @Value("${user-name-match-limit}")
-    private int userNameMatchLimit;
 
     private int updateTopPost(int userId, Integer postId) {
         return dao.updateTopPost(userId, postId);
@@ -237,19 +232,6 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
             tupleSet.add(new DefaultTypedTuple<>(v[0], Double.valueOf(v[1])));
         }
         return redisTemplate.opsForZSet().add(key, tupleSet);
-    }
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    public class RecentVisitedCategory {
-        Category category;
-        Double score;
-
-        RecentVisitedCategory(Category category, Double score) {
-            this.category = category;
-            this.score = score;
-        }
     }
 
     public Result<List<RecentVisitedCategory>> readRecentVisitedCategories(Operator operator) {
@@ -634,6 +616,19 @@ public class UserService extends BaseService<UserDao, User> implements Applicati
             redisTemplate.opsForHash().delete(getLastRefreshTimeKey(), deleteKeys.toArray());
         commonService.batchUpdate("lpt_user", "user_id", "user_last_get_news_time", CommonService.OPS_COPY, tmpList);
         log.info("用户动态刷新时间写入数据库");
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    public class RecentVisitedCategory {
+        Category category;
+        Double score;
+
+        RecentVisitedCategory(Category category, Double score) {
+            this.category = category;
+            this.score = score;
+        }
     }
 
 }

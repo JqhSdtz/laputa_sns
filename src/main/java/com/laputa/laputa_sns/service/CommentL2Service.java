@@ -34,6 +34,7 @@ import static com.laputa.laputa_sns.helper.CommentServiceHelper.POPULAR;
 
 /**
  * 二级评论服务
+ *
  * @author JQH
  * @since 下午 1:46 20/02/29
  */
@@ -58,6 +59,8 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
     private final ObjectMapper fullObjectMapper = new ObjectMapper();
 
     private String hmacKey;
+    @Value("${preview-cml2-num}")//在显示一级评论时附带显示的二级评论的数量
+    private int previewCml2Num;
 
     public CommentL2Service(UserService userService, LikeRecordService likeRecordService, PostService postService, CommentL1Service commentL1Service, CommentL2Validator commentL2Validator, StringRedisTemplate redisTemplate, @NotNull Environment environment, CommonService commonService, LikeRecordService likeRecordService1, NoticeService noticeService, AdminOpsService adminOpsService) {
         this.postService = postService;
@@ -85,9 +88,6 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
         this.queryHelper = new QueryHelper<>(this, redisHelper);
         this.serviceHelper = new CommentServiceHelper<>(2, queryHelper, redisHelper, redisTemplate, likeRecordService, commonService, userService, this, CommentL2.class);
     }
-
-    @Value("${preview-cml2-num}")//在显示一级评论时附带显示的二级评论的数量
-    private int previewCml2Num;
 
     private List<TmpEntry> selectTopNL2OfL1StrByMultiId(List<Integer> idList) {
         return dao.selectTopNL2OfL1StrByMultiId(idList);
@@ -196,6 +196,7 @@ public class CommentL2Service extends BaseService<CommentL2Dao, CommentL2> {
     public Result<CommentL2> readCommentWithAllFalse(Integer commentId, Operator operator) {
         return readComment(commentId, false, false, false, false, operator);
     }
+
     public Result<CommentL2> readCommentWithContent(Integer commentId, Operator operator) {
         return readComment(commentId, false, false, true, false, operator);
     }

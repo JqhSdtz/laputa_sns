@@ -43,18 +43,17 @@ public class PostIndexService implements ApplicationRunner {
     private final CommonService commonService;
 
     private final Operator progOperator = ProgOperatorManager.register(PostIndexService.class);
+    /**
+     * 帖子索引的最大缓存长度，超过此长度的将放入数据库
+     */
+    @Value("${post-index-max-cache-num}")
+    private int postIndexMaxCacheNum;
 
     public PostIndexService(@NotNull @Lazy CategoryService categoryService, @Lazy PostService postService, CommonService commonService) {
         this.categoryService = categoryService;
         this.postService = postService;
         this.commonService = commonService;
     }
-
-    /**
-     * 帖子索引的最大缓存长度，超过此长度的将放入数据库
-     */
-    @Value("${post-index-max-cache-num}")
-    private int postIndexMaxCacheNum;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -96,6 +95,7 @@ public class PostIndexService implements ApplicationRunner {
 
     /**
      * 以递归的方式加载该目录以及其全部子目录的帖子索引
+     *
      * @param root 目标目录
      * @param type 索引类型（POPULAR, LATEST）
      * @return
@@ -132,11 +132,12 @@ public class PostIndexService implements ApplicationRunner {
 
     /**
      * 获取帖子索引列表
+     *
      * @param category 目标目录
-     * @param type 索引类型（POPULAR, LATEST）
-     * @param startId 查询参数中的起始ID
-     * @param from 查询参数中的起始位置
-     * @param num 查询参数中的查询数量
+     * @param type     索引类型（POPULAR, LATEST）
+     * @param startId  查询参数中的起始ID
+     * @param from     查询参数中的起始位置
+     * @param num      查询参数中的查询数量
      * @return 以帖子ID表示的索引列表
      */
     public List<Integer> getPostIndexList(Category category, int type, Integer startId, Integer from, int num) {
@@ -152,13 +153,14 @@ public class PostIndexService implements ApplicationRunner {
         return postIdList;
     }
 
-   /**
-    * 向指定目录中添加帖子索引 
-    * @param postList 待添加的帖子列表
-    * @param category 目标目录
-    * @param type 索引类型（POPULAR, LATEST）
-    * @return 返回数组res[0]表示添加后索引列表的最后一个节点的ID，res[1]表示添加后索引列表的长度
-    */
+    /**
+     * 向指定目录中添加帖子索引
+     *
+     * @param postList 待添加的帖子列表
+     * @param category 目标目录
+     * @param type     索引类型（POPULAR, LATEST）
+     * @return 返回数组res[0]表示添加后索引列表的最后一个节点的ID，res[1]表示添加后索引列表的长度
+     */
     public int[] addPostIndex(@NotNull List<Post> postList, Category category, int type) {
         // 用map是为了防止id重复，把有改动的记录到changeMap中
         Map<Integer, TmpEntry> changeMap = new HashMap<>(postList.size());
@@ -180,9 +182,10 @@ public class PostIndexService implements ApplicationRunner {
 
     /**
      * 添加帖子索引，但不会修改数据库的索引字段
+     *
      * @param post
-     * @param type 索引类型（POPULAR, LATEST)
-     * @param isNew 是否是新创建的帖子
+     * @param type      索引类型（POPULAR, LATEST)
+     * @param isNew     是否是新创建的帖子
      * @param changeMap 用于记录在此过程中改变了索引状态的帖子（不只包括目标帖子），如果不需要获取索引状态的改变，则可传入null
      */
     public void addPostIndex(Post post, int type, boolean isNew, Map<Integer, TmpEntry> changeMap) {
@@ -222,13 +225,14 @@ public class PostIndexService implements ApplicationRunner {
 
     /**
      * 更新帖子的POPULAR索引，用于点赞或取消点赞时更新索引
+     *
      * @param post
-     * @param incr true表示点赞，false表示取消点赞
+     * @param incr                          true表示点赞，false表示取消点赞
      * @param onlyIfExistsOrGreaterThanLast 是否只在索引列表中已存在该帖子的索引，
-     * 或者该帖子的索引值（点赞数）大于索引列表末尾的索引的索引值时才添加该索引。
-     * 在添加从数据库获取的帖子列表时，需要添加索引中不存在的帖子，此时可以保证索引的顺序是正确的；
-     * 但是在点赞时如果不加判断直接将被点赞的帖子加入索引，则无法保证索引的顺序是正确的
-     * @param changeMap 用于记录在此过程中改变了索引状态的帖子（不只包括目标帖子），如果不需要获取索引状态的改变，则可传入null
+     *                                      或者该帖子的索引值（点赞数）大于索引列表末尾的索引的索引值时才添加该索引。
+     *                                      在添加从数据库获取的帖子列表时，需要添加索引中不存在的帖子，此时可以保证索引的顺序是正确的；
+     *                                      但是在点赞时如果不加判断直接将被点赞的帖子加入索引，则无法保证索引的顺序是正确的
+     * @param changeMap                     用于记录在此过程中改变了索引状态的帖子（不只包括目标帖子），如果不需要获取索引状态的改变，则可传入null
      * @return 该帖子是否加入到了索引中
      */
     public boolean updatePostPopIndex(@NotNull Post post, boolean incr, boolean onlyIfExistsOrGreaterThanLast, Map<Integer, TmpEntry> changeMap) {
@@ -295,10 +299,11 @@ public class PostIndexService implements ApplicationRunner {
     }
 
     /**
-    * 在指定目录中删除帖子的索引 
-    * @param postList 待删除的帖子列表
-    * @param type 索引类型（POPULAR, LATEST）
-    */
+     * 在指定目录中删除帖子的索引
+     *
+     * @param postList 待删除的帖子列表
+     * @param type     索引类型（POPULAR, LATEST）
+     */
     public void deletePostIndex(@NotNull List<Post> postList) {
         Map<Integer, TmpEntry> latestChangeMap = new HashMap<>(postList.size());
         Map<Integer, TmpEntry> popularChangeMap = new HashMap<>(postList.size());
@@ -334,9 +339,10 @@ public class PostIndexService implements ApplicationRunner {
 
     /**
      * 转移帖子的索引，从原目录转移到目标目录，需要保证帖子的点赞数和创建时间字段是正确的
-     * @param post 待转移的帖子
+     *
+     * @param post     待转移的帖子
      * @param original 帖子的原目录
-     * @param target 帖子的目标目录
+     * @param target   帖子的目标目录
      */
     public void transferPostIndex(Post post, Category original, Category target) {
         Map<Integer, TmpEntry> latestChangeMap = new HashMap<>(1);
@@ -355,6 +361,7 @@ public class PostIndexService implements ApplicationRunner {
 
     /**
      * 更新父目录后按照新的目录结构刷新本目录的索引列表
+     *
      * @param category
      */
     public void transferCategoryIndexList(Category category) {
@@ -367,11 +374,11 @@ public class PostIndexService implements ApplicationRunner {
         List<Post> latestPostList = new ArrayList<>(popularList.size());
         List<Post> popularPostList = new ArrayList<>(popularList.size());
         // 先从索引列表中读取出来所有的数据，因为在删除的过程中索引列表会变化，所以不能遍历的同时删除
-        for (Iterator<Index> iter = latestList.iterator(); iter.hasNext();) {
+        for (Iterator<Index> iter = latestList.iterator(); iter.hasNext(); ) {
             Index index = iter.next();
             latestPostList.add((Post) new Post(index.getId()).setCategory(category).setCreateTime(new Date(index.getValue())));
         }
-        for (Iterator<Index> iter = popularList.iterator(); iter.hasNext();) {
+        for (Iterator<Index> iter = popularList.iterator(); iter.hasNext(); ) {
             Index index = iter.next();
             popularPostList.add(new Post(index.getId()).setCategory(category).setLikeCnt(index.getValue()));
         }

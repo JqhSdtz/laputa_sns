@@ -6,6 +6,7 @@ export function processRouters(param) {
         routes: param.routers
     });
     const noCacheList = [];
+
     function doProcess(_routers) {
         _routers.forEach(router => {
             if (router.meta) {
@@ -18,6 +19,7 @@ export function processRouters(param) {
             }
         });
     }
+
     doProcess(param.routers);
 
     const titleMap = new Map();

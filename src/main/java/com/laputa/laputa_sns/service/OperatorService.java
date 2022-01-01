@@ -47,6 +47,10 @@ public class OperatorService {
     private final RedisHelper<Operator> redisHelper;
 
     private final Operator progOperator = ProgOperatorManager.register(OperatorService.class);
+    @Value("${pass-token-through-header}")
+    private boolean passTokenThroughHeader;
+    @Value("${pow-zero-length}")
+    private int powZeroLength;
 
     public OperatorService(@Lazy UserService userService, @Lazy PermissionService permissionService, PostNewsService postNewsService, NoticeService noticeService, StringRedisTemplate redisTemplate, @NotNull Environment environment) {
         this.userService = userService;
@@ -59,12 +63,6 @@ public class OperatorService {
         int operatorTimeOut = Integer.parseInt(Objects.requireNonNull(environment.getProperty("timeout.redis.operator")));
         this.redisHelper = new RedisHelper<>(RedisPrefix.OPERATOR_ONLINE, objectMapper, operatorTimeOut, null, null, null, null, Operator.class, redisTemplate);
     }
-
-    @Value("${pass-token-through-header}")
-    private boolean passTokenThroughHeader;
-
-    @Value("${pow-zero-length}")
-    private int powZeroLength;
 
     public Operator getOnlineOperator(Integer userId) {
         return redisHelper.getEntity(userId, false, false);
@@ -227,7 +225,6 @@ public class OperatorService {
 
     /**
      * 获取操作者的动态和通知数量
-     *
      */
     public void pullNewsAndNoticeCnt(Operator operator) {
         long curTime = new Date().getTime();

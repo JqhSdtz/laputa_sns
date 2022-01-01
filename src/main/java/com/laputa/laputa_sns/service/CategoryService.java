@@ -36,6 +36,7 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
 /**
  * 目录服务
  * 注：除初始化过程外，任何需要直接改动原有Category对象的方法都应该设为同步！
+ *
  * @author JQH
  * @since 下午 8:17 20/02/06
  */
@@ -46,11 +47,6 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
 public class CategoryService extends BaseService<CategoryDao, Category> implements ApplicationRunner {
 
     public static final Integer GROUND_ID = 1;
-
-    private Map<Integer, Category> categoryMap;
-    private Set<Category> leafCategorySet;
-    private Category groundCategory;
-
     private final PostService postService;
     private final PostIndexService postIndexService;
     private final AdminOpsService adminOpsService;
@@ -59,8 +55,12 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
     private final RedisHelper<Category> redisHelper;
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
-
     private final Operator progOperator = ProgOperatorManager.register(CategoryService.class);
+    private Map<Integer, Category> categoryMap;
+    private Set<Category> leafCategorySet;
+    private Category groundCategory;
+    @Value("${admin-ops-record-category}")
+    private int adminOpsRecordCategoryId;
 
     public CategoryService(PostService postService, PostIndexService postIndexService, AdminOpsService adminOpsService, CommonService commonService, @Lazy CategoryValidator categoryValidator, StringRedisTemplate redisTemplate) {
         this.postService = postService;
@@ -74,9 +74,6 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
                 .addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("nick_name", "raw_avatar", "type", "state")));
     }
 
-    @Value("${admin-ops-record-category}")
-    private int adminOpsRecordCategoryId;
-
     @Override
     /**加载目录树*/
     public void run(ApplicationArguments args) {
@@ -85,7 +82,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
 
     private void loadCategoryFromDB(boolean fromReload) {
         List<Category> categoryList = dao.selectList(new Category());
-        Map<Integer, Category> newCategoryMap  = new ConcurrentHashMap<>();
+        Map<Integer, Category> newCategoryMap = new ConcurrentHashMap<>();
         for (int i = 0; i < categoryList.size(); ++i) {
             Category category = categoryList.get(i);
             if (fromReload && categoryMap != null) {
@@ -140,6 +137,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
 
     /**
      * 级联地设置基础目录对象的帖子数据，在初始化和校正数据的时候调用
+     *
      * @param root
      * @return
      */
@@ -154,6 +152,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
 
     /**
      * 级联地设置基础目录对象的允许发帖管理等级，在初始化和校正数据的时候调用
+     *
      * @param root
      * @return
      */
@@ -422,7 +421,9 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         }
     }
 
-    /**获取目录，设置父目录的counter和子目录列表的counter*/
+    /**
+     * 获取目录，设置父目录的counter和子目录列表的counter
+     */
     public Result<Category> readCategoryWithAllCounters(Integer categoryId, Operator operator) {
         Result<Category> result = readCategory(categoryId, true, operator);
         if (result.getState() == FAIL)
@@ -461,6 +462,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
 
     /**
      * 给目标对象列表添加目录对象属性
+     *
      * @param entityList
      * @param getCategoryIdMethod
      * @param setCategoryMethod
@@ -498,6 +500,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
 
     /**
      * 写入管理员操作记录
+     *
      * @param category
      * @param type
      * @param operator
@@ -545,6 +548,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
 
     /**
      * 读取基础的目录对象，需谨慎调用，基础目录对象长期存在
+     *
      * @param categoryId
      * @param withCounter
      * @param operator
@@ -631,6 +635,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
 
     /**
      * 更新目录的展示顺序
+     *
      * @param paramObject
      * @param operator
      * @return
@@ -656,6 +661,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
 
     /**
      * 更新目录的缓存数量
+     *
      * @param paramObject
      * @param operator
      * @return
@@ -782,7 +788,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
         int res = dao.updateDefSub(param.getId(), param.getDefSubId());//数据库操作
         if (res == 0)//数据库操作失败
             return new Result<Category>(FAIL).setErrorCode(1010010128).setMessage("数据库操作失败");
-            resCategory.setDefSubId(param.getDefSubId());
+        resCategory.setDefSubId(param.getDefSubId());
         int type = isCancel ? AdminOpsRecord.TYPE_CANCEL_CATEGORY_DEF_SUB : AdminOpsRecord.TYPE_SET_CATEGORY_DEF_SUB;
         Category opParam = new Category(param.getId()).setName(resCategory.getName()).setIconImg(resCategory.getIconImg());
         writeToAdminOpsRecord((Category) opParam.setDefSubId(param.getDefSubId()).setOpComment(param.getOpComment()), type, operator);
@@ -832,6 +838,7 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
 
     /**
      * 校正目录的多个计数属性
+     *
      * @return
      */
     public synchronized String correctCounters() {

@@ -19,6 +19,7 @@ import java.util.Map;
 
 /**
  * 对象存储服务，调用又拍云的对象存储接口
+ *
  * @author JQH
  * @since 下午 2:34 20/04/08
  */
@@ -78,5 +79,5 @@ public class OSSService {
                     + CryptUtil.longToStr(operator.getUserId());
         }
     }
-    
+
 }

@@ -1,17 +1,17 @@
 package com.laputa.laputa_sns.service;
 
-import java.util.List;
-
 import com.laputa.laputa_sns.common.TmpEntry;
 import com.laputa.laputa_sns.common.TmpListEntry;
 import com.laputa.laputa_sns.dao.CommonDao;
-
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * 公共服务，主要是一些公共的数据库操作方法
+ *
  * @author JQH
  * @since 下午 12:34 20/03/16
  */
@@ -43,6 +43,7 @@ public class CommonService {
 
     /**
      * 根据ID更新一个表的某个字段
+     *
      * @param tableName
      * @param idFieldName
      * @param filedName
@@ -56,6 +57,7 @@ public class CommonService {
 
     /**
      * 根据ID列表批量更新表的某个字段
+     *
      * @param tableName
      * @param idFieldName
      * @param valueFiledName
@@ -76,8 +78,9 @@ public class CommonService {
         return cnt;
     }
 
-     /**
+    /**
      * 根据ID列表批量更新表的多个字段，<b>该方法尚未测试</b>
+     *
      * @param tableName
      * @param idFieldName
      * @param valueFiledNames

@@ -55,6 +55,10 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
     private final DefaultRedisScript<Long> multiPushNewsScript;
 
     private String hmacKey;
+    @Value("${user-news-out-box-length}")//#用户动态发件箱最大长度
+    private int userNewsOutBoxLength;
+    @Value("${user-news-in-box-length}")//#用户动态收件箱最大长度
+    private int userNewsInBoxLength;
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public PostNewsService(FollowService followService, PostService postService, StringRedisTemplate redisTemplate) {
@@ -65,21 +69,15 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
         this.indexExecutorCallBacks = initIndexExecutorCallBacks();
         // redis 5.0之后可以使用ZPOPMIN命令;
         this.pushNewsScript =
-            new DefaultRedisScript<>(ResourceUtil.getString("/lua/news/pushNews.lua"), Long.class);
+                new DefaultRedisScript<>(ResourceUtil.getString("/lua/news/pushNews.lua"), Long.class);
         this.pollNewsScript =
-            new DefaultRedisScript(ResourceUtil.getString("/lua/news/pollNews.lua"), List.class);
+                new DefaultRedisScript(ResourceUtil.getString("/lua/news/pollNews.lua"), List.class);
         // 必须用Long类型来接收Redis返回的整型数
         this.pollNewsCountScript =
-            new DefaultRedisScript(ResourceUtil.getString("/lua/news/pollNewsCount.lua"), Long.class);
+                new DefaultRedisScript(ResourceUtil.getString("/lua/news/pollNewsCount.lua"), Long.class);
         this.multiPushNewsScript =
-            new DefaultRedisScript(ResourceUtil.getString("/lua/news/multiPushNews.lua"), Long.class);
+                new DefaultRedisScript(ResourceUtil.getString("/lua/news/multiPushNews.lua"), Long.class);
     }
-
-    @Value("${user-news-out-box-length}")//#用户动态发件箱最大长度
-    private int userNewsOutBoxLength;
-
-    @Value("${user-news-in-box-length}")//#用户动态收件箱最大长度
-    private int userNewsInBoxLength;
 
     @Override
     /**加载全部用户的发件箱*/
@@ -163,16 +161,6 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
         return RedisUtil.addToZSetAndGetLastAndLength(redisTemplate, getNewsInBoxKey(userId), indexSet, userNewsInBoxLength, replaceWhenFull);
     }
 
-    private class RedisValue {
-        Integer postId;
-        Integer newsId;
-
-        RedisValue(Integer postId, Integer newsId) {
-            this.postId = postId;
-            this.newsId = newsId;
-        }
-    }
-
     private String getRedisValue(Integer postId, Integer newsId) {
         if (newsId == null)
             return String.valueOf(postId);
@@ -221,6 +209,7 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
 
     /**
      * 根据关注列表返回已经取关但还在列表中的PostNews对应的Redis中ZSet的Value
+     *
      * @param postNewsList
      * @param numLimit
      * @param followingList
@@ -329,8 +318,8 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
             for (int i = 0; i < param.idList.size(); ++i) {
                 Integer newsId = null;
                 if (param.indexSetList != null)
-                    newsId = parseRedisValue(((List<TypedTuple<String>>) param.indexSetList).get(i).getValue()).newsId;
-                newsList.add(new PostNews(newsId).setReceiverId(param.operator.getUserId()).setPostId((Integer) param.idList.get(i)));
+                    newsId = parseRedisValue(param.indexSetList.get(i).getValue()).newsId;
+                newsList.add(new PostNews(newsId).setReceiverId(param.operator.getUserId()).setPostId(param.idList.get(i)));
             }
             Result<List<String>> remValuesResult = fillPostNewsWithPost(newsList, param.paramEntity.getQueryParam().getQueryNum(), (List<Follow>) param.addition, param.operator);
             List<String> remValues = remValuesResult.getObject();
@@ -343,7 +332,7 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
             return new Result<List<PostNews>>(SUCCESS).setObject(tmpList);
         };
         callBacks.getDBListCallBack = executor -> {
-            PostNews param = (PostNews) executor.param.paramEntity;
+            PostNews param = executor.param.paramEntity;
             if (param.getQueryParam().getStartId() == null || param.getQueryParam().getStartId().equals(0)) {
                 RedisValue redisValue = parseRedisValue(param.getQueryParam().getStartValue());
                 if (redisValue.newsId != null)
@@ -364,7 +353,7 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
                 return;
             executor.param.newStartValue = (String) res[0];
             executor.param.newFrom = (int) (long) res[1];
-            executor.param.newStartId = ((PostNews) entityList.get(entityList.size() - 1)).getId();
+            executor.param.newStartId = entityList.get(entityList.size() - 1).getId();
         };
         return callBacks;
     }
@@ -407,5 +396,15 @@ public class PostNewsService extends BaseService<PostNewsDao, PostNews> implemen
         redisTemplate.delete(RedisUtil.scanAllKeys(redisTemplate, getNewsInBoxKey("*")));
         log.info("用户动态收件箱缓存清除");
         hmacKey = CryptUtil.randUrlSafeStr(64, true);//更新hmac的key
+    }
+
+    private class RedisValue {
+        Integer postId;
+        Integer newsId;
+
+        RedisValue(Integer postId, Integer newsId) {
+            this.postId = postId;
+            this.newsId = newsId;
+        }
     }
 }

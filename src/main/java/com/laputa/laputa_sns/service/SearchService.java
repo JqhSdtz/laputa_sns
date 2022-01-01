@@ -14,6 +14,7 @@ import java.util.List;
 
 /**
  * 搜索服务，搜索使用MySQL的全文索引功能
+ *
  * @author JQH
  * @since 下午 12:49 20/05/14
  */
@@ -24,15 +25,14 @@ public class SearchService {
     private final SearchDao dao;
     private final CategoryService categoryService;
     private final UserService userService;
+    @Value("${search-result-limit}")//搜索结果只返回20个
+    private int searchResultLimit;
 
     public SearchService(SearchDao dao, CategoryService categoryService, UserService userService) {
         this.dao = dao;
         this.categoryService = categoryService;
         this.userService = userService;
     }
-
-    @Value("${search-result-limit}")//搜索结果只返回20个
-    private int searchResultLimit;
 
     private String processWords(String words) {//删除通配符
         words = words.trim();

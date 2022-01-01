@@ -17,6 +17,7 @@ import java.util.*;
 
 /**
  * 通知服务
+ *
  * @author JQH
  * @since 下午 2:38 20/04/15
  */
@@ -31,6 +32,8 @@ public class NoticeService {
     private final StringRedisTemplate redisTemplate;
     private final DefaultRedisScript<Long> pushNoticeScript;
     private final DefaultRedisScript<List<String>> pullNoticeScript;
+    @Value("${user-notice-box-length}")//用户消息接收箱最大长度
+    private int userNoticeBoxLength;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public NoticeService(@Lazy PostService postService, @Lazy CommentL1Service commentL1Service, @Lazy CommentL2Service commentL2Service, StringRedisTemplate redisTemplate) {
@@ -50,9 +53,6 @@ public class NoticeService {
                         "\tlocal hList1 = redis.call('hmget', KEYS[2], unpack(fileds))\n" + "\tlocal hList2 = redis.call('hmget', KEYS[3], unpack(fileds))\n" + "\tfor i = 1, #hList1 do table.insert(zList, hList1[i]) end\n" +
                         "\tfor i = 1, #hList2 do table.insert(zList, hList2[i]) end\n" + "end\n" + "return zList", List.class);
     }
-
-    @Value("${user-notice-box-length}")//用户消息接收箱最大长度
-    private int userNoticeBoxLength;
 
     @NotNull
     private String getRedisTimeKey(Integer receiverId) {

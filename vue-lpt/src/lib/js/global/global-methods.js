@@ -2,7 +2,6 @@ import remHelper from '@/lib/js/uitls/rem-helper';
 import lpt from '@/lib/js/laputa/laputa';
 import {Toast} from 'vant';
 import events from './global-events';
-import states from './global-states';
 
 const option = {
     moduleTitle: ''

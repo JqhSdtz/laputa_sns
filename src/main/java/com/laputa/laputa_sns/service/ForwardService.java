@@ -31,6 +31,7 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
 
 /**
  * 转发服务
+ *
  * @author JQH
  * @since 下午 3:15 20/03/08
  */
@@ -112,7 +113,7 @@ public class ForwardService extends BaseService<PostDao, Post> {
     private IndexExecutor.CallBacks<Post> initIndexExecutorCallBacks() {
         IndexExecutor.CallBacks<Post> callBacks = new IndexExecutor.CallBacks<>();
         callBacks.getIdListCallBack = executor -> {
-            List<String> indexList = getRedisForwardIndex((Post) executor.param.paramEntity);
+            List<String> indexList = getRedisForwardIndex(executor.param.paramEntity);
             if (indexList == null)
                 executor.param.idList = null;
             else {
@@ -121,9 +122,9 @@ public class ForwardService extends BaseService<PostDao, Post> {
                     executor.param.idList.add(Integer.valueOf(indexList.get(i)));
             }
         };
-        callBacks.multiReadEntityCallBack = executor -> postService.multiReadPost((Post) executor.param.paramEntity, executor.param.idList, true, false, false, false, false, false, executor.param.operator);
-        callBacks.getDBListCallBack = executor -> getDBForwardList((Post) executor.param.paramEntity, executor.param.operator);
-        callBacks.multiSetRedisIndexCallBack = (entityList, executor) -> addToForwardZSet(((Post) executor.param.paramEntity).getSupId(), entityList, executor.param);
+        callBacks.multiReadEntityCallBack = executor -> postService.multiReadPost(executor.param.paramEntity, executor.param.idList, true, false, false, false, false, false, executor.param.operator);
+        callBacks.getDBListCallBack = executor -> getDBForwardList(executor.param.paramEntity, executor.param.operator);
+        callBacks.multiSetRedisIndexCallBack = (entityList, executor) -> addToForwardZSet(executor.param.paramEntity.getSupId(), entityList, executor.param);
         return callBacks;
     }
 
@@ -151,7 +152,9 @@ public class ForwardService extends BaseService<PostDao, Post> {
         return new Result<List<Post>>(SUCCESS).setObject(forwardList).setAttachedToken(newToken);
     }
 
-    /**创建转发，删除转发见PostService.deletePost*/
+    /**
+     * 创建转发，删除转发见PostService.deletePost
+     */
     public Result<Integer> createForward(@NotNull Post post, Operator operator) {
         if (!post.isValidInsertForwardParam())
             return new Result<Integer>(FAIL).setErrorCode(1010100201).setMessage("操作错误，参数不合法");
