@@ -41,7 +41,6 @@ import static com.laputa.laputa_sns.common.Result.SUCCESS;
  * @since 下午 8:17 20/02/06
  */
 
-// Category的父类AbstractBaseEntity中已经重写了hashCode和equals，所以这里没有问题
 @SuppressWarnings("MapOrSetKeyShouldOverrideHashCodeEquals")
 @Slf4j
 @Service
@@ -76,8 +75,10 @@ public class CategoryService extends BaseService<CategoryDao, Category> implemen
                 .addFilter("UserFilter", SimpleBeanPropertyFilter.filterOutAllExcept("nick_name", "raw_avatar", "type", "state")));
     }
 
+    /**
+     * 加载目录树
+     */
     @Override
-    /**加载目录树*/
     public void run(ApplicationArguments args) {
         loadCategoryFromDb(false);
     }
