@@ -25,6 +25,7 @@ export default {
 	name: 'PostImageList',
 	props: {
 		imgUrlList: Array,
+		fullUrlList: Array,
 		imageBoxList: Array
 	},
 	components: {
@@ -41,10 +42,14 @@ export default {
 		}
 	},
 	mounted() {
-		const width = this.$refs.imageListContainer.clientWidth;
-		this.imgSize = width / 3 - remHelper.remToPx(1);
+		this.setPostImageSize();
+		window.addEventListener('resize', this.setPostImageSize);
 	},
 	methods: {
+		setPostImageSize() {
+			const width = this.$refs.imageListContainer.clientWidth;
+			this.imgSize = width / 3 - remHelper.remToPx(1);
+		},
 		showImgPreview(index) {
 			ImagePreview({
 				images: this.fullUrlList,

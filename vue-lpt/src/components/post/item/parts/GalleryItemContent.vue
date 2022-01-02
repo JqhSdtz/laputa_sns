@@ -5,15 +5,15 @@
         </div>
         <div>
             <span style="vertical-align: middle">封面：</span>
-            <div v-if="env === 'lpt'" style="display: inline-block; vertical-align: middle">
+            <div v-if="lptContainer === 'lptMain'" style="display: inline-block; vertical-align: middle">
                 <a @click="showSingleImg(galleryItem.coverUrl)">
-                    <van-image :src="galleryItem.coverUrl" fit="cover" width="50" height="50"/>
+                    <van-image :src="galleryItem.coverUrl" fit="cover" width="4rem" height="4rem"/>
                 </a>
             </div>
-            <div v-if="env === 'blog'" style="display: inline-block; vertical-align: middle">
+            <div v-if="lptContainer === 'blogMain' || lptContainer === 'blogDrawer'" style="display: inline-block; vertical-align: middle">
                 <image-box 
                     :images="[{src: galleryItem.coverUrl, thumb: galleryItem.coverUrl}]"
-                    :thumb-style="{height: '50px', width: '50px'}"/>
+                    :thumb-style="{height: '4rem', width: '4rem'}"/>
             </div>
         </div>
         <div>
@@ -24,7 +24,6 @@
 
 <script>
 import {ImagePreview} from 'vant';
-import global from '@/lib/js/global';
 import ImageBox from '@/components/global/ImageBox';
 
 export default {
@@ -35,11 +34,11 @@ export default {
     components: {
         ImageBox
     },
-    data() {
-        return {
-            env: global.vars.env,
-        }
-    },
+	inject: {
+		lptContainer: {
+			type: String
+		}
+	},
     methods: {
         showSingleImg(url) {
 			ImagePreview({

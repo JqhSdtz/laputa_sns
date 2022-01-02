@@ -41,8 +41,9 @@
 			收起全文
 		</p>
 		<post-image-list v-if="imgUrlList.length > 0" style="margin-bottom: 1rem"
-             :img-url-list="imgUrlList"
-             :image-box-list="imageBoxList"/>
+		                 :img-url-list="imgUrlList"
+		                 :full-url-list="fullUrlList"
+		                 :image-box-list="imageBoxList"/>
 		<slot/>
 	</div>
 </template>
