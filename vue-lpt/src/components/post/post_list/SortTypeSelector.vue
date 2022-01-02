@@ -17,9 +17,7 @@
 				<a-button class="sort-type-btn" ref="sortTypeButton" 
 						  v-show="showSortTypeSelector"
 				          :style="defButtonStyle"
-				          style="font-size: 0.9rem"
-						  @mouseenter="onSortTypeButtonMouseEnter"
-						  @mouseleave="onSortTypeButtonMouseLeave">
+				          style="font-size: 0.9rem">
 					<ordered-list-outlined/>
 					<span style="margin-left: 0.5rem">
 						<span v-if="sortType === 'popular'">热门</span>
@@ -71,7 +69,6 @@ export default {
 		const tmpButtonStyle = {};
 		if (this.position === 'left') {
 			tmpButtonStyle.left = '2%';
-			tmpButtonStyle.backgroundColor = 'rgba(255, 255, 255, 0.5)';
 			tmpButtonStyle.border = 'none';
 		} else {
 			tmpButtonStyle.right = '1rem';
@@ -118,18 +115,6 @@ export default {
 		},
 		getPopBtnType(sortType) {
 			return this.sortType === sortType ? 'primary' : 'default';
-		},
-		onSortTypeButtonMouseEnter(event) {
-			const elem = event.target;
-			if (this.lptContainer === 'blogMain') {
-				elem.style.backgroundColor = 'rgba(255, 255, 255, 1)';
-			}
-		},
-		onSortTypeButtonMouseLeave(event) {
-			const elem = event.target;
-			if (this.lptContainer === 'blogMain') {
-				elem.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
-			}
 		}
 	}
 }
