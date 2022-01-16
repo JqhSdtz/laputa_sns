@@ -38,17 +38,19 @@ export default {
 	},
 	data() {
 		return {
-			imgSize: 50
+			imgSize: 75
 		}
 	},
 	mounted() {
-		this.setPostImageSize();
+		this.$nextTick(() => this.setPostImageSize());
 		window.addEventListener('resize', this.setPostImageSize);
 	},
 	methods: {
 		setPostImageSize() {
-			const width = this.$refs.imageListContainer.clientWidth;
-			this.imgSize = width / 3 - remHelper.remToPx(1);
+			if (this.lptContainer !== 'blogMain') {
+				const width = this.$refs.imageListContainer.clientWidth;
+				this.imgSize = width / 3 - remHelper.remToPx(1);
+			}
 		},
 		showImgPreview(index) {
 			ImagePreview({
