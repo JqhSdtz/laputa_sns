@@ -300,6 +300,7 @@ function _initLaputa(option) {
                 return ajaxPromise;
             }
         }
+        const uniquePromiseMap = new Map();
         lpt._ajax = function (param) {
             if (!param.consumer) {
                 // console.warn('no consumer defined for ajax request! use new consumer.');
@@ -356,14 +357,24 @@ function _initLaputa(option) {
                 lastAjaxTimestamp = new Date().getTime();
             }
 
-            const promise = axios({
-                method: method,
-                url: param.url,
-                headers: headers,
-                responseType: param.responseType,
-                param: method === 'GET' ? param.data : undefined,
-                data: method === 'GET' ? undefined : jsonDataStr
-            }).then(response => {
+            let axiosPromise;
+            if (typeof param.uniquePromiseId !== 'undefined') {
+                axiosPromise = uniquePromiseMap.get(param.uniquePromiseId);
+            }
+            if (!axiosPromise) {
+                axiosPromise = axios({
+                    method: method,
+                    url: param.url,
+                    headers: headers,
+                    responseType: param.responseType,
+                    param: method === 'GET' ? param.data : undefined,
+                    data: method === 'GET' ? undefined : jsonDataStr
+                });
+                if (typeof param.uniquePromiseId !== 'undefined') {
+                    uniquePromiseMap.set(param.uniquePromiseId, axiosPromise);
+                }
+            }
+            const promise = axiosPromise.then(response => {
                 const result = response.data;
                 const tmpUserToken = response.headers['x-lpt-user-token'];
                 if (typeof tmpUserToken !== 'undefined') {
@@ -703,6 +714,7 @@ function _initLaputa(option) {
             }),
             getFullText: wrap(function (param) {
                 param.url = lpt.baseApiUrl + '/post/full_text/' + param.param.fullTextId;
+                param.uniquePromiseId = param.param.fullTextId;
                 return lpt.get(param);
             }),
             updateContent: wrap(function (param) {

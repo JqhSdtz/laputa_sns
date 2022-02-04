@@ -173,7 +173,7 @@ export default {
 		openCommentPanel() {
 			if (this.postDetailEvents) {
 				this.postDetailEvents.emit('openCommentPanel', {
-					type: lpt.commentServ.level1,
+					type: lpt.commentServ.level2,
 					id: this.comment.id
 				});
 			}

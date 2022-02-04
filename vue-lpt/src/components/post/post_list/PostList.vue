@@ -208,7 +208,7 @@ export default {
 			if (name === 'addFollow' && this.postOf !== 'news') return;
 			this.onRefresh();
 		});
-		function belongToThisList(post) {
+		const belongToThisList = (post) => {
 			return (this.postOf === 'category' && post.type_str === 'public'
 				&& this.categoryId === post.category_id)
 				|| (this.postOf === 'creator' && this.creatorId === post.creator_id);
