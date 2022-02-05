@@ -73,9 +73,6 @@ export default {
 		this.querior = lpt.createQuerior();
 		this.postListEvents = createEventBus();
 		const hasPostList = typeof this.postList !== 'undefined';
-		this.querior.onReachBottom = () => {
-			this.$emit('finish');
-		};
 		return {
 			// 如果提前指定了postList，就直接设置为已经加载完成
 			finished: hasPostList ? true : toRef(this.querior, 'hasReachedBottom'),
@@ -318,6 +315,9 @@ export default {
 						if (isRefresh) {
 							this.$emit('refresh');
 							this.postListEvents.emit('refreshList');
+						}
+						if (this.querior.hasReachedBottom) {
+							this.$emit('finish');
 						}
 					},
 					fail(result) {
