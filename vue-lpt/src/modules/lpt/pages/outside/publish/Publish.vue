@@ -26,7 +26,8 @@
 					:show-word-limit="true" 
 					placeholder="输入内容（必填，最多100000字符）"/>
 			<van-uploader ref="uploader" class="uploader" v-model="fileList" @click="beforeChoose"
-			        :before-read="parseUpload" multiple :max-count="maxImgCount"/>
+			        :before-read="parseUpload" multiple :max-count="maxImgCount"
+					:preview-options="{closeable: true}"/>
 			<van-cell center title="是否公开">
 				<template #right-icon>
 					<van-switch v-model="form.isPublic" :disabled="opType !== 'create'" size="24"/>
