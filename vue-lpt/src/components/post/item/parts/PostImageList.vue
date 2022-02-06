@@ -47,8 +47,10 @@ export default {
 	},
 	methods: {
 		setPostImageSize() {
-			if (this.lptContainer !== 'blogMain') {
-				const width = this.$refs.imageListContainer.clientWidth;
+			const width = this.$refs.imageListContainer.clientWidth;
+			if (this.lptContainer === 'blogMain') {
+				this.imgSize = width / 8 - remHelper.remToPx(1);
+			} else {
 				this.imgSize = width / 3 - remHelper.remToPx(1);
 			}
 		},
