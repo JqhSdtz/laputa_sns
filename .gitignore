@@ -61,6 +61,7 @@ out/
 hs_err_pid*
 /gradle/
 
+/bin
 src/main/resources/application.yml
 src/main/java/com/laputa/laputa_sns/common/Secrets.java
 /vue-lpt/jsconfig.json
