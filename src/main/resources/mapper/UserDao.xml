@@ -82,17 +82,6 @@
 					<otherwise>user_id &gt; #{queryParam.startId}</otherwise>
 				</choose>
 			</if>
-			<if test="followersCnt != null">and user_followers_cnt between #{queryParam.from} and #{queryParam.to}</if>
-			<if test="followingCnt != null">and user_following_cnt between #{queryParam.from} and #{queryParam.to}</if>
-			<if test="postCnt != null">and user_post_cnt between #{queryParam.from} and #{queryParam.to}</if>
-			<if test="lastLoginTime != null">and user_last_login_time &gt;= #{queryParam.from} and user_last_login_time
-				&lt;=
-				#{queryParam.to}
-			</if>
-			<if test="queryParam.createTime != null">and user_create_time &gt;= #{queryParam.from} and user_create_time
-				&lt;=
-				#{queryParam.to}
-			</if>
 			<if test="type != null">and user_type = #{type}</if>
 			<if test="state != null">and user_state = #{state}</if>
 		</where>
