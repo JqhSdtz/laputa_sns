@@ -65,6 +65,7 @@ export default {
         this.postListEvents && this.postListEvents.on('refreshList', () => {
             this.actions = this.initActions(this.post);
         });
+        this.lptConsumer = lpt.createConsumer();
     },
     methods: {
         initActions(post) {
@@ -148,7 +149,7 @@ export default {
 			}
 		},
         doDelete() {
-            function fn(post, comment) {
+            const fn = (post, comment) => {
                 lpt.contentServ.delete({
                     consumer: this.lptConsumer,
                     param: {

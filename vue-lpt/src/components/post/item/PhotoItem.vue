@@ -76,6 +76,9 @@ export default {
 			showBottomBar: false,
 		};
 	},
+	created() {
+		this.lptConsumer = lpt.createConsumer();
+	},
 	mounted() {
 		if (this.lptContainer !== 'lptMain') {
 			watch(() => this.$refs.imageBox.state.show, (curShow) => {

@@ -55,6 +55,9 @@ export default {
             teleport: this.lptContainer === 'blogDrawer' ? '#blog-drawer .ant-drawer-content-wrapper' : undefined
         }
     },
+    created() {
+        this.lptConsumer = lpt.createConsumer();
+    },
     mounted() {
         this.hasMounted = true;
         this.$nextTick(() => this.bindPrompt());

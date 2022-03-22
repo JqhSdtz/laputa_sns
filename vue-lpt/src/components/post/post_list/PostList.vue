@@ -218,8 +218,19 @@ export default {
 			}
 		});
 		global.events.on('deletePost', (post) => {
-			if (belongToThisList(post)) {
+			let isInThePath = false;
+			if (post.category_path) {
+				post.category_path.forEach(path => {
+					if (path.id === this.categoryId) {
+						isInThePath = true;
+					}
+				});
+			}
+			const isBelongToThisList = belongToThisList(post);
+			if (isInThePath || isBelongToThisList) {
 				this.list.splice(this.list.findIndex(_post => _post.id === post.id), 1);
+			}
+			if (isBelongToThisList) {
 				if (this.list.length === 0) {
 					this.isEmpty = true;
 				}
